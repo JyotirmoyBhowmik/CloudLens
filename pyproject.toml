@@ -26,6 +26,7 @@ dependencies = [
     "opentelemetry-api>=1.26.0",
     "opentelemetry-sdk>=1.26.0",
     "prometheus-client>=0.20.0",
+    "pyarrow>=17.0.0",
 ]
 
 [project.optional-dependencies]

@@ -166,3 +166,71 @@ def test_real_postgres_transactional_rollback(real_postgres_engine):
         assert count == 0
         conn.execute(text(f"DROP TABLE IF EXISTS {table_name};"))
         conn.commit()
+
+
+def test_real_postgres_audit_event_append_only_enforcement(real_postgres_engine):
+    """Acceptance: An attempt to delete or update an audit row fails at the database level."""
+    table_name = "test_audit_event_append_only"
+
+    with real_postgres_engine.begin() as conn:
+        conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE;"))
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE {table_name} (
+                    id VARCHAR(64) PRIMARY KEY,
+                    tenant_id VARCHAR(64) NOT NULL,
+                    action VARCHAR(100) NOT NULL,
+                    occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+        )
+
+        # Install append-only trigger
+        conn.execute(
+            text(
+                f"""
+                CREATE OR REPLACE FUNCTION enforce_{table_name}_append_only()
+                RETURNS TRIGGER AS $$
+                BEGIN
+                    RAISE EXCEPTION 'PERMISSION_DENIED: audit table is append-only at the database level.';
+                END;
+                $$ LANGUAGE plpgsql;
+
+                CREATE TRIGGER trg_{table_name}_no_update
+                BEFORE UPDATE ON {table_name}
+                FOR EACH ROW EXECUTE FUNCTION enforce_{table_name}_append_only();
+
+                CREATE TRIGGER trg_{table_name}_no_delete
+                BEFORE DELETE ON {table_name}
+                FOR EACH ROW EXECUTE FUNCTION enforce_{table_name}_append_only();
+                """
+            )
+        )
+
+        # Insert audit record
+        conn.execute(
+            text(
+                f"INSERT INTO {table_name} (id, tenant_id, action) VALUES ('audit-1', 'tenant-1', 'AUTH_LOGIN');"
+            )
+        )
+
+    # Attempt DELETE -> must fail at the database level
+    with pytest.raises(Exception) as exc_delete:
+        with real_postgres_engine.begin() as conn:
+            conn.execute(text(f"DELETE FROM {table_name} WHERE id = 'audit-1';"))
+    assert "PERMISSION_DENIED" in str(exc_delete.value)
+
+    # Attempt UPDATE -> must fail at the database level
+    with pytest.raises(Exception) as exc_update:
+        with real_postgres_engine.begin() as conn:
+            conn.execute(text(f"UPDATE {table_name} SET action = 'MODIFIED' WHERE id = 'audit-1';"))
+    assert "PERMISSION_DENIED" in str(exc_update.value)
+
+    # Clean up
+    with real_postgres_engine.begin() as conn:
+        conn.execute(text(f"DROP TRIGGER IF EXISTS trg_{table_name}_no_delete ON {table_name};"))
+        conn.execute(text(f"DROP TRIGGER IF EXISTS trg_{table_name}_no_update ON {table_name};"))
+        conn.execute(text(f"DROP FUNCTION IF EXISTS enforce_{table_name}_append_only();"))
+        conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE;"))
