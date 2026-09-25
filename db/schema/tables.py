@@ -221,10 +221,18 @@ class ResourceTypeModel(Base):
     native_type_name = Column(String(255), nullable=False)
     canonical_type = Column(String(100), nullable=False)
     service_category = Column(String(32), nullable=False, default="OTHER")
+    default_monitoring_type = Column(String(64), nullable=False, default="UNKNOWN")
+    version = Column(Integer, nullable=False, default=1)
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (
         Index("idx_res_types_provider_native", "provider", "native_type_name", unique=True),
+        Index(
+            "idx_res_types_lookup", "provider", "native_type_name", "effective_from", "effective_to"
+        ),
     )
 
 
@@ -566,4 +574,121 @@ class SyncJobModel(Base):
 
     __table_args__ = (
         Index("idx_sync_jobs_tenant_connector", "tenant_id", "connector_type", "started_at"),
+    )
+
+
+# ==============================================================================
+# 6. Enterprise Master Catalogues & Gap Registry (Prompt 07)
+# ==============================================================================
+
+
+class ServiceCategoryModel(Base):
+    __tablename__ = "service_categories"
+
+    code = Column(String(64), primary_key=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    is_focus_standard = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class ServiceMappingModel(Base):
+    __tablename__ = "service_mappings"
+
+    id = Column(String(64), primary_key=True)
+    service_id = Column(String(64), ForeignKey("services.id"), nullable=False)
+    provider = Column(String(16), nullable=False)
+    native_service_name = Column(String(255), nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (
+        Index(
+            "idx_svc_map_lookup",
+            "provider",
+            "native_service_name",
+            "effective_from",
+            "effective_to",
+        ),
+    )
+
+
+class UnitCatalogueModel(Base):
+    __tablename__ = "unit_catalogue"
+
+    symbol = Column(String(64), primary_key=True)
+    name = Column(String(255), nullable=False)
+    dimensionality = Column(String(64), nullable=False)
+    base_unit = Column(String(64), nullable=False)
+    scale_factor_to_base = Column(Numeric(36, 18), nullable=False)
+    offset_to_base = Column(Numeric(36, 18), nullable=False, default=Decimal("0"))
+    version = Column(Integer, nullable=False, default=1)
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (Index("idx_units_dim", "dimensionality"),)
+
+
+class MetricCatalogueModel(Base):
+    __tablename__ = "metric_catalogue"
+
+    code = Column(String(100), primary_key=True)
+    display_name = Column(String(255), nullable=False)
+    unit_symbol = Column(String(64), ForeignKey("unit_catalogue.symbol"), nullable=False)
+    aggregation_method = Column(String(32), nullable=False)
+    applicable_monitoring_types = Column(JSONB, nullable=False, server_default="[]")
+    description = Column(Text, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class PricingDimensionCatalogueModel(Base):
+    __tablename__ = "pricing_dimension_catalogue"
+
+    code = Column(String(64), primary_key=True)
+    name = Column(String(255), nullable=False)
+    category = Column(String(64), nullable=False)
+    unit_symbol = Column(String(64), nullable=False)
+    aggregation_method = Column(String(32), nullable=False)
+    default_threshold_basis = Column(String(255), nullable=False)
+    applicability_rules = Column(JSONB, nullable=False, server_default="{}")
+    is_custom_escape_hatch = Column(Boolean, nullable=False, default=False)
+    provider_code = Column(String(16), nullable=True)
+    example_services = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    effective_from = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class CatalogueGapModel(Base):
+    __tablename__ = "catalogue_gaps"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=True)
+    catalogue_type = Column(String(32), nullable=False)
+    provider = Column(String(16), nullable=False)
+    native_identifier = Column(String(500), nullable=False)
+    status = Column(String(32), nullable=False, default="OPEN")
+    occurrence_count = Column(Integer, nullable=False, default=1)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    last_seen_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    context_payload = Column(JSONB, nullable=False, server_default="{}")
+    resolution_notes = Column(Text, nullable=True)
+    resolved_by = Column(String(255), nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("idx_cat_gaps_lookup", "catalogue_type", "provider", "native_identifier", "status"),
+        Index("idx_cat_gaps_status", "status", "last_seen_at"),
     )

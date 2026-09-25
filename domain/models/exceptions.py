@@ -45,3 +45,34 @@ class HistoricalAttributionException(DomainModelException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="HISTORICAL_ATTRIBUTION_ERROR")
+
+
+class CatalogueException(DomainModelException):
+    """Base exception for master catalogue violations."""
+
+    def __init__(self, message: str, error_code: str = "CATALOGUE_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class UnitConversionError(CatalogueException):
+    """Raised when unit conversion fails or unit is unsupported."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="UNIT_CONVERSION_ERROR")
+
+
+class IncompatibleUnitError(CatalogueException):
+    """Raised when attempting to convert across incompatible dimensionalities."""
+
+    def __init__(self, from_unit: str, to_unit: str, from_dim: str, to_dim: str) -> None:
+        super().__init__(
+            f"Cannot convert '{from_unit}' ({from_dim}) to '{to_unit}' ({to_dim}): incompatible dimensionalities.",
+            error_code="INCOMPATIBLE_UNIT_DIMENSIONALITY",
+        )
+
+
+class CatalogueVersioningError(CatalogueException):
+    """Raised when catalogue versioning invariants are violated."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="CATALOGUE_VERSIONING_ERROR")

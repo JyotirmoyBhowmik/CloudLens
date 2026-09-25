@@ -9,6 +9,7 @@ from normalisation.units.converter import (
     convert_network_bandwidth,
     convert_storage,
     convert_time_to_hours,
+    convert_unit,
 )
 
 
@@ -98,3 +99,11 @@ def test_compute_core_hours():
     # Zero vCPUs or zero hours
     assert compute_core_hours(0, Decimal("100")) == Decimal("0.0000")
     assert compute_core_hours(8, Decimal("0")) == Decimal("0.0000")
+
+
+def test_convert_unit_catalogue_delegation():
+    """Verify general unit conversion through the Unit Catalogue service."""
+    # Storage conversion: 1 GiB = 1024 MiB
+    assert convert_unit(Decimal("1"), "gib", "mib") == Decimal("1024.0000")
+    # Time storage conversion: 100 GB for 730 hours = 100 GB-month
+    assert convert_unit(Decimal("100"), "GB", "GB-month") == Decimal("100.0000")
