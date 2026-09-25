@@ -20,6 +20,8 @@ pnpm-debug.log*
 .pnpm-store/
 web/dist/
 web/build/
+dist/
+
 
 # Testing & Coverage
 .pytest_cache/

@@ -9,16 +9,24 @@
     "bootstrap": "python scripts/bootstrap.py",
     "check:layering": "python scripts/check_layering.py",
     "check:constants": "python scripts/check_no_hardcoded_constants.py",
+    "check:coverage:monetary": "python scripts/check_monetary_coverage.py",
+    "check:accessibility": "python scripts/check_accessibility.py",
+    "scan:vulnerabilities": "python scripts/scan_vulnerabilities.py",
+    "generate:estate": "python scripts/generate_synthetic_estate.py",
+    "build:signed": "python scripts/build_signed_container.py",
     "lint:python": "python scripts/run.py ruff check .",
     "format:python": "python scripts/run.py ruff format --check .",
     "typecheck:python": "python scripts/run.py mypy .",
     "test:python": "python scripts/run.py pytest",
+    "gate:commit": "python scripts/gate_commit.py",
+    "gate:pr": "python scripts/gate_pr.py",
+    "gate:rc": "python scripts/gate_rc.py",
     "build": "pnpm --filter cloudlens-web build",
     "test": "pnpm test:python",
     "dev:web": "pnpm --filter cloudlens-web dev",
     "build:web": "pnpm --filter cloudlens-web build",
     "lint:web": "pnpm --filter cloudlens-web lint",
-    "check:all": "pnpm check:layering && pnpm check:constants && pnpm lint:python && pnpm format:python && pnpm typecheck:python && pnpm test:python"
+    "check:all": "pnpm gate:commit && pnpm gate:pr"
   },
   "packageManager": "pnpm@10.33.0"
 }
