@@ -1,0 +1,292 @@
+[
+  {
+    "code": "DIM-01",
+    "name": "Per-second",
+    "category": "Consumption Unit",
+    "unit": "seconds",
+    "aggregation": "sum",
+    "default_threshold_basis": "Runtime seconds / hours",
+    "example_services": "AWS Lambda, GCP Cloud Run, Azure Container Instances (per-sec duration)",
+    "notes": "BBP Section 18.2 row 1 merged second/minute/hour; reconciled to discrete atomic unit."
+  },
+  {
+    "code": "DIM-02",
+    "name": "Per-minute",
+    "category": "Consumption Unit",
+    "unit": "minutes",
+    "aggregation": "sum",
+    "default_threshold_basis": "Runtime minutes / hours",
+    "example_services": "Azure Container Apps, Amazon Connect voice minutes, Twilio telephony",
+    "notes": "Added from Master Brief; discrete unit for sub-hourly services."
+  },
+  {
+    "code": "DIM-03",
+    "name": "Per-hour",
+    "category": "Consumption Unit",
+    "unit": "hours",
+    "aggregation": "sum",
+    "default_threshold_basis": "Runtime hours",
+    "example_services": "Amazon EC2, Azure Virtual Machines, GCP Compute Engine, OCI Compute",
+    "notes": "Standard compute and instance runtime measurement unit."
+  },
+  {
+    "code": "DIM-04",
+    "name": "Per-instance",
+    "category": "Consumption Unit",
+    "unit": "instance-hours / instance-months",
+    "aggregation": "sum",
+    "default_threshold_basis": "Instance count",
+    "example_services": "AWS NAT Gateway, Azure Bastion, GCP Cloud NAT, OCI Load Balancer",
+    "notes": "Fixed provisioned appliance / managed gateway unit."
+  },
+  {
+    "code": "DIM-05",
+    "name": "Per-request",
+    "category": "Consumption Unit",
+    "unit": "requests",
+    "aggregation": "sum",
+    "default_threshold_basis": "Request volume",
+    "example_services": "Amazon S3 GET/PUT, Azure Blob Operations, Google Cloud Storage operations",
+    "notes": "Object storage and serverless invocation requests."
+  },
+  {
+    "code": "DIM-06",
+    "name": "Per-API-call",
+    "category": "Consumption Unit",
+    "unit": "calls",
+    "aggregation": "sum",
+    "default_threshold_basis": "Call volume",
+    "example_services": "Amazon API Gateway, Azure API Management, Google Cloud Endpoints",
+    "notes": "Managed API calls and cognitive/AI invocation endpoints."
+  },
+  {
+    "code": "DIM-07",
+    "name": "Per-transaction",
+    "category": "Consumption Unit",
+    "unit": "transactions",
+    "aggregation": "sum",
+    "default_threshold_basis": "Transaction volume",
+    "example_services": "Amazon Aurora Serverless ACU, Cosmos DB RU/s, Google Cloud Spanner",
+    "notes": "Database and transaction processing operations."
+  },
+  {
+    "code": "DIM-08",
+    "name": "Per-message",
+    "category": "Consumption Unit",
+    "unit": "messages",
+    "aggregation": "sum",
+    "default_threshold_basis": "Message volume",
+    "example_services": "Amazon SQS, Azure Service Bus, GCP Pub/Sub, OCI Streaming",
+    "notes": "Added from Master Brief; event and message ingestion units."
+  },
+  {
+    "code": "DIM-09",
+    "name": "Per-operation",
+    "category": "Consumption Unit",
+    "unit": "operations",
+    "aggregation": "sum",
+    "default_threshold_basis": "Operation volume",
+    "example_services": "AWS KMS crypto operations, Azure Key Vault ops, DynamoDB Read/Write Units",
+    "notes": "Added from Master Brief; cryptographic and granular table operations."
+  },
+  {
+    "code": "DIM-10",
+    "name": "Per-GB",
+    "category": "Consumption Unit",
+    "unit": "GB",
+    "aggregation": "sum",
+    "default_threshold_basis": "Volume / Throughput",
+    "example_services": "AWS Transit Gateway data processed, Azure Event Hubs ingress, Cloud NAT data",
+    "notes": "Data processed / transient data volume."
+  },
+  {
+    "code": "DIM-11",
+    "name": "Per-GB-month",
+    "category": "Consumption Unit",
+    "unit": "GB-month",
+    "aggregation": "last",
+    "default_threshold_basis": "Capacity (Storage)",
+    "example_services": "Amazon EBS, Azure Managed Disks, Google Persistent Disk, OCI Block Volume",
+    "notes": "Standard storage persistence over time."
+  },
+  {
+    "code": "DIM-12",
+    "name": "Per-TB",
+    "category": "Consumption Unit",
+    "unit": "TB / TB-month",
+    "aggregation": "sum",
+    "default_threshold_basis": "Capacity / Query Volume",
+    "example_services": "Google BigQuery data scanned, AWS Athena TB scanned, Snowflake storage",
+    "notes": "Added from Master Brief; high-volume analytical query and petabyte storage unit."
+  },
+  {
+    "code": "DIM-13",
+    "name": "Per-data-transfer-unit",
+    "category": "Consumption Unit",
+    "unit": "GB / TB egress",
+    "aggregation": "sum",
+    "default_threshold_basis": "Transfer volume",
+    "example_services": "AWS Internet Egress, Azure Egress, GCP Inter-region Data Transfer, OCI Egress",
+    "notes": "Cross-region, cross-AZ, and internet outbound data movement."
+  },
+  {
+    "code": "DIM-14",
+    "name": "Per-CPU",
+    "category": "Consumption Unit",
+    "unit": "cores / OCPUs",
+    "aggregation": "sum",
+    "default_threshold_basis": "Core count",
+    "example_services": "OCI OCPU, Bare Metal Cores, VMware Cloud on AWS, Dedicated Hosts",
+    "notes": "Added from Master Brief; physical and socket-level processor allocations."
+  },
+  {
+    "code": "DIM-15",
+    "name": "Per-vCPU-hour",
+    "category": "Consumption Unit",
+    "unit": "vCPU-hours",
+    "aggregation": "sum",
+    "default_threshold_basis": "Consumption units",
+    "example_services": "AWS Fargate vCPU-hours, Azure Container Instances vCPU-hours, Cloud Run vCPU-seconds",
+    "notes": "Added from Master Brief; serverless and containerized virtual CPU execution."
+  },
+  {
+    "code": "DIM-16",
+    "name": "Per-node-hour",
+    "category": "Consumption Unit",
+    "unit": "node-hours",
+    "aggregation": "sum",
+    "default_threshold_basis": "Node count / hours",
+    "example_services": "Amazon EKS managed nodes, Azure AKS node pools, Google GKE Standard, Amazon Redshift",
+    "notes": "Added from Master Brief; managed cluster worker node runtime."
+  },
+  {
+    "code": "DIM-17",
+    "name": "Per-user",
+    "category": "Consumption Unit",
+    "unit": "users / seats",
+    "aggregation": "last",
+    "default_threshold_basis": "Seat count",
+    "example_services": "Amazon QuickSight Authors, Azure DevOps Basic, Microsoft 365, Power BI Pro",
+    "notes": "User-based seat licensing."
+  },
+  {
+    "code": "DIM-18",
+    "name": "Per-licence",
+    "category": "Consumption Unit",
+    "unit": "licences / cores",
+    "aggregation": "last",
+    "default_threshold_basis": "Licence count",
+    "example_services": "Red Hat Enterprise Linux on Cloud, SUSE Linux, SQL Server BYOL / per-core",
+    "notes": "Software licensing and bring-your-own-licence models."
+  },
+  {
+    "code": "DIM-19",
+    "name": "Subscription",
+    "category": "Structural Pricing Model",
+    "unit": "period fee",
+    "aggregation": "sum",
+    "default_threshold_basis": "Presence and renewal",
+    "example_services": "AWS Enterprise Support, Azure Support Plans, Marketplace SaaS monthly subscriptions",
+    "notes": "Fixed recurring monthly or annual platform fees."
+  },
+  {
+    "code": "DIM-20",
+    "name": "Commitment",
+    "category": "Structural Pricing Model",
+    "unit": "committed units / term",
+    "aggregation": "last",
+    "default_threshold_basis": "Coverage and utilisation",
+    "example_services": "AWS Compute Savings Plans, Azure Savings Plans, Google Committed Use Contracts",
+    "notes": "Contractual minimum spend or capacity agreements."
+  },
+  {
+    "code": "DIM-21",
+    "name": "Reservation",
+    "category": "Structural Pricing Model",
+    "unit": "reserved instances / term",
+    "aggregation": "last",
+    "default_threshold_basis": "Coverage and utilisation",
+    "example_services": "AWS Reserved Instances (1-yr/3-yr), Azure Reserved VM Instances, OCI Reserved Capacity",
+    "notes": "Pre-purchased capacity reservations."
+  },
+  {
+    "code": "DIM-22",
+    "name": "Savings plan",
+    "category": "Structural Pricing Model",
+    "unit": "hourly spend commitment ($/hr)",
+    "aggregation": "last",
+    "default_threshold_basis": "Spend utilisation",
+    "example_services": "AWS EC2 Instance Savings Plans, AWS SageMaker Savings Plans, Azure Savings Plan for Compute",
+    "notes": "Spend-based flexible compute commitment."
+  },
+  {
+    "code": "DIM-23",
+    "name": "Minimum commitment",
+    "category": "Structural Pricing Model",
+    "unit": "floor amount",
+    "aggregation": "max",
+    "default_threshold_basis": "Under-consumption risk",
+    "example_services": "Enterprise Agreement annual minimums, Snowflake annual capacity commits",
+    "notes": "Contractual floor spend requirements."
+  },
+  {
+    "code": "DIM-24",
+    "name": "Tiered pricing",
+    "category": "Structural Pricing Model",
+    "unit": "tiered units with tier breaks",
+    "aggregation": "sum",
+    "default_threshold_basis": "Tier boundary proximity",
+    "example_services": "AWS S3 Standard Storage (First 50 TB, Next 450 TB, Over 500 TB)",
+    "notes": "Graduated rate scales where incremental usage falls into cheaper price brackets."
+  },
+  {
+    "code": "DIM-25",
+    "name": "Volume pricing",
+    "category": "Structural Pricing Model",
+    "unit": "volume discount bracket",
+    "aggregation": "sum",
+    "default_threshold_basis": "Discount realisation",
+    "example_services": "CloudFront high-volume traffic tiers, Twilio volume discounts",
+    "notes": "All-units discount triggered when total usage exceeds volume thresholds."
+  },
+  {
+    "code": "DIM-26",
+    "name": "Free tier",
+    "category": "Structural Pricing Model",
+    "unit": "allowance units",
+    "aggregation": "sum",
+    "default_threshold_basis": "Allowance exhaustion",
+    "example_services": "AWS Always Free (Lambda 1M req), Azure Free Services (750 hrs B1s), GCP Free Tier, OCI Always Free",
+    "notes": "Included monthly allowance before billable rates activate."
+  },
+  {
+    "code": "DIM-27",
+    "name": "Sustained-use pricing",
+    "category": "Pricing Qualifier / Modifier",
+    "unit": "percentage modifier",
+    "aggregation": "average",
+    "default_threshold_basis": "Runtime discount curve",
+    "example_services": "Google Cloud Compute Engine Sustained Use Discounts (SUD)",
+    "notes": "Automated discount applied dynamically as monthly VM running percentage increases."
+  },
+  {
+    "code": "DIM-28",
+    "name": "Promotional pricing",
+    "category": "Pricing Qualifier / Modifier",
+    "unit": "promotional rate / credit offset",
+    "aggregation": "sum",
+    "default_threshold_basis": "Promotion expiry / credit depletion",
+    "example_services": "New service trial periods, promotional SKU discounts, AWS Activate credits",
+    "notes": "Time-limited discounted rates or vendor credit mechanisms."
+  },
+  {
+    "code": "DIM-29",
+    "name": "Region-specific pricing",
+    "category": "Pricing Qualifier / Modifier",
+    "unit": "regional multiplier / rate card",
+    "aggregation": "last",
+    "default_threshold_basis": "Regional variance",
+    "example_services": "AWS us-east-1 vs ap-south-1 VM pricing, Azure East US vs West Europe rate variance",
+    "notes": "Geographic rate variance for identical SKUs across provider datacenter regions."
+  }
+]
