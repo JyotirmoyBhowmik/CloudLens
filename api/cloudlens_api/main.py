@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from api.cloudlens_api.routes import config_router, health_router
+from api.cloudlens_api.routes import config_router, health_router, masterdata_router
 from domain.observability import (
     current_correlation_id,
     current_operation,
@@ -131,6 +131,7 @@ async def standardized_http_exception_handler(request: Request, exc: HTTPExcepti
 
 app.include_router(config_router)
 app.include_router(health_router)
+app.include_router(masterdata_router)
 
 
 class HealthResponse(BaseModel):

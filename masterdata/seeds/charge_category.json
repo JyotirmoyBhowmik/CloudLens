@@ -1,0 +1,7 @@
+[
+  {"code": "Usage", "display_name": "Usage", "description": "Charges incurred by metering consumption of cloud resources over time.", "sort_order": 1, "attributes": {"is_recurring": false}},
+  {"code": "Purchase", "display_name": "Purchase", "description": "Upfront or commitment fees for reservations, savings plans, or software licenses.", "sort_order": 2, "attributes": {"is_recurring": true}},
+  {"code": "Adjustment", "display_name": "Adjustment", "description": "Billing reconciliations, provider credits, or SLA dispute adjustments.", "sort_order": 3, "attributes": {"is_recurring": false}},
+  {"code": "Tax", "display_name": "Tax", "description": "Jurisdictional sales tax, VAT, or governmental surcharges.", "sort_order": 4, "attributes": {"is_recurring": false}},
+  {"code": "Credit", "display_name": "Credit", "description": "Promotional credits, startup tiers, or enterprise discount offsets.", "sort_order": 5, "attributes": {"is_recurring": false}}
+]

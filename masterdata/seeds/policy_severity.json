@@ -1,0 +1,6 @@
+[
+  {"code": "LOW", "display_name": "Low", "description": "Minor compliance hygiene observation; no immediate financial exposure.", "sort_order": 1, "attributes": {"sla_hours": 72, "level_order": 1}},
+  {"code": "MEDIUM", "display_name": "Medium", "description": "Noticeable efficiency or tagging violation requiring scheduled remediation.", "sort_order": 2, "attributes": {"sla_hours": 48, "level_order": 2}},
+  {"code": "HIGH", "display_name": "High", "description": "Material cost anomaly, idle resource waste, or significant policy breach.", "sort_order": 3, "attributes": {"sla_hours": 24, "level_order": 3}},
+  {"code": "CRITICAL", "display_name": "Critical", "description": "Severe budget breach, untagged production cluster, or runaway cost trigger.", "sort_order": 4, "attributes": {"sla_hours": 4, "level_order": 4}}
+]

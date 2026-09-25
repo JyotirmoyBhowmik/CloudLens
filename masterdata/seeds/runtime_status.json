@@ -1,0 +1,8 @@
+[
+  {"code": "RUNNING", "display_name": "Running", "description": "Resource is active, healthy, and consuming compute/runtime units.", "sort_order": 1, "attributes": {"is_billable": true, "color_hex": "#10b981"}},
+  {"code": "STOPPED", "display_name": "Stopped", "description": "Resource compute is halted; attached storage remains billable.", "sort_order": 2, "attributes": {"is_billable": false, "color_hex": "#f59e0b"}},
+  {"code": "TERMINATED", "display_name": "Terminated", "description": "Resource is permanently deleted and released.", "sort_order": 3, "attributes": {"is_billable": false, "color_hex": "#ef4444"}},
+  {"code": "DEALLOCATED", "display_name": "Deallocated", "description": "Cloud host hardware released; cloud fabric state saved.", "sort_order": 4, "attributes": {"is_billable": false, "color_hex": "#64748b"}},
+  {"code": "SUSPENDED", "display_name": "Suspended", "description": "Execution temporarily paused by cloud platform.", "sort_order": 5, "attributes": {"is_billable": false, "color_hex": "#8b5cf6"}},
+  {"code": "UNKNOWN", "display_name": "Unknown", "description": "Operational state could not be verified by provider telemetry.", "sort_order": 6, "attributes": {"is_billable": false, "color_hex": "#94a3b8"}}
+]

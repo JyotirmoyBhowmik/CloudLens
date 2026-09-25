@@ -692,3 +692,88 @@ class CatalogueGapModel(Base):
         Index("idx_cat_gaps_lookup", "catalogue_type", "provider", "native_identifier", "status"),
         Index("idx_cat_gaps_status", "status", "last_seen_at"),
     )
+
+
+# ==============================================================================
+# 7. Master Data Management Framework (Prompt 45)
+# ==============================================================================
+
+
+class MasterRegistryModel(Base):
+    __tablename__ = "master_registry"
+
+    code = Column(String(64), primary_key=True)
+    name = Column(String(255), nullable=False)
+    purpose = Column(Text, nullable=False)
+    schema_def = Column(JSONB, nullable=False, server_default="{}")
+    is_tenant_scoped = Column(Boolean, nullable=False, default=False)
+    is_editable = Column(Boolean, nullable=False, default=True)
+    requires_approval = Column(Boolean, nullable=False, default=False)
+    consuming_modules = Column(JSONB, nullable=False, server_default="[]")
+    seed_file = Column(String(255), nullable=False)
+    expected_review_period_days = Column(Integer, nullable=False, default=180)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class MasterDataRecordModel(Base):
+    __tablename__ = "master_data_records"
+
+    id = Column(String(64), primary_key=True)
+    master_type = Column(String(64), ForeignKey("master_registry.code"), nullable=False)
+    code = Column(String(100), nullable=False)
+    display_name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    sort_order = Column(Integer, nullable=False, default=0)
+    is_system = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    effective_from = Column(DateTime(timezone=True), nullable=False)
+    effective_to = Column(DateTime(timezone=True), nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    parent_code = Column(String(100), nullable=True)
+    attributes = Column(JSONB, nullable=False, server_default="{}")
+    tenant_id = Column(String(64), nullable=True)
+    created_by = Column(String(255), nullable=False, default="SYSTEM")
+    approved_by = Column(String(255), nullable=True)
+    lifecycle_status = Column(String(32), nullable=False, default="PUBLISHED")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_master_type_code_time", "master_type", "code", "effective_from", "effective_to"),
+        Index("idx_master_tenant_type", "tenant_id", "master_type"),
+    )
+
+
+class MasterDataAuditModel(Base):
+    __tablename__ = "master_data_audit"
+
+    id = Column(String(64), primary_key=True)
+    record_id = Column(String(64), nullable=False)
+    master_type = Column(String(64), nullable=False)
+    code = Column(String(100), nullable=False)
+    version = Column(Integer, nullable=False)
+    action = Column(String(32), nullable=False)
+    changed_by = Column(String(255), nullable=False)
+    change_reason = Column(Text, nullable=False)
+    diff_payload = Column(JSONB, nullable=False, server_default="{}")
+    snapshot = Column(JSONB, nullable=False, server_default="{}")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (Index("idx_master_audit_record", "master_type", "code", "created_at"),)
+
+
+class MasterDataImportAuditModel(Base):
+    __tablename__ = "master_data_import_audit"
+
+    id = Column(String(64), primary_key=True)
+    master_type = Column(String(64), nullable=False)
+    format = Column(String(16), nullable=False)
+    status = Column(String(32), nullable=False)
+    row_count = Column(Integer, nullable=False, default=0)
+    success_count = Column(Integer, nullable=False, default=0)
+    error_count = Column(Integer, nullable=False, default=0)
+    errors_payload = Column(JSONB, nullable=False, server_default="[]")
+    imported_by = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

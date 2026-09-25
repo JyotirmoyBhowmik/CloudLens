@@ -27,6 +27,7 @@ def test_migrations_chain_and_complete_rollback_capability():
     m3 = load_migration_module("003_materialized_aggregates.py")
     m4 = load_migration_module("004_expand_migrate_contract.py")
     m5 = load_migration_module("005_catalogues_and_gap_registry.py")
+    m6 = load_migration_module("006_master_data_framework.py")
 
     # 1. Verify DAG linkage
     assert m1.revision == "001_initial_schema"
@@ -44,8 +45,11 @@ def test_migrations_chain_and_complete_rollback_capability():
     assert m5.revision == "005_catalogues_and_gap_registry"
     assert m5.down_revision == "004_expand_migrate_contract"
 
+    assert m6.revision == "006_master_data_framework"
+    assert m6.down_revision == "005_catalogues_and_gap_registry"
+
     # 2. Verify all migrations have both upgrade() and downgrade() functions
-    for m in (m1, m2, m3, m4, m5):
+    for m in (m1, m2, m3, m4, m5, m6):
         assert hasattr(m, "upgrade") and callable(
             m.upgrade
         ), f"{m.revision} missing callable upgrade()"

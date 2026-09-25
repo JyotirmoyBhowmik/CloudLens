@@ -1,0 +1,13 @@
+[
+  {"code": "COMPUTE", "display_name": "Compute", "description": "Virtual machines, containers, serverless compute, and bare metal instances.", "sort_order": 1, "attributes": {"is_focus_standard": true}},
+  {"code": "STORAGE", "display_name": "Storage", "description": "Object storage, block volumes, file systems, and archival storage.", "sort_order": 2, "attributes": {"is_focus_standard": true}},
+  {"code": "NETWORKING", "display_name": "Networking", "description": "Virtual networks, load balancers, gateways, DNS, and CDN.", "sort_order": 3, "attributes": {"is_focus_standard": true}},
+  {"code": "DATABASE", "display_name": "Database", "description": "Relational, NoSQL, memory cache, and distributed database services.", "sort_order": 4, "attributes": {"is_focus_standard": true}},
+  {"code": "SECURITY_IDENTITY", "display_name": "Security & Identity", "description": "Identity and access management, key management, secrets, and firewalls.", "sort_order": 5, "attributes": {"is_focus_standard": true}},
+  {"code": "ANALYTICS", "display_name": "Analytics", "description": "Data warehousing, big data processing, data lakes, and business intelligence.", "sort_order": 6, "attributes": {"is_focus_standard": true}},
+  {"code": "AI_ML", "display_name": "AI & Machine Learning", "description": "Machine learning training, inference endpoints, and cognitive services.", "sort_order": 7, "attributes": {"is_focus_standard": true}},
+  {"code": "MANAGEMENT_GOVERNANCE", "display_name": "Management & Governance", "description": "Monitoring, logging, audit trails, policy enforcement, and cost management.", "sort_order": 8, "attributes": {"is_focus_standard": true}},
+  {"code": "INTEGRATION", "display_name": "Integration", "description": "Message queues, event streaming, workflow orchestration, and API gateways.", "sort_order": 9, "attributes": {"is_focus_standard": true}},
+  {"code": "DEVELOPER_TOOLS", "display_name": "Developer Tools", "description": "Build pipelines, code repositories, artifact registries, and deployment tooling.", "sort_order": 10, "attributes": {"is_focus_standard": true}},
+  {"code": "OTHER", "display_name": "Other", "description": "Unclassified or miscellaneous cloud provider offerings.", "sort_order": 11, "attributes": {"is_focus_standard": true}}
+]

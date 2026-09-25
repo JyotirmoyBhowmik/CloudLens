@@ -76,3 +76,44 @@ class CatalogueVersioningError(CatalogueException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="CATALOGUE_VERSIONING_ERROR")
+
+
+class MasterDataException(DomainModelException):
+    """Base exception for Master Data Management violations."""
+
+    def __init__(self, message: str, error_code: str = "MASTER_DATA_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class MasterNotRegisteredException(MasterDataException):
+    """Raised when operating on a master type not declared in the manifest."""
+
+    def __init__(self, master_type: str) -> None:
+        super().__init__(
+            f"Master type '{master_type}' is not registered in the system manifest. Nothing may be a master outside the registry.",
+            error_code="MASTER_NOT_REGISTERED",
+        )
+
+
+class ReferenceIntegrityBlockedException(MasterDataException):
+    """Raised when attempting to delete or deactivate a master value that is currently in use."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="REFERENCE_INTEGRITY_BLOCKED")
+
+
+class CannotDeleteSystemMasterException(MasterDataException):
+    """Raised when attempting to delete a shipped system master record."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(
+            f"Cannot delete system master value '{code}': shipped system master records cannot be deleted.",
+            error_code="CANNOT_DELETE_SYSTEM_MASTER",
+        )
+
+
+class MasterDataApprovalException(MasterDataException):
+    """Raised when invalid workflow state transition occurs during master data approval."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="MASTER_DATA_APPROVAL_ERROR")

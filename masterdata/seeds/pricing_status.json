@@ -1,0 +1,9 @@
+[
+  {"code": "FREE", "display_name": "Free", "description": "Inherently zero-rated service offering without billing triggers.", "sort_order": 1, "attributes": {"requires_rate_lookup": false}},
+  {"code": "FREE_TIER", "display_name": "Free Tier", "description": "Covered under provider monthly free allowance.", "sort_order": 2, "attributes": {"requires_rate_lookup": true}},
+  {"code": "CONDITIONAL_FREE", "display_name": "Conditional Free", "description": "Free only when provisioned alongside specific paid services or licenses.", "sort_order": 3, "attributes": {"requires_rate_lookup": true}},
+  {"code": "PAID", "display_name": "Paid", "description": "Standard billable consumption incurring charges.", "sort_order": 4, "attributes": {"requires_rate_lookup": true}},
+  {"code": "ESTIMATED", "display_name": "Estimated", "description": "Calculated rate based on architectural proxy or historical baseline.", "sort_order": 5, "attributes": {"requires_rate_lookup": true}},
+  {"code": "UNKNOWN", "display_name": "Unknown", "description": "Pricing rate card could not be retrieved from provider pricing API.", "sort_order": 6, "attributes": {"requires_rate_lookup": true}},
+  {"code": "NOT_APPLICABLE", "display_name": "Not Applicable", "description": "Pricing is not applicable to this organizational grouping construct.", "sort_order": 7, "attributes": {"requires_rate_lookup": false}}
+]

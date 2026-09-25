@@ -1,0 +1,6 @@
+[
+  {"code": "NOMINAL", "display_name": "Nominal", "description": "Actual consumption is well within budgeted forecast.", "sort_order": 1, "attributes": {"urgency": "INFO", "triggers_alert": false}},
+  {"code": "WARNING", "display_name": "Warning", "description": "Consumption has entered warning band threshold.", "sort_order": 2, "attributes": {"urgency": "WARNING", "triggers_alert": true}},
+  {"code": "CRITICAL", "display_name": "Critical", "description": "Consumption has exceeded high threshold limit.", "sort_order": 3, "attributes": {"urgency": "CRITICAL", "triggers_alert": true}},
+  {"code": "EXCEEDED", "display_name": "Exceeded", "description": "Budget allocation fully exhausted (>= 100%).", "sort_order": 4, "attributes": {"urgency": "EMERGENCY", "triggers_alert": true}}
+]
