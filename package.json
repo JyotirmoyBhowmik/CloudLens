@@ -1,0 +1,23 @@
+{
+  "name": "cloudlens-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CloudLens: Enterprise Multi-Cloud Governance Platform",
+  "author": "Jyotirmoy Bhowmik <admin@jyotirmoyb.com>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "bootstrap": "python scripts/bootstrap.py",
+    "check:layering": "python scripts/check_layering.py",
+    "lint:python": "python scripts/run.py ruff check .",
+    "format:python": "python scripts/run.py ruff format --check .",
+    "typecheck:python": "python scripts/run.py mypy .",
+    "test:python": "python scripts/run.py pytest",
+    "build": "pnpm --filter cloudlens-web build",
+    "test": "pnpm test:python",
+    "dev:web": "pnpm --filter cloudlens-web dev",
+    "build:web": "pnpm --filter cloudlens-web build",
+    "lint:web": "pnpm --filter cloudlens-web lint",
+    "check:all": "pnpm check:layering && pnpm lint:python && pnpm format:python && pnpm typecheck:python && pnpm test:python"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cloudlens-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cloudlens
+      POSTGRES_USER: cloudlens
+      POSTGRES_PASSWORD: cloudlens_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudlens -d cloudlens"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloudlens-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: cloudlens-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: cloudlens_minio
+      MINIO_ROOT_PASSWORD: cloudlens_minio_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: cloudlens-vault
+    restart: unless-stopped
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-vault-token-cloudlens
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+
+  api:
+    build:
+      context: ..
+      dockerfile: ops/docker/Dockerfile.api
+    container_name: cloudlens-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://cloudlens:cloudlens_dev_password@postgres:5432/cloudlens
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: cloudlens_minio
+      S3_SECRET_KEY: cloudlens_minio_password
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-vault-token-cloudlens
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: ops/docker/Dockerfile.worker
+    container_name: cloudlens-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://cloudlens:cloudlens_dev_password@postgres:5432/cloudlens
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: ops/docker/Dockerfile.web
+    container_name: cloudlens-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
