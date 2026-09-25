@@ -1,0 +1,45 @@
+{
+  "title": "CloudLens - Connector Sync Health",
+  "uid": "cloudlens-sync-health",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Sync Jobs Completed by Outcome",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(sync_job_outcome_total[5m])) by (provider, outcome)",
+          "legendFormat": "{{provider}} - {{outcome}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Sync Job Duration (Seconds)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(sync_job_duration_seconds_bucket[15m])) by (le, provider))",
+          "legendFormat": "p90 {{provider}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Connector Sync Failure Rate",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(sync_job_outcome_total{outcome='failed'}[15m])) / sum(rate(sync_job_outcome_total[15m]))",
+          "legendFormat": "Failure Ratio"
+        }
+      ]
+    }
+  ]
+}

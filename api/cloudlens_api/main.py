@@ -10,7 +10,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from api.cloudlens_api.routes import config_router
+from api.cloudlens_api.routes import config_router, health_router
+from domain.observability import (
+    current_correlation_id,
+    current_operation,
+    current_tenant_id,
+    get_logger,
+    metrics,
+    setup_tracing,
+    trace_api_request,
+)
+
+# Initialize OpenTelemetry in-memory / OTLP tracing
+setup_tracing(service_name="cloudlens-api", in_memory=True)
+logger = get_logger("cloudlens.api")
 
 app = FastAPI(
     title="CloudLens API",
@@ -33,34 +46,70 @@ app.add_middleware(
 
 @app.middleware("http")
 async def correlation_id_and_timing_middleware(request: Request, call_next):
-    """Propagate Correlation-ID and measure request latency (Enterprise Rule 4.2)."""
-    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+    """Propagate Correlation-ID, execute OpenTelemetry span, and record Prometheus metrics."""
+    correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
+    tenant_id = request.headers.get("X-Tenant-ID", "global")
     request.state.correlation_id = correlation_id
+    request.state.tenant_id = tenant_id
+
+    current_correlation_id.set(correlation_id)
+    current_tenant_id.set(tenant_id)
+    current_operation.set(f"{request.method} {request.url.path}")
+
     start_time = time.perf_counter()
 
-    try:
-        response: Response = await call_next(request)
-    except Exception:
-        duration_ms = (time.perf_counter() - start_time) * 1000.0
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "timestamp": datetime.now(UTC).isoformat(),
-                "status_code": 500,
-                "error_code": "INTERNAL_SERVER_ERROR",
-                "correlation_id": correlation_id,
-                "message": "An internal server error occurred.",
-            },
-            headers={
-                "X-Correlation-ID": correlation_id,
-                "X-Response-Time-MS": f"{duration_ms:.2f}",
-            },
-        )
+    with trace_api_request(
+        endpoint=request.url.path,
+        method=request.method,
+        correlation_id=correlation_id,
+        tenant_id=tenant_id,
+    ):
+        try:
+            response: Response = await call_next(request)
+            status_code = response.status_code
+        except Exception:
+            duration_s = time.perf_counter() - start_time
+            duration_ms = duration_s * 1000.0
+            metrics.api_request_duration_seconds.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status_code="500",
+            ).observe(duration_s)
+            logger.error(
+                "Request failed with unhandled internal server error",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": 500,
+                    "duration_ms": duration_ms,
+                },
+            )
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "status_code": 500,
+                    "error_code": "INTERNAL_SERVER_ERROR",
+                    "correlation_id": correlation_id,
+                    "message": "An internal server error occurred.",
+                },
+                headers={
+                    "X-Correlation-ID": correlation_id,
+                    "X-Response-Time-MS": f"{duration_ms:.2f}",
+                },
+            )
 
-    duration_ms = (time.perf_counter() - start_time) * 1000.0
-    response.headers["X-Correlation-ID"] = correlation_id
-    response.headers["X-Response-Time-MS"] = f"{duration_ms:.2f}"
-    return response
+        duration_s = time.perf_counter() - start_time
+        duration_ms = duration_s * 1000.0
+        metrics.api_request_duration_seconds.labels(
+            method=request.method,
+            endpoint=request.url.path,
+            status_code=str(status_code),
+        ).observe(duration_s)
+
+        response.headers["X-Correlation-ID"] = correlation_id
+        response.headers["X-Response-Time-MS"] = f"{duration_ms:.2f}"
+        return response
 
 
 @app.exception_handler(HTTPException)
@@ -81,6 +130,7 @@ async def standardized_http_exception_handler(request: Request, exc: HTTPExcepti
 
 
 app.include_router(config_router)
+app.include_router(health_router)
 
 
 class HealthResponse(BaseModel):

@@ -1,0 +1,45 @@
+{
+  "title": "CloudLens - Ingestion Volume & Variance",
+  "uid": "cloudlens-ingestion-volume",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Ingested Canonical FOCUS Rows Rate (rows/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(ingestion_rows_total[5m])) by (provider, dataset_type)",
+          "legendFormat": "{{provider}} ({{dataset_type}})"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Cumulative Rows Ingested",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(ingestion_rows_total) by (provider)",
+          "legendFormat": "{{provider}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Reconciliation Discrepancy Variance Ratio",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "reconciliation_variance_ratio",
+          "legendFormat": "Tenant {{tenant_id}} - {{provider}}"
+        }
+      ]
+    }
+  ]
+}

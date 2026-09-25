@@ -1,0 +1,57 @@
+{
+  "title": "CloudLens - Data Freshness & Database Health",
+  "uid": "cloudlens-data-freshness",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Connector Data Freshness Lag (Seconds)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "connector_freshness_seconds",
+          "legendFormat": "{{provider}} ({{connector_id}})"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Database Replication Lag (Seconds)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "db_replication_lag_seconds",
+          "legendFormat": "{{replica_host}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "FinOps Threshold Evaluation Latency (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(threshold_evaluation_duration_seconds_bucket[10m])) by (le))",
+          "legendFormat": "p95 Latency"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Notification Delivery Failures Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(notification_delivery_failures_total[5m])) by (channel_type, reason)",
+          "legendFormat": "{{channel_type}} ({{reason}})"
+        }
+      ]
+    }
+  ]
+}

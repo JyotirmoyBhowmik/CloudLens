@@ -1,0 +1,33 @@
+{
+  "title": "CloudLens - Task Queue Depth & Saturation",
+  "uid": "cloudlens-queue-depth",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Celery Task Queue Depth",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "queue_depth",
+          "legendFormat": "{{queue_name}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Worker Concurrency Saturation Ratio",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "worker_saturation",
+          "legendFormat": "{{worker_node}} ({{queue_name}})"
+        }
+      ]
+    }
+  ]
+}
