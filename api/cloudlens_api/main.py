@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.routes import config_router
+
 app = FastAPI(
     title="CloudLens API",
     description="Multi-cloud governance, inventory, pricing, cost, usage, and budgeting API",
@@ -76,6 +78,9 @@ async def standardized_http_exception_handler(request: Request, exc: HTTPExcepti
         },
         headers={"X-Correlation-ID": correlation_id},
     )
+
+
+app.include_router(config_router)
 
 
 class HealthResponse(BaseModel):

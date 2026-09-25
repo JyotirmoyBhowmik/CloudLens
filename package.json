@@ -8,6 +8,7 @@
   "scripts": {
     "bootstrap": "python scripts/bootstrap.py",
     "check:layering": "python scripts/check_layering.py",
+    "check:constants": "python scripts/check_no_hardcoded_constants.py",
     "lint:python": "python scripts/run.py ruff check .",
     "format:python": "python scripts/run.py ruff format --check .",
     "typecheck:python": "python scripts/run.py mypy .",
@@ -17,7 +18,7 @@
     "dev:web": "pnpm --filter cloudlens-web dev",
     "build:web": "pnpm --filter cloudlens-web build",
     "lint:web": "pnpm --filter cloudlens-web lint",
-    "check:all": "pnpm check:layering && pnpm lint:python && pnpm format:python && pnpm typecheck:python && pnpm test:python"
+    "check:all": "pnpm check:layering && pnpm check:constants && pnpm lint:python && pnpm format:python && pnpm typecheck:python && pnpm test:python"
   },
   "packageManager": "pnpm@10.33.0"
 }
