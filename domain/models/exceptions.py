@@ -138,3 +138,45 @@ class BootstrapIntegrityException(BootstrapException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="BOOTSTRAP_INTEGRITY_VIOLATION")
+
+
+class AttributionException(DomainModelException):
+    """Base exception for tag normalisation, ownership resolution, and cost allocation."""
+
+    def __init__(self, message: str, error_code: str = "ATTRIBUTION_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class UnresolvedOwnershipException(AttributionException):
+    """Raised when ownership cannot be resolved and strict governance exception is triggered (Prompt 08 Item 56)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="UNRESOLVED_OWNERSHIP")
+
+
+class AllocationRuleException(AttributionException):
+    """Raised when an allocation rule violation occurs."""
+
+    def __init__(self, message: str, error_code: str = "ALLOCATION_RULE_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class InvalidSplitRuleException(AllocationRuleException):
+    """Raised when a split allocation rule does not sum to exactly 100% (Prompt 08 Item 57)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_SPLIT_RULE_PERCENTAGE")
+
+
+class CuratedFieldOverwriteException(AttributionException):
+    """Raised when re-discovery attempts to overwrite a protected curated field without explicit authorization (Prompt 08 Item 59)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="CURATED_FIELD_OVERWRITE_FORBIDDEN")
+
+
+class InvalidTagConventionException(AttributionException):
+    """Raised when a tag normalization key convention or separator policy is invalid."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_TAG_CONVENTION")

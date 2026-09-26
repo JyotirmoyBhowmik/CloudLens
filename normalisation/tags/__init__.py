@@ -1,14 +1,14 @@
-"""CloudLens Normalisation Layer (Unit conversion, taxonomy, tag mapping)."""
+"""Tag normalisation module for CloudLens."""
 
-from normalisation.tags import (
+from normalisation.tags.models import (
     NormalizedTag,
     RawTagInput,
     TagCasePolicy,
     TagKeyConvention,
-    TagNormalisationService,
     TagSeparatorPolicy,
     TagSourceLevel,
 )
+from normalisation.tags.normaliser import TagNormalisationService
 
 __all__ = [
     "NormalizedTag",

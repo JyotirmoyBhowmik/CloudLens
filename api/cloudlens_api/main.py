@@ -11,11 +11,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.routes import (
+    attribution_router,
     bootstrap_router,
     config_router,
     health_router,
     masterdata_router,
 )
+from domain.models.exceptions import DomainModelException
 from domain.observability import (
     current_correlation_id,
     current_operation,
@@ -134,10 +136,28 @@ async def standardized_http_exception_handler(request: Request, exc: HTTPExcepti
     )
 
 
+@app.exception_handler(DomainModelException)
+async def standardized_domain_exception_handler(request: Request, exc: DomainModelException):
+    """Global domain model exception handler mapping business errors to sanitized JSON (Rule 2.3 & 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": 422,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(health_router)
 app.include_router(masterdata_router)
 app.include_router(bootstrap_router)
+app.include_router(attribution_router)
 
 
 class HealthResponse(BaseModel):
