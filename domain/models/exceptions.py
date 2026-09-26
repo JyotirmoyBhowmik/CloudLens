@@ -187,3 +187,113 @@ class DemoModeSafetyException(DomainModelException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="DEMO_MODE_SAFETY_VIOLATION")
+
+
+# ==============================================================================
+# Identity, Authentication, and Session Exceptions (Prompt 10)
+# ==============================================================================
+
+
+class IdentityException(DomainModelException):
+    """Base exception for identity, authentication, and session violations (Prompt 10)."""
+
+    def __init__(self, message: str, error_code: str = "IDENTITY_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class NoMappedRoleException(IdentityException):
+    """Raised when a user's IdP groups map to no role (Prompt 10 Item 69).
+
+    Never defaults to a role; access is denied and an administrator alert is raised.
+    """
+
+    def __init__(
+        self,
+        message: str = "User possesses no mapped platform roles from identity provider groups. Access strictly denied.",
+    ) -> None:
+        super().__init__(message, error_code="NO_MAPPED_ROLE")
+
+
+class BreakGlassLimitExceededException(IdentityException):
+    """Raised when attempting to provision more break-glass accounts than allowed (Prompt 10 Item 65)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="BREAK_GLASS_LIMIT_EXCEEDED")
+
+
+class BreakGlassAuthFailedException(IdentityException):
+    """Raised when break-glass credentials or mandatory MFA verification fails (Prompt 10 Item 65)."""
+
+    def __init__(
+        self,
+        message: str = "Break-glass authentication failed: invalid credentials or MFA challenge.",
+    ) -> None:
+        super().__init__(message, error_code="BREAK_GLASS_AUTH_FAILED")
+
+
+class TokenRevokedException(IdentityException):
+    """Raised when presenting a revoked token or accessing with a disabled user (Prompt 10 Item 66)."""
+
+    def __init__(self, message: str = "Authentication token has been revoked.") -> None:
+        super().__init__(message, error_code="TOKEN_REVOKED")
+
+
+class TokenExpiredException(IdentityException):
+    """Raised when an authentication or step-up token has expired (Prompt 10 Item 66)."""
+
+    def __init__(self, message: str = "Authentication token has expired.") -> None:
+        super().__init__(message, error_code="TOKEN_EXPIRED")
+
+
+class TokenInvalidException(IdentityException):
+    """Raised when token signature, structure, or claims are invalid (Prompt 10 Item 66)."""
+
+    def __init__(self, message: str = "Invalid authentication token signature or payload.") -> None:
+        super().__init__(message, error_code="TOKEN_INVALID")
+
+
+class SessionExpiredException(IdentityException):
+    """Raised when session absolute lifetime or idle timeout is exceeded (Prompt 10 Item 66)."""
+
+    def __init__(
+        self,
+        message: str = "User session has expired due to inactivity or absolute lifetime limit.",
+    ) -> None:
+        super().__init__(message, error_code="SESSION_EXPIRED")
+
+
+class UserDisabledException(IdentityException):
+    """Raised when disabled user attempts to access the platform (Prompt 10 Item 66)."""
+
+    def __init__(
+        self, message: str = "User account has been disabled. All sessions and tokens revoked."
+    ) -> None:
+        super().__init__(message, error_code="USER_DISABLED")
+
+
+class UserNotProvisionedException(IdentityException):
+    """Raised when user signs in via SSO but JIT provisioning is disabled and user is not pre-provisioned (Prompt 10 Item 64)."""
+
+    def __init__(
+        self,
+        message: str = "User account is not pre-provisioned and Just-In-Time provisioning is disabled.",
+    ) -> None:
+        super().__init__(message, error_code="USER_NOT_PROVISIONED")
+
+
+class StepUpRequiredException(IdentityException):
+    """Raised when high-risk action requires step-up authentication proof (Prompt 10 Item 68)."""
+
+    def __init__(self, action: str, message: str | None = None) -> None:
+        msg = message or f"Step-up authentication required for action: '{action}'."
+        super().__init__(msg, error_code="STEP_UP_REQUIRED")
+        self.action = action
+
+
+class MachineClientAuthFailedException(IdentityException):
+    """Raised when machine client authentication fails (Prompt 10 Item 67)."""
+
+    def __init__(
+        self, message: str = "Machine client credentials invalid, expired, or client inactive."
+    ) -> None:
+        super().__init__(message, error_code="MACHINE_CLIENT_AUTH_FAILED")

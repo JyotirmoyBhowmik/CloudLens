@@ -110,6 +110,39 @@ class TenantSettings(BaseModel):
         default=None,
         description="Active named demo scenario if in demo mode",
     )
+    # Authentication & Session Settings (Prompt 10)
+    jit_provisioning_enabled: bool = Field(
+        default=False,
+        description="Whether Just-In-Time user provisioning is enabled for OIDC/SAML sign-in",
+    )
+    group_to_role_mapping: dict[str, str] = Field(
+        default_factory=dict,
+        description="Tenant-specific IdP group to canonical SystemRole mapping",
+    )
+    access_token_ttl_seconds: int = Field(
+        default=900,
+        description="Access token lifespan in seconds (15 minutes default)",
+    )
+    refresh_token_ttl_seconds: int = Field(
+        default=86400,
+        description="Refresh token lifespan in seconds (24 hours default)",
+    )
+    session_idle_timeout_seconds: int = Field(
+        default=1800,
+        description="Idle session timeout in seconds (30 minutes default)",
+    )
+    session_absolute_lifetime_seconds: int = Field(
+        default=28800,
+        description="Absolute maximum session duration in seconds (8 hours default)",
+    )
+    step_up_token_ttl_seconds: int = Field(
+        default=300,
+        description="Step-up authentication elevated claim validity duration in seconds (5 minutes default)",
+    )
+    max_break_glass_accounts: int = Field(
+        default=2,
+        description="Strictly limited maximum count of local break-glass emergency accounts per tenant",
+    )
 
 
 class TenantSettingsStore:
@@ -146,6 +179,14 @@ class TenantSettingsStore:
         updated = TenantSettings.model_validate(current_data)
         self._tenants[tenant_id] = updated
         return updated
+
+    def update_settings(self, tenant_id: str, settings: TenantSettings) -> None:
+        """Sets or replaces tenant settings with a TenantSettings instance."""
+        self._tenants[tenant_id] = settings
+
+    def set(self, tenant_id: str, settings: TenantSettings) -> None:
+        """Alias for update_settings."""
+        self._tenants[tenant_id] = settings
 
     def reset(self, tenant_id: str | None = None) -> None:
         """Reset settings for testing."""

@@ -236,3 +236,37 @@ class ProviderCapability(StrEnum):
     C04_USAGE = "C-04"
     C11_PRICING = "C-11"
     C18_QUOTA = "C-18"
+
+
+class AuthMethod(StrEnum):
+    """Platform authentication mechanism (Prompt 10 Items 64, 65, 67)."""
+
+    OIDC = "OIDC"
+    SAML = "SAML"
+    BREAK_GLASS = "BREAK_GLASS"
+    CLIENT_CREDENTIALS = "CLIENT_CREDENTIALS"
+
+
+class UserStatus(StrEnum):
+    """Platform user lifecycle state (Prompt 10 Item 66)."""
+
+    ACTIVE = "ACTIVE"
+    DISABLED = "DISABLED"
+    LOCKED = "LOCKED"
+
+
+class TokenType(StrEnum):
+    """Cryptographic token classifications (Prompt 10 Items 66-68)."""
+
+    ACCESS = "ACCESS"
+    REFRESH = "REFRESH"
+    STEP_UP = "STEP_UP"
+    MACHINE_ACCESS = "MACHINE_ACCESS"
+
+
+class StepUpAction(StrEnum):
+    """Protected operations mandating step-up authentication (Prompt 10 Item 68)."""
+
+    CREDENTIAL_CREATION = "CREDENTIAL_CREATION"
+    OVERRIDE_APPLICATION = "OVERRIDE_APPLICATION"
+    BUDGET_APPROVAL = "BUDGET_APPROVAL"

@@ -326,11 +326,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-41d196afba7b",
+  "first_audit_event_id": "aud-boot-136ea16aef5e",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-09-26T10:22:53.149936Z",
-  "correlation_id": "corr-boot-7ed4e484"
+  "timestamp": "2026-09-26T13:34:14.911486Z",
+  "correlation_id": "corr-boot-ec9af182"
 }

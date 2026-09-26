@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from api.cloudlens_api.routes import (
     attribution_router,
+    auth_router,
     bootstrap_router,
     config_router,
     demo_mode_router,
@@ -156,6 +157,7 @@ async def standardized_domain_exception_handler(request: Request, exc: DomainMod
 
 
 app.include_router(config_router)
+app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(masterdata_router)
 app.include_router(bootstrap_router)
