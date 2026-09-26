@@ -270,3 +270,38 @@ class StepUpAction(StrEnum):
     CREDENTIAL_CREATION = "CREDENTIAL_CREATION"
     OVERRIDE_APPLICATION = "OVERRIDE_APPLICATION"
     BUDGET_APPROVAL = "BUDGET_APPROVAL"
+
+
+class GrantEffect(StrEnum):
+    """Effect of a scope grant (Prompt 11 Item 71-72)."""
+
+    ALLOW = "ALLOW"
+    DENY = "DENY"
+
+
+class GranteeType(StrEnum):
+    """Subject type receiving a scope grant (Prompt 11 Item 71)."""
+
+    USER = "USER"
+    ROLE = "ROLE"
+
+
+class FinancialSensitivity(StrEnum):
+    """Financial data visibility tiers (Prompt 11 Item 71, 73)."""
+
+    FULL_FINANCIAL_DETAIL = "FULL_FINANCIAL_DETAIL"
+    COST_TOTALS_ONLY = "COST_TOTALS_ONLY"
+    NON_FINANCIAL = "NON_FINANCIAL"
+
+
+class ScopingDimension(StrEnum):
+    """Eight canonical scoping dimensions for fine-grained authorization (Prompt 11 Item 71)."""
+
+    PROVIDER = "provider"
+    ACCOUNT_BILLING_BOUNDARY = "account_billing_boundary"
+    HIERARCHY_SUBTREE = "hierarchy_subtree"
+    PROJECT_APPLICATION = "project_application"
+    COST_CENTRE_BUSINESS_UNIT = "cost_centre_business_unit"
+    FINANCIAL_DATA_SENSITIVITY = "financial_data_sensitivity"
+    ADMINISTRATIVE = "administrative"
+    RESOURCE_EXCEPTION = "resource_exception"

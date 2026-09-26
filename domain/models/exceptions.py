@@ -297,3 +297,49 @@ class MachineClientAuthFailedException(IdentityException):
         self, message: str = "Machine client credentials invalid, expired, or client inactive."
     ) -> None:
         super().__init__(message, error_code="MACHINE_CLIENT_AUTH_FAILED")
+
+
+class RBACException(DomainModelException):
+    """Base exception for RBAC and scope authorization failures (Prompt 11)."""
+
+    def __init__(self, message: str, error_code: str = "RBAC_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class PermissionDeniedException(RBACException):
+    """Raised when principal lacks a required permission for an action (Prompt 11 Item 70)."""
+
+    def __init__(self, permission: str, message: str | None = None) -> None:
+        msg = message or f"Permission denied: Principal lacks required permission '{permission}'."
+        super().__init__(msg, error_code="PERMISSION_DENIED")
+        self.permission = permission
+
+
+class ScopeAccessDeniedException(RBACException):
+    """Raised when resource access is denied by scope grants or explicit deny (Prompt 11 Item 71-72)."""
+
+    def __init__(
+        self, resource_id: str | None, dimension: str | None, message: str | None = None
+    ) -> None:
+        target = f"resource '{resource_id}'" if resource_id else "requested entity"
+        dim = f" on dimension '{dimension}'" if dimension else ""
+        msg = message or f"Access to {target} is denied by scope grant policy{dim}."
+        super().__init__(msg, error_code="SCOPE_ACCESS_DENIED")
+        self.resource_id = resource_id
+        self.dimension = dimension
+
+
+class CustomRoleInvalidException(RBACException):
+    """Raised when creating a custom role with invalid or uncatalogued permissions (Prompt 11 Item 70)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="CUSTOM_ROLE_INVALID")
+
+
+class FinancialDetailAccessDeniedException(RBACException):
+    """Raised when user attempts to access raw unit rates or financial details without permission (Prompt 11 Item 73)."""
+
+    def __init__(
+        self, message: str = "Access to financial rates and charge line details is restricted."
+    ) -> None:
+        super().__init__(message, error_code="FINANCIAL_DETAIL_ACCESS_DENIED")

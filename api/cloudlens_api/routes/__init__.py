@@ -8,6 +8,7 @@ from api.cloudlens_api.routes.demo import router as demo_router
 from api.cloudlens_api.routes.demo_mode import router as demo_mode_router
 from api.cloudlens_api.routes.health import router as health_router
 from api.cloudlens_api.routes.masterdata import router as masterdata_router
+from api.cloudlens_api.routes.rbac import router as rbac_router
 
 __all__ = [
     "attribution_router",
@@ -18,4 +19,5 @@ __all__ = [
     "demo_router",
     "health_router",
     "masterdata_router",
+    "rbac_router",
 ]

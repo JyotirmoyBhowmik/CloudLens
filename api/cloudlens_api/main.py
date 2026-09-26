@@ -19,8 +19,13 @@ from api.cloudlens_api.routes import (
     demo_router,
     health_router,
     masterdata_router,
+    rbac_router,
 )
-from domain.models.exceptions import DomainModelException
+from domain.models.exceptions import (
+    CustomRoleInvalidException,
+    DomainModelException,
+    RBACException,
+)
 from domain.observability import (
     current_correlation_id,
     current_operation,
@@ -156,8 +161,31 @@ async def standardized_domain_exception_handler(request: Request, exc: DomainMod
     )
 
 
+@app.exception_handler(RBACException)
+async def standardized_rbac_exception_handler(request: Request, exc: RBACException):
+    """RBAC exception handler mapping permission and scope denials to HTTP 403 (Rule 2.3 & 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    status_code = (
+        status.HTTP_422_UNPROCESSABLE_ENTITY
+        if isinstance(exc, CustomRoleInvalidException)
+        else status.HTTP_403_FORBIDDEN
+    )
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
+app.include_router(rbac_router)
 app.include_router(health_router)
 app.include_router(masterdata_router)
 app.include_router(bootstrap_router)
