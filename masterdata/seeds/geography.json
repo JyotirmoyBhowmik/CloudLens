@@ -1,0 +1,97 @@
+[
+  {
+    "code": "GEO_US_EAST",
+    "display_name": "US East Regional Geography",
+    "description": "Primary North American eastern seaboard zone with FedRAMP and HIPAA compliance.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "geography_group": "NORTH_AMERICA",
+      "jurisdiction": "US",
+      "data_residency_classification": "FEDRAMP_HIGH",
+      "provider_regions": {
+        "aws": ["us-east-1", "us-east-2"],
+        "azure": ["eastus", "eastus2"],
+        "gcp": ["us-east1", "us-east4"],
+        "oci": ["us-ashburn-1"]
+      },
+      "is_approved_for_deployment": true
+    }
+  },
+  {
+    "code": "GEO_EU_CENTRAL",
+    "display_name": "Europe Central Geography (Frankfurt / Zurich)",
+    "description": "Continental European Union sovereign data residency zone under GDPR.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "geography_group": "EUROPE",
+      "jurisdiction": "EU",
+      "data_residency_classification": "GDPR_RESTRICTED",
+      "provider_regions": {
+        "aws": ["eu-central-1"],
+        "azure": ["germanywestcentral"],
+        "gcp": ["europe-west3"],
+        "oci": ["eu-frankfurt-1"]
+      },
+      "is_approved_for_deployment": true
+    }
+  },
+  {
+    "code": "GEO_UK_SOUTH",
+    "display_name": "United Kingdom Geography (London)",
+    "description": "UK statutory jurisdiction under UK Data Protection Act / FCA regulations.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "geography_group": "EUROPE",
+      "jurisdiction": "UK",
+      "data_residency_classification": "UK_FCA_REGULATED",
+      "provider_regions": {
+        "aws": ["eu-west-2"],
+        "azure": ["uksouth"],
+        "gcp": ["europe-west2"],
+        "oci": ["uk-london-1"]
+      },
+      "is_approved_for_deployment": true
+    }
+  },
+  {
+    "code": "GEO_APAC_SOUTHEAST",
+    "display_name": "Asia-Pacific Southeast Geography (Singapore)",
+    "description": "MAS-regulated financial cloud deployment zone in Singapore.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "geography_group": "ASIA_PACIFIC",
+      "jurisdiction": "SG",
+      "data_residency_classification": "MAS_TRM_COMPLIANT",
+      "provider_regions": {
+        "aws": ["ap-southeast-1"],
+        "azure": ["southeastasia"],
+        "gcp": ["asia-southeast1"],
+        "oci": ["ap-singapore-1"]
+      },
+      "is_approved_for_deployment": true
+    }
+  },
+  {
+    "code": "GEO_UNAPPROVED_RESTRICTED",
+    "display_name": "Restricted High-Risk Offshore Geography",
+    "description": "Sanctioned and unvetted international regions blocked for corporate workloads.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "geography_group": "RESTRICTED",
+      "jurisdiction": "INTERNATIONAL",
+      "data_residency_classification": "NON_COMPLIANT",
+      "provider_regions": {
+        "aws": ["cn-north-1", "me-south-1"],
+        "azure": ["chinaeast", "uaenorth"],
+        "gcp": [],
+        "oci": []
+      },
+      "is_approved_for_deployment": false
+    }
+  }
+]

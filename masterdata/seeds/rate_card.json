@@ -1,0 +1,74 @@
+[
+  {
+    "code": "RC_AWS_EC2_M5_NEGOTIATED",
+    "display_name": "AWS EC2 m5.large Custom Negotiated Rate",
+    "description": "Negotiated contract pricing under EDP superseding public list rate.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AWS",
+      "service_code": "AmazonEC2",
+      "sku_id": "m5.large-us-east-1",
+      "list_rate": "0.096000",
+      "contracted_rate": "0.078000",
+      "currency": "USD",
+      "source": "MANUAL",
+      "effective_from": "2026-01-01",
+      "contract_reference": "AGR-2026-AWS-9872"
+    }
+  },
+  {
+    "code": "RC_AWS_S3_STANDARD_NEGOTIATED",
+    "display_name": "AWS S3 Standard Storage Tier 1 Custom Rate",
+    "description": "Enterprise volume tier discounted rate uploaded via contract schedule.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AWS",
+      "service_code": "AmazonS3",
+      "sku_id": "s3-standard-gb-us-east-1",
+      "list_rate": "0.023000",
+      "contracted_rate": "0.018500",
+      "currency": "USD",
+      "source": "MANUAL",
+      "effective_from": "2026-01-01",
+      "contract_reference": "AGR-2026-AWS-9872"
+    }
+  },
+  {
+    "code": "RC_AZURE_VM_D4S_NEGOTIATED",
+    "display_name": "Azure Standard_D4s_v5 Custom Negotiated Rate",
+    "description": "Microsoft Customer Agreement custom enterprise rate card item.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AZURE",
+      "service_code": "VirtualMachines",
+      "sku_id": "standard-d4s-v5-eastus",
+      "list_rate": "0.192000",
+      "contracted_rate": "0.165000",
+      "currency": "USD",
+      "source": "MANUAL",
+      "effective_from": "2026-01-01",
+      "contract_reference": "AGR-2026-AZURE-4812"
+    }
+  },
+  {
+    "code": "RC_GCP_COMPUTE_N2_STANDARD_LIST",
+    "display_name": "GCP Compute Engine n2-standard-4 Public List Rate",
+    "description": "Standard public catalogue rate derived from provider API catalogue.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "GCP",
+      "service_code": "ComputeEngine",
+      "sku_id": "n2-standard-4-us-central1",
+      "list_rate": "0.194800",
+      "contracted_rate": null,
+      "currency": "USD",
+      "source": "PROVIDER_API",
+      "effective_from": "2026-01-01",
+      "contract_reference": null
+    }
+  }
+]

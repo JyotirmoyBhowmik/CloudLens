@@ -1,0 +1,58 @@
+[
+  {
+    "code": "PRJ-MIGRATION-2026",
+    "display_name": "Multi-Cloud Modernisation & Datacenter Exit",
+    "description": "Strategic datacenter evacuation and containerised replatforming.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "start_date": "2025-01-01",
+      "end_date": "2027-12-31",
+      "sponsor_id": "OWNER_CLOUD_INFRA",
+      "is_capitalised": true,
+      "cost_centre_code": "CC-4001"
+    }
+  },
+  {
+    "code": "PRJ-FINOPS-PLATFORM",
+    "display_name": "CloudLens FinOps & Unit Economics Engine",
+    "description": "Enterprise cloud cost governance, telemetry ingestion, and attribution.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "start_date": "2025-06-01",
+      "end_date": "2026-12-31",
+      "sponsor_id": "OWNER_CLOUD_INFRA",
+      "is_capitalised": true,
+      "cost_centre_code": "CC-4001"
+    }
+  },
+  {
+    "code": "PRJ-RETAIL-MOBILE-V3",
+    "display_name": "Next-Gen Retail Banking Mobile Experience",
+    "description": "Native iOS/Android consumer mobile application and microservices gateway.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "start_date": "2025-03-01",
+      "end_date": "2026-09-30",
+      "sponsor_id": "OWNER_DIGITAL_LEAD",
+      "is_capitalised": true,
+      "cost_centre_code": "CC-5001"
+    }
+  },
+  {
+    "code": "PRJ-MAINTENANCE-OPS",
+    "display_name": "Routine Operations & Incident Remediation",
+    "description": "Operational run-the-bank support and ongoing tier-3 support (OPEX).",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "start_date": "2024-01-01",
+      "end_date": "2030-12-31",
+      "sponsor_id": "OWNER_EXEC_LEAD",
+      "is_capitalised": false,
+      "cost_centre_code": "CC-1001"
+    }
+  }
+]

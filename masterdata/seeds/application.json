@@ -1,0 +1,117 @@
+[
+  {
+    "code": "APP-CORE-BANKING",
+    "display_name": "Core Banking Ledger & Transaction Engine",
+    "description": "Critical transactional engine holding double-entry customer balances and authorizations.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "criticality_tier": "Tier-1",
+      "business_owner": "OWNER_RETAIL_LEAD",
+      "technical_owner": "OWNER_CORE_ARCH",
+      "supporting_team": "TEAM_CORE_SRE",
+      "cost_centre": "CC-2001",
+      "environment_set": ["PROD", "STG", "DR"],
+      "lifecycle_state": "LIVE",
+      "service_level_classification": "PLATINUM",
+      "provider_tag_mappings": {
+        "aws": {"Application": "core-banking", "AppId": "APP-CORE-BANKING"},
+        "azure": {"ApplicationName": "core-banking", "AppCode": "APP-CORE-BANKING"},
+        "gcp": {"app": "core-banking", "app_id": "app-core-banking"},
+        "oci": {"Application": "core-banking", "AppId": "APP-CORE-BANKING"}
+      }
+    }
+  },
+  {
+    "code": "APP-CHECKOUT-SERVICE",
+    "display_name": "Digital Payments & Checkout Gateway",
+    "description": "Real-time card payments, Apple Pay/Google Pay integration, and tokenization gateway.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "criticality_tier": "Tier-1",
+      "business_owner": "OWNER_DIGITAL_LEAD",
+      "technical_owner": "OWNER_PAYMENTS_LEAD",
+      "supporting_team": "TEAM_PAYMENTS_ENG",
+      "cost_centre": "CC-2001",
+      "environment_set": ["PROD", "STG", "DEV", "DR"],
+      "lifecycle_state": "LIVE",
+      "service_level_classification": "PLATINUM",
+      "provider_tag_mappings": {
+        "aws": {"Application": "checkout-service", "AppId": "APP-CHECKOUT-SERVICE"},
+        "azure": {"ApplicationName": "checkout-service", "AppCode": "APP-CHECKOUT-SERVICE"},
+        "gcp": {"app": "checkout-service", "app_id": "app-checkout-service"},
+        "oci": {"Application": "checkout-service", "AppId": "APP-CHECKOUT-SERVICE"}
+      }
+    }
+  },
+  {
+    "code": "APP-RISK-ANALYTICS",
+    "display_name": "Market Risk & Portfolio Analytics",
+    "description": "Overnight Monte Carlo portfolio simulations and VaR risk calculations.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "criticality_tier": "Tier-2",
+      "business_owner": "OWNER_WEALTH_LEAD",
+      "technical_owner": "OWNER_QUANT_LEAD",
+      "supporting_team": "TEAM_DATA_PLATFORM",
+      "cost_centre": "CC-3001",
+      "environment_set": ["PROD", "DEV"],
+      "lifecycle_state": "LIVE",
+      "service_level_classification": "GOLD",
+      "provider_tag_mappings": {
+        "aws": {"Application": "risk-analytics", "AppId": "APP-RISK-ANALYTICS"},
+        "azure": {"ApplicationName": "risk-analytics", "AppCode": "APP-RISK-ANALYTICS"},
+        "gcp": {"app": "risk-analytics", "app_id": "app-risk-analytics"},
+        "oci": {"Application": "risk-analytics", "AppId": "APP-RISK-ANALYTICS"}
+      }
+    }
+  },
+  {
+    "code": "APP-CLOUDLENS-CONSOLE",
+    "display_name": "CloudLens Platform & Master Data Console",
+    "description": "Multi-cloud FinOps governance, cost allocation, and telemetry ingestion console.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "criticality_tier": "Tier-2",
+      "business_owner": "OWNER_CLOUD_INFRA",
+      "technical_owner": "OWNER_FINOPS_ARCH",
+      "supporting_team": "TEAM_FINOPS_ENG",
+      "cost_centre": "CC-4001",
+      "environment_set": ["PROD", "STG", "DEV"],
+      "lifecycle_state": "LIVE",
+      "service_level_classification": "GOLD",
+      "provider_tag_mappings": {
+        "aws": {"Application": "cloudlens", "AppId": "APP-CLOUDLENS-CONSOLE"},
+        "azure": {"ApplicationName": "cloudlens", "AppCode": "APP-CLOUDLENS-CONSOLE"},
+        "gcp": {"app": "cloudlens", "app_id": "app-cloudlens-console"},
+        "oci": {"Application": "cloudlens", "AppId": "APP-CLOUDLENS-CONSOLE"}
+      }
+    }
+  },
+  {
+    "code": "APP-DEV-SANDBOX",
+    "display_name": "Developer Prototyping & R&D Sandbox",
+    "description": "Ephemeral research playground for AI models and proof-of-concept testing.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "criticality_tier": "Tier-4",
+      "business_owner": "OWNER_DIGITAL_LEAD",
+      "technical_owner": "OWNER_SANDBOX_MGR",
+      "supporting_team": "TEAM_DEV_EXPERIENCE",
+      "cost_centre": "CC-5001",
+      "environment_set": ["SANDBOX"],
+      "lifecycle_state": "BUILD",
+      "service_level_classification": "BRONZE",
+      "provider_tag_mappings": {
+        "aws": {"Application": "sandbox", "AppId": "APP-DEV-SANDBOX"},
+        "azure": {"ApplicationName": "sandbox", "AppCode": "APP-DEV-SANDBOX"},
+        "gcp": {"app": "sandbox", "app_id": "app-dev-sandbox"},
+        "oci": {"Application": "sandbox", "AppId": "APP-DEV-SANDBOX"}
+      }
+    }
+  }
+]

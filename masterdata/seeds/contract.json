@@ -1,0 +1,59 @@
+[
+  {
+    "code": "CTR_AWS_EDP_2026",
+    "display_name": "AWS Enterprise Discount Program (EDP)",
+    "description": "3-Year Enterprise Discount Program committed spend agreement with Amazon Web Services.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AWS",
+      "agreement_type": "EDP",
+      "contract_reference": "AGR-2026-AWS-9872",
+      "term_start_date": "2026-01-01",
+      "term_end_date": "2028-12-31",
+      "committed_spend_amount": "5000000.00",
+      "discount_structure": {
+        "baseline_discount_percentage": 14.5,
+        "ec2_additional_discount_percentage": 5.0,
+        "s3_additional_discount_percentage": 3.0
+      }
+    }
+  },
+  {
+    "code": "CTR_AZURE_MCA_2026",
+    "display_name": "Microsoft Customer Agreement (MCA)",
+    "description": "Enterprise Azure agreement with direct commitment discounts and unified support.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AZURE",
+      "agreement_type": "MCA",
+      "contract_reference": "AGR-2026-AZURE-4812",
+      "term_start_date": "2026-01-01",
+      "term_end_date": "2028-12-31",
+      "committed_spend_amount": "3500000.00",
+      "discount_structure": {
+        "baseline_discount_percentage": 12.0,
+        "azure_hybrid_benefit_eligible": true
+      }
+    }
+  },
+  {
+    "code": "CTR_GCP_CUD_2026",
+    "display_name": "Google Cloud Committed Use Agreement",
+    "description": "Enterprise commitment discount agreement covering BigQuery and Compute Engine.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "GCP",
+      "agreement_type": "COMMITTED_USE_CONTRACT",
+      "contract_reference": "AGR-2026-GCP-7719",
+      "term_start_date": "2026-01-01",
+      "term_end_date": "2027-12-31",
+      "committed_spend_amount": "2000000.00",
+      "discount_structure": {
+        "baseline_discount_percentage": 15.0
+      }
+    }
+  }
+]

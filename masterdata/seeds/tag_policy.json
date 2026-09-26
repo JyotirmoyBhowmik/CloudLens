@@ -1,0 +1,57 @@
+[
+  {
+    "code": "TAG_POL_ENTERPRISE_MANDATORY",
+    "display_name": "Enterprise Mandatory Tagging Standard",
+    "description": "Four mandatory cost-allocation and governance tags required on all cloud resources.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "mandatory_tag_keys": ["Environment", "Application", "CostCentre", "Owner"],
+      "allowed_values": {
+        "Environment": ["Production", "Staging", "Development", "DisasterRecovery", "Sandbox"]
+      },
+      "format_rules": {
+        "CostCentre": "^CC-[0-9]{4}$",
+        "Owner": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      },
+      "scope_applicability": ["*"],
+      "enforcement_posture": "EXCEPTION"
+    }
+  },
+  {
+    "code": "TAG_POL_FINOPS_ALLOCATION",
+    "display_name": "FinOps Cost Allocation & Project Tracking",
+    "description": "Financial attribution tagging policy validating project codes and business units.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "mandatory_tag_keys": ["ProjectCode", "BusinessUnit"],
+      "allowed_values": {
+        "BusinessUnit": ["BU_GLOBAL_CORP", "BU_RETAIL_BANKING", "BU_WEALTH_MGMT", "BU_CLOUD_ENGINEERING", "BU_DIGITAL_INNOVATION"]
+      },
+      "format_rules": {
+        "ProjectCode": "^PRJ-[A-Z0-9-]+$"
+      },
+      "scope_applicability": ["*"],
+      "enforcement_posture": "REPORT_ONLY"
+    }
+  },
+  {
+    "code": "TAG_POL_PRODUCTION_STRICT",
+    "display_name": "Production Critical Infrastructure Tag Enforcement",
+    "description": "Strict compliance policy blocking deployments missing critical operational tags.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "mandatory_tag_keys": ["Environment", "Criticality", "DisasterRecoveryTier"],
+      "allowed_values": {
+        "Environment": ["Production"],
+        "Criticality": ["Tier-1", "Tier-2"],
+        "DisasterRecoveryTier": ["Platinum", "Gold"]
+      },
+      "format_rules": {},
+      "scope_applicability": ["grp-prod-root", "ou-prod-banking"],
+      "enforcement_posture": "BLOCK_AT_POLICY"
+    }
+  }
+]

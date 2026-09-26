@@ -1,0 +1,89 @@
+[
+  {
+    "code": "HOL_US_FEDERAL",
+    "display_name": "US Federal Statutory Holidays 2026",
+    "description": "United States federal statutory holiday calendar for schedule adherence.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "location_code": "LOC_US_EAST_VA",
+      "year": 2026,
+      "holidays": [
+        {"date": "2026-01-01", "name": "New Year's Day", "type": "PUBLIC"},
+        {"date": "2026-01-19", "name": "Martin Luther King Jr. Day", "type": "PUBLIC"},
+        {"date": "2026-02-16", "name": "Presidents' Day", "type": "PUBLIC"},
+        {"date": "2026-05-25", "name": "Memorial Day", "type": "PUBLIC"},
+        {"date": "2026-06-19", "name": "Juneteenth", "type": "PUBLIC"},
+        {"date": "2026-07-04", "name": "Independence Day", "type": "PUBLIC"},
+        {"date": "2026-09-07", "name": "Labor Day", "type": "PUBLIC"},
+        {"date": "2026-10-12", "name": "Columbus Day", "type": "PUBLIC"},
+        {"date": "2026-11-11", "name": "Veterans Day", "type": "PUBLIC"},
+        {"date": "2026-11-26", "name": "Thanksgiving Day", "type": "PUBLIC"},
+        {"date": "2026-12-25", "name": "Christmas Day", "type": "PUBLIC"}
+      ]
+    }
+  },
+  {
+    "code": "HOL_UK_BANK",
+    "display_name": "UK Bank Holidays 2026",
+    "description": "United Kingdom statutory and bank holidays for schedule adherence.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "location_code": "LOC_UK_LON",
+      "year": 2026,
+      "holidays": [
+        {"date": "2026-01-01", "name": "New Year's Day", "type": "BANK"},
+        {"date": "2026-04-03", "name": "Good Friday", "type": "BANK"},
+        {"date": "2026-04-06", "name": "Easter Monday", "type": "BANK"},
+        {"date": "2026-05-04", "name": "Early May Bank Holiday", "type": "BANK"},
+        {"date": "2026-05-25", "name": "Spring Bank Holiday", "type": "BANK"},
+        {"date": "2026-08-31", "name": "Summer Bank Holiday", "type": "BANK"},
+        {"date": "2026-12-25", "name": "Christmas Day", "type": "BANK"},
+        {"date": "2026-12-28", "name": "Boxing Day (Observed)", "type": "BANK"}
+      ]
+    }
+  },
+  {
+    "code": "HOL_GERMAN_FEDERAL",
+    "display_name": "German Federal Holidays 2026",
+    "description": "Hessen & German statutory federal holidays for Frankfurt operations.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "location_code": "LOC_EU_FRA",
+      "year": 2026,
+      "holidays": [
+        {"date": "2026-01-01", "name": "Neujahr", "type": "PUBLIC"},
+        {"date": "2026-04-03", "name": "Karfreitag", "type": "PUBLIC"},
+        {"date": "2026-04-06", "name": "Ostermontag", "type": "PUBLIC"},
+        {"date": "2026-05-01", "name": "Tag der Arbeit", "type": "PUBLIC"},
+        {"date": "2026-05-14", "name": "Christi Himmelfahrt", "type": "PUBLIC"},
+        {"date": "2026-05-25", "name": "Pfingstmontag", "type": "PUBLIC"},
+        {"date": "2026-10-03", "name": "Tag der Deutschen Einheit", "type": "PUBLIC"},
+        {"date": "2026-12-25", "name": "1. Weihnachtstag", "type": "PUBLIC"},
+        {"date": "2026-12-26", "name": "2. Weihnachtstag", "type": "PUBLIC"}
+      ]
+    }
+  },
+  {
+    "code": "HOL_SG_PUBLIC",
+    "display_name": "Singapore Public Holidays 2026",
+    "description": "Singapore Ministry of Manpower gazetted public holidays.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "location_code": "LOC_APAC_SG",
+      "year": 2026,
+      "holidays": [
+        {"date": "2026-01-01", "name": "New Year's Day", "type": "PUBLIC"},
+        {"date": "2026-02-17", "name": "Chinese New Year", "type": "PUBLIC"},
+        {"date": "2026-02-18", "name": "Chinese New Year Day 2", "type": "PUBLIC"},
+        {"date": "2026-04-03", "name": "Good Friday", "type": "PUBLIC"},
+        {"date": "2026-05-01", "name": "Labour Day", "type": "PUBLIC"},
+        {"date": "2026-08-09", "name": "National Day", "type": "PUBLIC"},
+        {"date": "2026-12-25", "name": "Christmas Day", "type": "PUBLIC"}
+      ]
+    }
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "code": "FX_POLICY_DEFAULT",
+    "display_name": "Enterprise Standard Multi-Currency Policy",
+    "description": "Standard corporate treasury rate selection policy across all dashboards and reports.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "tenant_id": null,
+      "reporting_currency": "USD",
+      "presentation_policies": {
+        "budget_variance": "BUDGET_RATE",
+        "actual_cost": "MONTHLY_AVERAGE",
+        "real_time_alert": "SPOT",
+        "trend_analysis": "CONSTANT",
+        "executive_dashboard": "MONTHLY_AVERAGE"
+      }
+    }
+  },
+  {
+    "code": "FX_POLICY_UK_EUROPE",
+    "display_name": "UK & European Region Multi-Currency Policy",
+    "description": "European reporting currency conversion policy reporting in GBP.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "tenant_id": "tenant-uk-regional",
+      "reporting_currency": "GBP",
+      "presentation_policies": {
+        "budget_variance": "BUDGET_RATE",
+        "actual_cost": "MONTHLY_AVERAGE",
+        "real_time_alert": "SPOT",
+        "trend_analysis": "CONSTANT",
+        "executive_dashboard": "MONTHLY_AVERAGE"
+      }
+    }
+  }
+]

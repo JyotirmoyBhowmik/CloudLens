@@ -4,6 +4,22 @@ Provides universal registry, effective-dated versioning, reference-integrity gua
 idempotent seeding, import/export, and health inspection.
 """
 
+from masterdata.business_engines import (
+    BudgetAllocation,
+    BudgetAllocationService,
+    ContractRateEngine,
+    CurrencyConversionResult,
+    CurrencyConverterEngine,
+    EffectiveRateResult,
+    FinancialCalendarEngine,
+    FiscalPeriod,
+    GeographyComplianceEngine,
+    GeographyComplianceResult,
+    RuntimeScheduleAdherenceEngine,
+    ScheduleAdherenceResult,
+    TagComplianceReport,
+    TagPolicyEngine,
+)
 from masterdata.io import MasterDataIO
 from masterdata.models import (
     DEFAULT_MASTER_EPOCH,
@@ -30,8 +46,18 @@ from masterdata.service import (
 )
 
 __all__ = [
+    "BudgetAllocation",
+    "BudgetAllocationService",
+    "ContractRateEngine",
+    "CurrencyConversionResult",
+    "CurrencyConverterEngine",
     "DEFAULT_MASTER_EPOCH",
     "DryRunValidationResult",
+    "EffectiveRateResult",
+    "FinancialCalendarEngine",
+    "FiscalPeriod",
+    "GeographyComplianceEngine",
+    "GeographyComplianceResult",
     "LifecycleStatus",
     "MasterDataAuditEntry",
     "MasterDataHealthReport",
@@ -41,8 +67,12 @@ __all__ = [
     "MasterDataSeeder",
     "MasterDataService",
     "MasterRegistryEntry",
+    "RuntimeScheduleAdherenceEngine",
     "SYSTEM_MASTER_REGISTRY",
+    "ScheduleAdherenceResult",
     "SeedExecutionReport",
+    "TagComplianceReport",
+    "TagPolicyEngine",
     "WhereUsedReport",
     "get_master_data_service",
     "get_registered_master",

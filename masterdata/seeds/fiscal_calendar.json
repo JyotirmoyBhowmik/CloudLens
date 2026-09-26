@@ -1,0 +1,80 @@
+[
+  {
+    "code": "FC_STANDARD_JAN",
+    "display_name": "Standard Calendar Fiscal Year (Jan - Dec)",
+    "description": "Standard 12-month calendar fiscal year beginning January 1st.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "fiscal_year_start_month": 1,
+      "fiscal_year_start_day": 1,
+      "period_type": "MONTHLY",
+      "period_definitions": [
+        {"period": 1, "name": "Period 1 (Jan)", "start_offset_month": 0, "close_day_offset": 5},
+        {"period": 2, "name": "Period 2 (Feb)", "start_offset_month": 1, "close_day_offset": 5},
+        {"period": 3, "name": "Period 3 (Mar)", "start_offset_month": 2, "close_day_offset": 5},
+        {"period": 4, "name": "Period 4 (Apr)", "start_offset_month": 3, "close_day_offset": 5},
+        {"period": 5, "name": "Period 5 (May)", "start_offset_month": 4, "close_day_offset": 5},
+        {"period": 6, "name": "Period 6 (Jun)", "start_offset_month": 5, "close_day_offset": 5},
+        {"period": 7, "name": "Period 7 (Jul)", "start_offset_month": 6, "close_day_offset": 5},
+        {"period": 8, "name": "Period 8 (Aug)", "start_offset_month": 7, "close_day_offset": 5},
+        {"period": 9, "name": "Period 9 (Sep)", "start_offset_month": 8, "close_day_offset": 5},
+        {"period": 10, "name": "Period 10 (Oct)", "start_offset_month": 9, "close_day_offset": 5},
+        {"period": 11, "name": "Period 11 (Nov)", "start_offset_month": 10, "close_day_offset": 5},
+        {"period": 12, "name": "Period 12 (Dec)", "start_offset_month": 11, "close_day_offset": 10}
+      ]
+    }
+  },
+  {
+    "code": "FC_APRIL_UK",
+    "display_name": "UK / Commonwealth Fiscal Year (Apr - Mar)",
+    "description": "United Kingdom corporate fiscal year beginning April 1st.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "fiscal_year_start_month": 4,
+      "fiscal_year_start_day": 1,
+      "period_type": "MONTHLY",
+      "period_definitions": [
+        {"period": 1, "name": "P1 (Apr)", "start_offset_month": 0, "close_day_offset": 5},
+        {"period": 2, "name": "P2 (May)", "start_offset_month": 1, "close_day_offset": 5},
+        {"period": 3, "name": "P3 (Jun)", "start_offset_month": 2, "close_day_offset": 5},
+        {"period": 4, "name": "P4 (Jul)", "start_offset_month": 3, "close_day_offset": 5},
+        {"period": 5, "name": "P5 (Aug)", "start_offset_month": 4, "close_day_offset": 5},
+        {"period": 6, "name": "P6 (Sep)", "start_offset_month": 5, "close_day_offset": 5},
+        {"period": 7, "name": "P7 (Oct)", "start_offset_month": 6, "close_day_offset": 5},
+        {"period": 8, "name": "P8 (Nov)", "start_offset_month": 7, "close_day_offset": 5},
+        {"period": 9, "name": "P9 (Dec)", "start_offset_month": 8, "close_day_offset": 5},
+        {"period": 10, "name": "P10 (Jan)", "start_offset_month": 9, "close_day_offset": 5},
+        {"period": 11, "name": "P11 (Feb)", "start_offset_month": 10, "close_day_offset": 5},
+        {"period": 12, "name": "P12 (Mar)", "start_offset_month": 11, "close_day_offset": 10}
+      ]
+    }
+  },
+  {
+    "code": "FC_OCT_US_GOV",
+    "display_name": "US Federal Fiscal Year (Oct - Sep)",
+    "description": "US Government and public sector fiscal calendar beginning October 1st.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "fiscal_year_start_month": 10,
+      "fiscal_year_start_day": 1,
+      "period_type": "MONTHLY",
+      "period_definitions": [
+        {"period": 1, "name": "P1 (Oct)", "start_offset_month": 0, "close_day_offset": 5},
+        {"period": 2, "name": "P2 (Nov)", "start_offset_month": 1, "close_day_offset": 5},
+        {"period": 3, "name": "P3 (Dec)", "start_offset_month": 2, "close_day_offset": 5},
+        {"period": 4, "name": "P4 (Jan)", "start_offset_month": 3, "close_day_offset": 5},
+        {"period": 5, "name": "P5 (Feb)", "start_offset_month": 4, "close_day_offset": 5},
+        {"period": 6, "name": "P6 (Mar)", "start_offset_month": 5, "close_day_offset": 5},
+        {"period": 7, "name": "P7 (Apr)", "start_offset_month": 6, "close_day_offset": 5},
+        {"period": 8, "name": "P8 (May)", "start_offset_month": 7, "close_day_offset": 5},
+        {"period": 9, "name": "P9 (Jun)", "start_offset_month": 8, "close_day_offset": 5},
+        {"period": 10, "name": "P10 (Jul)", "start_offset_month": 9, "close_day_offset": 5},
+        {"period": 11, "name": "P11 (Aug)", "start_offset_month": 10, "close_day_offset": 5},
+        {"period": 12, "name": "P12 (Sep)", "start_offset_month": 11, "close_day_offset": 10}
+      ]
+    }
+  }
+]

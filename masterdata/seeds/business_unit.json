@@ -1,0 +1,57 @@
+[
+  {
+    "code": "BU_GLOBAL_CORP",
+    "display_name": "Global Corporate",
+    "description": "Executive and enterprise governance parent unit.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "head_of_unit": "Chief Executive Officer",
+      "cost_centre_prefix": "CC-100"
+    }
+  },
+  {
+    "code": "BU_RETAIL_BANKING",
+    "display_name": "Retail Banking",
+    "description": "Consumer banking, checking, payments, and branch operations.",
+    "sort_order": 2,
+    "parent_code": "BU_GLOBAL_CORP",
+    "attributes": {
+      "head_of_unit": "Head of Retail Banking",
+      "cost_centre_prefix": "CC-200"
+    }
+  },
+  {
+    "code": "BU_WEALTH_MGMT",
+    "display_name": "Wealth & Asset Management",
+    "description": "Private banking, portfolio management, and trading services.",
+    "sort_order": 3,
+    "parent_code": "BU_GLOBAL_CORP",
+    "attributes": {
+      "head_of_unit": "Head of Wealth Management",
+      "cost_centre_prefix": "CC-300"
+    }
+  },
+  {
+    "code": "BU_CLOUD_ENGINEERING",
+    "display_name": "Cloud Platform & Infrastructure Engineering",
+    "description": "Central infrastructure engineering, cloud landing zones, and shared foundational services.",
+    "sort_order": 4,
+    "parent_code": "BU_GLOBAL_CORP",
+    "attributes": {
+      "head_of_unit": "VP Cloud Infrastructure",
+      "cost_centre_prefix": "CC-400"
+    }
+  },
+  {
+    "code": "BU_DIGITAL_INNOVATION",
+    "display_name": "Digital Platforms & Innovation",
+    "description": "Customer mobile applications, APIs, and AI/ML data science engineering.",
+    "sort_order": 5,
+    "parent_code": "BU_GLOBAL_CORP",
+    "attributes": {
+      "head_of_unit": "Chief Digital Officer",
+      "cost_centre_prefix": "CC-500"
+    }
+  }
+]

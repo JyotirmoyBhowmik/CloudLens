@@ -1,0 +1,82 @@
+[
+  {
+    "code": "CMT_AWS_RI_C5_3YR",
+    "display_name": "AWS EC2 c5.large Standard Reserved Instances (3-Year)",
+    "description": "36-Month All Upfront Reserved Instance commitment for Core Banking.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AWS",
+      "commitment_type": "RESERVATION",
+      "scope_id": "act-aws-prod-01",
+      "scope_type": "BILLING_ACCOUNT",
+      "committed_units": 64,
+      "unit_symbol": "instance",
+      "term_months": 36,
+      "start_date": "2024-01-01",
+      "expiry_date": "2027-01-01",
+      "renewal_reminder_lead_time_days": 60,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "code": "CMT_AWS_SAVINGS_PLAN_COMPUTE",
+    "display_name": "AWS Compute Savings Plan $50/hr (1-Year)",
+    "description": "12-Month No Upfront Compute Savings Plan across EC2, Fargate, and Lambda.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AWS",
+      "commitment_type": "SAVINGS_PLAN",
+      "scope_id": "ou-core-engineering",
+      "scope_type": "GROUP",
+      "committed_units": 50.0,
+      "unit_symbol": "USD/hr",
+      "term_months": 12,
+      "start_date": "2026-01-01",
+      "expiry_date": "2027-01-01",
+      "renewal_reminder_lead_time_days": 30,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "code": "CMT_AZURE_RI_D_SERIES",
+    "display_name": "Azure D-Series Virtual Machine Reservation (3-Year)",
+    "description": "3-Year Azure reservation for Standard_D4s_v5 in East US.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "AZURE",
+      "commitment_type": "RESERVATION",
+      "scope_id": "sub-azure-fintech-prod",
+      "scope_type": "BILLING_ACCOUNT",
+      "committed_units": 32,
+      "unit_symbol": "instance",
+      "term_months": 36,
+      "start_date": "2024-06-01",
+      "expiry_date": "2027-06-01",
+      "renewal_reminder_lead_time_days": 90,
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "code": "CMT_GCP_CUD_BIGQUERY",
+    "display_name": "GCP BigQuery Slot Commitments (1-Year)",
+    "description": "1000 Baseline Dedicated BigQuery query execution slots.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "provider_code": "GCP",
+      "commitment_type": "COMMITTED_USE",
+      "scope_id": "fld-analytics-prod",
+      "scope_type": "GROUP",
+      "committed_units": 1000,
+      "unit_symbol": "slots",
+      "term_months": 12,
+      "start_date": "2026-01-01",
+      "expiry_date": "2027-01-01",
+      "renewal_reminder_lead_time_days": 45,
+      "status": "ACTIVE"
+    }
+  }
+]

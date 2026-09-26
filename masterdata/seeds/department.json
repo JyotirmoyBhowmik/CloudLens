@@ -1,0 +1,50 @@
+[
+  {
+    "code": "DEP_CLOUD_ARCH",
+    "display_name": "Cloud Architecture & Governance",
+    "description": "Enterprise cloud standards, security baselines, and FinOps.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "division": "Technology & Architecture",
+      "head_of_department": "Director of Architecture",
+      "cost_centre_code": "CC-4001"
+    }
+  },
+  {
+    "code": "DEP_DATA_PLATFORM",
+    "display_name": "Data Platform & Analytics Engineering",
+    "description": "Big data lakes, streaming telemetry, and BI data marts.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "division": "Data & Analytics",
+      "head_of_department": "Director of Data Engineering",
+      "cost_centre_code": "CC-5001"
+    }
+  },
+  {
+    "code": "DEP_INFOSEC",
+    "display_name": "Information Security & Compliance",
+    "description": "Cybersecurity operations, identity management, and threat response.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "division": "Risk & Compliance",
+      "head_of_department": "Chief Information Security Officer",
+      "cost_centre_code": "CC-1001"
+    }
+  },
+  {
+    "code": "DEP_PAYMENTS_ENG",
+    "display_name": "Payments & Clearing Systems",
+    "description": "Real-time payment rails, clearing gateways, and SWIFT.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "division": "Banking Solutions",
+      "head_of_department": "Director of Payments",
+      "cost_centre_code": "CC-2001"
+    }
+  }
+]

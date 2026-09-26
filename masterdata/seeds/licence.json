@@ -1,0 +1,62 @@
+[
+  {
+    "code": "LIC_MS_SQL_SERVER_EE",
+    "display_name": "Microsoft SQL Server Enterprise Edition (Core)",
+    "description": "Enterprise SQL Server core-pack licences with Software Assurance for Azure/AWS BYOL.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "licence_type": "MICROSOFT_SQL_SERVER",
+      "entitlement_count": 128,
+      "assignment_basis": "CORE",
+      "is_byol": true,
+      "renewal_date": "2027-06-30",
+      "monitoring_type_code": "DATABASE"
+    }
+  },
+  {
+    "code": "LIC_WINDOWS_SERVER_DC",
+    "display_name": "Windows Server Datacenter Edition (Core)",
+    "description": "Windows Server Core packs with Azure Hybrid Benefit portability rights.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "licence_type": "WINDOWS_SERVER",
+      "entitlement_count": 512,
+      "assignment_basis": "CORE",
+      "is_byol": true,
+      "renewal_date": "2027-06-30",
+      "monitoring_type_code": "VIRTUAL_MACHINE"
+    }
+  },
+  {
+    "code": "LIC_RHEL_SERVER_PREMIUM",
+    "display_name": "Red Hat Enterprise Linux Premium Subscription",
+    "description": "Red Hat Cloud Access subscriptions portable to AWS EC2 and GCP Compute.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "licence_type": "RED_HAT_ENTERPRISE_LINUX",
+      "entitlement_count": 64,
+      "assignment_basis": "INSTANCE",
+      "is_byol": true,
+      "renewal_date": "2026-12-31",
+      "monitoring_type_code": "VIRTUAL_MACHINE"
+    }
+  },
+  {
+    "code": "LIC_ORACLE_DB_EE",
+    "display_name": "Oracle Database Enterprise Edition Processor License",
+    "description": "Processor licence pack for OCI Compartments and AWS RDS custom installations.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "licence_type": "ORACLE_DB",
+      "entitlement_count": 32,
+      "assignment_basis": "CORE",
+      "is_byol": true,
+      "renewal_date": "2027-03-31",
+      "monitoring_type_code": "DATABASE"
+    }
+  }
+]

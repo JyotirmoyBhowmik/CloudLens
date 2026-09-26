@@ -1,0 +1,110 @@
+[
+  {
+    "code": "USD",
+    "display_name": "US Dollar",
+    "description": "United States Dollar - primary global reporting currency.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "$",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "EUR",
+    "display_name": "Euro",
+    "description": "European Union Euro.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "€",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "GBP",
+    "display_name": "British Pound Sterling",
+    "description": "United Kingdom Pound Sterling.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "£",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "JPY",
+    "display_name": "Japanese Yen",
+    "description": "Japanese Yen (0 minor units).",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "¥",
+      "minor_units": 0,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "CAD",
+    "display_name": "Canadian Dollar",
+    "description": "Canadian Dollar.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "CA$",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "AUD",
+    "display_name": "Australian Dollar",
+    "description": "Australian Dollar.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "A$",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "SGD",
+    "display_name": "Singapore Dollar",
+    "description": "Singapore Dollar.",
+    "sort_order": 7,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "S$",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "INR",
+    "display_name": "Indian Rupee",
+    "description": "Indian Rupee.",
+    "sort_order": 8,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "₹",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  },
+  {
+    "code": "CHF",
+    "display_name": "Swiss Franc",
+    "description": "Swiss Franc.",
+    "sort_order": 9,
+    "parent_code": null,
+    "attributes": {
+      "symbol": "CHF",
+      "minor_units": 2,
+      "rounding_rule": "HALF_EVEN"
+    }
+  }
+]

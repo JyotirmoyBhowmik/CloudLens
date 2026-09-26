@@ -1,0 +1,122 @@
+[
+  {
+    "code": "FX_USD_EUR_SPOT",
+    "display_name": "USD to EUR Spot Rate",
+    "description": "Real-time market spot rate for immediate currency translation.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "EUR",
+      "rate": "0.925000",
+      "effective_date": "2026-09-01",
+      "rate_type": "SPOT",
+      "source": "ECB"
+    }
+  },
+  {
+    "code": "FX_USD_EUR_MONTHLY_AVG",
+    "display_name": "USD to EUR Monthly Average Rate",
+    "description": "Trailing 30-day volume weighted monthly average rate for actual billing.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "EUR",
+      "rate": "0.920000",
+      "effective_date": "2026-09-01",
+      "rate_type": "MONTHLY_AVERAGE",
+      "source": "ECB"
+    }
+  },
+  {
+    "code": "FX_USD_EUR_BUDGET",
+    "display_name": "USD to EUR Annual Planning Budget Rate",
+    "description": "Fixed corporate treasury annual budget rate for variance tracking.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "EUR",
+      "rate": "0.900000",
+      "effective_date": "2026-01-01",
+      "rate_type": "BUDGET_RATE",
+      "source": "TREASURY"
+    }
+  },
+  {
+    "code": "FX_USD_EUR_CONSTANT",
+    "display_name": "USD to EUR Constant Currency Benchmark",
+    "description": "Constant currency rate baseline for multi-year trend analysis.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "EUR",
+      "rate": "0.910000",
+      "effective_date": "2025-01-01",
+      "rate_type": "CONSTANT",
+      "source": "TREASURY"
+    }
+  },
+  {
+    "code": "FX_USD_GBP_SPOT",
+    "display_name": "USD to GBP Spot Rate",
+    "description": "Real-time spot rate for British Pound.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "GBP",
+      "rate": "0.785000",
+      "effective_date": "2026-09-01",
+      "rate_type": "SPOT",
+      "source": "BOE"
+    }
+  },
+  {
+    "code": "FX_USD_GBP_MONTHLY_AVG",
+    "display_name": "USD to GBP Monthly Average Rate",
+    "description": "Monthly average rate for British Pound actual cost reporting.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "GBP",
+      "rate": "0.780000",
+      "effective_date": "2026-09-01",
+      "rate_type": "MONTHLY_AVERAGE",
+      "source": "BOE"
+    }
+  },
+  {
+    "code": "FX_USD_GBP_BUDGET",
+    "display_name": "USD to GBP Annual Planning Budget Rate",
+    "description": "Fixed corporate treasury annual budget rate for British Pound.",
+    "sort_order": 7,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "GBP",
+      "rate": "0.760000",
+      "effective_date": "2026-01-01",
+      "rate_type": "BUDGET_RATE",
+      "source": "TREASURY"
+    }
+  },
+  {
+    "code": "FX_USD_JPY_MONTHLY_AVG",
+    "display_name": "USD to JPY Monthly Average Rate",
+    "description": "Monthly average rate for Japanese Yen.",
+    "sort_order": 8,
+    "parent_code": null,
+    "attributes": {
+      "from_currency": "USD",
+      "to_currency": "JPY",
+      "rate": "152.500000",
+      "effective_date": "2026-09-01",
+      "rate_type": "MONTHLY_AVERAGE",
+      "source": "BOJ"
+    }
+  }
+]

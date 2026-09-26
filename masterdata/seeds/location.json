@@ -1,0 +1,58 @@
+[
+  {
+    "code": "LOC_US_EAST_VA",
+    "display_name": "US East - Ashburn Data Center & Office",
+    "description": "Primary North American operations hub and cloud interconnect.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "country_code": "US",
+      "city": "Ashburn, VA",
+      "site_type": "datacenter",
+      "timezone": "America/New_York",
+      "holiday_calendar_code": "HOL_US_FEDERAL"
+    }
+  },
+  {
+    "code": "LOC_UK_LON",
+    "display_name": "UK London City Financial Hub",
+    "description": "European trading, executive, and regional datacenter presence.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "country_code": "GB",
+      "city": "London",
+      "site_type": "office",
+      "timezone": "Europe/London",
+      "holiday_calendar_code": "HOL_UK_BANK"
+    }
+  },
+  {
+    "code": "LOC_EU_FRA",
+    "display_name": "EU Frankfurt Co-Location & Operations",
+    "description": "Continental European GDPR-compliant infrastructure hub.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "country_code": "DE",
+      "city": "Frankfurt",
+      "site_type": "co-lo",
+      "timezone": "Europe/Berlin",
+      "holiday_calendar_code": "HOL_GERMAN_FEDERAL"
+    }
+  },
+  {
+    "code": "LOC_APAC_SG",
+    "display_name": "APAC Singapore Regional Hub",
+    "description": "Asia-Pacific primary presence and financial routing center.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "country_code": "SG",
+      "city": "Singapore",
+      "site_type": "office",
+      "timezone": "Asia/Singapore",
+      "holiday_calendar_code": "HOL_SG_PUBLIC"
+    }
+  }
+]

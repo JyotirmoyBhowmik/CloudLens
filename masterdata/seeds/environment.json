@@ -1,0 +1,97 @@
+[
+  {
+    "code": "PROD",
+    "display_name": "Production",
+    "description": "Live production environment serving customer requests with 24/7 SLA.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "is_production": true,
+      "default_schedule": "SCHED_24X7",
+      "default_threshold_profile": "TH_PROD_TIGHT",
+      "default_monitoring_posture": "AGGRESSIVE",
+      "provider_tag_mappings": {
+        "aws": {"Environment": "production", "Env": "prod"},
+        "azure": {"Environment": "Production", "Env": "prod"},
+        "gcp": {"env": "prod", "environment": "production"},
+        "oci": {"Environment": "prod"}
+      }
+    }
+  },
+  {
+    "code": "STG",
+    "display_name": "Staging / Pre-Production",
+    "description": "Production mirror environment for final pre-release load testing and validation.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "is_production": false,
+      "default_schedule": "SCHED_EXTENDED_HOURS",
+      "default_threshold_profile": "TH_NONPROD_BALANCED",
+      "default_monitoring_posture": "STANDARD",
+      "provider_tag_mappings": {
+        "aws": {"Environment": "staging", "Env": "stg"},
+        "azure": {"Environment": "Staging", "Env": "stage"},
+        "gcp": {"env": "stg", "environment": "staging"},
+        "oci": {"Environment": "stg"}
+      }
+    }
+  },
+  {
+    "code": "DEV",
+    "display_name": "Development",
+    "description": "Active developer engineering and continuous integration testing environment.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "is_production": false,
+      "default_schedule": "SCHED_BUSINESS_HOURS",
+      "default_threshold_profile": "TH_NONPROD_LENIENT",
+      "default_monitoring_posture": "LIGHTWEIGHT",
+      "provider_tag_mappings": {
+        "aws": {"Environment": "development", "Env": "dev"},
+        "azure": {"Environment": "Development", "Env": "dev"},
+        "gcp": {"env": "dev", "environment": "development"},
+        "oci": {"Environment": "dev"}
+      }
+    }
+  },
+  {
+    "code": "DR",
+    "display_name": "Disaster Recovery",
+    "description": "Warm-standby disaster recovery estate in secondary geographical region.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "is_production": true,
+      "default_schedule": "SCHED_STANDBY",
+      "default_threshold_profile": "TH_PROD_TIGHT",
+      "default_monitoring_posture": "STANDARD",
+      "provider_tag_mappings": {
+        "aws": {"Environment": "disaster-recovery", "Env": "dr"},
+        "azure": {"Environment": "DisasterRecovery", "Env": "dr"},
+        "gcp": {"env": "dr", "environment": "disaster-recovery"},
+        "oci": {"Environment": "dr"}
+      }
+    }
+  },
+  {
+    "code": "SANDBOX",
+    "display_name": "Sandbox / R&D",
+    "description": "Isolated sandbox environment with aggressive auto-shutdown outside business hours.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "is_production": false,
+      "default_schedule": "SCHED_AUTO_SHUTDOWN_NIGHTLY",
+      "default_threshold_profile": "TH_NONPROD_LENIENT",
+      "default_monitoring_posture": "LIGHTWEIGHT",
+      "provider_tag_mappings": {
+        "aws": {"Environment": "sandbox", "Env": "sbx"},
+        "azure": {"Environment": "Sandbox", "Env": "sbx"},
+        "gcp": {"env": "sandbox", "environment": "sandbox"},
+        "oci": {"Environment": "sandbox"}
+      }
+    }
+  }
+]

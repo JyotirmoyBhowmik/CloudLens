@@ -1,0 +1,111 @@
+[
+  {
+    "code": "OWNER_CLOUD_INFRA",
+    "display_name": "Marcus Vance (VP Infrastructure)",
+    "description": "Enterprise cloud platform owner and executive infrastructure sponsor.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "entity_type": "PERSON",
+      "display_name": "Marcus Vance",
+      "contact_channels": {
+        "email": "marcus.vance@cloudlens.corp",
+        "slack": "#cloud-infra-leadership",
+        "pagerduty": "P1-INFRA-EXEC"
+      },
+      "directory_reference": "aad-usr-91029384",
+      "role": "BUDGET_OWNER",
+      "delegation_successor_id": "OWNER_FINOPS_ARCH",
+      "out_of_office_successor_id": "OWNER_FINOPS_ARCH",
+      "active_period_start": "2020-01-01",
+      "active_period_end": "2030-12-31"
+    }
+  },
+  {
+    "code": "OWNER_FINOPS_ARCH",
+    "display_name": "Elena Rostova (Lead FinOps Architect)",
+    "description": "Technical owner of CloudLens platform and rate card administrator.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "entity_type": "PERSON",
+      "display_name": "Elena Rostova",
+      "contact_channels": {
+        "email": "elena.rostova@cloudlens.corp",
+        "slack": "#finops-champions",
+        "pagerduty": "P2-FINOPS-CORE"
+      },
+      "directory_reference": "aad-usr-48102938",
+      "role": "TECHNICAL_OWNER",
+      "delegation_successor_id": "TEAM_FINOPS_ENG",
+      "out_of_office_successor_id": "TEAM_FINOPS_ENG",
+      "active_period_start": "2021-03-01",
+      "active_period_end": "2030-12-31"
+    }
+  },
+  {
+    "code": "OWNER_RETAIL_LEAD",
+    "display_name": "Sarah Jenkins (Head of Retail Platforms)",
+    "description": "Retail banking domain business owner and budget signatory.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "entity_type": "PERSON",
+      "display_name": "Sarah Jenkins",
+      "contact_channels": {
+        "email": "sarah.jenkins@cloudlens.corp",
+        "slack": "#retail-banking-ops"
+      },
+      "directory_reference": "aad-usr-10293847",
+      "role": "BUSINESS_OWNER",
+      "delegation_successor_id": "OWNER_CORE_ARCH",
+      "out_of_office_successor_id": "OWNER_CORE_ARCH",
+      "active_period_start": "2020-01-01",
+      "active_period_end": "2030-12-31"
+    }
+  },
+  {
+    "code": "TEAM_FINOPS_ENG",
+    "display_name": "FinOps Engineering Operations Team",
+    "description": "Operational team managing anomaly remediation and threshold policies.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "entity_type": "TEAM",
+      "display_name": "FinOps Engineering Team",
+      "contact_channels": {
+        "email": "finops-team@cloudlens.corp",
+        "slack": "#cloudlens-alerts",
+        "pagerduty": "P3-FINOPS-TEAM"
+      },
+      "directory_reference": "aad-grp-77291024",
+      "role": "APPROVER",
+      "delegation_successor_id": "OWNER_FINOPS_ARCH",
+      "out_of_office_successor_id": "OWNER_FINOPS_ARCH",
+      "active_period_start": "2020-01-01",
+      "active_period_end": "2030-12-31"
+    }
+  },
+  {
+    "code": "TEAM_CORE_SRE",
+    "display_name": "Core Banking Site Reliability Engineering",
+    "description": "24/7 production escalation contact team for critical banking systems.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "entity_type": "TEAM",
+      "display_name": "Core Banking SRE",
+      "contact_channels": {
+        "email": "core-sre@cloudlens.corp",
+        "slack": "#core-sre-oncall",
+        "pagerduty": "P1-CORE-BANKING-ONCALL"
+      },
+      "directory_reference": "aad-grp-88201923",
+      "role": "ESCALATION_CONTACT",
+      "delegation_successor_id": "OWNER_RETAIL_LEAD",
+      "out_of_office_successor_id": "OWNER_RETAIL_LEAD",
+      "active_period_start": "2020-01-01",
+      "active_period_end": "2030-12-31"
+    }
+  }
+]

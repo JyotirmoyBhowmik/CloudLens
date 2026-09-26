@@ -1,0 +1,54 @@
+[
+  {
+    "code": "LE_US_CORP",
+    "display_name": "CloudLens Corporation (US)",
+    "description": "Primary parent incorporation in Delaware, USA.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "jurisdiction": "United States (Delaware)",
+      "registration_number": "DE-7391024",
+      "currency": "USD",
+      "tax_id": "XX-XXXXXXX"
+    }
+  },
+  {
+    "code": "LE_UK_LTD",
+    "display_name": "CloudLens UK Limited",
+    "description": "United Kingdom subsidiary operating European financial services.",
+    "sort_order": 2,
+    "parent_code": "LE_US_CORP",
+    "attributes": {
+      "jurisdiction": "United Kingdom (England & Wales)",
+      "registration_number": "UK-10928374",
+      "currency": "GBP",
+      "tax_id": "GB-981240192"
+    }
+  },
+  {
+    "code": "LE_EU_BV",
+    "display_name": "CloudLens Europe B.V.",
+    "description": "Netherlands European Union operating subsidiary.",
+    "sort_order": 3,
+    "parent_code": "LE_US_CORP",
+    "attributes": {
+      "jurisdiction": "Netherlands (EU)",
+      "registration_number": "NL-82019283",
+      "currency": "EUR",
+      "tax_id": "NL-820192830B01"
+    }
+  },
+  {
+    "code": "LE_SG_PTE",
+    "display_name": "CloudLens APAC Pte. Ltd.",
+    "description": "Singapore Asia-Pacific regional holding entity.",
+    "sort_order": 4,
+    "parent_code": "LE_US_CORP",
+    "attributes": {
+      "jurisdiction": "Singapore",
+      "registration_number": "SG-202209182A",
+      "currency": "SGD",
+      "tax_id": "M90382910X"
+    }
+  }
+]

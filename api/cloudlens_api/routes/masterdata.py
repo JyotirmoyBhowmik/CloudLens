@@ -8,7 +8,8 @@ Exposes endpoints for the Master Data Console:
 - Lineage, where-used, import/export, and health reports.
 """
 
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response, status
@@ -22,12 +23,26 @@ from domain.models.exceptions import (
     ReferenceIntegrityBlockedException,
 )
 from masterdata import (
+    BudgetAllocation,
+    BudgetAllocationService,
+    ContractRateEngine,
+    CurrencyConversionResult,
+    CurrencyConverterEngine,
     DryRunValidationResult,
+    EffectiveRateResult,
+    FinancialCalendarEngine,
+    FiscalPeriod,
+    GeographyComplianceEngine,
+    GeographyComplianceResult,
     MasterDataHealthReport,
     MasterDataLineage,
     MasterDataRecord,
     MasterDataService,
     MasterRegistryEntry,
+    RuntimeScheduleAdherenceEngine,
+    ScheduleAdherenceResult,
+    TagComplianceReport,
+    TagPolicyEngine,
     WhereUsedReport,
     get_master_data_service,
 )
@@ -92,6 +107,142 @@ async def list_registry_manifest() -> list[MasterRegistryEntry]:
 async def get_master_data_health() -> MasterDataHealthReport:
     """Returns platform-wide master data health and hygiene inspection."""
     return get_master_service().get_health_report()
+
+
+class ValidateBudgetRequest(BaseModel):
+    tenant_id: str
+    name: str
+    amount: Decimal
+    currency: str = "USD"
+    fiscal_year: int
+    cost_centre_code: str
+    business_unit_code: str
+
+
+class ScheduleAdherenceEvaluateRequest(BaseModel):
+    resource_id: str
+    environment_code: str
+    current_status: str
+    check_date: date
+    location_code: str = "LOC_US_EAST_VA"
+
+
+class CurrencyConvertRequest(BaseModel):
+    amount: Decimal
+    from_currency: str
+    presentation_context: str = "actual_cost"
+    tenant_id: str | None = None
+    as_of_date: str | None = None
+
+
+class TagPolicyEvaluateRequest(BaseModel):
+    tags: dict[str, str]
+    policy_code: str = "TAG_POL_ENTERPRISE_MANDATORY"
+
+
+# ------------------------------------------------------------------------------
+# Business Master Data Domain Endpoints (Prompt 46)
+# ------------------------------------------------------------------------------
+
+
+@router.post("/budgets/validate", response_model=BudgetAllocation)
+async def validate_and_create_budget(payload: ValidateBudgetRequest) -> BudgetAllocation:
+    """Validates budget creation against registered Cost Centre and Business Unit masters."""
+    try:
+        service = BudgetAllocationService(get_master_service())
+        return service.create_budget_allocation(
+            tenant_id=payload.tenant_id,
+            name=payload.name,
+            amount=payload.amount,
+            currency=payload.currency,
+            fiscal_year=payload.fiscal_year,
+            cost_centre_code=payload.cost_centre_code,
+            business_unit_code=payload.business_unit_code,
+            created_by="api_user",
+        )
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.get("/calendar/fiscal-periods", response_model=list[FiscalPeriod])
+async def get_fiscal_periods(
+    calendar_code: str = Query("FC_STANDARD_JAN", description="Fiscal calendar code"),
+    fiscal_year: int = Query(2026, description="Fiscal year"),
+) -> list[FiscalPeriod]:
+    """Calculates all 12 period boundaries dynamically from master data."""
+    try:
+        engine = FinancialCalendarEngine(get_master_service())
+        return engine.get_fiscal_periods(calendar_code, fiscal_year)
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.post("/schedule-adherence/evaluate", response_model=ScheduleAdherenceResult)
+async def evaluate_schedule_adherence(
+    payload: ScheduleAdherenceEvaluateRequest,
+) -> ScheduleAdherenceResult:
+    """Evaluates schedule adherence, suppressing exceptions on holidays."""
+    try:
+        engine = RuntimeScheduleAdherenceEngine(get_master_service())
+        return engine.evaluate_schedule_adherence(
+            resource_id=payload.resource_id,
+            environment_code=payload.environment_code,
+            current_status=payload.current_status,
+            check_date=payload.check_date,
+            location_code=payload.location_code,
+        )
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.post("/currency/convert", response_model=CurrencyConversionResult)
+async def convert_currency_cost(payload: CurrencyConvertRequest) -> CurrencyConversionResult:
+    """Converts a cost to reporting currency using the tenant FX presentation policy."""
+    try:
+        engine = CurrencyConverterEngine(get_master_service())
+        return engine.convert_cost(
+            amount=payload.amount,
+            from_currency=payload.from_currency,
+            presentation_context=payload.presentation_context,
+            tenant_id=payload.tenant_id,
+            as_of_date=payload.as_of_date,
+        )
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.get("/rate-cards/effective-rate", response_model=EffectiveRateResult)
+async def get_effective_rate_card(
+    provider_code: str = Query(..., description="Cloud provider code"),
+    service_code: str = Query(..., description="Service code"),
+    sku_id: str = Query(..., description="SKU identifier"),
+) -> EffectiveRateResult:
+    """Resolves effective rate with contracted precedence and visible manual source label."""
+    try:
+        engine = ContractRateEngine(get_master_service())
+        return engine.resolve_effective_rate(provider_code, service_code, sku_id)
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message) from e
+
+
+@router.post("/tag-policy/evaluate", response_model=TagComplianceReport)
+async def evaluate_tag_policy(payload: TagPolicyEvaluateRequest) -> TagComplianceReport:
+    """Evaluates resource tags against corporate tag policy."""
+    try:
+        engine = TagPolicyEngine(get_master_service())
+        return engine.evaluate_tags(payload.tags, payload.policy_code)
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.get("/geography/compliance", response_model=GeographyComplianceResult)
+async def evaluate_geography_compliance(
+    provider_code: str = Query(..., description="Cloud provider code"),
+    region_name: str = Query(..., description="Region name"),
+) -> GeographyComplianceResult:
+    """Verifies region deployment compliance and sovereign data residency."""
+    engine = GeographyComplianceEngine(get_master_service())
+    return engine.evaluate_region(provider_code, region_name)
 
 
 @router.get("/records/{master_type}", response_model=list[MasterDataRecord])

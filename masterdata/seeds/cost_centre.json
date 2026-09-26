@@ -1,0 +1,72 @@
+[
+  {
+    "code": "CC-1001",
+    "display_name": "Executive Governance & Corporate Affairs",
+    "description": "Enterprise leadership and strategic operations.",
+    "sort_order": 1,
+    "parent_code": "BU_GLOBAL_CORP",
+    "attributes": {
+      "business_unit_code": "BU_GLOBAL_CORP",
+      "gl_account_reference": "GL-61000-EXEC",
+      "owner_id": "OWNER_EXEC_LEAD",
+      "validity_start": "2020-01-01",
+      "validity_end": "2035-12-31"
+    }
+  },
+  {
+    "code": "CC-2001",
+    "display_name": "Core Banking Production Systems",
+    "description": "Retail core ledger and transaction processing ledger.",
+    "sort_order": 2,
+    "parent_code": "BU_RETAIL_BANKING",
+    "attributes": {
+      "business_unit_code": "BU_RETAIL_BANKING",
+      "gl_account_reference": "GL-62100-RETAIL",
+      "owner_id": "OWNER_RETAIL_LEAD",
+      "validity_start": "2020-01-01",
+      "validity_end": "2035-12-31"
+    }
+  },
+  {
+    "code": "CC-3001",
+    "display_name": "Wealth Management Portfolio Analytics",
+    "description": "High net-worth analytics and market data feeds.",
+    "sort_order": 3,
+    "parent_code": "BU_WEALTH_MGMT",
+    "attributes": {
+      "business_unit_code": "BU_WEALTH_MGMT",
+      "gl_account_reference": "GL-63100-WEALTH",
+      "owner_id": "OWNER_WEALTH_LEAD",
+      "validity_start": "2020-01-01",
+      "validity_end": "2035-12-31"
+    }
+  },
+  {
+    "code": "CC-4001",
+    "display_name": "Central Cloud Infrastructure Services",
+    "description": "Shared landing zones, network backbones, and FinOps platforms.",
+    "sort_order": 4,
+    "parent_code": "BU_CLOUD_ENGINEERING",
+    "attributes": {
+      "business_unit_code": "BU_CLOUD_ENGINEERING",
+      "gl_account_reference": "GL-64100-CLOUD",
+      "owner_id": "OWNER_CLOUD_INFRA",
+      "validity_start": "2020-01-01",
+      "validity_end": "2035-12-31"
+    }
+  },
+  {
+    "code": "CC-5001",
+    "display_name": "Digital Customer Experience & Mobile Apps",
+    "description": "Front-end customer digital channels and API gateways.",
+    "sort_order": 5,
+    "parent_code": "BU_DIGITAL_INNOVATION",
+    "attributes": {
+      "business_unit_code": "BU_DIGITAL_INNOVATION",
+      "gl_account_reference": "GL-65100-DIGITAL",
+      "owner_id": "OWNER_DIGITAL_LEAD",
+      "validity_start": "2020-01-01",
+      "validity_end": "2035-12-31"
+    }
+  }
+]

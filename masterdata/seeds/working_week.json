@@ -1,0 +1,41 @@
+[
+  {
+    "code": "WW_STANDARD_MON_FRI",
+    "display_name": "Standard Western Working Week (Mon - Fri)",
+    "description": "Standard business days Monday through Friday, 08:00 to 18:00 local time.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "working_days": [1, 2, 3, 4, 5],
+      "daily_start_time": "08:00",
+      "daily_end_time": "18:00",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "code": "WW_MIDDLE_EAST_SUN_THU",
+    "display_name": "Middle East Working Week (Sun - Thu)",
+    "description": "Regional working week Sunday through Thursday, 08:00 to 18:00 local time.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "working_days": [7, 1, 2, 3, 4],
+      "daily_start_time": "08:00",
+      "daily_end_time": "18:00",
+      "timezone": "Asia/Dubai"
+    }
+  },
+  {
+    "code": "WW_CONTINUOUS_24X7",
+    "display_name": "Continuous Operation 24x7",
+    "description": "Always-on production infrastructure with no scheduled downtime windows.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "working_days": [1, 2, 3, 4, 5, 6, 7],
+      "daily_start_time": "00:00",
+      "daily_end_time": "23:59",
+      "timezone": "UTC"
+    }
+  }
+]
