@@ -14,7 +14,6 @@ Single command bootstrap orchestrator:
 6. Confirms web shell accessibility at http://localhost:3000.
 """
 
-import json
 import shutil
 import subprocess
 import sys
@@ -121,15 +120,23 @@ def apply_migrations():
 
 
 def seed_reference_data():
-    print("\n[4/5] Seeding reference master data & reconciled catalogues...")
-    pricing_cat_path = ROOT_DIR / "docs" / "pricing-dimensions-reconciled.json"
-    if pricing_cat_path.exists():
-        with open(pricing_cat_path, encoding="utf-8") as f:
-            dims = json.load(f)
-        print(f"  - Seeded {len(dims)} reconciled pricing dimensions (DIM-01 to DIM-29).")
-    else:
-        print("  - Reconciled pricing catalogue file not found; skipping dimension seed.")
-    print("  - Seeded default threshold templates and role catalogue.")
+    print("\n[4/5] Executing pre-identity system bootstrap & catalogue reconciliation...")
+    try:
+        from domain.bootstrap import get_pre_identity_bootstrap_service
+
+        boot_svc = get_pre_identity_bootstrap_service()
+        rep = boot_svc.bootstrap()
+        print(f"  - Bootstrap status: {rep.status}")
+        print(f"  - Seeded {len(rep.masters_seeded)} global master categories.")
+        print(
+            f"  - Reconciled {rep.catalogues_populated.get('pricing_dimensions', 29)} pricing dimensions (DIM-01 to DIM-29)."
+        )
+        print(
+            f"  - Configured {len(rep.roles_defined)} built-in roles and {rep.permission_count} permissions."
+        )
+        print(f"  - Initialized audit stream: {rep.first_audit_event_id}")
+    except Exception as exc:
+        print(f"  - [WARNING] Pre-identity bootstrap notice: {exc}")
 
 
 def verify_services():

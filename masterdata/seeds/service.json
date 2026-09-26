@@ -1,0 +1,62 @@
+[
+  {
+    "code": "VirtualMachines",
+    "display_name": "Virtual Machines",
+    "description": "Virtual machine and compute instance services across providers.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "service_id": "svc-compute-vm",
+      "provider": "canonical",
+      "category": "COMPUTE"
+    }
+  },
+  {
+    "code": "ObjectStorage",
+    "display_name": "Object Storage",
+    "description": "Scalable blob and object storage buckets.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "service_id": "svc-storage-obj",
+      "provider": "canonical",
+      "category": "STORAGE"
+    }
+  },
+  {
+    "code": "RelationalDatabase",
+    "display_name": "Relational Database",
+    "description": "Managed SQL and relational database instances.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "service_id": "svc-database-sql",
+      "provider": "canonical",
+      "category": "DATABASE"
+    }
+  },
+  {
+    "code": "ServerlessFunctions",
+    "display_name": "Serverless Functions",
+    "description": "Event-driven serverless compute execution runtimes.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "service_id": "svc-serverless-fn",
+      "provider": "canonical",
+      "category": "COMPUTE"
+    }
+  },
+  {
+    "code": "NetworkGateway",
+    "display_name": "Network Gateway",
+    "description": "Virtual network gateways, NAT gateways, and connectivity hubs.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "service_id": "svc-network-gw",
+      "provider": "canonical",
+      "category": "NETWORKING"
+    }
+  }
+]

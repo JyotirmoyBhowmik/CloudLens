@@ -83,15 +83,13 @@ class MasterDataSeeder:
                 report.total_records_processed += 1
                 code = item["code"]
 
-                # Find if active system record already exists
+                # Find if system record already exists
                 existing = next(
-                    (
-                        r
-                        for r in existing_list
-                        if r.code == code and r.tenant_id is None and r.is_active
-                    ),
+                    (r for r in existing_list if r.code == code and r.tenant_id is None),
                     None,
                 )
+
+                item_active = item.get("is_active", True)
 
                 if existing is None:
                     # New record insertion
@@ -104,7 +102,7 @@ class MasterDataSeeder:
                         description=item.get("description"),
                         sort_order=item.get("sort_order", 0),
                         is_system=True,  # Mandatory Prompt 45 Item 6
-                        is_active=True,
+                        is_active=item_active,
                         effective_from=DEFAULT_MASTER_EPOCH,
                         effective_to=None,
                         version=1,
@@ -124,6 +122,7 @@ class MasterDataSeeder:
                     is_same_order = existing.sort_order == item.get("sort_order", 0)
                     is_same_attrs = existing.attributes == item.get("attributes", {})
                     is_same_parent = existing.parent_code == item.get("parent_code")
+                    is_same_active = existing.is_active == item_active
 
                     if (
                         is_same_display
@@ -131,6 +130,7 @@ class MasterDataSeeder:
                         and is_same_order
                         and is_same_attrs
                         and is_same_parent
+                        and is_same_active
                     ):
                         report.unchanged_count += 1
                     else:
@@ -140,6 +140,7 @@ class MasterDataSeeder:
                         existing.sort_order = item.get("sort_order", 0)
                         existing.attributes = item.get("attributes", {})
                         existing.parent_code = item.get("parent_code")
+                        existing.is_active = item_active
                         report.updated_count += 1
 
         return report

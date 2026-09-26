@@ -1,0 +1,89 @@
+[
+  {
+    "code": "TT_COMPUTE_IDLE",
+    "display_name": "Idle Compute Instance Detection",
+    "description": "Flags compute instances running with average CPU utilization below 5% for 7 consecutive days.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "COMPUTE_HOST",
+      "metric_code": "cpu_utilization_percentage",
+      "operator": "LESS_THAN",
+      "threshold_value": 5.0,
+      "evaluation_window_days": 7,
+      "default_severity": "WARNING"
+    }
+  },
+  {
+    "code": "TT_STORAGE_UNATTACHED",
+    "display_name": "Unattached Persistent Storage Cleanup",
+    "description": "Detects unattached block storage volumes and idle disks detached for more than 14 days.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "STORAGE_STORE",
+      "metric_code": "storage_allocated_bytes",
+      "operator": "GREATER_THAN",
+      "threshold_value": 0.0,
+      "unattached_duration_days": 14,
+      "default_severity": "MEDIUM"
+    }
+  },
+  {
+    "code": "TT_BUDGET_WARNING",
+    "display_name": "Budget Burn Rate Warning (Amber)",
+    "description": "Fires amber alert when actual or forecasted spend reaches 80% of scope budget limit.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "FINANCIAL_SCOPE",
+      "metric_code": "budget_consumption_percentage",
+      "operator": "GREATER_THAN_OR_EQUAL",
+      "threshold_value": 80.0,
+      "default_severity": "WARNING"
+    }
+  },
+  {
+    "code": "TT_BUDGET_CRITICAL",
+    "display_name": "Budget Exceeded Alert (Critical)",
+    "description": "Fires critical red alert when cumulative monthly spend crosses 100% of allocated budget.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "FINANCIAL_SCOPE",
+      "metric_code": "budget_consumption_percentage",
+      "operator": "GREATER_THAN_OR_EQUAL",
+      "threshold_value": 100.0,
+      "default_severity": "CRITICAL"
+    }
+  },
+  {
+    "code": "TT_SPEND_SPIKE",
+    "display_name": "Daily Cost Spike Anomaly",
+    "description": "Flags sudden day-over-day cost surges exceeding 20% compared against 30-day baseline.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "FINANCIAL_SCOPE",
+      "metric_code": "cost_increase_percentage",
+      "operator": "GREATER_THAN",
+      "threshold_value": 20.0,
+      "z_score_threshold": 2.5,
+      "default_severity": "HIGH"
+    }
+  },
+  {
+    "code": "TT_CONNECTOR_LATENCY",
+    "display_name": "Connector Ingestion Lag SLA",
+    "description": "Warns when connector telemetry freshness exceeds 86,400 seconds (24 hours).",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "target_monitoring_type": "CONNECTOR_PROBE",
+      "metric_code": "connector_freshness_seconds",
+      "operator": "GREATER_THAN",
+      "threshold_value": 86400.0,
+      "default_severity": "HIGH"
+    }
+  }
+]

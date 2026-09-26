@@ -1,0 +1,99 @@
+[
+  {
+    "code": "C-01",
+    "display_name": "Hierarchy Discovery",
+    "description": "Discovery of organizational hierarchy, management groups, folders, compartments, and billing accounts.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-01",
+      "required_tier": "FOUNDATIONAL",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "organizations:Describe*, organizations:List*",
+      "azure_role": "Management Group Reader",
+      "gcp_role": "roles/resourcemanager.organizationViewer",
+      "oci_policy": "read compartments in tenancy"
+    }
+  },
+  {
+    "code": "C-02",
+    "display_name": "Resource Inventory",
+    "description": "Continuous discovery, classification, and metadata extraction of provisioned cloud infrastructure resources.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-02",
+      "required_tier": "FOUNDATIONAL",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "resource-explorer-2:Search, tag:GetResources",
+      "azure_role": "Reader on Microsoft.Resources",
+      "gcp_role": "roles/cloudasset.viewer",
+      "oci_policy": "read all-resources in tenancy"
+    }
+  },
+  {
+    "code": "C-03",
+    "display_name": "Cost Ingestion",
+    "description": "Automated ingestion, parsing, and normalization of billing exports, invoices, and FOCUS cost lines.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-03",
+      "required_tier": "CORE_FINOPS",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "ce:GetCostAndUsage, s3:GetObject on CUR bucket",
+      "azure_role": "Cost Management Reader",
+      "gcp_role": "roles/bigquery.dataViewer",
+      "oci_policy": "read usage-reports in tenancy, read cost-reports in tenancy"
+    }
+  },
+  {
+    "code": "C-04",
+    "display_name": "Usage Metrics",
+    "description": "High-frequency operational metrics ingestion (CPU, memory, disk, network throughput) for rightsizing.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-04",
+      "required_tier": "CORE_FINOPS",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "cloudwatch:GetMetricData, cloudwatch:ListMetrics",
+      "azure_role": "Monitoring Reader",
+      "gcp_role": "roles/monitoring.viewer",
+      "oci_policy": "read metrics in tenancy"
+    }
+  },
+  {
+    "code": "C-11",
+    "display_name": "Pricing Discovery",
+    "description": "Dynamic retrieval of public list rates, regional rate cards, and SKU catalog pricing structures.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-11",
+      "required_tier": "PRICING",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "pricing:GetProducts, pricing:DescribeServices",
+      "azure_role": "Public Retail Rates API",
+      "gcp_role": "Cloud Catalog API",
+      "oci_policy": "Public rate card endpoints"
+    }
+  },
+  {
+    "code": "C-18",
+    "display_name": "Quota & Limits Headroom",
+    "description": "Continuous tracking of provider service limits, quota consumption, and exhaustion headroom (AM-07).",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "capability_id": "C-18",
+      "required_tier": "ADVANCED_FINOPS",
+      "supported_providers": ["AWS", "AZURE", "GCP", "OCI"],
+      "aws_policy": "servicequotas:GetServiceQuota, servicequotas:List*",
+      "azure_role": "Reader on Microsoft.Quota/quotas/read",
+      "gcp_role": "roles/servicemanagement.quotaViewer",
+      "oci_policy": "read limits in tenancy",
+      "added_by": "AM-07"
+    }
+  }
+]

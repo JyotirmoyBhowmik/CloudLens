@@ -117,3 +117,24 @@ class MasterDataApprovalException(MasterDataException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="MASTER_DATA_APPROVAL_ERROR")
+
+
+class BootstrapException(DomainModelException):
+    """Base exception for system bootstrap violations."""
+
+    def __init__(self, message: str, error_code: str = "BOOTSTRAP_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class SystemAlreadyInitialisedException(BootstrapException):
+    """Raised when re-running bootstrap against an already initialized system."""
+
+    def __init__(self, message: str = "System is already initialized.") -> None:
+        super().__init__(message, error_code="SYSTEM_ALREADY_INITIALIZED")
+
+
+class BootstrapIntegrityException(BootstrapException):
+    """Raised when bootstrap prerequisites, seed counts, or invariants fail validation."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="BOOTSTRAP_INTEGRITY_VIOLATION")

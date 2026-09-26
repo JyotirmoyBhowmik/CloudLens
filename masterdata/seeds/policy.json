@@ -1,0 +1,105 @@
+[
+  {
+    "code": "POL_CONNECTOR_HEALTH",
+    "display_name": "Connector Health & Freshness SLA Guardrail",
+    "description": "Monitors active connectors to ensure synchronization latency does not exceed 24 hours.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "category": "CONNECTOR",
+      "rule_type": "CONNECTOR_FRESHNESS",
+      "enabled": true,
+      "severity": "HIGH",
+      "parameters": {
+        "max_freshness_seconds": 86400
+      }
+    }
+  },
+  {
+    "code": "POL_TAG_COMPLIANCE",
+    "display_name": "Mandatory Tagging Compliance Enforcement",
+    "description": "Requires all cloud resources to bear valid CostCenter, Environment, and Owner tags.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": false,
+    "attributes": {
+      "category": "TAGGING",
+      "rule_type": "TAG_ENFORCEMENT",
+      "enabled": false,
+      "severity": "MEDIUM",
+      "parameters": {
+        "required_keys": ["CostCenter", "Environment", "Owner"]
+      }
+    }
+  },
+  {
+    "code": "POL_IDLE_RESOURCE",
+    "display_name": "Idle Compute Rightsizing & Deallocation Policy",
+    "description": "Flags compute instances with low CPU/RAM for shutdown, resizing, or termination.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": false,
+    "attributes": {
+      "category": "COST_OPTIMIZATION",
+      "rule_type": "IDLE_COMPUTE",
+      "enabled": false,
+      "severity": "LOW",
+      "parameters": {
+        "cpu_idle_threshold": 5.0,
+        "consecutive_days": 7
+      }
+    }
+  },
+  {
+    "code": "POL_UNATTACHED_STORAGE",
+    "display_name": "Unattached Persistent Storage Cleanup Guardrail",
+    "description": "Identifies unattached volumes for snapshot retention and subsequent volume deletion.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": false,
+    "attributes": {
+      "category": "COST_OPTIMIZATION",
+      "rule_type": "UNATTACHED_VOLUME",
+      "enabled": false,
+      "severity": "MEDIUM",
+      "parameters": {
+        "unattached_days": 14
+      }
+    }
+  },
+  {
+    "code": "POL_EXPENSIVE_SKU",
+    "display_name": "High-Performance GPU/HPC SKU Provisioning Guardrail",
+    "description": "Enforces pre-approval on provisioning high-cost GPU and specialized compute families.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": false,
+    "attributes": {
+      "category": "FINANCIAL_GUARDRAIL",
+      "rule_type": "EXPENSIVE_SKU",
+      "enabled": false,
+      "severity": "HIGH",
+      "parameters": {
+        "restricted_families": ["p4d.24xlarge", "Standard_ND96asr_v4", "a2-megagpu-16g"]
+      }
+    }
+  },
+  {
+    "code": "POL_REGIONAL_RESTRICTION",
+    "display_name": "Approved Datacenter Regions Deployment Policy",
+    "description": "Restricts resource provisioning to approved data sovereignty and compliance regions.",
+    "sort_order": 6,
+    "parent_code": null,
+    "is_active": false,
+    "attributes": {
+      "category": "COMPLIANCE",
+      "rule_type": "REGIONAL_RESTRICTION",
+      "enabled": false,
+      "severity": "CRITICAL",
+      "parameters": {
+        "allow_unapproved_regions": false
+      }
+    }
+  }
+]

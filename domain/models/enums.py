@@ -200,3 +200,28 @@ class SyncJobStatus(str, Enum):
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+
+
+class SystemRole(str, Enum):
+    """Nine built-in canonical roles for enterprise FinOps RBAC (Prompt 49A Item 9)."""
+
+    GLOBAL_ADMIN = "GLOBAL_ADMIN"
+    TENANT_ADMIN = "TENANT_ADMIN"
+    FINOPS_ADMIN = "FINOPS_ADMIN"
+    FINOPS_ANALYST = "FINOPS_ANALYST"
+    FINOPS_VIEWER = "FINOPS_VIEWER"
+    CLOUD_ARCHITECT = "CLOUD_ARCHITECT"
+    DEVELOPER = "DEVELOPER"
+    SECURITY_AUDITOR = "SECURITY_AUDITOR"
+    TENANT_USER = "TENANT_USER"
+
+
+class ProviderCapability(str, Enum):
+    """Supported cloud provider capability groups (Prompt 49A Item 11, AM-07)."""
+
+    C01_HIERARCHY = "C-01"
+    C02_INVENTORY = "C-02"
+    C03_COST = "C-03"
+    C04_USAGE = "C-04"
+    C11_PRICING = "C-11"
+    C18_QUOTA = "C-18"

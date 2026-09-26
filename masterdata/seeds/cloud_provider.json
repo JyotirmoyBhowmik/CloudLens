@@ -1,7 +1,57 @@
 [
-  {"code": "AWS", "display_name": "Amazon Web Services", "description": "Amazon Web Services cloud infrastructure.", "sort_order": 1, "attributes": {"api_endpoint": "https://aws.amazon.com", "icon": "aws-icon"}},
-  {"code": "AZURE", "display_name": "Microsoft Azure", "description": "Microsoft Azure cloud computing platform.", "sort_order": 2, "attributes": {"api_endpoint": "https://management.azure.com", "icon": "azure-icon"}},
-  {"code": "GCP", "display_name": "Google Cloud Platform", "description": "Google Cloud enterprise computing and analytics suite.", "sort_order": 3, "attributes": {"api_endpoint": "https://cloud.google.com", "icon": "gcp-icon"}},
-  {"code": "OCI", "display_name": "Oracle Cloud Infrastructure", "description": "Oracle Cloud Infrastructure high-performance cloud services.", "sort_order": 4, "attributes": {"api_endpoint": "https://oracle.com/cloud", "icon": "oci-icon"}},
-  {"code": "CANONICAL", "display_name": "CloudLens Canonical Boundary", "description": "Provider-agnostic canonical tenant scope boundary.", "sort_order": 5, "attributes": {"api_endpoint": "https://cloudlens.local", "icon": "canonical-icon"}}
+  {
+    "code": "AWS",
+    "display_name": "Amazon Web Services",
+    "description": "Amazon Web Services cloud infrastructure.",
+    "sort_order": 1,
+    "attributes": {
+      "api_endpoint": "https://aws.amazon.com",
+      "icon": "aws-icon",
+      "default_capabilities": ["C-01", "C-02", "C-03", "C-04", "C-11", "C-18"]
+    }
+  },
+  {
+    "code": "AZURE",
+    "display_name": "Microsoft Azure",
+    "description": "Microsoft Azure cloud computing platform.",
+    "sort_order": 2,
+    "attributes": {
+      "api_endpoint": "https://management.azure.com",
+      "icon": "azure-icon",
+      "default_capabilities": ["C-01", "C-02", "C-03", "C-04", "C-11", "C-18"]
+    }
+  },
+  {
+    "code": "GCP",
+    "display_name": "Google Cloud Platform",
+    "description": "Google Cloud enterprise computing and analytics suite.",
+    "sort_order": 3,
+    "attributes": {
+      "api_endpoint": "https://cloud.google.com",
+      "icon": "gcp-icon",
+      "default_capabilities": ["C-01", "C-02", "C-03", "C-04", "C-11", "C-18"]
+    }
+  },
+  {
+    "code": "OCI",
+    "display_name": "Oracle Cloud Infrastructure",
+    "description": "Oracle Cloud Infrastructure high-performance cloud services.",
+    "sort_order": 4,
+    "attributes": {
+      "api_endpoint": "https://oracle.com/cloud",
+      "icon": "oci-icon",
+      "default_capabilities": ["C-01", "C-02", "C-03", "C-04", "C-11", "C-18"]
+    }
+  },
+  {
+    "code": "CANONICAL",
+    "display_name": "CloudLens Canonical Boundary",
+    "description": "Provider-agnostic canonical tenant scope boundary.",
+    "sort_order": 5,
+    "attributes": {
+      "api_endpoint": "https://cloudlens.local",
+      "icon": "canonical-icon",
+      "default_capabilities": ["C-01", "C-02", "C-03"]
+    }
+  }
 ]

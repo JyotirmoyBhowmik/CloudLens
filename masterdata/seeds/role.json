@@ -1,0 +1,209 @@
+[
+  {
+    "code": "GLOBAL_ADMIN",
+    "display_name": "Global Administrator",
+    "description": "Full platform-wide administrative authority across all tenants and subsystems.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "PLATFORM",
+      "requires_mfa": true,
+      "allowed_permissions": [
+        "config:read", "config:write",
+        "features:read", "features:toggle",
+        "tenants:settings:read", "tenants:settings:write",
+        "billing:read", "billing:export",
+        "connectors:read", "connectors:write", "connectors:sync", "connectors:validate",
+        "inventory:read", "inventory:export",
+        "pricing:read", "pricing:write",
+        "rate_cards:read", "rate_cards:write",
+        "budgets:read", "budgets:write",
+        "thresholds:read", "thresholds:write",
+        "governance:read", "governance:write", "policies:evaluate",
+        "audit:read", "audit:export",
+        "reports:read", "reports:generate", "reports:export",
+        "users:read", "users:write",
+        "roles:read", "roles:write",
+        "masterdata:read", "masterdata:write", "masterdata:approve",
+        "quotas:read", "quotas:write"
+      ]
+    }
+  },
+  {
+    "code": "TENANT_ADMIN",
+    "display_name": "Tenant Administrator",
+    "description": "Administrative authority within the tenant boundary (settings, users, connectors, policies).",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "TENANT",
+      "requires_mfa": true,
+      "allowed_permissions": [
+        "config:read",
+        "features:read",
+        "tenants:settings:read", "tenants:settings:write",
+        "billing:read", "billing:export",
+        "connectors:read", "connectors:write", "connectors:sync", "connectors:validate",
+        "inventory:read", "inventory:export",
+        "budgets:read", "budgets:write",
+        "thresholds:read", "thresholds:write",
+        "governance:read", "governance:write", "policies:evaluate",
+        "reports:read", "reports:generate", "reports:export",
+        "users:read", "users:write",
+        "roles:read",
+        "masterdata:read",
+        "quotas:read", "quotas:write"
+      ]
+    }
+  },
+  {
+    "code": "FINOPS_ADMIN",
+    "display_name": "FinOps Administrator",
+    "description": "Management of FinOps budgets, thresholds, rate cards, commitments, and cost allocations.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "TENANT",
+      "requires_mfa": true,
+      "allowed_permissions": [
+        "config:read",
+        "features:read",
+        "tenants:settings:read", "tenants:settings:write",
+        "billing:read", "billing:export",
+        "pricing:read", "pricing:write",
+        "rate_cards:read", "rate_cards:write",
+        "budgets:read", "budgets:write",
+        "thresholds:read", "thresholds:write",
+        "governance:read", "governance:write", "policies:evaluate",
+        "inventory:read",
+        "reports:read", "reports:generate", "reports:export",
+        "masterdata:read",
+        "quotas:read"
+      ]
+    }
+  },
+  {
+    "code": "FINOPS_ANALYST",
+    "display_name": "FinOps Analyst",
+    "description": "FinOps analytics, cost modeling, anomaly investigation, and report generation.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "SCOPE",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "config:read",
+        "features:read",
+        "tenants:settings:read",
+        "billing:read", "billing:export",
+        "pricing:read",
+        "rate_cards:read",
+        "budgets:read",
+        "thresholds:read",
+        "inventory:read",
+        "reports:read", "reports:generate", "reports:export",
+        "masterdata:read",
+        "quotas:read"
+      ]
+    }
+  },
+  {
+    "code": "FINOPS_VIEWER",
+    "display_name": "FinOps Viewer",
+    "description": "Read-only access to billing data, budgets, and executive financial dashboards.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "SCOPE",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "config:read",
+        "features:read",
+        "tenants:settings:read",
+        "billing:read",
+        "reports:read",
+        "quotas:read"
+      ]
+    }
+  },
+  {
+    "code": "CLOUD_ARCHITECT",
+    "display_name": "Cloud Architect",
+    "description": "Infrastructure topology, resource inventory, rightsizing recommendations, and pre-flight gates.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "SCOPE",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "inventory:read", "inventory:export",
+        "connectors:read",
+        "thresholds:read",
+        "governance:read", "policies:evaluate",
+        "quotas:read",
+        "billing:read",
+        "reports:read"
+      ]
+    }
+  },
+  {
+    "code": "DEVELOPER",
+    "display_name": "Developer",
+    "description": "Scope-bounded visibility into application resources, unit economics, and team metrics.",
+    "sort_order": 7,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "SCOPE",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "inventory:read",
+        "billing:read",
+        "thresholds:read",
+        "reports:read"
+      ]
+    }
+  },
+  {
+    "code": "SECURITY_AUDITOR",
+    "display_name": "Security & Compliance Auditor",
+    "description": "Audit trail inspection, access reviews, compliance reporting, and policy verification.",
+    "sort_order": 8,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "TENANT",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "audit:read", "audit:export",
+        "governance:read",
+        "inventory:read",
+        "roles:read",
+        "users:read",
+        "reports:read", "reports:export"
+      ]
+    }
+  },
+  {
+    "code": "TENANT_USER",
+    "display_name": "Tenant User",
+    "description": "Standard scoped user with self-service viewing permissions.",
+    "sort_order": 9,
+    "parent_code": null,
+    "attributes": {
+      "is_built_in": true,
+      "max_scope": "SCOPE",
+      "requires_mfa": false,
+      "allowed_permissions": [
+        "tenants:settings:read",
+        "billing:read"
+      ]
+    }
+  }
+]

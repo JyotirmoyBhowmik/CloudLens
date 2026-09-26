@@ -1,0 +1,336 @@
+{
+  "status": "INITIALIZED",
+  "is_already_initialized": false,
+  "is_interactively_usable": false,
+  "tenant_id": "tenant-system",
+  "tenant_name": "CloudLens System Tenant",
+  "reporting_currency": "USD",
+  "fiscal_calendar_code": "FC_STANDARD_JAN",
+  "fiscal_calendar_start_month": 1,
+  "time_zone": "UTC",
+  "retention_profile": {
+    "raw_metrics_retention_days": 90,
+    "daily_aggregates_retention_days": 730,
+    "audit_log_retention_days": 1095
+  },
+  "cost_basis_default": "billed",
+  "forecast_method_default": "linear",
+  "masters_seeded": {
+    "SERVICE_CATEGORY": {
+      "master_code": "SERVICE_CATEGORY",
+      "record_count": 11,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/service_category.json"
+    },
+    "RESOURCE_TYPE": {
+      "master_code": "RESOURCE_TYPE",
+      "record_count": 11,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/resource_type.json"
+    },
+    "UNIT": {
+      "master_code": "UNIT",
+      "record_count": 21,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/unit.json"
+    },
+    "METRIC": {
+      "master_code": "METRIC",
+      "record_count": 8,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/metric.json"
+    },
+    "PRICING_DIMENSION": {
+      "master_code": "PRICING_DIMENSION",
+      "record_count": 29,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/pricing_dimension.json"
+    },
+    "CLOUD_PROVIDER": {
+      "master_code": "CLOUD_PROVIDER",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/cloud_provider.json"
+    },
+    "RUNTIME_STATUS": {
+      "master_code": "RUNTIME_STATUS",
+      "record_count": 6,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/runtime_status.json"
+    },
+    "CHARGE_CATEGORY": {
+      "master_code": "CHARGE_CATEGORY",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/charge_category.json"
+    },
+    "PRICING_STATUS": {
+      "master_code": "PRICING_STATUS",
+      "record_count": 7,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/pricing_status.json"
+    },
+    "POLICY_SEVERITY": {
+      "master_code": "POLICY_SEVERITY",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/policy_severity.json"
+    },
+    "THRESHOLD_BAND": {
+      "master_code": "THRESHOLD_BAND",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/threshold_band.json"
+    },
+    "BUSINESS_UNIT": {
+      "master_code": "BUSINESS_UNIT",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/business_unit.json"
+    },
+    "COST_CENTRE": {
+      "master_code": "COST_CENTRE",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/cost_centre.json"
+    },
+    "DEPARTMENT": {
+      "master_code": "DEPARTMENT",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/department.json"
+    },
+    "LEGAL_ENTITY": {
+      "master_code": "LEGAL_ENTITY",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/legal_entity.json"
+    },
+    "LOCATION": {
+      "master_code": "LOCATION",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/location.json"
+    },
+    "PROJECT": {
+      "master_code": "PROJECT",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/project.json"
+    },
+    "APPLICATION": {
+      "master_code": "APPLICATION",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/application.json"
+    },
+    "OWNER_TEAM": {
+      "master_code": "OWNER_TEAM",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/owner_team.json"
+    },
+    "ENVIRONMENT": {
+      "master_code": "ENVIRONMENT",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/environment.json"
+    },
+    "FISCAL_CALENDAR": {
+      "master_code": "FISCAL_CALENDAR",
+      "record_count": 3,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/fiscal_calendar.json"
+    },
+    "HOLIDAY_CALENDAR": {
+      "master_code": "HOLIDAY_CALENDAR",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/holiday_calendar.json"
+    },
+    "WORKING_WEEK": {
+      "master_code": "WORKING_WEEK",
+      "record_count": 3,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/working_week.json"
+    },
+    "CURRENCY": {
+      "master_code": "CURRENCY",
+      "record_count": 9,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/currency.json"
+    },
+    "EXCHANGE_RATE": {
+      "master_code": "EXCHANGE_RATE",
+      "record_count": 8,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/exchange_rate.json"
+    },
+    "TENANT_FX_POLICY": {
+      "master_code": "TENANT_FX_POLICY",
+      "record_count": 2,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/tenant_fx_policy.json"
+    },
+    "CONTRACT": {
+      "master_code": "CONTRACT",
+      "record_count": 3,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/contract.json"
+    },
+    "RATE_CARD": {
+      "master_code": "RATE_CARD",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/rate_card.json"
+    },
+    "COMMITMENT": {
+      "master_code": "COMMITMENT",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/commitment.json"
+    },
+    "LICENCE": {
+      "master_code": "LICENCE",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/licence.json"
+    },
+    "TAG_POLICY": {
+      "master_code": "TAG_POLICY",
+      "record_count": 3,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/tag_policy.json"
+    },
+    "GEOGRAPHY": {
+      "master_code": "GEOGRAPHY",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/geography.json"
+    },
+    "STRING_CATALOGUE": {
+      "master_code": "STRING_CATALOGUE",
+      "record_count": 8,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/string_catalogue.json"
+    },
+    "SYSTEM_TENANT": {
+      "master_code": "SYSTEM_TENANT",
+      "record_count": 1,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/system_tenant.json"
+    },
+    "PERMISSION": {
+      "master_code": "PERMISSION",
+      "record_count": 39,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/permission.json"
+    },
+    "ROLE": {
+      "master_code": "ROLE",
+      "record_count": 9,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/role.json"
+    },
+    "THRESHOLD_TEMPLATE": {
+      "master_code": "THRESHOLD_TEMPLATE",
+      "record_count": 6,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/threshold_template.json"
+    },
+    "BUDGET_TEMPLATE": {
+      "master_code": "BUDGET_TEMPLATE",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/budget_template.json"
+    },
+    "POLICY": {
+      "master_code": "POLICY",
+      "record_count": 6,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/policy.json"
+    },
+    "PROVIDER_CAPABILITY": {
+      "master_code": "PROVIDER_CAPABILITY",
+      "record_count": 6,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/provider_capability.json"
+    },
+    "SERVICE": {
+      "master_code": "SERVICE",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/service.json"
+    }
+  },
+  "roles_defined": [
+    "GLOBAL_ADMIN",
+    "TENANT_ADMIN",
+    "FINOPS_ADMIN",
+    "FINOPS_ANALYST",
+    "FINOPS_VIEWER",
+    "CLOUD_ARCHITECT",
+    "DEVELOPER",
+    "SECURITY_AUDITOR",
+    "TENANT_USER"
+  ],
+  "permission_count": 39,
+  "catalogues_populated": {
+    "pricing_dimensions": 29,
+    "units": 21,
+    "metrics": 8,
+    "resource_types": 11,
+    "service_categories": 11,
+    "services": 5,
+    "threshold_templates": 6,
+    "budget_templates": 4,
+    "policies": 6
+  },
+  "providers_registered": {
+    "AWS": [
+      "C-01",
+      "C-02",
+      "C-03",
+      "C-04",
+      "C-11",
+      "C-18"
+    ],
+    "AZURE": [
+      "C-01",
+      "C-02",
+      "C-03",
+      "C-04",
+      "C-11",
+      "C-18"
+    ],
+    "GCP": [
+      "C-01",
+      "C-02",
+      "C-03",
+      "C-04",
+      "C-11",
+      "C-18"
+    ],
+    "OCI": [
+      "C-01",
+      "C-02",
+      "C-03",
+      "C-04",
+      "C-11",
+      "C-18"
+    ],
+    "CANONICAL": [
+      "C-01",
+      "C-02",
+      "C-03"
+    ]
+  },
+  "audit_stream_initialized": true,
+  "first_audit_event_id": "aud-boot-bd3cef448b8a",
+  "identities_count": 0,
+  "credentials_count": 0,
+  "grants_count": 0,
+  "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
+  "timestamp": "2026-09-26T08:12:56.334579Z",
+  "correlation_id": "corr-boot-2507fcce"
+}

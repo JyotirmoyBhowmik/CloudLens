@@ -18,9 +18,11 @@ from domain.models.enums import (
     ChargeCategory,
     PolicySeverity,
     PricingStatus,
+    ProviderCapability,
     ProviderType,
     RuntimeStatus,
     ServiceCategory,
+    SystemRole,
 )
 from domain.models.exceptions import MasterDataException
 from masterdata.models import MasterDataRecord
@@ -54,6 +56,8 @@ DEFAULT_ENUM_BINDINGS: dict[type[Enum], str] = {
     PricingStatus: "PRICING_STATUS",
     ChargeCategory: "CHARGE_CATEGORY",
     PolicySeverity: "POLICY_SEVERITY",
+    SystemRole: "ROLE",
+    ProviderCapability: "PROVIDER_CAPABILITY",
 }
 
 

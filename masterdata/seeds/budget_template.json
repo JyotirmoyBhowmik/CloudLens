@@ -1,0 +1,54 @@
+[
+  {
+    "code": "BT_MONTHLY_FIXED",
+    "display_name": "Standard Monthly Operating Budget",
+    "description": "Standard recurring monthly budget evaluated at calendar month boundaries with amber/red alerts.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "period_type": "MONTHLY",
+      "threshold_template_codes": ["TT_BUDGET_WARNING", "TT_BUDGET_CRITICAL"],
+      "allow_overruns": false,
+      "reset_on_period_end": true
+    }
+  },
+  {
+    "code": "BT_QUARTERLY_PROJECT",
+    "display_name": "Quarterly Initiative Milestone Budget",
+    "description": "Project milestone budget evaluated across a 3-month fiscal quarter with capitalisation tracking.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "period_type": "QUARTERLY",
+      "threshold_template_codes": ["TT_BUDGET_WARNING", "TT_BUDGET_CRITICAL"],
+      "allow_overruns": false,
+      "reset_on_period_end": false
+    }
+  },
+  {
+    "code": "BT_ANNUAL_DEPARTMENT",
+    "display_name": "Annual Departmental Operating Budget",
+    "description": "Department-level annual financial allocation tracked against company fiscal calendar.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "period_type": "ANNUAL",
+      "threshold_template_codes": ["TT_BUDGET_WARNING", "TT_BUDGET_CRITICAL"],
+      "allow_overruns": true,
+      "reset_on_period_end": false
+    }
+  },
+  {
+    "code": "BT_ENVIRONMENT_DEV",
+    "display_name": "Non-Production Sandbox Spend Cap",
+    "description": "Hard spending ceiling for development, test, and experimental sandbox environments.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "period_type": "MONTHLY",
+      "threshold_template_codes": ["TT_BUDGET_WARNING", "TT_BUDGET_CRITICAL"],
+      "allow_overruns": false,
+      "reset_on_period_end": true
+    }
+  }
+]
