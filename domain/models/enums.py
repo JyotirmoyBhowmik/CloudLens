@@ -305,3 +305,24 @@ class ScopingDimension(StrEnum):
     FINANCIAL_DATA_SENSITIVITY = "financial_data_sensitivity"
     ADMINISTRATIVE = "administrative"
     RESOURCE_EXCEPTION = "resource_exception"
+
+
+class CredentialType(StrEnum):
+    """Supported cloud provider authentication mechanism types (Prompt 12 Item 77)."""
+
+    ROLE_ARN = "ROLE_ARN"
+    OIDC_FEDERATION = "OIDC_FEDERATION"
+    SERVICE_PRINCIPAL = "SERVICE_PRINCIPAL"
+    SERVICE_ACCOUNT_KEY = "SERVICE_ACCOUNT_KEY"
+    API_SIGNING_KEY = "API_SIGNING_KEY"
+    CLIENT_SECRET = "CLIENT_SECRET"
+
+
+class RotationState(StrEnum):
+    """Lifecycle rotation state for provider credentials (Prompt 12 Item 78)."""
+
+    ACTIVE = "ACTIVE"
+    ROTATING = "ROTATING"
+    RETIRED = "RETIRED"
+    REVOKED = "REVOKED"
+    EXPIRED = "EXPIRED"

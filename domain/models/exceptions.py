@@ -371,3 +371,84 @@ class FinancialDetailAccessDeniedException(RBACException):
         self, message: str = "Access to financial rates and charge line details is restricted."
     ) -> None:
         super().__init__(message, error_code="FINANCIAL_DETAIL_ACCESS_DENIED")
+
+
+# ==============================================================================
+# Secret Management and Credential Lifecycle Exceptions (Prompt 12)
+# ==============================================================================
+
+
+class CredentialException(DomainModelException):
+    """Base exception for secret management and credential lifecycle violations (Prompt 12)."""
+
+    def __init__(self, message: str, error_code: str = "CREDENTIAL_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class CredentialValidationException(CredentialException):
+    """Raised when provider credential fails pre-flight validation (Prompt 12 Item 78)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="CREDENTIAL_VALIDATION_FAILED")
+
+
+class CredentialNotFoundException(CredentialException):
+    """Raised when requested credential profile does not exist."""
+
+    def __init__(self, profile_id: str, tenant_id: str | None = None) -> None:
+        msg = f"Credential profile '{profile_id}' not found" + (
+            f" for tenant '{tenant_id}'." if tenant_id else "."
+        )
+        super().__init__(msg, error_code="CREDENTIAL_NOT_FOUND")
+        self.profile_id = profile_id
+        self.tenant_id = tenant_id
+
+
+class CredentialExpiredException(CredentialException):
+    """Raised when attempting to execute operations with an expired credential (Prompt 12 Item 79)."""
+
+    def __init__(self, profile_id: str, message: str | None = None) -> None:
+        msg = message or f"Credential profile '{profile_id}' has expired and cannot be used."
+        super().__init__(msg, error_code="CREDENTIAL_EXPIRED")
+        self.profile_id = profile_id
+
+
+class CredentialRevokedException(CredentialException):
+    """Raised when attempting to use a revoked credential profile (Prompt 12 Item 78)."""
+
+    def __init__(self, profile_id: str, message: str | None = None) -> None:
+        msg = message or f"Credential profile '{profile_id}' has been revoked."
+        super().__init__(msg, error_code="CREDENTIAL_REVOKED")
+        self.profile_id = profile_id
+
+
+class CrossTenantCredentialAccessException(CredentialException):
+    """Raised when attempting to access or bind a credential profile across tenant boundaries (Prompt 12 Item 80)."""
+
+    def __init__(self, profile_id: str, caller_tenant_id: str, owner_tenant_id: str) -> None:
+        msg = (
+            f"Security violation: Tenant '{caller_tenant_id}' attempted to access credential profile "
+            f"'{profile_id}' owned by tenant '{owner_tenant_id}'. Cross-tenant credential sharing is strictly prohibited."
+        )
+        super().__init__(msg, error_code="CROSS_TENANT_CREDENTIAL_ACCESS_DENIED")
+        self.profile_id = profile_id
+        self.caller_tenant_id = caller_tenant_id
+        self.owner_tenant_id = owner_tenant_id
+
+
+class SecretStoreUnavailableException(CredentialException):
+    """Raised when the dedicated secret store backend cannot be reached or fails (Prompt 12 Item 77)."""
+
+    def __init__(self, message: str = "Secret store backend is unavailable.") -> None:
+        super().__init__(message, error_code="SECRET_STORE_UNAVAILABLE")
+
+
+class CredentialRotationInProgressException(CredentialException):
+    """Raised when an operation conflicts with an ongoing credential rotation."""
+
+    def __init__(self, profile_id: str) -> None:
+        super().__init__(
+            f"Credential profile '{profile_id}' is already undergoing rotation.",
+            error_code="CREDENTIAL_ROTATION_IN_PROGRESS",
+        )
+        self.profile_id = profile_id

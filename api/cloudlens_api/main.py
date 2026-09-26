@@ -15,6 +15,7 @@ from api.cloudlens_api.routes import (
     auth_router,
     bootstrap_router,
     config_router,
+    credentials_router,
     demo_mode_router,
     demo_router,
     health_router,
@@ -192,6 +193,7 @@ app.include_router(bootstrap_router)
 app.include_router(attribution_router)
 app.include_router(demo_router)
 app.include_router(demo_mode_router)
+app.include_router(credentials_router)
 
 
 class HealthResponse(BaseModel):

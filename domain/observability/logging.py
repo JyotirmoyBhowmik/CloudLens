@@ -12,7 +12,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
 
-from domain.observability.redaction import redact_text, redact_value
+from domain.observability.redaction import SENSITIVE_KEY_SUBSTRINGS, redact_text, redact_value
 
 # Context variables for tracing and multi-tenant context propagation
 current_correlation_id: ContextVar[str] = ContextVar("current_correlation_id", default="")
@@ -83,7 +83,11 @@ class CloudLensJsonFormatter(logging.Formatter):
                 "actor",
                 "operation",
             ):
-                extra_fields[key] = redact_value(val)
+                k_lower = str(key).lower()
+                if any(sub in k_lower for sub in SENSITIVE_KEY_SUBSTRINGS):
+                    extra_fields[key] = "[REDACTED]"
+                else:
+                    extra_fields[key] = redact_value(val)
 
         if extra_fields:
             log_payload["extra"] = extra_fields

@@ -2,7 +2,7 @@
 
 > **Provider**: Amazon Web Services (AWS)  
 > **Security Baseline**: Read-only, Least Privilege (SEC-012)  
-> **Owning Connector**: `connectors/aws` (`Prompt 17`)
+> **Authoritative Specification**: `docs/permissions/aws.md`
 
 ---
 
@@ -10,21 +10,22 @@
 
 | Mechanism | Description | Security Tier |
 |:---|:---|:---:|
-| **Cross-Account IAM Role + External ID** | STS `AssumeRole` with unique external ID (recommended) | **Primary** |
-| **OIDC Web Identity Federation** | Kubernetes EKS service account or GitHub Actions OIDC | **Supported** |
-| **IAM Identity Center** | Federated short-lived identity assertions | **Supported** |
-| **Long-Lived Access Keys** | IAM User access key/secret key with mandatory 90-day rotation | **Restricted** |
-| **Root Credentials** | AWS account root user credentials | **Forbidden** |
+| **Cross-Account IAM Role + External ID (sts:AssumeRole)** | Primary recommended authentication pattern | **Primary** |
+| **OIDC Web Identity Federation (EKS / Workload)** | Supported secondary authentication pattern | **Supported** |
+| **AWS IAM Identity Center Federation** | Supported secondary authentication pattern | **Supported** |
+| **Audited IAM User Access Keys (Mandatory 90-day rotation)** | Supported secondary authentication pattern | **Supported** |
+| **AWS Root User Credentials** | Strictly prohibited by governance policy | **Forbidden** |
+| **Shared Static Long-Lived Passwords** | Strictly prohibited by governance policy | **Forbidden** |
 
 ---
 
 ## 2. Required Permissions by Capability Group
 
-| Capability Group | AWS Managed Policy / Actions | Required Scope | Capability Flag |
-|:---|:---|:---|:---:|
-| **Hierarchy Discovery** | `organizations:Describe*`, `organizations:List*` | Organization Management / Delegation | `C-01` |
-| **Resource Inventory** | `resource-explorer-2:Search`, `tag:GetResources` | AWS Account / Aggregator Region | `C-02` |
-| **Cost Ingestion** | `ce:GetCostAndUsage`, `s3:GetObject` on CUR bucket | Management Account | `C-03` |
-| **Usage Metrics** | `cloudwatch:GetMetricData`, `cloudwatch:ListMetrics` | Account | `C-04` |
-| **Pricing Discovery** | `pricing:GetProducts`, `pricing:DescribeServices` | Global (`us-east-1`) | `C-11` |
-| **Quota & Limits** | `servicequotas:GetServiceQuota`, `servicequotas:List*` | Account | `C-18` |
+| Capability Flag | Capability Group | Minimum Required Permissions | Required Scope | Consequence if Not Granted |
+|:---:|:---|:---|:---|:---|
+| `C-01` | **Hierarchy Discovery** | `organizations:DescribeOrganization`<br>`organizations:ListAccounts`<br>`organizations:ListRoots`<br>`organizations:ListOrganizationalUnitsForParent`<br>`organizations:ListAccountsForParent` | AWS Organizations Management Account or Delegated Administrator | CloudLens cannot discover multi-account hierarchy; accounts must be added individually. Scope inheritance, OU-based cost allocation, and parent tag inheritance cannot function. |
+| `C-02` | **Resource Inventory** | `resource-explorer-2:Search`<br>`tag:GetResources`<br>`tag:GetTagKeys`<br>`tag:GetTagValues` | AWS Account or Multi-Region Resource Explorer Aggregator | Inventory discovery disabled. CloudLens cannot identify orphan resources, unallocated workloads, or evaluate resource-level tag hygiene policies. |
+| `C-03` | **Cost & Billing Ingestion** | `ce:GetCostAndUsage`<br>`ce:GetCostAndUsageWithResources`<br>`s3:GetObject on CUR/Cost & Usage Report S3 Bucket`<br>`s3:ListBucket on CUR S3 Bucket` | Billing / Management Account with CUR export target bucket | Billed cost ingestion fails completely. Spend analytics, FOCUS 1.0 normalization, and financial reconciliation cannot operate. |
+| `C-04` | **Usage Metrics & Right-Sizing** | `cloudwatch:GetMetricData`<br>`cloudwatch:ListMetrics` | Target AWS Account | Utilization telemetry unavailable. Idle compute detection, right-sizing recommendations, and anomaly correlation with utilization curves are disabled. |
+| `C-11` | **Pricing Discovery** | `pricing:GetProducts`<br>`pricing:DescribeServices` | Global endpoint ('us-east-1') | Public rate card lookup disabled. CloudLens falls back to cached baseline prices; on-demand rate comparison and spot pricing analytics may become stale. |
+| `C-18` | **Quota & Service Limits** | `servicequotas:GetServiceQuota`<br>`servicequotas:ListServiceQuotas` | Target AWS Account | Service quota tracking disabled. Platform cannot alert when resource provisioning approaches account limits or hard API throttles. |
