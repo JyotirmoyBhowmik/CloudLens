@@ -4395,9 +4395,9 @@ for r in REGISTER:
         pass
 
 print(f"\nTotal unassigned orphan requirements (Genuine Gaps): {len(ORPHANS)}")
-assert (
-    len(ORPHANS) == 0
-), "No unresolved orphan requirements allowed before proceeding to Prompt 01!"
+assert len(ORPHANS) == 0, (
+    "No unresolved orphan requirements allowed before proceeding to Prompt 01!"
+)
 
 # Save JSON register
 json_register_path = os.path.join(WORKSPACE_DIR, "requirements-register.json")

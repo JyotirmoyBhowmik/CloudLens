@@ -12,7 +12,7 @@ Verifies:
 """
 
 import ast
-from enum import Enum
+from enum import StrEnum
 
 import pytest
 from starlette.testclient import TestClient
@@ -231,7 +231,7 @@ def test_enumeration_bridge_code_referencing_value_absent_from_master_fails(
 ):
     """Acceptance: Referencing a value in an enum absent from a master fails the build."""
 
-    class DivergentStatusEnum(str, Enum):
+    class DivergentStatusEnum(StrEnum):
         RUNNING = "RUNNING"
         STOPPED = "STOPPED"
         PHANTOM_STATE = "PHANTOM_STATE"  # Value does not exist in RUNTIME_STATUS master

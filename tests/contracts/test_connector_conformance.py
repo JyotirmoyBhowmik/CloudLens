@@ -71,9 +71,9 @@ class TestConnectorInterfaceConformance:
     def test_base_contract_inheritance(self, all_connectors: list[BaseCloudConnector]):
         """Every connector must inherit from BaseCloudConnector."""
         for conn in all_connectors:
-            assert isinstance(
-                conn, BaseCloudConnector
-            ), f"{conn.__class__.__name__} must inherit BaseCloudConnector"
+            assert isinstance(conn, BaseCloudConnector), (
+                f"{conn.__class__.__name__} must inherit BaseCloudConnector"
+            )
             assert conn.connector_id.startswith("conn-test-")
             assert conn.tenant_id == "T-TEST"
             assert isinstance(conn.provider_name, str)

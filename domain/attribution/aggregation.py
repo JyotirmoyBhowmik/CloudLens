@@ -58,9 +58,9 @@ class AllocationAggregationService:
             rows=rows,
             dimension_name="cost_center",
             key_extractor=lambda r: r.cost_center_code,
-            name_extractor=lambda k: "Unallocated Cost"
-            if k == "UNALLOCATED"
-            else f"Cost Center {k}",
+            name_extractor=lambda k: (
+                "Unallocated Cost" if k == "UNALLOCATED" else f"Cost Center {k}"
+            ),
             other_threshold=other_threshold_percentage,
         )
 
@@ -74,9 +74,9 @@ class AllocationAggregationService:
             rows=rows,
             dimension_name="business_unit",
             key_extractor=lambda r: r.business_unit_code or "UNALLOCATED",
-            name_extractor=lambda k: "Unallocated Cost"
-            if k == "UNALLOCATED"
-            else f"Business Unit {k}",
+            name_extractor=lambda k: (
+                "Unallocated Cost" if k == "UNALLOCATED" else f"Business Unit {k}"
+            ),
             other_threshold=other_threshold_percentage,
         )
 

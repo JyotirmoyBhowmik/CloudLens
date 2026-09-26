@@ -16,7 +16,7 @@ from collections.abc import Generator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
@@ -275,7 +275,7 @@ class SyntheticEstateGenerator:
             dominant_spend=Decimal("0.00"),
             long_tail_spend=Decimal("0.00"),
             spend_by_provider={p: Decimal("0.00") for p in PROVIDERS},
-            count_by_provider={p: 0 for p in PROVIDERS},
+            count_by_provider=dict.fromkeys(PROVIDERS, 0),
         )
 
         f_out = None
@@ -864,14 +864,14 @@ class SyntheticEstateGenerator:
 
         unowned_ids: list[str] = []
         for u in range(8):
-            u_id = f"res-unowned-cluster-{u+1:02d}"
+            u_id = f"res-unowned-cluster-{u + 1:02d}"
             unowned_ids.append(u_id)
             unowned_res = Resource(
                 id=u_id,
                 tenant_id=tenant_id,
                 scope_id=unowned_scope.id,
                 native_id=f"native-unowned-{u_id}",
-                name=f"orphan-worker-{u+1:02d}",
+                name=f"orphan-worker-{u + 1:02d}",
                 provider=ProviderType.AWS,
                 service_id="svc-virtualmachines",
                 resource_type_id="rt-instance",
@@ -884,7 +884,7 @@ class SyntheticEstateGenerator:
             resources.append(unowned_res)
             cost_facts.append(
                 CostFact(
-                    id=f"cf-unowned-{u+1:02d}",
+                    id=f"cf-unowned-{u + 1:02d}",
                     tenant_id=tenant_id,
                     scope_id=unowned_scope.id,
                     resource_id=unowned_res.id,
@@ -920,7 +920,7 @@ class SyntheticEstateGenerator:
         )
 
 
-class SyntheticAnomalyType(str, Enum):
+class SyntheticAnomalyType(StrEnum):
     """Classifies the deliberate anomaly types required by Prompt 09 Item 61."""
 
     COST_SPIKE = "COST_SPIKE"

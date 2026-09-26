@@ -7,7 +7,7 @@ Defines:
 """
 
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ EXPORT_WATERMARK = "DEMONSTRATION DATA ONLY - NOT FOR OPERATIONAL USE"
 DEMO_BANNER_TEXT = "DEMO MODE ACTIVE — SIMULATED CLOUD ESTATE (NOT FOR OPERATIONAL USE)"
 
 
-class DemoScenario(str, Enum):
+class DemoScenario(StrEnum):
     """Seven named demonstration scenarios loadable in a single click (Prompt 47 Item 32)."""
 
     MONTH_END_REVIEW = "Month-End Review"

@@ -10,7 +10,7 @@ Enforces:
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 from domain.models.exceptions import InvalidSplitRuleException
 
 
-class OwnershipResolutionRule(str, Enum):
+class OwnershipResolutionRule(StrEnum):
     """Deterministic precedence order for ownership attribution (BBP Section 16.2)."""
 
     MANUAL_ASSIGNMENT = "MANUAL_ASSIGNMENT"
@@ -56,7 +56,7 @@ class OwnershipResolutionResult(BaseModel):
     )
 
 
-class AllocationRuleType(str, Enum):
+class AllocationRuleType(StrEnum):
     """Allocation rule types evaluated with first-match-wins order (BBP Section 17.5)."""
 
     DIRECT_RESOURCE = "DIRECT_RESOURCE"
@@ -67,7 +67,7 @@ class AllocationRuleType(str, Enum):
     UNALLOCATED = "UNALLOCATED"
 
 
-class AllocationSplitType(str, Enum):
+class AllocationSplitType(StrEnum):
     """Methodology for splitting shared costs."""
 
     PROPORTIONAL = "PROPORTIONAL"
@@ -168,7 +168,7 @@ class AllocatedCostRow(BaseModel):
     allocated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class CuratedField(str, Enum):
+class CuratedField(StrEnum):
     """Protected resource attributes that survive discovery synchronisation."""
 
     OWNER = "owner_id"

@@ -9,7 +9,7 @@ Enforces Prompt 45 Items 1, 2, 7, 8, 10:
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field, computed_field
@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, computed_field
 DEFAULT_MASTER_EPOCH = datetime(2000, 1, 1, 0, 0, 0)
 
 
-class LifecycleStatus(str, Enum):
+class LifecycleStatus(StrEnum):
     """Change management workflow states for master data records."""
 
     DRAFT = "DRAFT"

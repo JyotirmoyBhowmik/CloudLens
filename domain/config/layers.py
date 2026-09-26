@@ -5,13 +5,13 @@ BUILTIN_DEFAULT -> ENVIRONMENT -> TENANT (Database)
 with strict layer provenance tracking and secret masking.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class ConfigLayer(str, Enum):
+class ConfigLayer(StrEnum):
     """Configuration layer hierarchy. Later layers override earlier layers."""
 
     BUILTIN_DEFAULT = "builtin_default"

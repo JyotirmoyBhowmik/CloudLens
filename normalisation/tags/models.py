@@ -6,14 +6,14 @@ original key retained, OCI defined-tag namespace retained separately, and the
 source level recorded (resource, resource group, subscription, compartment, project)."
 """
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from domain.models.enums import ScopeRole
 
 
-class TagSourceLevel(str, Enum):
+class TagSourceLevel(StrEnum):
     """Hierarchy level where a tag originated or was inherited from."""
 
     RESOURCE = "RESOURCE"
@@ -25,7 +25,7 @@ class TagSourceLevel(str, Enum):
     TENANT = ScopeRole.TENANT.value
 
 
-class TagCasePolicy(str, Enum):
+class TagCasePolicy(StrEnum):
     """Configurable casing convention for normalized tag keys."""
 
     LOWER = "lower"
@@ -36,7 +36,7 @@ class TagCasePolicy(str, Enum):
     PRESERVE = "preserve"
 
 
-class TagSeparatorPolicy(str, Enum):
+class TagSeparatorPolicy(StrEnum):
     """Configurable delimiter convention for multi-word tag keys."""
 
     HYPHEN = "hyphen"  # '-'

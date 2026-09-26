@@ -69,8 +69,6 @@ ALLOWED_STRUCTURAL_NUMBERS = {
     0,
     1,
     -1,
-    0.0,
-    1.0,
     100.0,  # Percentage base math (x * 100.0)
     1000.0,  # Millisecond conversion
     1024,  # Kibibyte scale

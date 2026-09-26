@@ -10,13 +10,13 @@ Defines:
 import hashlib
 import json
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class SimulatorProfile(str, Enum):
+class SimulatorProfile(StrEnum):
     """Four provider-shaped simulator profiles reproducing native structures (Prompt 47 Item 23)."""
 
     AWS = "aws"

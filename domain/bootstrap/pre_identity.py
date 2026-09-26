@@ -487,9 +487,9 @@ class PreIdentityBootstrapService:
 | **Forecast Method** | `{report.forecast_method_default}` | `SYSTEM_TENANT` |
 
 ### Retention Profile Limits
-- **Granular Raw Metrics**: `{report.retention_profile['raw_metrics_retention_days']}` days
-- **Daily Cost & Usage Aggregates**: `{report.retention_profile['daily_aggregates_retention_days']}` days
-- **Audit Logs & Security Trail**: `{report.retention_profile['audit_log_retention_days']}` days
+- **Granular Raw Metrics**: `{report.retention_profile["raw_metrics_retention_days"]}` days
+- **Daily Cost & Usage Aggregates**: `{report.retention_profile["daily_aggregates_retention_days"]}` days
+- **Audit Logs & Security Trail**: `{report.retention_profile["audit_log_retention_days"]}` days
 
 ---
 
@@ -497,15 +497,15 @@ class PreIdentityBootstrapService:
 
 | Catalogue | Count | Prompt 00R Reconciled Baseline | Parity Status |
 |:---|:---:|:---:|:---:|
-| **Pricing Dimensions** | `{report.catalogues_populated.get('pricing_dimensions')}` | 29 | **RECONCILED (100%)** |
-| **Units of Measurement** | `{report.catalogues_populated.get('units')}` | 21 | **RECONCILED (100%)** |
-| **System Metrics** | `{report.catalogues_populated.get('metrics')}` | 8 | **RECONCILED (100%)** |
-| **Resource Types** | `{report.catalogues_populated.get('resource_types')}` | 11 | **RECONCILED (100%)** |
-| **FOCUS Service Categories** | `{report.catalogues_populated.get('service_categories')}` | 11 | **RECONCILED (100%)** |
-| **Canonical Services** | `{report.catalogues_populated.get('services')}` | 5 | **RECONCILED (100%)** |
-| **Default Threshold Templates** | `{report.catalogues_populated.get('threshold_templates')}` | 6 | **SEEDED** |
-| **Default Budget Templates** | `{report.catalogues_populated.get('budget_templates')}` | 4 | **SEEDED** |
-| **Governance Policies** | `{report.catalogues_populated.get('policies')}` | 6 | **SEEDED (Disabled except Connector Health)** |
+| **Pricing Dimensions** | `{report.catalogues_populated.get("pricing_dimensions")}` | 29 | **RECONCILED (100%)** |
+| **Units of Measurement** | `{report.catalogues_populated.get("units")}` | 21 | **RECONCILED (100%)** |
+| **System Metrics** | `{report.catalogues_populated.get("metrics")}` | 8 | **RECONCILED (100%)** |
+| **Resource Types** | `{report.catalogues_populated.get("resource_types")}` | 11 | **RECONCILED (100%)** |
+| **FOCUS Service Categories** | `{report.catalogues_populated.get("service_categories")}` | 11 | **RECONCILED (100%)** |
+| **Canonical Services** | `{report.catalogues_populated.get("services")}` | 5 | **RECONCILED (100%)** |
+| **Default Threshold Templates** | `{report.catalogues_populated.get("threshold_templates")}` | 6 | **SEEDED** |
+| **Default Budget Templates** | `{report.catalogues_populated.get("budget_templates")}` | 4 | **SEEDED** |
+| **Governance Policies** | `{report.catalogues_populated.get("policies")}` | 6 | **SEEDED (Disabled except Connector Health)** |
 
 ---
 
@@ -513,7 +513,7 @@ class PreIdentityBootstrapService:
 
 - **Total Permissions Defined**: `{report.permission_count}` fine-grained permissions
 - **Nine Built-in Roles**:
-{chr(10).join(f"  {idx+1}. `{role}`" for idx, role in enumerate(report.roles_defined))}
+{chr(10).join(f"  {idx + 1}. `{role}`" for idx, role in enumerate(report.roles_defined))}
 
 > **IMPORTANT**: The role definitions exist as master data only.
 > **Zero users exist** (`identities_count = 0`), **zero credentials exist** (`credentials_count = 0`), and **zero scope grants exist** (`grants_count = 0`).

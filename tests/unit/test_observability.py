@@ -215,6 +215,6 @@ def test_all_12_canonical_metrics_registered_and_scrapable(client: TestClient):
     metrics_text = res.text
 
     for metric_name in expected_metrics:
-        assert (
-            metric_name in metrics_text
-        ), f"Metric {metric_name} was not found in /metrics scrape output!"
+        assert metric_name in metrics_text, (
+            f"Metric {metric_name} was not found in /metrics scrape output!"
+        )

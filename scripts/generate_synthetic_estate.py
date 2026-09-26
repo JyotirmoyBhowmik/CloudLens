@@ -80,9 +80,9 @@ def main() -> None:
     provider_sum = sum(manifest.spend_by_provider.values())
     assert provider_sum == manifest.total_cost, "Discrepancy in provider spend reconciliation!"
     type_sum = manifest.dominant_spend + manifest.long_tail_spend
-    assert (
-        type_sum == manifest.total_cost
-    ), "Discrepancy in dominant/long-tail spend reconciliation!"
+    assert type_sum == manifest.total_cost, (
+        "Discrepancy in dominant/long-tail spend reconciliation!"
+    )
     total_count = manifest.compliant_tags_count + manifest.tagging_gaps_count
     assert total_count == manifest.resource_count, "Discrepancy in tagging resource count!"
 

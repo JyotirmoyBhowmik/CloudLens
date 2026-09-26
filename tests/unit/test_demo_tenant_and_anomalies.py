@@ -265,9 +265,9 @@ class TestIngestionFixtures:
         for fixture_name in self.FIXTURES:
             raw_text = (fixtures_dir / fixture_name).read_text(encoding="utf-8")
             for pattern in forbidden_patterns:
-                assert (
-                    pattern not in raw_text
-                ), f"Forbidden pattern '{pattern}' detected in fixture {fixture_name}"
+                assert pattern not in raw_text, (
+                    f"Forbidden pattern '{pattern}' detected in fixture {fixture_name}"
+                )
 
     def test_fixtures_contain_messy_edge_cases(self):
         """Ingestion fixtures must contain realistic messiness: credits, untagged rows, adjustments."""

@@ -105,6 +105,6 @@ def test_thirteen_month_aggregation_query_performance():
 
     # Verify accuracy and query performance SLA (<500ms for 20k multi-dimensional rollup)
     assert len(grouped_results) > 0
-    assert (
-        duration < 0.5
-    ), f"13-month multi-dimensional aggregation took {duration*1000:.2f}ms, exceeding target!"
+    assert duration < 0.5, (
+        f"13-month multi-dimensional aggregation took {duration * 1000:.2f}ms, exceeding target!"
+    )

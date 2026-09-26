@@ -1,9 +1,9 @@
 """Canonical Domain Enums for CloudLens Enterprise Data Model."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderType(str, Enum):
+class ProviderType(StrEnum):
     """Supported cloud providers and canonical system boundary."""
 
     AWS = "aws"
@@ -13,7 +13,7 @@ class ProviderType(str, Enum):
     CANONICAL = "canonical"
 
 
-class ScopeRole(str, Enum):
+class ScopeRole(StrEnum):
     """Canonical roles for multi-cloud scope hierarchy (Prompt 05 Item 31)."""
 
     TENANT = "TENANT"
@@ -24,7 +24,7 @@ class ScopeRole(str, Enum):
     BILLING_ACCOUNT = "BILLING_ACCOUNT"
 
 
-class ScopeAbsenceReason(str, Enum):
+class ScopeAbsenceReason(StrEnum):
     """Explicit reasons why a scope level may be absent in a given provider topology."""
 
     NOT_APPLICABLE_TO_PROVIDER = "NOT_APPLICABLE_TO_PROVIDER"
@@ -32,7 +32,7 @@ class ScopeAbsenceReason(str, Enum):
     NOT_PROVISIONED = "NOT_PROVISIONED"
 
 
-class MeasureNullState(str, Enum):
+class MeasureNullState(StrEnum):
     """Four-state null discipline for measures (Prompt 05 Item 36).
 
     Bare nulls are banned for all measures. Every absent measure must explicitly declare:
@@ -48,7 +48,7 @@ class MeasureNullState(str, Enum):
     NOT_SUPPORTED = "NOT_SUPPORTED"
 
 
-class PricingStatus(str, Enum):
+class PricingStatus(StrEnum):
     """Canonical resource pricing classification per BBP Section 16."""
 
     FREE = "FREE"
@@ -60,7 +60,7 @@ class PricingStatus(str, Enum):
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
-class OriginType(str, Enum):
+class OriginType(StrEnum):
     """Data provenance origin for Data Dictionary per Prompt 05 Item 38."""
 
     DISCOVERED = "DISCOVERED"  # Discovered automatically by cloud provider connectors
@@ -68,7 +68,7 @@ class OriginType(str, Enum):
     CURATED = "CURATED"  # Manually entered, tagged, or overridden by enterprise administrators
 
 
-class ServiceCategory(str, Enum):
+class ServiceCategory(StrEnum):
     """Standardized service categories across all cloud providers."""
 
     COMPUTE = "COMPUTE"
@@ -84,7 +84,7 @@ class ServiceCategory(str, Enum):
     OTHER = "OTHER"
 
 
-class RuntimeStatus(str, Enum):
+class RuntimeStatus(StrEnum):
     """Operational lifecycle state of a cloud resource."""
 
     RUNNING = "RUNNING"
@@ -95,7 +95,7 @@ class RuntimeStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class ChargeCategory(str, Enum):
+class ChargeCategory(StrEnum):
     """FOCUS 1.0 charge categories for CostFacts."""
 
     USAGE = "Usage"
@@ -105,7 +105,7 @@ class ChargeCategory(str, Enum):
     CREDIT = "Credit"
 
 
-class CostSourceType(str, Enum):
+class CostSourceType(StrEnum):
     """Six canonical cost source types per FOCUS and Prompt 47 Item 29 / Prompt 36."""
 
     INVOICE = "INVOICE"
@@ -116,7 +116,7 @@ class CostSourceType(str, Enum):
     AMORTISED = "AMORTISED"
 
 
-class PricingModel(str, Enum):
+class PricingModel(StrEnum):
     """Standard pricing model definitions."""
 
     ON_DEMAND = "OnDemand"
@@ -126,7 +126,7 @@ class PricingModel(str, Enum):
     TIERED = "Tiered"
 
 
-class BudgetPeriod(str, Enum):
+class BudgetPeriod(StrEnum):
     """Budget cycle frequency."""
 
     MONTHLY = "MONTHLY"
@@ -134,7 +134,7 @@ class BudgetPeriod(str, Enum):
     ANNUAL = "ANNUAL"
 
 
-class PolicySeverity(str, Enum):
+class PolicySeverity(StrEnum):
     """Governance policy violation severity."""
 
     LOW = "LOW"
@@ -143,7 +143,7 @@ class PolicySeverity(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class PolicyStatus(str, Enum):
+class PolicyStatus(StrEnum):
     """Governance finding resolution status."""
 
     OPEN = "OPEN"
@@ -151,7 +151,7 @@ class PolicyStatus(str, Enum):
     SUPPRESSED = "SUPPRESSED"
 
 
-class DependencyType(str, Enum):
+class DependencyType(StrEnum):
     """Cross-resource dependency relationships."""
 
     NETWORK = "NETWORK"
@@ -161,7 +161,7 @@ class DependencyType(str, Enum):
     EVENT_SUBSCRIPTION = "EVENT_SUBSCRIPTION"
 
 
-class DependencyDirection(str, Enum):
+class DependencyDirection(StrEnum):
     """Directionality of resource dependency."""
 
     INBOUND = "INBOUND"
@@ -169,7 +169,7 @@ class DependencyDirection(str, Enum):
     BIDIRECTIONAL = "BIDIRECTIONAL"
 
 
-class AlertSeverity(str, Enum):
+class AlertSeverity(StrEnum):
     """Alert notification severity level."""
 
     INFO = "INFO"
@@ -178,7 +178,7 @@ class AlertSeverity(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class AlertStatus(str, Enum):
+class AlertStatus(StrEnum):
     """Alert lifecycle state."""
 
     ACTIVE = "ACTIVE"
@@ -186,7 +186,7 @@ class AlertStatus(str, Enum):
     RESOLVED = "RESOLVED"
 
 
-class NotificationChannel(str, Enum):
+class NotificationChannel(StrEnum):
     """Outbound alerting delivery channels."""
 
     EMAIL = "EMAIL"
@@ -196,7 +196,7 @@ class NotificationChannel(str, Enum):
     TEAMS = "TEAMS"
 
 
-class NotificationStatus(str, Enum):
+class NotificationStatus(StrEnum):
     """Notification dispatch outcome."""
 
     PENDING = "PENDING"
@@ -204,7 +204,7 @@ class NotificationStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class SyncJobStatus(str, Enum):
+class SyncJobStatus(StrEnum):
     """Connector ingestion job status."""
 
     SCHEDULED = "SCHEDULED"
@@ -213,7 +213,7 @@ class SyncJobStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class SystemRole(str, Enum):
+class SystemRole(StrEnum):
     """Nine built-in canonical roles for enterprise FinOps RBAC (Prompt 49A Item 9)."""
 
     GLOBAL_ADMIN = "GLOBAL_ADMIN"
@@ -227,7 +227,7 @@ class SystemRole(str, Enum):
     TENANT_USER = "TENANT_USER"
 
 
-class ProviderCapability(str, Enum):
+class ProviderCapability(StrEnum):
     """Supported cloud provider capability groups (Prompt 49A Item 11, AM-07)."""
 
     C01_HIERARCHY = "C-01"

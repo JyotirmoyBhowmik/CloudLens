@@ -10,13 +10,13 @@ All thresholds resolve from configuration defaults or tenant settings.
 """
 
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import NamedTuple
 
 from domain.rules.monetary import to_decimal
 
 
-class ThresholdBand(str, Enum):
+class ThresholdBand(StrEnum):
     """FinOps governance alert severity levels."""
 
     NORMAL = "NORMAL"  # Healthy / Under amber threshold

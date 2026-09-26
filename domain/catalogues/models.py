@@ -9,13 +9,13 @@ Enforces Prompt 07:
 
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class Dimensionality(str, Enum):
+class Dimensionality(StrEnum):
     """Physical and structural dimensions for canonical units."""
 
     DIGITAL_STORAGE = "DIGITAL_STORAGE"
@@ -28,7 +28,7 @@ class Dimensionality(str, Enum):
     CURRENCY = "CURRENCY"
 
 
-class AggregationMethod(str, Enum):
+class AggregationMethod(StrEnum):
     """Mathematical aggregation methods for metrics and pricing dimensions."""
 
     SUM = "sum"
@@ -37,7 +37,7 @@ class AggregationMethod(str, Enum):
     LAST = "last"
 
 
-class CatalogueType(str, Enum):
+class CatalogueType(StrEnum):
     """Class of master catalogue."""
 
     SERVICE = "SERVICE"
@@ -47,7 +47,7 @@ class CatalogueType(str, Enum):
     PRICING_DIMENSION = "PRICING_DIMENSION"
 
 
-class GapStatus(str, Enum):
+class GapStatus(StrEnum):
     """Lifecycle state of an unmapped catalogue entry."""
 
     OPEN = "OPEN"

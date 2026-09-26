@@ -50,12 +50,12 @@ def test_migrations_chain_and_complete_rollback_capability():
 
     # 2. Verify all migrations have both upgrade() and downgrade() functions
     for m in (m1, m2, m3, m4, m5, m6):
-        assert hasattr(m, "upgrade") and callable(
-            m.upgrade
-        ), f"{m.revision} missing callable upgrade()"
-        assert hasattr(m, "downgrade") and callable(
-            m.downgrade
-        ), f"{m.revision} missing callable downgrade()"
+        assert hasattr(m, "upgrade") and callable(m.upgrade), (
+            f"{m.revision} missing callable upgrade()"
+        )
+        assert hasattr(m, "downgrade") and callable(m.downgrade), (
+            f"{m.revision} missing callable downgrade()"
+        )
 
 
 def test_expand_migrate_contract_pattern_implementation():
