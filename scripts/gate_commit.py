@@ -37,6 +37,10 @@ def main() -> None:
             "Enumeration Bridge Verification",
             [sys.executable, "scripts/check_enum_bridge.py"],
         ),
+        (
+            "Tenant Repository Context Enforcement",
+            [sys.executable, "scripts/check_tenant_repository_enforcement.py"],
+        ),
         ("Ruff Linter", [sys.executable, "scripts/run.py", "ruff", "check", "."]),
         ("Ruff Format Check", [sys.executable, "scripts/run.py", "ruff", "format", "--check", "."]),
         ("Mypy Static Type Checking", [sys.executable, "scripts/run.py", "mypy", "."]),

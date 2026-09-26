@@ -452,3 +452,111 @@ class CredentialRotationInProgressException(CredentialException):
             error_code="CREDENTIAL_ROTATION_IN_PROGRESS",
         )
         self.profile_id = profile_id
+
+
+class TenantContextException(DomainModelException):
+    """Base exception for tenant scoping and isolation violations (Prompt 13)."""
+
+    def __init__(self, message: str, error_code: str = "TENANT_CONTEXT_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class MissingTenantContextException(TenantContextException):
+    """Raised when repository or service queries are executed without valid tenant context (Prompt 13 Item 84)."""
+
+    def __init__(
+        self,
+        message: str = "Tenant context is mandatory for data access and cannot be missing or empty.",
+    ) -> None:
+        super().__init__(message, error_code="MISSING_TENANT_CONTEXT")
+
+
+class CrossTenantAccessForbiddenException(TenantContextException):
+    """Raised when an authenticated caller attempts to reach or manipulate another tenant's data (Prompt 13 Item 83)."""
+
+    def __init__(
+        self,
+        message: str = "Cross-tenant access forbidden: parameter or identity mismatch with tenant boundary.",
+    ) -> None:
+        super().__init__(message, error_code="CROSS_TENANT_ACCESS_FORBIDDEN")
+
+
+class CrossTenantStorageAccessException(TenantContextException):
+    """Raised when object storage access attempts cross-tenant directory access (Prompt 13 Item 85)."""
+
+    def __init__(
+        self,
+        message: str = "Cross-tenant storage access denied: path must be strictly within tenant prefix.",
+    ) -> None:
+        super().__init__(message, error_code="CROSS_TENANT_STORAGE_ACCESS_DENIED")
+
+
+class InvalidStoragePathException(TenantContextException):
+    """Raised when object storage key contains forbidden directory traversal sequences."""
+
+    def __init__(
+        self,
+        message: str = "Invalid object storage path: directory traversal or leading slash forbidden.",
+    ) -> None:
+        super().__init__(message, error_code="INVALID_STORAGE_PATH")
+
+
+class AuditStreamException(DomainModelException):
+    """Base exception for append-only audit stream violations (Prompt 13 Item 86)."""
+
+    def __init__(self, message: str, error_code: str = "AUDIT_STREAM_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class AuditTamperForbiddenException(AuditStreamException):
+    """Raised when any user, including Super Admin, attempts to update or delete audit records (Prompt 13 Item 86)."""
+
+    def __init__(
+        self,
+        message: str = "Audit records are immutable and append-only. Modification or deletion is strictly forbidden (SEC-015). This attempt has been audited.",
+    ) -> None:
+        super().__init__(message, error_code="AUDIT_TAMPER_FORBIDDEN")
+
+
+class AuditRecordNotFoundException(AuditStreamException):
+    """Raised when an audit record is not found."""
+
+    def __init__(self, event_id: str) -> None:
+        super().__init__(
+            f"Audit event '{event_id}' not found.", error_code="AUDIT_RECORD_NOT_FOUND"
+        )
+        self.event_id = event_id
+
+
+class OverrideException(DomainModelException):
+    """Base exception for operational override violations (Prompt 13 Item 87)."""
+
+    def __init__(self, message: str, error_code: str = "OVERRIDE_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class OverrideValidationException(OverrideException):
+    """Raised when an override record fails validation of any of the 8 mandatory attributes (Prompt 13 Item 87)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="OVERRIDE_VALIDATION_FAILED")
+
+
+class PermanentOverrideNotAllowedException(OverrideException):
+    """Raised when attempting to create a permanent override without explicit configuration and approval."""
+
+    def __init__(
+        self,
+        message: str = "Permanent overrides are forbidden without explicit configuration and approved governance reference.",
+    ) -> None:
+        super().__init__(message, error_code="PERMANENT_OVERRIDE_NOT_ALLOWED")
+
+
+class OverrideNotFoundException(OverrideException):
+    """Raised when the requested override record does not exist."""
+
+    def __init__(self, override_id: str) -> None:
+        super().__init__(
+            f"Override record '{override_id}' not found.", error_code="OVERRIDE_NOT_FOUND"
+        )
+        self.override_id = override_id

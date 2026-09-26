@@ -445,6 +445,39 @@ class AuditEventModel(Base):
     )
 
 
+class OverrideModel(Base):
+    """Operational and governance override records holding all eight mandatory attributes (Prompt 13 Item 87)."""
+
+    __tablename__ = "overrides"
+
+    id = Column(String(64), primary_key=True, nullable=False)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    override_class = Column(String(64), nullable=False)
+    who = Column(String(255), nullable=False)
+    what = Column(String(255), nullable=False)
+    why = Column(Text, nullable=False)
+    when = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    previous_value = Column(JSONB, nullable=True)
+    new_value = Column(JSONB, nullable=False)
+    expiry = Column(DateTime(timezone=True), nullable=True)
+    is_permanent = Column(Boolean, nullable=False, default=False)
+    approval_metadata = Column(JSONB, nullable=True)
+    status = Column(String(32), nullable=False, default="ACTIVE")
+    reverted_at = Column(DateTime(timezone=True), nullable=True)
+    reverted_by = Column(String(255), nullable=True)
+    reversion_reason = Column(Text, nullable=True)
+    correlation_id = Column(String(64), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_overrides_tenant_status", "tenant_id", "status"),
+        Index("idx_overrides_tenant_expiry", "tenant_id", "expiry"),
+    )
+
+
 # ==============================================================================
 # 4. Materialized Daily Aggregate Tables (Item 42)
 # ==============================================================================

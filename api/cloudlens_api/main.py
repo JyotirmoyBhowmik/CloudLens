@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from api.cloudlens_api.routes import (
     attribution_router,
+    audit_router,
     auth_router,
     bootstrap_router,
     config_router,
@@ -20,12 +21,23 @@ from api.cloudlens_api.routes import (
     demo_router,
     health_router,
     masterdata_router,
+    overrides_router,
     rbac_router,
+    storage_router,
 )
 from domain.models.exceptions import (
+    AuditRecordNotFoundException,
+    AuditStreamException,
+    AuditTamperForbiddenException,
+    CrossTenantAccessForbiddenException,
+    CrossTenantStorageAccessException,
     CustomRoleInvalidException,
     DomainModelException,
+    OverrideException,
+    OverrideNotFoundException,
+    PermanentOverrideNotAllowedException,
     RBACException,
+    TenantContextException,
 )
 from domain.observability import (
     current_correlation_id,
@@ -64,7 +76,22 @@ app.add_middleware(
 async def correlation_id_and_timing_middleware(request: Request, call_next):
     """Propagate Correlation-ID, execute OpenTelemetry span, and record Prometheus metrics."""
     correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
-    tenant_id = request.headers.get("X-Tenant-ID", "global")
+    tenant_id = "global"
+
+    # Derive tenant from authenticated identity if present, never trusting client parameter alone (Item 83)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            from domain.identity.service import get_identity_service
+
+            token_str = auth_header[len("Bearer ") :].strip()
+            auth_ctx = get_identity_service().token_engine.extract_auth_context(token_str)
+            tenant_id = auth_ctx.tenant_id
+        except Exception:
+            tenant_id = request.headers.get("X-Tenant-ID", "global")
+    else:
+        tenant_id = request.headers.get("X-Tenant-ID", "global")
+
     request.state.correlation_id = correlation_id
     request.state.tenant_id = tenant_id
 
@@ -184,6 +211,78 @@ async def standardized_rbac_exception_handler(request: Request, exc: RBACExcepti
     )
 
 
+@app.exception_handler(TenantContextException)
+async def standardized_tenant_context_exception_handler(
+    request: Request, exc: TenantContextException
+):
+    """Tenant isolation and context exception handler (Prompt 13 Items 83-85)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    status_code = (
+        status.HTTP_403_FORBIDDEN
+        if isinstance(exc, (CrossTenantAccessForbiddenException, CrossTenantStorageAccessException))
+        else status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
+@app.exception_handler(AuditStreamException)
+async def standardized_audit_stream_exception_handler(request: Request, exc: AuditStreamException):
+    """Append-only audit stream exception handler (Prompt 13 Item 86)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, AuditTamperForbiddenException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(exc, AuditRecordNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
+@app.exception_handler(OverrideException)
+async def standardized_override_exception_handler(request: Request, exc: OverrideException):
+    """Operational override exception handler (Prompt 13 Item 87)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, PermanentOverrideNotAllowedException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(exc, OverrideNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -194,6 +293,9 @@ app.include_router(attribution_router)
 app.include_router(demo_router)
 app.include_router(demo_mode_router)
 app.include_router(credentials_router)
+app.include_router(audit_router)
+app.include_router(overrides_router)
+app.include_router(storage_router)
 
 
 class HealthResponse(BaseModel):

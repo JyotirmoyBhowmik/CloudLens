@@ -18,6 +18,7 @@ from typing import Any
 from domain.config.surface import SecretStoreConfig
 from domain.models.exceptions import (
     CredentialNotFoundException,
+    CrossTenantCredentialAccessException,
     SecretStoreUnavailableException,
 )
 
@@ -42,15 +43,16 @@ class SecretStore(ABC):
         pass
 
     @abstractmethod
-    def get_secret(self, secret_ref: str) -> dict[str, Any]:
+    def get_secret(self, secret_ref: str, tenant_id: str | None = None) -> dict[str, Any]:
         """Retrieves raw credential material by opaque reference URI.
 
         Accessible ONLY to runtime cloud connectors during sync or connection verification.
+        Validates tenant-scoped path if tenant_id is provided.
         """
         pass
 
     @abstractmethod
-    def delete_secret(self, secret_ref: str) -> bool:
+    def delete_secret(self, secret_ref: str, tenant_id: str | None = None) -> bool:
         """Permanently deletes credential material from the store upon revocation."""
         pass
 
@@ -105,18 +107,31 @@ class InMemorySecretStore(SecretStore):
         )
         return ref_uri
 
-    def get_secret(self, secret_ref: str) -> dict[str, Any]:
+    def _validate_tenant_scope(self, secret_ref: str, tenant_id: str | None) -> None:
+        if tenant_id:
+            clean_tenant = urllib.parse.quote(tenant_id, safe="")
+            expected_prefix = f"/tenants/{clean_tenant}/"
+            if expected_prefix not in secret_ref:
+                raise CrossTenantCredentialAccessException(
+                    profile_id=secret_ref,
+                    caller_tenant_id=tenant_id,
+                    owner_tenant_id="external",
+                )
+
+    def get_secret(self, secret_ref: str, tenant_id: str | None = None) -> dict[str, Any]:
+        self._validate_tenant_scope(secret_ref, tenant_id)
         with self._lock:
             secret = self._secrets.get(secret_ref)
 
         if secret is None:
             raise CredentialNotFoundException(
                 profile_id=secret_ref,
-                tenant_id=None,
+                tenant_id=tenant_id,
             )
         return copy.deepcopy(secret)
 
-    def delete_secret(self, secret_ref: str) -> bool:
+    def delete_secret(self, secret_ref: str, tenant_id: str | None = None) -> bool:
+        self._validate_tenant_scope(secret_ref, tenant_id)
         with self._lock:
             removed = self._secrets.pop(secret_ref, None) is not None
 
@@ -161,11 +176,11 @@ class VaultSecretStore(SecretStore):
         # For local execution or test harness where Vault daemon is not running, delegate cleanly
         return self._fallback_store.store_secret(tenant_id, profile_id, version, secret_data)
 
-    def get_secret(self, secret_ref: str) -> dict[str, Any]:
-        return self._fallback_store.get_secret(secret_ref)
+    def get_secret(self, secret_ref: str, tenant_id: str | None = None) -> dict[str, Any]:
+        return self._fallback_store.get_secret(secret_ref, tenant_id=tenant_id)
 
-    def delete_secret(self, secret_ref: str) -> bool:
-        return self._fallback_store.delete_secret(secret_ref)
+    def delete_secret(self, secret_ref: str, tenant_id: str | None = None) -> bool:
+        return self._fallback_store.delete_secret(secret_ref, tenant_id=tenant_id)
 
     def has_secret(self, secret_ref: str) -> bool:
         return self._fallback_store.has_secret(secret_ref)

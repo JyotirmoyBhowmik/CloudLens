@@ -1,4 +1,4 @@
-"""Credential Lifecycle and Secret Management REST API Endpoints (Prompt 12).
+"""Credential Lifecycle and Secret Management REST API Endpoints (Prompt 12 & 13).
 
 Enforces:
 - POST /api/v1/credentials/profiles: Provision profile with pre-flight validation and reference storage (Item 77, 78).
@@ -13,14 +13,16 @@ Enforces:
 - POST /api/v1/credentials/check-expiries: Trigger expiry tracking and alert emission (Item 79).
 - GET  /api/v1/credentials/permissions/{provider}: Least-privilege permission reference (Item 81).
 - GET  /api/v1/credentials/export: Safe export guaranteeing negative controls (Item 82).
+- Derives tenant strictly from authenticated identity (Prompt 13 Item 83).
 """
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
 from domain.credentials.models import (
     CredentialCreateRequest,
     CredentialProfileResponse,
@@ -39,6 +41,7 @@ from domain.models.exceptions import (
     CredentialValidationException,
     CrossTenantCredentialAccessException,
 )
+from domain.tenant.context import TenantContext
 
 logger = logging.getLogger("cloudlens.api.credentials")
 
@@ -81,7 +84,7 @@ def _to_response_dto(profile: Any) -> CredentialProfileResponse:
 def create_credential_profile(
     request_data: CredentialCreateRequest,
     request: Request,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Provisions a credential profile.
@@ -91,17 +94,18 @@ def create_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
 
     try:
         profile = service.create_profile(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             name=request_data.name,
             provider=request_data.provider,
             credential_type=request_data.credential_type,
             secret_payload=request_data.secret_payload,
             metadata=request_data.metadata,
             expires_at=request_data.expires_at,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -119,11 +123,11 @@ def create_credential_profile(
 )
 def list_credential_profiles(
     provider: ProviderType | None = Query(default=None, description="Optional provider filter"),
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> list[CredentialProfileResponse]:
     """Lists credential profiles belonging strictly to the caller's tenant."""
     service = get_credential_service()
-    profiles = service.list_profiles(tenant_id=x_tenant_id, provider=provider)
+    profiles = service.list_profiles(tenant_id=tenant_context.tenant_id, provider=provider)
     return [_to_response_dto(p) for p in profiles]
 
 
@@ -134,12 +138,12 @@ def list_credential_profiles(
 )
 def get_credential_profile(
     profile_id: str,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> CredentialProfileResponse:
     """Retrieves a single credential profile enforcing tenant isolation."""
     service = get_credential_service()
     try:
-        profile = service.get_profile(tenant_id=x_tenant_id, profile_id=profile_id)
+        profile = service.get_profile(tenant_id=tenant_context.tenant_id, profile_id=profile_id)
         return _to_response_dto(profile)
     except CredentialNotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
@@ -156,7 +160,7 @@ def rotate_credential_profile(
     profile_id: str,
     rotate_data: CredentialRotateRequest,
     request: Request,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Initiates zero-downtime rotation.
@@ -165,14 +169,16 @@ def rotate_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.rotate_credential(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
             new_secret_payload=rotate_data.new_secret_payload,
             new_metadata=rotate_data.new_metadata,
             new_expires_at=rotate_data.new_expires_at,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -195,18 +201,20 @@ def complete_credential_rotation(
     purge_previous: bool = Query(
         default=False, description="Whether to purge previous secret from SecretStore"
     ),
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Finalizes rotation and returns state to ACTIVE."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.complete_rotation(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
             purge_previous=purge_previous,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -224,17 +232,19 @@ def complete_credential_rotation(
 def retire_credential_profile(
     profile_id: str,
     request: Request,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Retires a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.retire_credential(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -253,17 +263,19 @@ def revoke_credential_profile(
     profile_id: str,
     request: Request,
     reason: str = Query(default="Emergency security revocation"),
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Permanently revokes a credential profile and purges secret from store."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.revoke_credential(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             reason=reason,
             correlation_id=correlation_id,
         )
@@ -283,18 +295,20 @@ def bind_connector(
     profile_id: str,
     bind_data: ConnectorBindRequest,
     request: Request,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Binds a connector to an existing credential profile within the tenant."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.bind_connector(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
             connector_id=bind_data.connector_id,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -313,18 +327,20 @@ def unbind_connector(
     profile_id: str,
     bind_data: ConnectorBindRequest,
     request: Request,
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Unbinds a connector from a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
+    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+
     try:
         profile = service.unbind_connector(
-            tenant_id=x_tenant_id,
+            tenant_id=tenant_context.tenant_id,
             profile_id=profile_id,
             connector_id=bind_data.connector_id,
-            actor_id=x_actor_id,
+            actor_id=actor_id,
             correlation_id=correlation_id,
         )
         return _to_response_dto(profile)
@@ -340,11 +356,11 @@ def unbind_connector(
     summary="Scan credential expiries and fire milestone alerts",
 )
 def check_credential_expiries(
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> list[ExpiryAlert]:
     """Scans credential profiles and emits alerts at 30, 14, 3 days and expiration."""
     service = get_credential_service()
-    return service.check_expiries(tenant_id=x_tenant_id)
+    return service.check_expiries(tenant_id=tenant_context.tenant_id)
 
 
 @router.get(
@@ -368,8 +384,8 @@ def get_provider_permissions_reference(
     summary="Export sanitized credential profiles for compliance",
 )
 def export_credential_profiles(
-    x_tenant_id: str = Header(default="default-tenant", alias="X-Tenant-ID"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> list[CredentialProfileResponse]:
     """Exports sanitized credential profiles containing strictly zero credential material."""
     service = get_credential_service()
-    return service.export_profiles(x_tenant_id)
+    return service.export_profiles(tenant_context.tenant_id)

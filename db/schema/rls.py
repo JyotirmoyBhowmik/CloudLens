@@ -22,6 +22,7 @@ TENANT_ISOLATED_TABLES = [
     "policies",
     "alerts",
     "sync_jobs",
+    "overrides",
 ]
 
 

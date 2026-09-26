@@ -49,6 +49,10 @@ def main() -> None:
             [sys.executable, "scripts/check_enum_bridge.py"],
         ),
         (
+            "Tenant Repository Context Enforcement",
+            [sys.executable, "scripts/check_tenant_repository_enforcement.py"],
+        ),
+        (
             "Domain Logic Coverage Policy (>= 85%)",
             [
                 sys.executable,
