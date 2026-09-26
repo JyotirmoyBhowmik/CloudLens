@@ -220,6 +220,12 @@
       "applied_version": 1,
       "seed_file": "masterdata/seeds/system_tenant.json"
     },
+    "SUPERUSER_IDENTITY": {
+      "master_code": "SUPERUSER_IDENTITY",
+      "record_count": 1,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/superuser_identity.json"
+    },
     "PERMISSION": {
       "master_code": "PERMISSION",
       "record_count": 39,
@@ -326,11 +332,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-baaf71986a5c",
+  "first_audit_event_id": "aud-boot-8492aaab4bd2",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-09-26T13:50:24.947865Z",
-  "correlation_id": "corr-boot-6978173d"
+  "timestamp": "2026-09-26T14:11:07.328650Z",
+  "correlation_id": "corr-boot-54607d72"
 }

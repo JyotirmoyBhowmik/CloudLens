@@ -596,6 +596,23 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/system_tenant.json",
         expected_review_period_days=365,
     ),
+    "SUPERUSER_IDENTITY": MasterRegistryEntry(
+        code="SUPERUSER_IDENTITY",
+        name="Platform Superuser Identity Configuration",
+        purpose="Defines the single named superuser identity and security contact for platform bootstrap (Prompt 49B).",
+        schema_def={
+            "email": "string",
+            "security_alert_email": "string",
+            "max_routine_days": "number",
+            "unrestricted_scope": "boolean",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["bootstrap", "identity", "auth", "security", "rbac"],
+        seed_file="masterdata/seeds/superuser_identity.json",
+        expected_review_period_days=90,
+    ),
     "PERMISSION": MasterRegistryEntry(
         code="PERMISSION",
         name="Platform Permission Catalogue",

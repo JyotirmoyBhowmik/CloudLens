@@ -299,6 +299,34 @@ class MachineClientAuthFailedException(IdentityException):
         super().__init__(message, error_code="MACHINE_CLIENT_AUTH_FAILED")
 
 
+class SuperuserException(IdentityException):
+    """Base exception for platform superuser governance violations (Prompt 49B)."""
+
+    def __init__(self, message: str, error_code: str = "SUPERUSER_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class SuperuserImmutableException(SuperuserException):
+    """Raised when attempting to delete, downgrade, disable MFA, or un-audit the platform superuser (Prompt 49B Item 17)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="SUPERUSER_IMMUTABLE_VIOLATION")
+
+
+class SuperuserActivationException(SuperuserException):
+    """Raised when superuser credential activation fails (Prompt 49B Item 17)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="SUPERUSER_ACTIVATION_FAILED")
+
+
+class SuperuserRoutineUseException(SuperuserException):
+    """Raised when superuser is used for routine operations exceeding delegation limits (Prompt 49B Item 19)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="SUPERUSER_ROUTINE_USE_EXCEEDED")
+
+
 class RBACException(DomainModelException):
     """Base exception for RBAC and scope authorization failures (Prompt 11)."""
 

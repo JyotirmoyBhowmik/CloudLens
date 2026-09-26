@@ -1,0 +1,17 @@
+[
+  {
+    "code": "SUPERUSER_DEFAULT",
+    "display_name": "Platform Superuser",
+    "description": "Shipped default superuser configuration for platform administration (Prompt 49B).",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "email": "admin@jyotirmoyb.com",
+      "display_name": "CloudLens Platform Superuser",
+      "security_alert_email": "security-alerts@jyotirmoyb.com",
+      "max_routine_days": 3,
+      "unrestricted_scope": true,
+      "elevated_audit_retention_days": 2555
+    }
+  }
+]

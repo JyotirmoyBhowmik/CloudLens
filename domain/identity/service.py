@@ -55,6 +55,7 @@ from domain.models.exceptions import (
     NoMappedRoleException,
     SessionExpiredException,
     StepUpRequiredException,
+    SuperuserImmutableException,
     TokenInvalidException,
     TokenRevokedException,
     UserDisabledException,
@@ -167,6 +168,10 @@ class IdentityService:
         # Observability events
         self._audit_events: list[AuditEvent] = []
         self._alerts: list[Alert] = []
+
+        # Prompt 49B AM-05: Break-glass consolidation
+        self._break_glass_consolidated: bool = False
+        self._consolidated_superuser_email: str | None = None
 
     @property
     def token_engine(self) -> CryptographicTokenEngine:
@@ -396,6 +401,13 @@ class IdentityService:
         else:
             raise StepUpRequiredException(StepUpAction.CREDENTIAL_CREATION.value)
 
+        # Prompt 49B AM-05: Break-glass consolidation
+        if self._break_glass_consolidated:
+            raise BreakGlassLimitExceededException(
+                "Break-glass access is consolidated to the single platform superuser identity per AM-05. "
+                "Secondary break-glass creation is prohibited."
+            )
+
         # Check tenant break-glass limit (Item 65)
         current_count = sum(
             1
@@ -524,6 +536,21 @@ class IdentityService:
             correlation_id=corr_id,
             is_break_glass=True,
         )
+
+    def consolidate_break_glass(self, superuser_email: str) -> None:
+        """Consolidates emergency break-glass access onto single named superuser (Prompt 49B Item 18 / AM-05)."""
+        self._break_glass_consolidated = True
+        self._consolidated_superuser_email = superuser_email
+        logger.info(
+            "Consolidated platform break-glass paths onto single superuser identity (AM-05)",
+            extra={"superuser_email": superuser_email},
+        )
+
+    def enumerate_break_glass_paths(self) -> list[str]:
+        """Lists active break-glass identity paths (strictly exactly 1 when consolidated)."""
+        if self._break_glass_consolidated and self._consolidated_superuser_email:
+            return [self._consolidated_superuser_email]
+        return [acc.account_name for acc in self._break_glass_accounts.values() if acc.is_active]
 
     # ----------------------------------------------------------------------
     # Item 66: Token Lifecycle, Refresh Rotation, and Revocation
@@ -712,6 +739,27 @@ class IdentityService:
         user = self._users.get(user_id)
         if not user:
             raise IdentityException(f"User '{user_id}' not found on tenant '{tenant_id}'.")
+
+        # Prompt 49B Item 17: Platform superuser cannot be deleted or disabled
+        if (
+            self._consolidated_superuser_email
+            and user.email.lower() == self._consolidated_superuser_email.lower()
+        ):
+            self._record_audit_event(
+                tenant_id=tenant_id,
+                actor_id=actor_id,
+                action="SUPERUSER_PROTECTION_BLOCKED",
+                entity_type="User",
+                entity_id=user_id,
+                payload_after={
+                    "blocked_action": "DISABLE_USER",
+                    "rule": "CANNOT_BE_DELETED_OR_DISABLED",
+                },
+                correlation_id=correlation_id or str(uuid.uuid4()),
+            )
+            raise SuperuserImmutableException(
+                "Attempting to disable or delete the platform superuser is strictly refused and audited."
+            )
 
         user.status = UserStatus.DISABLED
         user.updated_at = datetime.now(UTC)
