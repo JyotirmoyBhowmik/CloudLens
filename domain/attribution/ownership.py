@@ -105,6 +105,7 @@ class OwnershipResolutionService:
             )
 
         # Normalize tags if raw domain Tag objects provided
+        norm_tags: list[NormalizedTag] = []
         if tags is not None:
             norm_tags = tags
         elif resource.tags:

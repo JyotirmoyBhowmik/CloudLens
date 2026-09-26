@@ -1,0 +1,235 @@
+[
+  {
+    "billing_account_id": "01ABCD-2345EF-6789GH",
+    "service": {
+      "id": "6F81-5844-456A",
+      "description": "Compute Engine"
+    },
+    "sku": {
+      "id": "D982-F0A1-332B",
+      "description": "N2 Instance Core running in Americas"
+    },
+    "usage_start_time": "2026-09-01T00:00:00Z",
+    "usage_end_time": "2026-09-01T01:00:00Z",
+    "project": {
+      "id": "proj-retail-banking-prod",
+      "name": "Retail Banking Production",
+      "ancestry_numbers": "/organizations/1092837465/folders/9876543210/projects/proj-retail-banking-prod",
+      "labels": [
+        { "key": "env", "value": "production" },
+        { "key": "business_unit", "value": "Retail-Banking" }
+      ]
+    },
+    "labels": [
+      { "key": "app", "value": "core-banking-api" },
+      { "key": "cost_centre", "value": "CC-BANK-100" },
+      { "key": "owner", "value": "banking-eng@cloudlens.internal" },
+      { "key": "env", "value": "production" }
+    ],
+    "system_labels": [
+      { "key": "compute.googleapis.com/machine_spec", "value": "n2-standard-4" }
+    ],
+    "location": {
+      "location": "us-central1",
+      "country": "US",
+      "region": "us-central1",
+      "zone": "us-central1-a"
+    },
+    "resource": {
+      "name": "gcp-vm-core-bank-prod-01",
+      "global_name": "//compute.googleapis.com/projects/proj-retail-banking-prod/zones/us-central1-a/instances/gcp-vm-core-bank-prod-01"
+    },
+    "export_time": "2026-09-01T02:15:00Z",
+    "cost": 1.4880,
+    "currency": "USD",
+    "currency_conversion_rate": 1.0,
+    "usage": {
+      "amount": 4.0,
+      "unit": "seconds",
+      "amount_in_pricing_units": 4.0,
+      "pricing_unit": "hour"
+    },
+    "credits": [
+      {
+        "name": "Sustained Usage Discount",
+        "amount": -0.2976,
+        "full_name": "Sustained Usage Discount: Americas",
+        "id": "SUD-AMER-2026",
+        "type": "SUSTAINED_USAGE_DISCOUNT"
+      }
+    ],
+    "cost_type": "regular"
+  },
+  {
+    "billing_account_id": "01ABCD-2345EF-6789GH",
+    "service": {
+      "id": "A482-1249-10BA",
+      "description": "Cloud Storage"
+    },
+    "sku": {
+      "id": "8432-84BA-8321",
+      "description": "Standard Storage US Regional"
+    },
+    "usage_start_time": "2026-09-01T00:00:00Z",
+    "usage_end_time": "2026-09-01T01:00:00Z",
+    "project": {
+      "id": "proj-retail-banking-prod",
+      "name": "Retail Banking Production",
+      "ancestry_numbers": "/organizations/1092837465/folders/9876543210/projects/proj-retail-banking-prod"
+    },
+    "labels": [
+      { "key": "app", "value": "statement-storage" },
+      { "key": "cost_centre", "value": "CC-BANK-100" },
+      { "key": "env", "value": "production" }
+    ],
+    "system_labels": [],
+    "location": {
+      "location": "us-central1",
+      "country": "US",
+      "region": "us-central1",
+      "zone": null
+    },
+    "resource": {
+      "name": "gcp-gcs-customer-statements-prod",
+      "global_name": "//storage.googleapis.com/projects/proj-retail-banking-prod/buckets/gcp-gcs-customer-statements-prod"
+    },
+    "export_time": "2026-09-01T02:15:00Z",
+    "cost": 0.5200,
+    "currency": "USD",
+    "currency_conversion_rate": 1.0,
+    "usage": {
+      "amount": 26000.0,
+      "unit": "byte-seconds",
+      "amount_in_pricing_units": 26.0,
+      "pricing_unit": "gibibyte month"
+    },
+    "credits": [],
+    "cost_type": "regular"
+  },
+  {
+    "billing_account_id": "01ABCD-2345EF-6789GH",
+    "service": {
+      "id": "24E5-B4C1-4D56",
+      "description": "BigQuery"
+    },
+    "sku": {
+      "id": "7812-45A0-112E",
+      "description": "Analysis (Queries)"
+    },
+    "usage_start_time": "2026-09-01T04:00:00Z",
+    "usage_end_time": "2026-09-01T05:00:00Z",
+    "project": {
+      "id": "proj-ai-recommendations-analytics",
+      "name": "AI Recommendations Analytics",
+      "ancestry_numbers": "/organizations/1092837465/folders/9876543210/projects/proj-ai-recommendations-analytics"
+    },
+    "labels": [
+      { "key": "data-classification", "value": "confidential" },
+      { "key": "project-lead", "value": "ml-platform@cloudlens.internal" }
+    ],
+    "system_labels": [],
+    "location": {
+      "location": "us-central1",
+      "country": "US",
+      "region": "us-central1",
+      "zone": null
+    },
+    "resource": {
+      "name": "bq-daily-customer-features",
+      "global_name": "//bigquery.googleapis.com/projects/proj-ai-recommendations-analytics/datasets/analytics/tables/bq-daily-customer-features"
+    },
+    "export_time": "2026-09-01T06:00:00Z",
+    "cost": 6.2500,
+    "currency": "USD",
+    "currency_conversion_rate": 1.0,
+    "usage": {
+      "amount": 1250000000000.0,
+      "unit": "bytes",
+      "amount_in_pricing_units": 1.25,
+      "pricing_unit": "terabytes"
+    },
+    "credits": [],
+    "cost_type": "regular"
+  },
+  {
+    "billing_account_id": "01ABCD-2345EF-6789GH",
+    "service": {
+      "id": "6F81-5844-456A",
+      "description": "Compute Engine"
+    },
+    "sku": {
+      "id": "B832-1109-90AF",
+      "description": "Network Internet Egress from Americas to EMEA"
+    },
+    "usage_start_time": "2026-09-01T05:00:00Z",
+    "usage_end_time": "2026-09-01T06:00:00Z",
+    "project": {
+      "id": "proj-unmapped-sandbox",
+      "name": "Unmapped Sandbox",
+      "ancestry_numbers": "/organizations/1092837465/projects/proj-unmapped-sandbox"
+    },
+    "labels": [],
+    "system_labels": [],
+    "location": {
+      "location": "global",
+      "country": "US",
+      "region": "global",
+      "zone": null
+    },
+    "resource": {
+      "name": "unlabeled-egress-gateway",
+      "global_name": "//compute.googleapis.com/projects/proj-unmapped-sandbox/global/gateways/unlabeled-egress-gateway"
+    },
+    "export_time": "2026-09-01T07:15:00Z",
+    "cost": 0.8500,
+    "currency": "USD",
+    "currency_conversion_rate": 1.0,
+    "usage": {
+      "amount": 10737418240.0,
+      "unit": "bytes",
+      "amount_in_pricing_units": 10.0,
+      "pricing_unit": "gibibytes"
+    },
+    "credits": [],
+    "cost_type": "regular"
+  },
+  {
+    "billing_account_id": "01ABCD-2345EF-6789GH",
+    "service": {
+      "id": "6F81-5844-456A",
+      "description": "Compute Engine"
+    },
+    "sku": {
+      "id": "ADJ-SLA-CREDIT",
+      "description": "Service Level Agreement Credit Adjustment"
+    },
+    "usage_start_time": "2026-08-15T00:00:00Z",
+    "usage_end_time": "2026-08-15T23:59:59Z",
+    "project": {
+      "id": "proj-retail-banking-prod",
+      "name": "Retail Banking Production",
+      "ancestry_numbers": "/organizations/1092837465/folders/9876543210/projects/proj-retail-banking-prod"
+    },
+    "labels": [],
+    "system_labels": [],
+    "location": {
+      "location": "us-central1",
+      "country": "US",
+      "region": "us-central1",
+      "zone": null
+    },
+    "resource": null,
+    "export_time": "2026-09-02T10:00:00Z",
+    "cost": -120.0000,
+    "currency": "USD",
+    "currency_conversion_rate": 1.0,
+    "usage": {
+      "amount": 0.0,
+      "unit": "requests",
+      "amount_in_pricing_units": 0.0,
+      "pricing_unit": "requests"
+    },
+    "credits": [],
+    "cost_type": "adjustment"
+  }
+]
