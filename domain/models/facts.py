@@ -12,7 +12,7 @@ from decimal import Decimal
 from pydantic import Field
 
 from domain.models.base import CanonicalEntity
-from domain.models.enums import ChargeCategory, PricingModel, RuntimeStatus
+from domain.models.enums import ChargeCategory, CostSourceType, PricingModel, RuntimeStatus
 from domain.models.measures import FinancialMeasure, QuantityMeasure
 
 
@@ -28,6 +28,9 @@ class CostFact(CanonicalEntity):
     charge_period_end: datetime = Field(..., description="End of charge interval in UTC")
     charge_category: ChargeCategory = Field(
         default=ChargeCategory.USAGE, description="FOCUS charge category"
+    )
+    cost_source: CostSourceType = Field(
+        default=CostSourceType.INVOICE, description="FOCUS cost source classification"
     )
     charge_subcategory: str | None = Field(
         default=None, description="Pricing construct: On-Demand, Spot, Reserved"

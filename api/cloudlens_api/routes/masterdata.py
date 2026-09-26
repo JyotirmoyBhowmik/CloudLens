@@ -8,6 +8,7 @@ Exposes endpoints for the Master Data Console:
 - Lineage, where-used, import/export, and health reports.
 """
 
+import json
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -486,11 +487,34 @@ async def execute_master_import(master_type: str, payload: ImportPayload) -> dic
 async def export_master_records(
     master_type: str,
     format: str = Query("json", description="Export format: json or csv"),
+    x_tenant_id: str = Header(default="global", alias="X-Tenant-ID"),
 ) -> Response:
-    """Exports master data records as JSON or CSV."""
+    """Exports master data records as JSON or CSV with mandatory Demo Mode watermark if active."""
     try:
         content = get_master_service().export_data(master_type, export_format=format)
+        from domain.config.tenant_settings import tenant_settings_store
+        from domain.demo.models import EXPORT_WATERMARK
+
+        settings = tenant_settings_store.get(x_tenant_id)
+        resp_headers: dict[str, str] = {}
+
+        if settings.is_demo_mode:
+            resp_headers["X-CloudLens-Demo-Mode"] = "true"
+            resp_headers["X-CloudLens-Watermark"] = EXPORT_WATERMARK
+            if format.lower() == "csv":
+                content = f"# WATERMARK: {EXPORT_WATERMARK}\n" + content
+            elif format.lower() == "json":
+                try:
+                    data = json.loads(content)
+                    if isinstance(data, list):
+                        content = json.dumps(
+                            [{"_watermark": EXPORT_WATERMARK, "_demo_mode": True}] + data,
+                            indent=2,
+                        )
+                except Exception:
+                    pass
+
         media_type = "text/csv" if format.lower() == "csv" else "application/json"
-        return Response(content=content, media_type=media_type)
+        return Response(content=content, media_type=media_type, headers=resp_headers)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e

@@ -102,6 +102,14 @@ class TenantSettings(BaseModel):
     retention_profile: RetentionProfile = Field(default_factory=RetentionProfile)
     threshold_defaults: ThresholdDefaults = Field(default_factory=ThresholdDefaults)
     approval_limits: ApprovalLimits = Field(default_factory=ApprovalLimits)
+    is_demo_mode: bool = Field(
+        default=False,
+        description="Flag indicating if tenant is operating in synthetic Demo Mode with simulated data",
+    )
+    demo_scenario: str | None = Field(
+        default=None,
+        description="Active named demo scenario if in demo mode",
+    )
 
 
 class TenantSettingsStore:

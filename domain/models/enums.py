@@ -105,6 +105,17 @@ class ChargeCategory(str, Enum):
     CREDIT = "Credit"
 
 
+class CostSourceType(str, Enum):
+    """Six canonical cost source types per FOCUS and Prompt 47 Item 29 / Prompt 36."""
+
+    INVOICE = "INVOICE"
+    METERED = "METERED"
+    ESTIMATED = "ESTIMATED"
+    ALLOCATED = "ALLOCATED"
+    ADJUSTED = "ADJUSTED"
+    AMORTISED = "AMORTISED"
+
+
 class PricingModel(str, Enum):
     """Standard pricing model definitions."""
 

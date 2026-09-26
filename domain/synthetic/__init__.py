@@ -12,6 +12,12 @@ from domain.synthetic.estate_generator import (
     SyntheticAnomalyType,
     SyntheticEstateGenerator,
 )
+from domain.synthetic.mock_generator import (
+    DeterministicMockEstateGenerator,
+    DeterministicMockEstateResult,
+    MockEstateManifest,
+    MockImperfection,
+)
 
 __all__ = [
     "CompleteEstateResult",
@@ -19,7 +25,11 @@ __all__ = [
     "DEMO_TENANT_NAME",
     "DemoTenantLoaderService",
     "DemoTenantSeedResult",
+    "DeterministicMockEstateGenerator",
+    "DeterministicMockEstateResult",
     "EstateManifest",
+    "MockEstateManifest",
+    "MockImperfection",
     "SyntheticAnomaly",
     "SyntheticAnomalyType",
     "SyntheticEstateGenerator",

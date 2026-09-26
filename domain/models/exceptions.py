@@ -180,3 +180,10 @@ class InvalidTagConventionException(AttributionException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="INVALID_TAG_CONVENTION")
+
+
+class DemoModeSafetyException(DomainModelException):
+    """Raised when an operation violates Demo Mode safety interlocks (Prompt 47 Item 30)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="DEMO_MODE_SAFETY_VIOLATION")
