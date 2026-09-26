@@ -71,7 +71,7 @@ def test_registry_manifest_covers_all_system_masters(service: MasterDataService)
     }
 
     assert expected_masters.issubset(registered_codes)
-    assert len(registry) == 32
+    assert len(registry) == 33
 
     # Strict rule: accessing or creating an unregistered master must raise MasterNotRegisteredException
     with pytest.raises(MasterNotRegisteredException) as exc_info:
@@ -455,7 +455,7 @@ def test_master_data_health_inspection(service: MasterDataService):
     """Inspects health of registered masters, identifies unreferenced and stale values."""
     health = service.inspect_health()
 
-    assert health.total_masters_registered == 32
+    assert health.total_masters_registered == 33
     assert health.total_records > 80
     assert health.active_records > 80
     assert health.inactive_records == 0
@@ -474,7 +474,7 @@ def test_api_masterdata_routes(client: TestClient):
     res_reg = client.get("/api/v1/masterdata/registry")
     assert res_reg.status_code == 200
     reg_data = res_reg.json()
-    assert len(reg_data) == 32
+    assert len(reg_data) == 33
 
     # 2. GET /api/v1/masterdata/records/{master_type}
     res_list = client.get("/api/v1/masterdata/records/SERVICE_CATEGORY")
@@ -501,7 +501,7 @@ def test_api_masterdata_routes(client: TestClient):
     res_health = client.get("/api/v1/masterdata/health")
     assert res_health.status_code == 200
     health_data = res_health.json()
-    assert health_data["total_masters_registered"] == 32
+    assert health_data["total_masters_registered"] == 33
     assert health_data["overall_health_score"] > 0
 
     # 6. POST /api/v1/masterdata/dry-run

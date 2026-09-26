@@ -1,0 +1,114 @@
+[
+  {
+    "code": "UI_NAV_DASHBOARD",
+    "display_name": "Executive Dashboard Navigation Label",
+    "description": "Navigation link title for the executive overview dashboard.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "LABEL",
+      "template": "Executive Dashboard",
+      "fallback_en": "Executive Dashboard",
+      "variables": []
+    }
+  },
+  {
+    "code": "UI_NAV_INVENTORY",
+    "display_name": "Resource Inventory Navigation Label",
+    "description": "Navigation link title for the multi-cloud inventory page.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "LABEL",
+      "template": "Resource Inventory",
+      "fallback_en": "Resource Inventory",
+      "variables": []
+    }
+  },
+  {
+    "code": "UI_NAV_MASTER_DATA",
+    "display_name": "Master Data Console Navigation Label",
+    "description": "Navigation link title for the Master Data Console.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "LABEL",
+      "template": "Master Data Console",
+      "fallback_en": "Master Data Console",
+      "variables": []
+    }
+  },
+  {
+    "code": "ALERT_BUDGET_EXCEEDED",
+    "display_name": "Budget Threshold Exceeded Alert",
+    "description": "Notification message when consumption crosses configured budget threshold.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "EXPLANATION",
+      "template": "Budget allocation for Cost Centre '{cost_centre}' has reached {consumption_pct}% of total allocated threshold.",
+      "fallback_en": "Budget allocation for Cost Centre '{cost_centre}' has reached {consumption_pct}% of total allocated threshold.",
+      "variables": ["cost_centre", "consumption_pct"]
+    }
+  },
+  {
+    "code": "ALERT_COST_SPIKE",
+    "display_name": "Day-over-Day Cost Spike Alert",
+    "description": "Anomalous cost spike notification template.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "EXPLANATION",
+      "template": "Anomalous cost increase of {spike_pct}% detected for service '{service_name}' in region '{region_name}'.",
+      "fallback_en": "Anomalous cost increase of {spike_pct}% detected for service '{service_name}' in region '{region_name}'.",
+      "variables": ["spike_pct", "service_name", "region_name"]
+    }
+  },
+  {
+    "code": "HELP_TAG_POLICY",
+    "display_name": "Tagging Compliance Help Tooltip",
+    "description": "Guidance tooltip displayed on unallocated or non-compliant cloud resources.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "HELP",
+      "template": "Every resource must bear mandatory tags: Environment, Application, CostCentre, and Owner.",
+      "fallback_en": "Every resource must bear mandatory tags: Environment, Application, CostCentre, and Owner.",
+      "variables": []
+    }
+  },
+  {
+    "code": "ERR_UNREGISTERED_MASTER",
+    "display_name": "Unregistered Master Type Error Message",
+    "description": "System error message when an unregistered master taxonomy code is requested.",
+    "sort_order": 7,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "ERROR",
+      "template": "Master type '{master_type}' is not registered in the system manifest. All master taxonomies must be pre-declared.",
+      "fallback_en": "Master type '{master_type}' is not registered in the system manifest. All master taxonomies must be pre-declared.",
+      "variables": ["master_type"]
+    }
+  },
+  {
+    "code": "EMAIL_MONTHLY_REPORT",
+    "display_name": "Monthly Executive FinOps Email Report",
+    "description": "Email dispatch template for monthly cloud financial summary.",
+    "sort_order": 8,
+    "parent_code": null,
+    "attributes": {
+      "locale": "en_US",
+      "category": "EMAIL",
+      "template": "Cloud spend summary for period {period_name}: Total {reporting_currency} {total_spend}. Effective amortised rate: {effective_rate}.",
+      "fallback_en": "Cloud spend summary for period {period_name}: Total {reporting_currency} {total_spend}. Effective amortised rate: {effective_rate}.",
+      "variables": ["period_name", "reporting_currency", "total_spend", "effective_rate"]
+    }
+  }
+]

@@ -7,6 +7,10 @@ from pydantic import BaseModel, Field
 
 from domain.config import (
     ConfigProvenance,
+    ConfigurationAuditEngine,
+    ConfigurationAuditReport,
+    ConfigurationDriftEngine,
+    ConfigurationDriftReport,
     UnregisteredFeatureFlagError,
     config_resolver,
     feature_flag_service,
@@ -80,6 +84,39 @@ async def inspect_setting(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Configuration setting '{setting_key}' was not found.",
         ) from None
+
+
+@router.get(
+    "/config/audit-report",
+    response_model=ConfigurationAuditReport,
+    summary="Configuration audit report with layer provenance (Prompt 48 Item 38)",
+)
+async def get_configuration_audit_report(
+    tenant_id: str | None = Query(
+        default=None, description="Optional tenant ID to include tenant-layer settings"
+    ),
+) -> ConfigurationAuditReport:
+    """Returns comprehensive configuration audit report accounting for every effective setting.
+
+    Acceptance: The configuration audit report accounts for every effective setting with its source layer.
+    """
+    engine = ConfigurationAuditEngine()
+    return engine.generate_audit_report(tenant_id=tenant_id, mask_secrets=True)
+
+
+@router.get(
+    "/config/drift",
+    response_model=ConfigurationDriftReport,
+    summary="Configuration drift detector (Prompt 48 Item 39)",
+)
+async def get_configuration_drift(
+    tenant_id: str | None = Query(
+        default=None, description="Optional tenant ID to evaluate tenant configuration drift"
+    ),
+) -> ConfigurationDriftReport:
+    """Compares running configuration against shipped defaults and reports all deviations."""
+    engine = ConfigurationDriftEngine()
+    return engine.detect_drift(tenant_id=tenant_id, mask_secrets=True)
 
 
 # --- Tenant Settings Endpoints ---

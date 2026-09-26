@@ -33,6 +33,10 @@ def main() -> None:
             "No Hard-coded Constants Audit",
             [sys.executable, "scripts/check_no_hardcoded_constants.py"],
         ),
+        (
+            "Enumeration Bridge Verification",
+            [sys.executable, "scripts/check_enum_bridge.py"],
+        ),
         ("Ruff Linter", [sys.executable, "scripts/run.py", "ruff", "check", "."]),
         ("Ruff Format Check", [sys.executable, "scripts/run.py", "ruff", "format", "--check", "."]),
         ("Mypy Static Type Checking", [sys.executable, "scripts/run.py", "mypy", "."]),

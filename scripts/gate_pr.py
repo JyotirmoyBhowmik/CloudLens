@@ -41,6 +41,14 @@ def main() -> None:
             [sys.executable, "scripts/run.py", "pytest", "tests/integration/test_database_real.py"],
         ),
         (
+            "Zero Hard-Coding & Exception Register Audit",
+            [sys.executable, "scripts/check_no_hardcoded_constants.py"],
+        ),
+        (
+            "Enumeration Bridge Verification",
+            [sys.executable, "scripts/check_enum_bridge.py"],
+        ),
+        (
             "Domain Logic Coverage Policy (>= 85%)",
             [
                 sys.executable,

@@ -41,6 +41,7 @@ from masterdata import (
     MasterRegistryEntry,
     RuntimeScheduleAdherenceEngine,
     ScheduleAdherenceResult,
+    StringCatalogueService,
     TagComplianceReport,
     TagPolicyEngine,
     WhereUsedReport,
@@ -243,6 +244,52 @@ async def evaluate_geography_compliance(
     """Verifies region deployment compliance and sovereign data residency."""
     engine = GeographyComplianceEngine(get_master_service())
     return engine.evaluate_region(provider_code, region_name)
+
+
+class ResolveStringRequest(BaseModel):
+    key: str
+    locale: str = "en_US"
+    params: dict[str, Any] = Field(default_factory=dict)
+    tenant_id: str | None = None
+
+
+@router.post("/strings/resolve")
+async def resolve_externalised_string(payload: ResolveStringRequest) -> dict[str, Any]:
+    """Resolves an externalised display string or template from STRING_CATALOGUE master."""
+    try:
+        service = StringCatalogueService(get_master_service())
+        resolved = service.resolve_string(
+            key=payload.key,
+            locale=payload.locale,
+            params=payload.params,
+            tenant_id=payload.tenant_id,
+        )
+        return {
+            "key": payload.key,
+            "locale": payload.locale,
+            "resolved_text": resolved,
+        }
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
+
+
+@router.get("/strings/resolve")
+async def resolve_externalised_string_get(
+    key: str = Query(..., description="String catalogue key code"),
+    locale: str = Query("en_US", description="Locale code"),
+    tenant_id: str | None = Query(None, description="Optional tenant scope"),
+) -> dict[str, Any]:
+    """Resolves a static label from STRING_CATALOGUE master."""
+    try:
+        service = StringCatalogueService(get_master_service())
+        resolved = service.resolve_string(key=key, locale=locale, tenant_id=tenant_id)
+        return {
+            "key": key,
+            "locale": locale,
+            "resolved_text": resolved,
+        }
+    except MasterDataException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
 
 @router.get("/records/{master_type}", response_model=list[MasterDataRecord])

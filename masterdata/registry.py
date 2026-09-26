@@ -554,6 +554,27 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/geography.json",
         expected_review_period_days=180,
     ),
+    # ==========================================================================
+    # String Catalogue Master (Prompt 48 Item 37)
+    # ==========================================================================
+    "STRING_CATALOGUE": MasterRegistryEntry(
+        code="STRING_CATALOGUE",
+        name="Externalised String Catalogue",
+        purpose="User-facing display strings, navigation labels, help text, explanation text, and notifications.",
+        schema_def={
+            "locale": "string",
+            "category": "string",
+            "template": "string",
+            "fallback_en": "string",
+            "variables": "array",
+        },
+        is_tenant_scoped=True,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["presentation", "ui", "i18n", "notifications", "reporting"],
+        seed_file="masterdata/seeds/string_catalogue.json",
+        expected_review_period_days=90,
+    ),
 }
 
 

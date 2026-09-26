@@ -1,5 +1,15 @@
 """CloudLens Configuration Domain Package."""
 
+from domain.config.audit_report import (
+    ConfigurationAuditEngine,
+    ConfigurationAuditReport,
+    SettingAuditEntry,
+)
+from domain.config.drift_detector import (
+    ConfigurationDriftEngine,
+    ConfigurationDriftReport,
+    SettingDriftEntry,
+)
 from domain.config.feature_flags import (
     FeatureFlagService,
     FlagAuditEvent,
@@ -36,6 +46,10 @@ __all__ = [
     "CacheConfig",
     "ConfigLayer",
     "ConfigProvenance",
+    "ConfigurationAuditEngine",
+    "ConfigurationAuditReport",
+    "ConfigurationDriftEngine",
+    "ConfigurationDriftReport",
     "ConfigurationResolver",
     "DatabaseConfig",
     "ExportLimitsConfig",
@@ -50,6 +64,8 @@ __all__ = [
     "RateLimitsConfig",
     "RetentionProfile",
     "SecretStoreConfig",
+    "SettingAuditEntry",
+    "SettingDriftEntry",
     "SettingMetadata",
     "SystemConfig",
     "TenantSettings",
