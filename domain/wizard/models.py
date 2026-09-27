@@ -84,6 +84,14 @@ class PreCompletionEstimate(BaseModel):
     explanation: str = Field(
         ..., description="Human-readable breakdown explaining assumptions and calculations"
     )
+    billing_export_history_warning: str | None = Field(
+        default=None,
+        description="Non-retrospective export warning (e.g. for GCP Cloud Billing)",
+    )
+    warnings: list[str] = Field(
+        default_factory=list,
+        description="Provider-specific caveats and permanent operational notices",
+    )
 
 
 class QuotaMonitoringConfig(BaseModel):
@@ -136,6 +144,14 @@ class OnboardingCompletionSummary(BaseModel):
     )
     landing_destination: str = Field(
         ..., description="Route destination for observing live first-sync progress"
+    )
+    billing_export_history_warning: str | None = Field(
+        default=None,
+        description="Permanent non-retrospective export warning for GCP Cloud Billing",
+    )
+    warnings: list[str] = Field(
+        default_factory=list,
+        description="Operational caveats and permanent estate warnings",
     )
 
 

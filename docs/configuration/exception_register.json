@@ -5,7 +5,7 @@
     "literal_value": "6",
     "reason": "Standard 6-hour reconciliation window slice for backfill planning",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-09-27T09:38:05.835922+00:00"
+    "recorded_at": "2026-09-27T10:02:46.731636+00:00"
   },
   {
     "file_path": "connectors/simulator/connector.py",
@@ -13,6 +13,6 @@
     "literal_value": "0.001",
     "reason": "Minimum sleep threshold for OS thread scheduling granularity",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-09-27T09:38:05.873986+00:00"
+    "recorded_at": "2026-09-27T10:02:46.851547+00:00"
   }
 ]

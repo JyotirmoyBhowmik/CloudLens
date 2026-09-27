@@ -480,12 +480,24 @@ class OnboardingWizardService:
             f"projected at ~{metric_calls:,} requests, with an estimated provider API cost impact of ~${provider_cost:.4f}/month."
         )
 
+        provider = session.provider or ProviderType.AWS
+        warnings: list[str] = []
+        billing_warning = None
+        if provider == ProviderType.GCP:
+            billing_warning = (
+                "Cloud Billing export is NOT retrospective. Export history begins strictly at enablement; "
+                "prior consumption cannot be backfilled from BigQuery export."
+            )
+            warnings.append(billing_warning)
+
         estimate = PreCompletionEstimate(
             resource_count_estimate=resource_estimate,
             expected_duration_seconds=expected_duration,
             metric_call_volume_estimate=metric_calls,
             provider_cost_implication_estimate_usd=round(provider_cost, 4),
             explanation=explanation,
+            billing_export_history_warning=billing_warning,
+            warnings=warnings,
         )
 
         session.wizard_data["estimates"] = estimate.model_dump()
@@ -663,6 +675,15 @@ class OnboardingWizardService:
         landing_destination = (
             f"/onboarding/first-sync-progress?session_id={session_id}&connector_id={connector_id}"
         )
+        warnings: list[str] = []
+        billing_warning = None
+        if provider == ProviderType.GCP:
+            billing_warning = (
+                "Cloud Billing export is NOT retrospective. Export history begins strictly at enablement; "
+                "prior consumption cannot be backfilled from BigQuery export."
+            )
+            warnings.append(billing_warning)
+
         summary = OnboardingCompletionSummary(
             session_id=session_id,
             connector_id=connector_id,
@@ -675,6 +696,8 @@ class OnboardingWizardService:
             estimated_time_to_first_cost_seconds=14400,
             alert_test_result=test_report.model_dump(),
             landing_destination=landing_destination,
+            billing_export_history_warning=billing_warning,
+            warnings=warnings,
         )
         session.wizard_data["completion_summary"] = summary.model_dump()
 
