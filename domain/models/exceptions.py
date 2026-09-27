@@ -889,3 +889,30 @@ class InvalidFreeAllowanceException(PricingException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="INVALID_FREE_ALLOWANCE")
+
+
+class UndefendedFreeStatusException(PricingException):
+    """Raised when a FREE pricing status or statement is attempted without defensible conditions (Prompt 21 Item 159)."""
+
+    def __init__(
+        self,
+        message: str = "A bare 'FREE' status or statement is strictly prohibited without explicit conditions.",
+    ) -> None:
+        super().__init__(message, error_code="UNDEFENDED_FREE_STATUS")
+
+
+class IncompatibleCostTypeError(PricingException, TypeError):
+    """Raised when incompatible cost source types (e.g. ActualCost and EstimatedCost) are accidentally added or blended (Prompt 21 Item 161)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INCOMPATIBLE_COST_TYPE")
+
+
+class MissingTraceabilityException(PricingException):
+    """Raised when a pricing or cost statement is generated without source reference or effective date (Prompt 21 Item 162)."""
+
+    def __init__(
+        self,
+        message: str = "Pricing and cost statements strictly require a source reference and effective date.",
+    ) -> None:
+        super().__init__(message, error_code="MISSING_TRACEABILITY")
