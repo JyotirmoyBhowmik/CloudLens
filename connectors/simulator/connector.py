@@ -20,12 +20,17 @@ from pathlib import Path
 from typing import Any, cast
 
 from connectors.contract.base import BaseCloudConnector
+from connectors.contract.models import (
+    HealthStatusResult,
+    PermissionValidationResult,
+    ProviderMetadataResult,
+)
 from connectors.simulator.models import (
     PaginationParams,
     RawLandingPayload,
     SimulatorProfile,
 )
-from domain.models.enums import ProviderCapability
+from domain.models.enums import ConnectorCapability, ProviderCapability, ProviderType
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +59,26 @@ class ProviderSimulatorConnector(BaseCloudConnector):
         self._last_request_time = 0.0
         self._request_count = 0
         self._landings: list[RawLandingPayload] = []
+
+    def default_capabilities(self) -> set[ConnectorCapability]:
+        """Simulator declares comprehensive capability contract."""
+        return {
+            ConnectorCapability.AUTHENTICATE,
+            ConnectorCapability.VALIDATE_PERMISSIONS,
+            ConnectorCapability.HEALTH_STATUS,
+            ConnectorCapability.DISCOVER_ORGANIZATIONS,
+            ConnectorCapability.DISCOVER_ACCOUNTS,
+            ConnectorCapability.DISCOVER_HIERARCHY,
+            ConnectorCapability.DISCOVER_RESOURCES,
+            ConnectorCapability.DISCOVER_SERVICES,
+            ConnectorCapability.COLLECT_COST_BULK,
+            ConnectorCapability.COLLECT_COST_QUERY,
+            ConnectorCapability.COLLECT_USAGE,
+            ConnectorCapability.COLLECT_PRICING_PUBLIC,
+            ConnectorCapability.COLLECT_TAGS,
+            ConnectorCapability.COLLECT_BUDGETS,
+            ConnectorCapability.PROVIDER_METADATA,
+        }
 
     @property
     def provider_name(self) -> str:
@@ -122,8 +147,44 @@ class ProviderSimulatorConnector(BaseCloudConnector):
         self._enforce_rate_limit()
         return True
 
-    async def discover_hierarchy(self) -> list[dict[str, Any]]:
+    async def health_status(self) -> HealthStatusResult:
+        """Health check probe against simulated cloud management endpoints."""
+        self._assert_declared(ConnectorCapability.HEALTH_STATUS)
+        self._enforce_rate_limit()
+        return HealthStatusResult(
+            healthy=True,
+            latency_ms=2.0,
+            details={"profile": self.profile.value, "status": "operational"},
+        )
+
+    async def validate_permissions(self) -> PermissionValidationResult:
+        """Pre-flight permission validation capability."""
+        self._assert_declared(ConnectorCapability.VALIDATE_PERMISSIONS)
+        self._enforce_rate_limit()
+        return PermissionValidationResult(
+            valid=True,
+            provider=self.provider_name,
+            capabilities=[c.value for c in self.declared_capabilities],
+            missing_permissions={},
+        )
+
+    async def provider_metadata(self) -> ProviderMetadataResult:
+        """Returns provider metadata for simulator profile."""
+        self._assert_declared(ConnectorCapability.PROVIDER_METADATA)
+        return ProviderMetadataResult(
+            provider=ProviderType(self.profile.value),
+            api_version="2026-09-01",
+            supported_regions=["us-east-1", "eu-west-1", "ap-southeast-1"],
+            capabilities_supported=list(self.declared_capabilities),
+            metadata={"status": "operational"},
+        )
+
+    async def discover_hierarchy(
+        self,
+        pagination: PaginationParams | None = None,
+    ) -> list[dict[str, Any]]:
         """Discovers native cloud organization and account hierarchy matching the profile."""
+        _ = pagination
         self._enforce_rate_limit()
 
         nodes: list[dict[str, Any]] = []
@@ -279,7 +340,7 @@ class ProviderSimulatorConnector(BaseCloudConnector):
 
     async def discover_resources(
         self,
-        scope_id: str,
+        scope_id: str = "root",
         pagination: PaginationParams | None = None,
     ) -> list[dict[str, Any]]:
         """Enumerates cloud resources within given scope conforming to native provider shape."""

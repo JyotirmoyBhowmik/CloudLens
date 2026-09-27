@@ -73,6 +73,55 @@ class ApprovalLimits(BaseModel):
     )
 
 
+class ConnectorSettings(BaseModel):
+    """Configuration surface for provider connectors, rate limiting, and circuit breakers (Prompt 14)."""
+
+    default_page_size: int = Field(
+        default=100,
+        description="Default pagination batch size for connector discovery and collection operations",
+    )
+    max_page_size: int = Field(
+        default=1000,
+        description="Maximum bounded page size permitted across all connector calls",
+    )
+    default_hourly_quota: int = Field(
+        default=10000,
+        description="Default hourly API request quota per connector",
+    )
+    default_rate_limit_per_second: float = Field(
+        default=50.0,
+        description="Token bucket default replenishment rate (tokens per second)",
+    )
+    default_burst_capacity: float = Field(
+        default=50.0,
+        description="Token bucket maximum burst allowance",
+    )
+    circuit_breaker_failure_threshold: int = Field(
+        default=5,
+        description="Consecutive failure count triggering circuit breaker OPEN state",
+    )
+    circuit_breaker_recovery_timeout_seconds: float = Field(
+        default=30.0,
+        description="Cooldown duration before circuit breaker attempts HALF_OPEN probe",
+    )
+    circuit_breaker_success_threshold: int = Field(
+        default=2,
+        description="Consecutive successful probes required to reset circuit breaker to CLOSED",
+    )
+    adaptive_concurrency_min: int = Field(
+        default=1,
+        description="Minimum concurrent requests under extreme throttling",
+    )
+    adaptive_concurrency_max: int = Field(
+        default=16,
+        description="Maximum concurrent requests allowed during stable operations",
+    )
+    adaptive_concurrency_initial: int = Field(
+        default=8,
+        description="Initial concurrency ceiling on connector startup",
+    )
+
+
 class TenantSettings(BaseModel):
     """Canonical tenant configuration profile."""
 
@@ -102,6 +151,7 @@ class TenantSettings(BaseModel):
     retention_profile: RetentionProfile = Field(default_factory=RetentionProfile)
     threshold_defaults: ThresholdDefaults = Field(default_factory=ThresholdDefaults)
     approval_limits: ApprovalLimits = Field(default_factory=ApprovalLimits)
+    connector_settings: ConnectorSettings = Field(default_factory=ConnectorSettings)
     is_demo_mode: bool = Field(
         default=False,
         description="Flag indicating if tenant is operating in synthetic Demo Mode with simulated data",

@@ -238,6 +238,57 @@ class ProviderCapability(StrEnum):
     C18_QUOTA = "C-18"
 
 
+class ConnectorCapability(StrEnum):
+    """The seventeen canonical connector capabilities (Prompt 14 Item 89, BBP Section 26)."""
+
+    AUTHENTICATE = "authenticate"
+    VALIDATE_PERMISSIONS = "validate_permissions"
+    DISCOVER_ORGANIZATIONS = "discover_organizations"
+    DISCOVER_ACCOUNTS = "discover_accounts"
+    DISCOVER_HIERARCHY = "discover_hierarchy"
+    DISCOVER_RESOURCES = "discover_resources"
+    DISCOVER_SERVICES = "discover_services"
+    COLLECT_COST_BULK = "collect_cost_bulk"
+    COLLECT_COST_QUERY = "collect_cost_query"
+    COLLECT_USAGE = "collect_usage"
+    COLLECT_PRICING_PUBLIC = "collect_pricing_public"
+    COLLECT_PRICING_NEGOTIATED = "collect_pricing_negotiated"
+    COLLECT_TAGS = "collect_tags"
+    DISCOVER_RELATIONSHIPS = "discover_relationships"
+    COLLECT_BUDGETS = "collect_budgets"
+    HEALTH_STATUS = "health_status"
+    PROVIDER_METADATA = "provider_metadata"
+
+
+class ConnectorLifecycleState(StrEnum):
+    """Connector lifecycle states and transitions (Prompt 14 Item 91)."""
+
+    REGISTERED = "REGISTERED"
+    CREDENTIAL_BOUND = "CREDENTIAL_BOUND"
+    VALIDATED = "VALIDATED"
+    ACTIVE = "ACTIVE"
+    DEGRADED = "DEGRADED"
+    FAILED = "FAILED"
+    SUSPENDED = "SUSPENDED"
+
+
+class CapabilityHealth(StrEnum):
+    """Health state of an individual capability (Prompt 14 Item 91)."""
+
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    FAILED = "FAILED"
+    DISABLED = "DISABLED"
+
+
+class CircuitBreakerState(StrEnum):
+    """Circuit breaker state for capability calls (Prompt 14 Item 92)."""
+
+    CLOSED = "CLOSED"
+    OPEN = "OPEN"
+    HALF_OPEN = "HALF_OPEN"
+
+
 class AuthMethod(StrEnum):
     """Platform authentication mechanism (Prompt 10 Items 64, 65, 67)."""
 
@@ -380,6 +431,18 @@ class AuditEventType(StrEnum):
     # Tamper & Isolation Violations
     AUDIT_MUTATION_ATTEMPT = "AUDIT_MUTATION_ATTEMPT"
     CROSS_TENANT_ACCESS_ATTEMPT = "CROSS_TENANT_ACCESS_ATTEMPT"
+
+    # Connector Lifecycle & Capabilities (Prompt 14)
+    CONNECTOR_REGISTERED = "CONNECTOR_REGISTERED"
+    CONNECTOR_CREDENTIAL_BOUND = "CONNECTOR_CREDENTIAL_BOUND"
+    CONNECTOR_PROBED = "CONNECTOR_PROBED"
+    CONNECTOR_STATE_CHANGED = "CONNECTOR_STATE_CHANGED"
+    CONNECTOR_CAPABILITY_DEGRADED = "CONNECTOR_CAPABILITY_DEGRADED"
+    CONNECTOR_CAPABILITY_RECOVERED = "CONNECTOR_CAPABILITY_RECOVERED"
+    CONNECTOR_RATE_LIMITED = "CONNECTOR_RATE_LIMITED"
+    CONNECTOR_CIRCUIT_OPENED = "CONNECTOR_CIRCUIT_OPENED"
+    CONNECTOR_PAYLOAD_LANDED = "CONNECTOR_PAYLOAD_LANDED"
+    CONNECTOR_QUOTA_EXHAUSTED = "CONNECTOR_QUOTA_EXHAUSTED"
 
 
 class OverrideClass(StrEnum):

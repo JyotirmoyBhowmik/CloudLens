@@ -86,6 +86,11 @@ class TenantObjectStorage(ABC):
         """Lists object keys belonging strictly to the caller's tenant."""
         raise NotImplementedError
 
+    @abstractmethod
+    def object_exists(self, tenant_context: TenantContext, key: str) -> bool:
+        """Checks if an object exists strictly within caller's tenant prefix."""
+        raise NotImplementedError
+
 
 class InMemoryTenantObjectStorage(TenantObjectStorage):
     """Thread-safe in-memory object storage implementation."""
@@ -142,6 +147,16 @@ class InMemoryTenantObjectStorage(TenantObjectStorage):
                     relative_key = scoped_key[len(tenant_root) :]
                     results.append(relative_key)
         return sorted(results)
+
+    def object_exists(self, tenant_context: TenantContext, key: str) -> bool:
+        """Checks if an object exists strictly within caller's tenant prefix."""
+        tc = require_tenant_context(tenant_context)
+        try:
+            scoped_key = self.sanitize_and_resolve_key(tc.tenant_id, key)
+            with self._lock:
+                return scoped_key in self._store
+        except Exception:
+            return False
 
 
 _GLOBAL_STORAGE: TenantObjectStorage | None = None

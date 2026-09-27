@@ -34,6 +34,7 @@ from domain.config.surface import (
 )
 from domain.config.tenant_settings import (
     ApprovalLimits,
+    ConnectorSettings,
     RetentionProfile,
     TenantSettings,
     TenantSettingsStore,
@@ -43,6 +44,7 @@ from domain.config.tenant_settings import (
 
 __all__ = [
     "ApprovalLimits",
+    "ConnectorSettings",
     "CacheConfig",
     "ConfigLayer",
     "ConfigProvenance",

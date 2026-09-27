@@ -15,6 +15,16 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from connectors.contract.models import PaginationParams
+
+__all__ = [
+    "PaginatedResponse",
+    "PaginationParams",
+    "RateLimitConfig",
+    "RawLandingPayload",
+    "SimulatorProfile",
+]
+
 
 class SimulatorProfile(StrEnum):
     """Four provider-shaped simulator profiles reproducing native structures (Prompt 47 Item 23)."""
@@ -35,13 +45,6 @@ class RateLimitConfig(BaseModel):
     simulate_throttling: bool = Field(
         default=True, description="Whether to simulate rate limit headers and throttling exceptions"
     )
-
-
-class PaginationParams(BaseModel):
-    """Pagination query parameters for simulated endpoints."""
-
-    page_size: int = Field(default=50, ge=1, le=1000, description="Items per page")
-    page_token: str | None = Field(default=None, description="Opaque pagination token / cursor")
 
 
 class PaginatedResponse(BaseModel):

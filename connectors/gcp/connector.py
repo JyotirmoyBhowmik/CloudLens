@@ -1,26 +1,59 @@
 """Google Cloud Platform (GCP) Connector Skeleton."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from connectors.contract.base import BaseCloudConnector
+from connectors.contract.models import (
+    HealthStatusResult,
+    PagedResult,
+    PaginationParams,
+    PermissionValidationResult,
+)
+from domain.models.enums import ConnectorCapability
 
 
 class GCPConnector(BaseCloudConnector):
     """GCP connector skeleton implementing BaseCloudConnector."""
 
+    def default_capabilities(self) -> set[ConnectorCapability]:
+        return {
+            ConnectorCapability.VALIDATE_PERMISSIONS,
+            ConnectorCapability.HEALTH_STATUS,
+            ConnectorCapability.DISCOVER_HIERARCHY,
+            ConnectorCapability.DISCOVER_RESOURCES,
+        }
+
     @property
     def provider_name(self) -> str:
         return "gcp"
 
-    async def validate_credentials(self) -> dict[str, Any]:
-        return {"valid": True, "provider": "gcp", "capabilities": []}
+    async def validate_permissions(self) -> PermissionValidationResult:
+        self._assert_declared(ConnectorCapability.VALIDATE_PERMISSIONS)
+        return PermissionValidationResult(
+            valid=True,
+            provider="gcp",
+            capabilities=[c.value for c in self.declared_capabilities],
+        )
 
-    async def test_connection(self) -> bool:
-        return True
+    async def health_status(self) -> HealthStatusResult:
+        self._assert_declared(ConnectorCapability.HEALTH_STATUS)
+        return HealthStatusResult(healthy=True, latency_ms=2.0, details={"provider": "gcp"})
 
-    async def discover_hierarchy(self) -> list[dict[str, Any]]:
-        return []
+    async def discover_hierarchy(
+        self,
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        self._assert_declared(ConnectorCapability.DISCOVER_HIERARCHY)
+        _ = pagination
+        return PagedResult(items=[], continuation_token=None, is_truncated=False, total_records=0)
 
-    async def discover_resources(self, scope_id: str) -> list[dict[str, Any]]:
-        _ = scope_id
-        return []
+    async def discover_resources(
+        self,
+        scope_id: str = "root",
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        self._assert_declared(ConnectorCapability.DISCOVER_RESOURCES)
+        _ = (scope_id, pagination)
+        return PagedResult(items=[], continuation_token=None, is_truncated=False, total_records=0)

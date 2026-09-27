@@ -560,3 +560,142 @@ class OverrideNotFoundException(OverrideException):
             f"Override record '{override_id}' not found.", error_code="OVERRIDE_NOT_FOUND"
         )
         self.override_id = override_id
+
+
+# ==============================================================================
+# Connector & Capability Exceptions (Prompt 14 / BBP Section 26)
+# ==============================================================================
+
+
+class ConnectorException(DomainModelException):
+    """Base exception for all connector and provider integration failures."""
+
+    def __init__(self, message: str, error_code: str = "CONNECTOR_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class UndeclaredCapabilityException(ConnectorException):
+    """Raised when the platform or client attempts to invoke an undeclared capability."""
+
+    def __init__(self, connector_id: str, capability: str) -> None:
+        super().__init__(
+            f"Connector '{connector_id}' has not declared capability '{capability}'. "
+            "Platform must never invoke undeclared capabilities (Prompt 14 Item 90).",
+            error_code="UNDECLARED_CAPABILITY",
+        )
+        self.connector_id = connector_id
+        self.capability = capability
+
+
+class CapabilityNotSupportedException(ConnectorException):
+    """Raised when a connector or provider does not support an operation."""
+
+    def __init__(self, provider: str, capability: str) -> None:
+        super().__init__(
+            f"Provider '{provider}' does not support capability '{capability}'.",
+            error_code="CAPABILITY_NOT_SUPPORTED",
+        )
+        self.provider = provider
+        self.capability = capability
+
+
+class CapabilityDegradedException(ConnectorException):
+    """Raised when attempting to execute a capability currently in DEGRADED or FAILED health."""
+
+    def __init__(self, connector_id: str, capability: str, reason: str) -> None:
+        super().__init__(
+            f"Capability '{capability}' on connector '{connector_id}' is degraded: {reason}",
+            error_code="CAPABILITY_DEGRADED",
+        )
+        self.connector_id = connector_id
+        self.capability = capability
+        self.reason = reason
+
+
+class InvalidConnectorStateTransitionException(ConnectorException):
+    """Raised when an invalid lifecycle state transition is attempted."""
+
+    def __init__(self, current_state: str, attempted_state: str) -> None:
+        super().__init__(
+            f"Invalid connector transition from '{current_state}' to '{attempted_state}'.",
+            error_code="INVALID_CONNECTOR_STATE_TRANSITION",
+        )
+        self.current_state = current_state
+        self.attempted_state = attempted_state
+
+
+class RateLimitExceededException(ConnectorException):
+    """Raised when a connector request exceeds token bucket rate limits."""
+
+    def __init__(self, connector_id: str, retry_after: float | None = None) -> None:
+        msg = f"Rate limit exceeded for connector '{connector_id}'."
+        if retry_after is not None:
+            msg += f" Retry after {retry_after:.2f} seconds."
+        super().__init__(msg, error_code="RATE_LIMIT_EXCEEDED")
+        self.connector_id = connector_id
+        self.retry_after = retry_after
+
+
+class CircuitBreakerOpenException(ConnectorException):
+    """Raised when a capability call is rejected because the circuit breaker is OPEN."""
+
+    def __init__(self, connector_id: str, capability: str, recovery_time_seconds: float) -> None:
+        super().__init__(
+            f"Circuit breaker is OPEN for capability '{capability}' on connector '{connector_id}'. "
+            f"Failing fast. Retry in {recovery_time_seconds:.1f}s.",
+            error_code="CIRCUIT_BREAKER_OPEN",
+        )
+        self.connector_id = connector_id
+        self.capability = capability
+        self.recovery_time_seconds = recovery_time_seconds
+
+
+class PaginationCheckpointException(ConnectorException):
+    """Raised when checkpoint persistence or resumption fails."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="PAGINATION_CHECKPOINT_ERROR")
+
+
+class QuotaExhaustedException(ConnectorException):
+    """Raised when hourly API quota for a connector is exhausted."""
+
+    def __init__(self, connector_id: str, hourly_limit: int, resets_at_iso: str) -> None:
+        super().__init__(
+            f"Hourly quota of {hourly_limit} requests exhausted for connector '{connector_id}'. "
+            f"Quota resets at {resets_at_iso}.",
+            error_code="QUOTA_EXHAUSTED",
+        )
+        self.connector_id = connector_id
+        self.hourly_limit = hourly_limit
+        self.resets_at_iso = resets_at_iso
+
+
+class RawLandingException(ConnectorException):
+    """Raised when landing immutable raw payload to object storage fails."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="RAW_LANDING_ERROR")
+
+
+class ProviderRawErrorException(ConnectorException):
+    """Surfaces verbatim provider errors alongside human-readable explanations (Prompt 14 constraint)."""
+
+    def __init__(
+        self,
+        provider: str,
+        capability: str,
+        verbatim_error: str,
+        plain_language_explanation: str,
+        status_code: int | None = None,
+    ) -> None:
+        super().__init__(
+            f"[{provider}:{capability}] Provider error: {verbatim_error} | "
+            f"Explanation: {plain_language_explanation}",
+            error_code="PROVIDER_RAW_ERROR",
+        )
+        self.provider = provider
+        self.capability = capability
+        self.verbatim_error = verbatim_error
+        self.plain_language_explanation = plain_language_explanation
+        self.status_code = status_code

@@ -1,10 +1,10 @@
 [
   {
     "file_path": "connectors/simulator/connector.py",
-    "line_number": 91,
+    "line_number": 116,
     "literal_value": "0.001",
     "reason": "Minimum sleep threshold for OS thread scheduling granularity",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-09-26T14:50:48.228468+00:00"
+    "recorded_at": "2026-09-27T04:14:13.319379+00:00"
   }
 ]

@@ -16,6 +16,7 @@ from api.cloudlens_api.routes import (
     auth_router,
     bootstrap_router,
     config_router,
+    connectors_router,
     credentials_router,
     demo_mode_router,
     demo_router,
@@ -29,6 +30,8 @@ from domain.models.exceptions import (
     AuditRecordNotFoundException,
     AuditStreamException,
     AuditTamperForbiddenException,
+    CircuitBreakerOpenException,
+    ConnectorException,
     CrossTenantAccessForbiddenException,
     CrossTenantStorageAccessException,
     CustomRoleInvalidException,
@@ -36,8 +39,10 @@ from domain.models.exceptions import (
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
+    QuotaExhaustedException,
     RBACException,
     TenantContextException,
+    UndeclaredCapabilityException,
 )
 from domain.observability import (
     current_correlation_id,
@@ -283,6 +288,32 @@ async def standardized_override_exception_handler(request: Request, exc: Overrid
     )
 
 
+@app.exception_handler(ConnectorException)
+async def standardized_connector_exception_handler(request: Request, exc: ConnectorException):
+    """Connector and capability exception handler (Prompt 14 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, UndeclaredCapabilityException):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, CircuitBreakerOpenException):
+        status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    elif isinstance(exc, QuotaExhaustedException):
+        status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -293,6 +324,7 @@ app.include_router(attribution_router)
 app.include_router(demo_router)
 app.include_router(demo_mode_router)
 app.include_router(credentials_router)
+app.include_router(connectors_router)
 app.include_router(audit_router)
 app.include_router(overrides_router)
 app.include_router(storage_router)

@@ -11,6 +11,7 @@ Enforces Prompt 06 Items 39, 40, 42, 44:
 from decimal import Decimal
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
@@ -608,6 +609,74 @@ class SyncJobModel(Base):
     __table_args__ = (
         Index("idx_sync_jobs_tenant_connector", "tenant_id", "connector_type", "started_at"),
     )
+
+
+class ConnectorModel(Base):
+    """Registered cloud provider connector record (Prompt 14 / BBP Section 26)."""
+
+    __tablename__ = "connectors"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    provider = Column(String(32), nullable=False)
+    lifecycle_state = Column(String(32), nullable=False, default="REGISTERED")
+    credential_profile_id = Column(String(64), nullable=True)
+    declared_capabilities = Column(JSON, nullable=False, default=list)
+    verified_capabilities = Column(JSON, nullable=False, default=list)
+    config = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_connectors_tenant_state", "tenant_id", "lifecycle_state"),
+        Index("idx_connectors_tenant_provider", "tenant_id", "provider"),
+    )
+
+
+class ConnectorCheckpointModel(Base):
+    """Continuation token checkpoints for interrupted job resumption (Prompt 14 Item 93)."""
+
+    __tablename__ = "connector_checkpoints"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    job_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=False)
+    capability = Column(String(64), nullable=False)
+    continuation_token = Column(Text, nullable=True)
+    page_number = Column(Integer, nullable=False, default=1)
+    records_ingested = Column(Integer, nullable=False, default=0)
+    last_record_id = Column(String(255), nullable=True)
+    status = Column(String(32), nullable=False, default="IN_PROGRESS")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (Index("idx_checkpoints_job_cap", "tenant_id", "job_id", "capability"),)
+
+
+class RawLandingModel(Base):
+    """Metadata for raw immutable provider payloads in object storage (Prompt 14 Item 95)."""
+
+    __tablename__ = "raw_landings"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=False)
+    run_id = Column(String(64), nullable=False, index=True)
+    capability = Column(String(64), nullable=False)
+    schema_version = Column(String(32), nullable=False)
+    storage_path = Column(Text, nullable=False)
+    sha256_checksum = Column(String(64), nullable=False)
+    byte_size = Column(Integer, nullable=False)
+    record_count = Column(Integer, nullable=False)
+    landed_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (Index("idx_raw_landings_lookup", "tenant_id", "connector_id", "run_id"),)
 
 
 # ==============================================================================

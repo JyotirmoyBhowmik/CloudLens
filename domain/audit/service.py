@@ -114,6 +114,27 @@ class AuditService:
         )
         return persisted
 
+    def record_event(
+        self,
+        tenant_context: TenantContext,
+        event_type: AuditEventType,
+        actor: str = "SYSTEM",
+        payload: dict[str, Any] | None = None,
+        action: str | None = None,
+        resource_type: str = "CONNECTOR",
+        resource_id: str = "SYSTEM",
+    ) -> AuditEvent:
+        """Convenience method to record an audit event with standard defaults."""
+        event_in = AuditEventCreate(
+            event_type=event_type,
+            actor_id=actor,
+            action=action or event_type.value,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            details=payload or {},
+        )
+        return self.append_event(tenant_context=tenant_context, event_in=event_in)
+
     def list_events(
         self,
         tenant_context: TenantContext,

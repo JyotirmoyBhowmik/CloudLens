@@ -23,6 +23,9 @@ TENANT_ISOLATED_TABLES = [
     "alerts",
     "sync_jobs",
     "overrides",
+    "connectors",
+    "connector_checkpoints",
+    "raw_landings",
 ]
 
 

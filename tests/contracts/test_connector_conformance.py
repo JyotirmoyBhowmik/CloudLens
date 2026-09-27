@@ -23,6 +23,7 @@ import pytest
 
 from connectors.aws.connector import AWSConnector
 from connectors.azure.connector import AzureConnector
+from connectors.conformance.kit import ConnectorConformanceKit
 from connectors.contract.base import BaseCloudConnector
 from connectors.gcp.connector import GCPConnector
 from connectors.oci.connector import OCIConnector
@@ -31,6 +32,7 @@ from connectors.simulator.models import PaginationParams, SimulatorProfile
 from connectors.simulator.orchestrator import SyncOrchestrator
 from connectors.stub.connector import StubConnector
 from domain.models.enums import ProviderCapability, SyncJobStatus
+from domain.tenant.context import TenantContext
 
 
 @pytest.fixture
@@ -208,3 +210,97 @@ class TestProviderSimulatorCapabilities:
         assert job.rows_ingested > 0
         assert job.completed_at is not None
         assert len(orchestrator.get_history()) >= 1
+
+
+class TestPrompt14ConnectorConformance:
+    """Prompt 14 Acceptance & Conformance Test Suite (BBP Section 26)."""
+
+    @pytest.fixture
+    def conformance_kit(self) -> ConnectorConformanceKit:
+        return ConnectorConformanceKit()
+
+    @pytest.fixture
+    def test_tenant(self) -> TenantContext:
+        return TenantContext(tenant_id="T-CONFORMANCE-TEST")
+
+    @pytest.mark.asyncio
+    async def test_stub_three_capabilities_conformance_acceptance(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: A stub connector declaring only three capabilities passes the conformance kit
+
+        and the platform never calls the other fourteen.
+        """
+        await conformance_kit.verify_stub_three_capability_conformance(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_adaptive_concurrency_throttling_and_recovery_acceptance(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Simulated throttling causes concurrency to reduce and then recover,
+
+        with no lost records.
+        """
+        await conformance_kit.verify_adaptive_concurrency_and_rate_limiting(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_checkpointed_pagination_resumption_acceptance(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Killing a worker mid-page resumes from the checkpoint with no duplication."""
+        await conformance_kit.verify_checkpointed_pagination_resumption(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_per_capability_failure_isolation(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Cost failure never stops inventory sync (Item 91)."""
+        await conformance_kit.verify_failure_isolation(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_error_transparency_verbatim_reporting(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Do not swallow provider error; surface verbatim alongside plain-language explanation."""
+        await conformance_kit.verify_error_transparency(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_raw_payload_landing_immutability(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Raw payload landed in object storage, immutable, schema-versioned, SHA256 before normalization."""
+        await conformance_kit.verify_raw_payload_landing_and_immutability(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_hourly_quota_tracking(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+    ):
+        """Acceptance: Quota tracking per connector per hour exposed in diagnostics (Item 94)."""
+        await conformance_kit.verify_hourly_quota_tracking(test_tenant)
+
+    @pytest.mark.asyncio
+    async def test_full_conformance_across_all_connectors(
+        self,
+        conformance_kit: ConnectorConformanceKit,
+        test_tenant: TenantContext,
+        all_connectors: list[BaseCloudConnector],
+    ):
+        """Validates that all registered connectors satisfy capability boundary safety."""
+        for conn in all_connectors:
+            boundaries = await conformance_kit.verify_capability_boundaries(conn, test_tenant)
+            assert boundaries["safety_verified"] is True
+            assert boundaries["declared_count"] > 0
