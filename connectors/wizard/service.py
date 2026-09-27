@@ -489,6 +489,12 @@ class OnboardingWizardService:
                 "prior consumption cannot be backfilled from BigQuery export."
             )
             warnings.append(billing_warning)
+        elif provider == ProviderType.OCI:
+            oci_tag_warning = (
+                "OCI tag-based cost attribution applies strictly from the time of association onward and is never retroactive. "
+                "Tags associated today will not allocate historical consumption prior to tag attachment."
+            )
+            warnings.append(oci_tag_warning)
 
         estimate = PreCompletionEstimate(
             resource_count_estimate=resource_estimate,
