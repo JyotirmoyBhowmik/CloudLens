@@ -16,6 +16,7 @@ from domain.models.enums import (
     AlertSeverity,
     AlertStatus,
     BudgetPeriod,
+    ConnectorCapability,
     DependencyDirection,
     DependencyType,
     NotificationChannel,
@@ -24,6 +25,7 @@ from domain.models.enums import (
     PolicyStatus,
     ProviderType,
     SyncJobStatus,
+    SyncType,
 )
 from domain.models.measures import FinancialMeasure
 from domain.rules.thresholds import ThresholdBand
@@ -150,10 +152,30 @@ class Notification(CanonicalEntity):
 
 
 class SyncJob(CanonicalEntity):
-    """Connector data ingestion and reconciliation execution audit."""
+    """Connector data ingestion and reconciliation execution audit (Prompt 15 Items 97, 99)."""
 
+    tenant_id: str = Field(default="global", description="Organization tenant ID")
+    connector_id: str | None = Field(default=None, description="Bound connector ID")
     connector_type: ProviderType = Field(..., description="Target cloud provider connector")
     scope_id: str = Field(..., description="Target root scope node")
+    sync_type: SyncType = Field(default=SyncType.SCHEDULED_SYNC, description="Sync execution mode")
+    capability: ConnectorCapability | None = Field(
+        default=None, description="Specific capability synced"
+    )
+    dataset_version: str | None = Field(default=None, description="Dataset version for idempotency")
+    idempotency_key: str | None = Field(default=None, description="Computed idempotency key")
+    period_start: datetime | None = Field(default=None, description="Window start time")
+    period_end: datetime | None = Field(default=None, description="Window end time")
+    scopes_requested: list[str] = Field(default_factory=list, description="Scopes targeted")
+    scopes_completed: list[str] = Field(
+        default_factory=list, description="Scopes successfully ingested"
+    )
+    scopes_failed: list[str] = Field(
+        default_factory=list, description="Scopes that encountered failures"
+    )
+    scope_results: list[dict[str, Any]] = Field(
+        default_factory=list, description="Per-scope detailed execution outcomes"
+    )
     status: SyncJobStatus = Field(
         default=SyncJobStatus.SCHEDULED, description="Job progress status"
     )

@@ -22,6 +22,7 @@ from typing import Any, cast
 from connectors.contract.base import BaseCloudConnector
 from connectors.contract.models import (
     HealthStatusResult,
+    PagedResult,
     PermissionValidationResult,
     ProviderMetadataResult,
 )
@@ -125,6 +126,23 @@ class ProviderSimulatorConnector(BaseCloudConnector):
     async def validate_credentials(self) -> dict[str, Any]:
         """Pre-flight credential validation declaring full capability suite."""
         self._enforce_rate_limit()
+
+        # Simulated credential rejection if config contains failure triggers
+        config_str = str(self.config).lower()
+        if (
+            self.config.get("simulate_failure")
+            or "nonexistent" in config_str
+            or "invalid" in config_str
+            or "bad-" in config_str
+        ):
+            return {
+                "valid": False,
+                "provider": self.provider_name,
+                "profile": self.profile.value,
+                "connector_id": self.connector_id,
+                "message": f"Authentication failed: Provider {self.provider_name} rejected credentials (InvalidClientTokenId / AccessDenied).",
+            }
+
         return {
             "valid": True,
             "provider": self.provider_name,
@@ -477,3 +495,218 @@ class ProviderSimulatorConnector(BaseCloudConnector):
         )
         self._landings.append(landing)
         return paged_records
+
+    async def discover_services(
+        self,
+        scope_id: str | None = None,
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Enumerates cloud services available in simulated provider profile."""
+        _ = (scope_id, pagination)
+        self._assert_declared(ConnectorCapability.DISCOVER_SERVICES)
+        self._enforce_rate_limit()
+        if self.profile == SimulatorProfile.AWS:
+            services = [
+                {
+                    "service_id": "AmazonEC2",
+                    "service_name": "Amazon Elastic Compute Cloud",
+                    "category": "Compute",
+                },
+                {
+                    "service_id": "AmazonS3",
+                    "service_name": "Amazon Simple Storage Service",
+                    "category": "Storage",
+                },
+                {
+                    "service_id": "AmazonRDS",
+                    "service_name": "Amazon Relational Database Service",
+                    "category": "Database",
+                },
+            ]
+        elif self.profile == SimulatorProfile.AZURE:
+            services = [
+                {
+                    "service_id": "Microsoft.Compute",
+                    "service_name": "Virtual Machines",
+                    "category": "Compute",
+                },
+                {
+                    "service_id": "Microsoft.Storage",
+                    "service_name": "Storage Accounts",
+                    "category": "Storage",
+                },
+                {
+                    "service_id": "Microsoft.Sql",
+                    "service_name": "Azure SQL Database",
+                    "category": "Database",
+                },
+            ]
+        elif self.profile == SimulatorProfile.GCP:
+            services = [
+                {
+                    "service_id": "compute.googleapis.com",
+                    "service_name": "Compute Engine",
+                    "category": "Compute",
+                },
+                {
+                    "service_id": "storage.googleapis.com",
+                    "service_name": "Cloud Storage",
+                    "category": "Storage",
+                },
+                {
+                    "service_id": "bigquery.googleapis.com",
+                    "service_name": "BigQuery",
+                    "category": "Analytics",
+                },
+            ]
+        else:
+            services = [
+                {"service_id": "compute", "service_name": "OCI Compute", "category": "Compute"},
+                {
+                    "service_id": "objectstorage",
+                    "service_name": "OCI Object Storage",
+                    "category": "Storage",
+                },
+            ]
+        return PagedResult(items=services, continuation_token=None)
+
+    async def collect_cost_bulk(
+        self,
+        start_date: str = "2026-09-01",
+        end_date: str = "2026-09-27",
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects bulk cost records wrapped in PagedResult."""
+        _ = (start_date, end_date)
+        self._assert_declared(ConnectorCapability.COLLECT_COST_BULK)
+        records = await self.fetch_cost_and_usage(pagination=pagination)
+        return PagedResult(items=records, continuation_token=None)
+
+    async def collect_cost_query(
+        self,
+        query: dict[str, Any] | None = None,
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects cost records via query filter wrapped in PagedResult."""
+        _ = query
+        self._assert_declared(ConnectorCapability.COLLECT_COST_QUERY)
+        records = await self.fetch_cost_and_usage(pagination=pagination)
+        return PagedResult(items=records, continuation_token=None)
+
+    async def collect_usage(
+        self,
+        scope_id: str = "root",
+        metric_names: list[str] | None = None,
+        start_time: str = "2026-09-01",
+        end_time: str = "2026-09-27",
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects telemetry usage metrics wrapped in PagedResult."""
+        _ = (metric_names, start_time, end_time, pagination)
+        self._assert_declared(ConnectorCapability.COLLECT_USAGE)
+        self._enforce_rate_limit()
+        usage_records = [
+            {
+                "record_id": f"use-{self.profile.value}-01",
+                "scope_id": scope_id,
+                "metric_name": "CPUUtilization",
+                "value": 45.2,
+                "unit": "Percent",
+            },
+            {
+                "record_id": f"use-{self.profile.value}-02",
+                "scope_id": scope_id,
+                "metric_name": "NetworkIn",
+                "value": 1024000.0,
+                "unit": "Bytes",
+            },
+            {
+                "record_id": f"use-{self.profile.value}-03",
+                "scope_id": scope_id,
+                "metric_name": "DiskReadOps",
+                "value": 1500.0,
+                "unit": "Count",
+            },
+        ]
+        return PagedResult(items=usage_records, continuation_token=None)
+
+    async def collect_pricing_public(
+        self,
+        service_code: str | None = None,
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects public pricing catalog records wrapped in PagedResult."""
+        _ = (service_code, pagination)
+        self._assert_declared(ConnectorCapability.COLLECT_PRICING_PUBLIC)
+        self._enforce_rate_limit()
+        prices = [
+            {
+                "sku": "SKU-COMP-001",
+                "service": "Compute",
+                "unit_price": 0.096,
+                "currency": "USD",
+                "unit": "Hrs",
+            },
+            {
+                "sku": "SKU-STOR-001",
+                "service": "Storage",
+                "unit_price": 0.023,
+                "currency": "USD",
+                "unit": "GB-Mo",
+            },
+        ]
+        return PagedResult(items=prices, continuation_token=None)
+
+    async def collect_budgets(
+        self,
+        scope_id: str | None = None,
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects provider budget records wrapped in PagedResult."""
+        _ = (scope_id, pagination)
+        self._assert_declared(ConnectorCapability.COLLECT_BUDGETS)
+        self._enforce_rate_limit()
+        budgets = [
+            {
+                "budget_id": "bgt-prod-monthly",
+                "name": "Production Monthly Spend",
+                "limit_amount": 50000.0,
+                "currency": "USD",
+                "time_unit": "MONTHLY",
+            },
+        ]
+        return PagedResult(items=budgets, continuation_token=None)
+
+    async def collect_tags(
+        self,
+        scope_id: str = "root",
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects tag taxonomy mappings."""
+        _ = (scope_id, pagination)
+        self._assert_declared(ConnectorCapability.COLLECT_TAGS)
+        self._enforce_rate_limit()
+        tags: list[dict[str, Any]] = [
+            {"Environment": "Production", "CostCenter": "CC-101", "Owner": "FinOps"}
+        ]
+        return PagedResult(items=tags, continuation_token=None)
+
+    async def discover_relationships(
+        self,
+        scope_id: str = "root",
+        pagination: PaginationParams | None = None,
+    ) -> PagedResult[dict[str, Any]]:
+        """Collects resource dependency relationships."""
+        _ = (scope_id, pagination)
+        self._assert_declared(ConnectorCapability.DISCOVER_RELATIONSHIPS)
+        self._enforce_rate_limit()
+        return PagedResult(
+            items=[
+                {
+                    "source_id": f"res-{scope_id}-1",
+                    "target_id": f"res-{scope_id}-2",
+                    "relationship_type": "ATTACHED_TO",
+                }
+            ],
+            continuation_token=None,
+        )

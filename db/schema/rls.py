@@ -26,6 +26,10 @@ TENANT_ISOLATED_TABLES = [
     "connectors",
     "connector_checkpoints",
     "raw_landings",
+    "sync_scope_results",
+    "quarantine_records",
+    "wizard_sessions",
+    "connector_schedules",
 ]
 
 

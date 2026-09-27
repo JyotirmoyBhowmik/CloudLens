@@ -91,6 +91,20 @@ class CheckpointStore:
             )
             return checkpoint
 
+    def get_checkpoint(
+        self,
+        tenant_id: str,
+        job_id: str,
+        capability: str | ConnectorCapability,
+    ) -> JobCheckpoint | None:
+        """Retrieves a checkpoint by tenant_id, job_id, and capability string or enum."""
+        cap_val = (
+            capability.value if isinstance(capability, ConnectorCapability) else str(capability)
+        )
+        key = (tenant_id, job_id, cap_val)
+        with self._lock:
+            return self._checkpoints.get(key)
+
     def get_latest_checkpoint(
         self,
         tenant_context: TenantContext,
@@ -102,10 +116,11 @@ class CheckpointStore:
             raise MissingTenantContextException(
                 "Cannot retrieve checkpoint without authenticated TenantContext."
             )
-
-        key = (tenant_context.tenant_id, job_id, capability.value)
-        with self._lock:
-            return self._checkpoints.get(key)
+        return self.get_checkpoint(
+            tenant_id=tenant_context.tenant_id,
+            job_id=job_id,
+            capability=capability,
+        )
 
     def mark_completed(
         self,

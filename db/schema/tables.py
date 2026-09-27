@@ -596,9 +596,19 @@ class SyncJobModel(Base):
     __tablename__ = "sync_jobs"
 
     id = Column(String(64), primary_key=True)
-    tenant_id = Column(String(64), nullable=False)
-    connector_type = Column(String(16), nullable=False)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=True, index=True)
+    connector_type = Column(String(32), nullable=False)
     scope_id = Column(String(64), nullable=False)
+    sync_type = Column(String(32), nullable=False, default="scheduled_sync")
+    capability = Column(String(64), nullable=True)
+    dataset_version = Column(String(64), nullable=True)
+    idempotency_key = Column(String(255), nullable=True, index=True)
+    period_start = Column(DateTime(timezone=True), nullable=True)
+    period_end = Column(DateTime(timezone=True), nullable=True)
+    scopes_requested = Column(JSON, nullable=False, default=list)
+    scopes_completed = Column(JSON, nullable=False, default=list)
+    scopes_failed = Column(JSON, nullable=False, default=list)
     status = Column(String(32), nullable=False, default="SCHEDULED")
     started_at = Column(DateTime(timezone=True), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -608,7 +618,96 @@ class SyncJobModel(Base):
 
     __table_args__ = (
         Index("idx_sync_jobs_tenant_connector", "tenant_id", "connector_type", "started_at"),
+        Index("idx_sync_jobs_idempotency", "tenant_id", "idempotency_key"),
     )
+
+
+class SyncScopeResultModel(Base):
+    """Per-scope execution status and row counts for partial failure isolation (Prompt 15 Item 99)."""
+
+    __tablename__ = "sync_scope_results"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    job_id = Column(String(64), nullable=False, index=True)
+    scope_id = Column(String(64), nullable=False)
+    status = Column(String(32), nullable=False, default="SUCCESS")
+    records_ingested = Column(Integer, nullable=False, default=0)
+    error_message = Column(Text, nullable=True)
+    error_code = Column(String(64), nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (Index("idx_scope_results_lookup", "tenant_id", "job_id", "scope_id"),)
+
+
+class QuarantineRecordModel(Base):
+    """Dead-letter quarantine records for data integrity failures (Prompt 15 Item 99)."""
+
+    __tablename__ = "quarantine_records"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=False, index=True)
+    job_id = Column(String(64), nullable=True, index=True)
+    capability = Column(String(64), nullable=False)
+    quarantine_reason = Column(String(64), nullable=False)
+    error_details = Column(Text, nullable=False)
+    payload_summary = Column(JSON, nullable=False, default=dict)
+    raw_payload_path = Column(Text, nullable=True)
+    status = Column(String(32), nullable=False, default="QUARANTINED")
+    quarantined_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_by = Column(String(255), nullable=True)
+
+    __table_args__ = (
+        Index("idx_quarantine_tenant_status", "tenant_id", "status", "quarantined_at"),
+    )
+
+
+class WizardSessionModel(Base):
+    """Thirteen-step onboarding wizard session state for save-and-resume (Prompt 15 Item 100)."""
+
+    __tablename__ = "wizard_sessions"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    user_id = Column(String(255), nullable=False)
+    provider = Column(String(32), nullable=True)
+    current_step = Column(String(64), nullable=False, default="select_provider")
+    completed_steps = Column(JSON, nullable=False, default=list)
+    wizard_data = Column(JSON, nullable=False, default=dict)
+    status = Column(String(32), nullable=False, default="IN_PROGRESS")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (Index("idx_wizard_tenant_user", "tenant_id", "user_id", "status"),)
+
+
+class ConnectorScheduleModel(Base):
+    """Configured per-connector, per-capability schedules with intervals (Prompt 15 Item 98)."""
+
+    __tablename__ = "connector_schedules"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=False, index=True)
+    capability = Column(String(64), nullable=False)
+    interval_minutes = Column(Integer, nullable=False)
+    cron_expression = Column(String(64), nullable=True)
+    lookback_days = Column(Integer, nullable=False, default=0)
+    is_enabled = Column(Boolean, nullable=False, default=True)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    last_successful_run_at = Column(DateTime(timezone=True), nullable=True)
+    next_run_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (Index("idx_schedules_lookup", "tenant_id", "connector_id", "capability"),)
 
 
 class ConnectorModel(Base):

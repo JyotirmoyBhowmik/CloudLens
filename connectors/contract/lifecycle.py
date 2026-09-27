@@ -97,12 +97,30 @@ class ConnectorLifecycleManager:
         self._states: dict[tuple[str, str], ConnectorLifecycleState] = {}
         # Map: (tenant_id, connector_id, capability) -> CapabilityHealthRecord
         self._capability_health: dict[tuple[str, str, str], CapabilityHealthRecord] = {}
+        # Map: (tenant_id, connector_id) -> set[ConnectorCapability]
+        self._declared_capabilities: dict[tuple[str, str], set[ConnectorCapability]] = {}
         self._lock = threading.Lock()
 
     def get_state(self, tenant_id: str, connector_id: str) -> ConnectorLifecycleState:
         """Returns the current lifecycle state of the connector, defaulting to REGISTERED."""
         with self._lock:
             return self._states.get((tenant_id, connector_id), ConnectorLifecycleState.REGISTERED)
+
+    def get_declared_capabilities(
+        self, tenant_id: str, connector_id: str
+    ) -> set[ConnectorCapability]:
+        """Returns declared capabilities for a connector, defaulting to full canonical set."""
+        with self._lock:
+            return self._declared_capabilities.get(
+                (tenant_id, connector_id), set(ConnectorCapability)
+            )
+
+    def set_declared_capabilities(
+        self, tenant_id: str, connector_id: str, capabilities: set[ConnectorCapability]
+    ) -> None:
+        """Sets declared capabilities for a connector."""
+        with self._lock:
+            self._declared_capabilities[(tenant_id, connector_id)] = capabilities
 
     def transition_state(
         self,

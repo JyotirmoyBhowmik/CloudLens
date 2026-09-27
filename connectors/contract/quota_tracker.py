@@ -136,6 +136,15 @@ class HourlyQuotaTracker:
                 resets_at=window_reset,
             )
 
+    def get_diagnostics(
+        self,
+        tenant_id: str,
+        connector_id: str,
+        now: datetime | None = None,
+    ) -> HourlyQuotaDiagnostic:
+        """Retrieves diagnostic quota status without incrementing the counter (alias for get_diagnostic)."""
+        return self.get_diagnostic(tenant_id=tenant_id, connector_id=connector_id, now=now)
+
     def _prune_expired_windows(self, current_window: str) -> None:
         """Prunes historical window keys older than 24 hours."""
         keys_to_remove = [k for k in self._counts if k[2] < current_window]

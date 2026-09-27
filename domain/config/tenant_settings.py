@@ -122,6 +122,110 @@ class ConnectorSettings(BaseModel):
     )
 
 
+class SyncScheduleSettings(BaseModel):
+    """Synchronization intervals, restatement windows, and warning thresholds (Prompt 15 Item 98)."""
+
+    inventory_interval_hours: int = Field(
+        default=4,
+        description="Default inventory incremental sync interval in hours (recommended 4-6h)",
+    )
+    inventory_full_sync_interval_hours: int = Field(
+        default=24,
+        description="Daily full inventory reconciliation sync interval in hours",
+    )
+    cost_interval_hours: int = Field(
+        default=6,
+        description="Cost ingestion cadence in the open period in hours (recommended 4-8h)",
+    )
+    cost_restatement_lookback_days: int = Field(
+        default=3,
+        description="Look-back window in days for cost restatement and late-arriving billing records (3-7 days)",
+    )
+    usage_interval_hours: int = Field(
+        default=1,
+        description="Usage metrics collection interval in hours (hourly to daily)",
+    )
+    pricing_interval_hours: int = Field(
+        default=168,
+        description="Pricing public catalog refresh interval in hours (weekly = 168h)",
+    )
+    pricing_on_demand_unknown_sku: bool = Field(
+        default=True,
+        description="Whether to perform on-demand lookup upon encountering an unknown SKU",
+    )
+    relationships_interval_hours: int = Field(
+        default=24,
+        description="Resource graph and dependency relationship discovery interval in hours (daily)",
+    )
+    provider_budgets_interval_hours: int = Field(
+        default=24,
+        description="Provider-native budget and quota synchronization interval in hours (daily)",
+    )
+    max_sync_lag_warning_hours: int = Field(
+        default=24,
+        description="Sync freshness threshold in hours before an operator staleness warning is flagged",
+    )
+    # Cadence validation thresholds (warn if interval is unlikely to yield new data)
+    min_cost_interval_hours: int = Field(
+        default=4,
+        description="Minimum cost sync interval before issuing a cadence warning (provider billing exports update ~3x/day)",
+    )
+    min_pricing_interval_hours: int = Field(
+        default=24,
+        description="Minimum pricing sync interval before issuing a cadence warning (catalogs update weekly)",
+    )
+    min_budget_interval_hours: int = Field(
+        default=6,
+        description="Minimum provider budget sync interval before issuing a cadence warning",
+    )
+
+
+class WizardSettings(BaseModel):
+    """Configuration and pre-completion estimation multipliers for onboarding wizard (Prompt 15 Items 100, 103)."""
+
+    include_future_scopes_default: bool = Field(
+        default=True,
+        description="Default setting for automatically including newly discovered scopes",
+    )
+    default_estimated_resource_multiplier: int = Field(
+        default=150,
+        description="Estimated average cloud resources per discovered scope for pre-completion sizing",
+    )
+    estimated_seconds_per_scope: int = Field(
+        default=12,
+        description="Estimated initial discovery synchronization duration per scope in seconds",
+    )
+    estimated_metric_calls_per_resource: int = Field(
+        default=5,
+        description="Estimated metric API calls per resource during monitoring runs",
+    )
+    estimated_provider_cost_per_10k_calls: float = Field(
+        default=0.01,
+        description="Estimated cloud provider monitoring API cost per 10,000 requests in USD",
+    )
+    session_expiry_days: int = Field(
+        default=7,
+        description="Onboarding wizard saved draft session lifetime in days",
+    )
+
+
+class DataValidationSettings(BaseModel):
+    """Data integrity and monetary sanity check thresholds for ingestion validation (Prompt 15 Item 99)."""
+
+    max_single_line_item_amount: float = Field(
+        default=1000000.0,
+        description="Maximum single cost line item amount in reporting currency before flagging monetary sanity failure",
+    )
+    min_single_line_item_amount: float = Field(
+        default=-50000.0,
+        description="Minimum credit or refund single line item amount allowed before quarantine",
+    )
+    max_records_per_scope_warning: int = Field(
+        default=500000,
+        description="Sanity threshold for single scope record count in an individual ingestion cycle",
+    )
+
+
 class TenantSettings(BaseModel):
     """Canonical tenant configuration profile."""
 
@@ -152,6 +256,9 @@ class TenantSettings(BaseModel):
     threshold_defaults: ThresholdDefaults = Field(default_factory=ThresholdDefaults)
     approval_limits: ApprovalLimits = Field(default_factory=ApprovalLimits)
     connector_settings: ConnectorSettings = Field(default_factory=ConnectorSettings)
+    sync_schedule_settings: SyncScheduleSettings = Field(default_factory=SyncScheduleSettings)
+    wizard_settings: WizardSettings = Field(default_factory=WizardSettings)
+    data_validation_settings: DataValidationSettings = Field(default_factory=DataValidationSettings)
     is_demo_mode: bool = Field(
         default=False,
         description="Flag indicating if tenant is operating in synthetic Demo Mode with simulated data",

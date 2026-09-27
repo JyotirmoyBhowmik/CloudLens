@@ -20,11 +20,14 @@ from api.cloudlens_api.routes import (
     credentials_router,
     demo_mode_router,
     demo_router,
+    diagnostics_router,
     health_router,
     masterdata_router,
     overrides_router,
     rbac_router,
     storage_router,
+    sync_router,
+    wizard_router,
 )
 from domain.models.exceptions import (
     AuditRecordNotFoundException,
@@ -41,8 +44,10 @@ from domain.models.exceptions import (
     PermanentOverrideNotAllowedException,
     QuotaExhaustedException,
     RBACException,
+    SyncJobNotFoundException,
     TenantContextException,
     UndeclaredCapabilityException,
+    WizardSessionNotFoundException,
 )
 from domain.observability import (
     current_correlation_id,
@@ -298,6 +303,8 @@ async def standardized_connector_exception_handler(request: Request, exc: Connec
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     elif isinstance(exc, QuotaExhaustedException):
         status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    elif isinstance(exc, (SyncJobNotFoundException, WizardSessionNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
     else:
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -328,6 +335,9 @@ app.include_router(connectors_router)
 app.include_router(audit_router)
 app.include_router(overrides_router)
 app.include_router(storage_router)
+app.include_router(sync_router)
+app.include_router(wizard_router)
+app.include_router(diagnostics_router)
 
 
 class HealthResponse(BaseModel):

@@ -210,7 +210,58 @@ class SyncJobStatus(StrEnum):
     SCHEDULED = "SCHEDULED"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
+    PARTIAL_SUCCESS = "PARTIAL_SUCCESS"
     FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class SyncType(StrEnum):
+    """The seven canonical synchronization execution modes (Prompt 15 Item 97)."""
+
+    INITIAL_DISCOVERY = "initial_discovery"
+    FULL_SYNC = "full_sync"
+    INCREMENTAL_SYNC = "incremental_sync"
+    SCHEDULED_SYNC = "scheduled_sync"
+    MANUAL_SYNC = "manual_sync"
+    ON_DEMAND_SINGLE_ENTITY_REFRESH = "on_demand_single_entity_refresh"
+    BACKFILL = "backfill"
+
+
+class WizardStep(StrEnum):
+    """The thirteen canonical onboarding wizard progression steps (Prompt 15 Item 100)."""
+
+    SELECT_PROVIDER = "select_provider"
+    SELECT_CONNECTION_METHOD = "select_connection_method"
+    ENTER_CREDENTIALS = "enter_credentials"
+    VALIDATE_CREDENTIALS = "validate_credentials"
+    VALIDATE_PERMISSIONS = "validate_permissions"
+    DISCOVER_SCOPES = "discover_scopes"
+    SELECT_SCOPES = "select_scopes"
+    CONFIGURE_SYNCHRONISATION = "configure_synchronisation"
+    CONFIGURE_COST_INGESTION = "configure_cost_ingestion"
+    CONFIGURE_RESOURCE_DISCOVERY = "configure_resource_discovery"
+    CONFIGURE_USAGE_MONITORING = "configure_usage_monitoring"
+    CONFIGURE_BUDGETS_THRESHOLDS = "configure_budgets_thresholds"
+    COMPLETE = "complete"
+
+
+class QuarantineReason(StrEnum):
+    """Dead-letter quarantine classifications for ingested data failure (Prompt 15 Item 99)."""
+
+    SCHEMA_VIOLATION = "SCHEMA_VIOLATION"
+    MONETARY_SANITY_FAILURE = "MONETARY_SANITY_FAILURE"
+    MISSING_REQUIRED_FIELDS = "MISSING_REQUIRED_FIELDS"
+    UNPARSEABLE_PAYLOAD = "UNPARSEABLE_PAYLOAD"
+    RATE_LIMIT_EXHAUSTED = "RATE_LIMIT_EXHAUSTED"
+
+
+class QuarantineStatus(StrEnum):
+    """Lifecycle status of a quarantined dead-letter record (Prompt 15 Item 99)."""
+
+    QUARANTINED = "QUARANTINED"
+    REVIEWED = "REVIEWED"
+    REPROCESSED = "REPROCESSED"
+    DISCARDED = "DISCARDED"
 
 
 class SystemRole(StrEnum):
@@ -443,6 +494,19 @@ class AuditEventType(StrEnum):
     CONNECTOR_CIRCUIT_OPENED = "CONNECTOR_CIRCUIT_OPENED"
     CONNECTOR_PAYLOAD_LANDED = "CONNECTOR_PAYLOAD_LANDED"
     CONNECTOR_QUOTA_EXHAUSTED = "CONNECTOR_QUOTA_EXHAUSTED"
+
+    # Sync Orchestration & Ingestion (Prompt 15)
+    SYNC_STARTED = "SYNC_STARTED"
+    SYNC_COMPLETED = "SYNC_COMPLETED"
+    SYNC_PARTIAL = "SYNC_PARTIAL"
+    SYNC_FAILED = "SYNC_FAILED"
+    PAYLOAD_QUARANTINED = "PAYLOAD_QUARANTINED"
+    WIZARD_STARTED = "WIZARD_STARTED"
+    WIZARD_STEP_SAVED = "WIZARD_STEP_SAVED"
+    WIZARD_COMPLETED = "WIZARD_COMPLETED"
+    SCHEDULE_UPDATED = "SCHEDULE_UPDATED"
+    DIAGNOSTIC_EXECUTION = "DIAGNOSTIC_EXECUTION"
+    FAILOVER_TRIGGERED = "FAILOVER_TRIGGERED"
 
 
 class OverrideClass(StrEnum):

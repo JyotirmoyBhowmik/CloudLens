@@ -228,6 +228,11 @@ class HourlyQuotaDiagnostic(BaseModel):
     )
     resets_at: datetime = Field(..., description="Timestamp when quota window resets")
 
+    @property
+    def headroom_percent(self) -> float:
+        """Returns the percentage of hourly headroom remaining."""
+        return max(0.0, round(100.0 - self.utilization_percentage, 2))
+
 
 class RawLandingRecord(BaseModel):
     """Metadata record for raw immutable payloads landed in object storage (Prompt 14 Item 95)."""

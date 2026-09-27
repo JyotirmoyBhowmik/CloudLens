@@ -699,3 +699,117 @@ class ProviderRawErrorException(ConnectorException):
         self.verbatim_error = verbatim_error
         self.plain_language_explanation = plain_language_explanation
         self.status_code = status_code
+
+
+# ==============================================================================
+# Sync Orchestration, Wizard, and Diagnostics Exceptions (Prompt 15)
+# ==============================================================================
+
+
+class SyncJobException(ConnectorException):
+    """Base exception for synchronization orchestration and execution errors (Prompt 15)."""
+
+    def __init__(self, message: str, error_code: str = "SYNC_JOB_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class SyncJobExecutionException(SyncJobException):
+    """Raised when an active sync run fails fatally across all scopes."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="SYNC_JOB_EXECUTION_FAILED")
+
+
+class SyncJobNotFoundException(SyncJobException):
+    """Raised when looking up an unknown sync job identifier."""
+
+    def __init__(self, job_id: str) -> None:
+        super().__init__(f"Sync job '{job_id}' not found.", error_code="SYNC_JOB_NOT_FOUND")
+        self.job_id = job_id
+
+
+class IdempotentSyncSkippedException(SyncJobException):
+    """Raised when an identical sync job has already completed and duplicate execution is prevented."""
+
+    def __init__(self, idempotency_key: str) -> None:
+        super().__init__(
+            f"Sync job with idempotency key '{idempotency_key}' already completed. Skipped duplicate run.",
+            error_code="IDEMPOTENT_SYNC_SKIPPED",
+        )
+        self.idempotency_key = idempotency_key
+
+
+class QuarantineException(SyncJobException):
+    """Raised when data fails integrity or schema checks and is sent to dead-letter quarantine."""
+
+    def __init__(self, message: str, reason: str) -> None:
+        super().__init__(f"Data quarantined ({reason}): {message}", error_code="DATA_QUARANTINED")
+        self.reason = reason
+
+
+class DataValidationException(SyncJobException):
+    """Raised when raw or transformed provider records fail validation rules."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="DATA_VALIDATION_ERROR")
+
+
+class InvalidScheduleIntervalException(SyncJobException):
+    """Raised when a connector schedule interval violates bounding rules."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_SCHEDULE_INTERVAL")
+
+
+class WizardException(ConnectorException):
+    """Base exception for onboarding wizard workflow violations (Prompt 15)."""
+
+    def __init__(self, message: str, error_code: str = "WIZARD_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class InvalidWizardStepException(WizardException):
+    """Raised when an onboarding wizard step transition is illegal or out of sequence."""
+
+    def __init__(self, current_step: str, requested_step: str) -> None:
+        super().__init__(
+            f"Cannot advance wizard step from '{current_step}' to '{requested_step}'.",
+            error_code="INVALID_WIZARD_STEP",
+        )
+        self.current_step = current_step
+        self.requested_step = requested_step
+
+
+class WizardSessionNotFoundException(WizardException):
+    """Raised when looking up an unknown onboarding wizard session identifier."""
+
+    def __init__(self, session_id: str) -> None:
+        super().__init__(
+            f"Wizard session '{session_id}' not found.", error_code="WIZARD_SESSION_NOT_FOUND"
+        )
+        self.session_id = session_id
+
+
+class CredentialValidationFailedException(WizardException):
+    """Raised when connector credentials fail pre-flight validation (Item 100/101)."""
+
+    def __init__(self, verbatim_error: str, provider: str) -> None:
+        super().__init__(
+            f"Credential validation failed for {provider}: {verbatim_error}",
+            error_code="CREDENTIAL_VALIDATION_FAILED",
+        )
+        self.verbatim_error = verbatim_error
+        self.provider = provider
+
+
+class ConnectorDegradedException(ConnectorException):
+    """Raised when an operation cannot be fulfilled because connector or capability is degraded."""
+
+    def __init__(self, connector_id: str, capability: str, reason: str) -> None:
+        super().__init__(
+            f"Capability '{capability}' on connector '{connector_id}' is degraded: {reason}",
+            error_code="CONNECTOR_DEGRADED",
+        )
+        self.connector_id = connector_id
+        self.capability = capability
+        self.reason = reason
