@@ -242,7 +242,18 @@ class WizardStep(StrEnum):
     CONFIGURE_RESOURCE_DISCOVERY = "configure_resource_discovery"
     CONFIGURE_USAGE_MONITORING = "configure_usage_monitoring"
     CONFIGURE_BUDGETS_THRESHOLDS = "configure_budgets_thresholds"
+    TEST_ALERT_DELIVERY = "test_alert_delivery"
     COMPLETE = "complete"
+
+
+class SyncStageStatus(StrEnum):
+    """Execution status of visible stages during first synchronization (Prompt 15B Item 21)."""
+
+    NOT_STARTED = "not_started"
+    RUNNING = "running"
+    COMPLETE = "complete"
+    PARTIAL = "partial"
+    FAILED = "failed"
 
 
 class QuarantineReason(StrEnum):
@@ -507,6 +518,8 @@ class AuditEventType(StrEnum):
     SCHEDULE_UPDATED = "SCHEDULE_UPDATED"
     DIAGNOSTIC_EXECUTION = "DIAGNOSTIC_EXECUTION"
     FAILOVER_TRIGGERED = "FAILOVER_TRIGGERED"
+    ALERT_TEST_DISPATCHED = "ALERT_TEST_DISPATCHED"
+    FIRST_SYNC_PROGRESS_VIEWED = "FIRST_SYNC_PROGRESS_VIEWED"
 
 
 class OverrideClass(StrEnum):
@@ -518,6 +531,7 @@ class OverrideClass(StrEnum):
     FEATURE_FLAG = "FEATURE_FLAG"
     ALLOCATION_RULE = "ALLOCATION_RULE"
     RETENTION_PERIOD = "RETENTION_PERIOD"
+    ALERT_DELIVERY_FAILURE = "ALERT_DELIVERY_FAILURE"
 
 
 class OverrideStatus(StrEnum):

@@ -343,3 +343,76 @@ def test_contract_checkpoint_resumption(client: TestClient, tenant_headers: dict
     assert resumed["connector_id"] == connector_id
     assert resumed["page_number"] == 2
     assert resumed["continuation_token_present"] is True
+
+
+def test_contract_onboarding_step_restoration_and_alert_delivery(
+    client: TestClient, tenant_headers: dict[str, str]
+):
+    """Prompt 15B Items 21-27: Test alert delivery, first-sync progress, completion summary, and notification log API contracts."""
+    # 1. Start a new session
+    res_start = client.post("/api/v1/wizard/sessions", headers=tenant_headers)
+    assert res_start.status_code == 201
+    session_id = res_start.json()["session"]["id"]
+
+    # 2. Test Alert Delivery endpoint (Item 24)
+    probe_payload = {
+        "channels": [
+            {"channel": "EMAIL", "recipient": "ops-contract@test.cloudlens.io"},
+            {"channel": "SLACK", "recipient": "https://hooks.slack.com/contract-test"},
+        ]
+    }
+    res_test = client.post(
+        f"/api/v1/wizard/sessions/{session_id}/test-alert-delivery",
+        json=probe_payload,
+        headers=tenant_headers,
+    )
+    assert res_test.status_code == 200
+    report = res_test.json()
+    assert report["is_test"] is True
+    assert report["total_channels"] == 2
+    assert report["successful_channels"] == 2
+    assert report["can_proceed"] is True
+
+    # 3. Complete Wizard (Items 21, 22, 27)
+    res_comp = client.post(f"/api/v1/wizard/sessions/{session_id}/complete", headers=tenant_headers)
+    assert res_comp.status_code == 200
+    comp_data = res_comp.json()
+    assert comp_data["status"] == "COMPLETED"
+    assert "landing_destination" in comp_data
+    assert "/onboarding/first-sync-progress" in comp_data["landing_destination"]
+    assert "first_sync_progress" in comp_data
+    assert "completion_summary" in comp_data
+
+    # 4. GET /first-sync-progress (Item 21)
+    res_fsp = client.get(
+        f"/api/v1/wizard/sessions/{session_id}/first-sync-progress",
+        headers=tenant_headers,
+    )
+    assert res_fsp.status_code == 200
+    fsp_data = res_fsp.json()
+    assert fsp_data["total_stages"] == 5
+    assert len(fsp_data["stages"]) == 5
+    cost_stage = next(s for s in fsp_data["stages"] if s["stage_id"] == "retrieve_cost_data")
+    assert "Provider billing latency" in cost_stage["latency_explanation"]
+
+    # 5. GET /completion-summary (Item 27)
+    res_sum = client.get(
+        f"/api/v1/wizard/sessions/{session_id}/completion-summary",
+        headers=tenant_headers,
+    )
+    assert res_sum.status_code == 200
+    sum_data = res_sum.json()
+    assert sum_data["session_id"] == session_id
+    assert len(sum_data["capabilities_available"]) > 0
+    assert "4 to 8 hours" in sum_data["estimated_time_to_first_cost_data"]
+
+    # 6. GET /notifications/log (Item 25)
+    res_logs = client.get("/api/v1/wizard/notifications/log", headers=tenant_headers)
+    assert res_logs.status_code == 200
+    logs = res_logs.json()
+    assert isinstance(logs, list)
+    matching = [rec for rec in logs if rec.get("metadata", {}).get("session_id") == session_id]
+    assert len(matching) >= 2
+    for rec in matching:
+        assert rec["is_test"] is True
+        assert rec["alert_id"] is None

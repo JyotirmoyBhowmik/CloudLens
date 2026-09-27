@@ -30,6 +30,8 @@ TENANT_ISOLATED_TABLES = [
     "quarantine_records",
     "wizard_sessions",
     "connector_schedules",
+    "notification_logs",
+    "first_sync_progress",
 ]
 
 

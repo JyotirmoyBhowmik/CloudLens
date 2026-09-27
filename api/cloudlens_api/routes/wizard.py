@@ -24,8 +24,16 @@ from domain.models.exceptions import (
     InvalidWizardStepException,
     WizardSessionNotFoundException,
 )
+from domain.notification.models import (
+    AlertDeliveryTestReport,
+    ChannelTestInput,
+    NotificationLogRecord,
+)
+from domain.notification.repository import get_notification_log_repository
+from domain.sync.first_sync_models import FirstSyncProgressReport
 from domain.tenant.context import TenantContext
 from domain.wizard.models import (
+    OnboardingCompletionSummary,
     PermissionConsequenceReport,
     PreCompletionEstimate,
     WizardSession,
@@ -57,6 +65,12 @@ class ValidatePermissionsRequest(BaseModel):
     )
 
 
+class TestAlertDeliveryRequest(BaseModel):
+    channels: list[ChannelTestInput] = Field(
+        default_factory=list, description="Optional channel configurations to test"
+    )
+
+
 class CompleteWizardResponse(BaseModel):
     status: str
     session_id: str
@@ -65,6 +79,9 @@ class CompleteWizardResponse(BaseModel):
     initial_sync_job_id: str
     sync_status: str
     rows_ingested: int
+    landing_destination: str | None = None
+    first_sync_progress: dict[str, Any] | None = None
+    completion_summary: dict[str, Any] | None = None
 
 
 @router.post("/sessions", response_model=StartSessionResponse, status_code=status.HTTP_201_CREATED)
@@ -218,3 +235,61 @@ async def complete_wizard(
     service = get_wizard_service()
     result = await service.complete_wizard(session_id=session_id, tenant_context=tenant_context)
     return CompleteWizardResponse(**result)
+
+
+@router.post(
+    "/sessions/{session_id}/test-alert-delivery",
+    response_model=AlertDeliveryTestReport,
+)
+async def test_alert_delivery(
+    session_id: str,
+    payload: TestAlertDeliveryRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> AlertDeliveryTestReport:
+    """Executes synthetic alert delivery verification probes across communication channels (Prompt 15B Item 24)."""
+    service = get_wizard_service()
+    return await service.test_alert_delivery_step(
+        session_id=session_id,
+        channels=payload.channels,
+        tenant_context=tenant_context,
+    )
+
+
+@router.get(
+    "/sessions/{session_id}/first-sync-progress",
+    response_model=FirstSyncProgressReport,
+)
+async def get_first_sync_progress(
+    session_id: str,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> FirstSyncProgressReport:
+    """Retrieves live first-sync progress report for the 5 folded stages (Prompt 15B Item 21)."""
+    service = get_wizard_service()
+    return service.get_first_sync_progress(session_id=session_id, tenant_context=tenant_context)
+
+
+@router.get(
+    "/sessions/{session_id}/completion-summary",
+    response_model=OnboardingCompletionSummary,
+)
+async def get_completion_summary(
+    session_id: str,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> OnboardingCompletionSummary:
+    """Retrieves the consolidated onboarding completion summary (Prompt 15B Item 27)."""
+    service = get_wizard_service()
+    return service.get_completion_summary(session_id=session_id, tenant_context=tenant_context)
+
+
+@router.get(
+    "/notifications/log",
+    response_model=list[NotificationLogRecord],
+)
+async def get_notification_log(
+    limit: int = 50,
+    offset: int = 0,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> list[NotificationLogRecord]:
+    """Retrieves the notification audit log including test alerts (Prompt 15B Item 25)."""
+    repo = get_notification_log_repository()
+    return repo.list(tenant_context=tenant_context, limit=limit, offset=offset)

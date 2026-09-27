@@ -710,6 +710,62 @@ class ConnectorScheduleModel(Base):
     __table_args__ = (Index("idx_schedules_lookup", "tenant_id", "connector_id", "capability"),)
 
 
+class NotificationLogModel(Base):
+    """Immutable audit record of outbound notification dispatch and test alerts (Prompt 15B Items 24, 25)."""
+
+    __tablename__ = "notification_logs"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    alert_id = Column(String(64), nullable=True)
+    channel = Column(String(32), nullable=False)
+    recipient = Column(String(255), nullable=False)
+    status = Column(String(32), nullable=False, default="PENDING")
+    message = Column(Text, nullable=False)
+    is_test = Column(Boolean, nullable=False, default=False)
+    latency_ms = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
+    metadata_payload = Column(JSON, nullable=False, default=dict)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_notif_tenant_channel", "tenant_id", "channel"),
+        Index("idx_notif_tenant_test", "tenant_id", "is_test"),
+        Index("idx_notif_tenant_sent", "tenant_id", "sent_at"),
+    )
+
+
+class FirstSyncProgressModel(Base):
+    """Aggregated first-sync progress report across five visible stages (Prompt 15B Items 21, 22)."""
+
+    __tablename__ = "first_sync_progress"
+
+    id = Column(String(64), primary_key=True)
+    tenant_id = Column(String(64), nullable=False, index=True)
+    session_id = Column(String(64), nullable=False, index=True)
+    connector_id = Column(String(64), nullable=False, index=True)
+    initial_sync_job_id = Column(String(64), nullable=True)
+    overall_status = Column(String(32), nullable=False, default="RUNNING")
+    stages_data = Column(JSON, nullable=False, default=list)
+    total_stages = Column(Integer, nullable=False, default=5)
+    completed_stages = Column(Integer, nullable=False, default=0)
+    estimated_time_to_first_cost_seconds = Column(Integer, nullable=False, default=14400)
+    landing_destination = Column(String(500), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_first_sync_tenant_session", "tenant_id", "session_id", unique=True),
+        Index("idx_first_sync_tenant_connector", "tenant_id", "connector_id"),
+    )
+
+
 class ConnectorModel(Base):
     """Registered cloud provider connector record (Prompt 14 / BBP Section 26)."""
 

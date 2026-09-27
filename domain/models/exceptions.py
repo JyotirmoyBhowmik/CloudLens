@@ -1,5 +1,9 @@
 """Domain Exceptions for Canonical Domain Models."""
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class DomainModelException(Exception):
     """Base exception for all domain model violations."""
@@ -813,3 +817,26 @@ class ConnectorDegradedException(ConnectorException):
         self.connector_id = connector_id
         self.capability = capability
         self.reason = reason
+
+
+class AlertDeliveryFailedException(WizardException):
+    """Raised when all alert delivery channels fail during onboarding verification (Prompt 15B Item 24)."""
+
+    def __init__(
+        self,
+        message: str = "Alert delivery test failed across all configured channels.",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, error_code="ALERT_DELIVERY_FAILED")
+        self.details = details or {}
+
+
+class FirstSyncNotFoundException(WizardException):
+    """Raised when first synchronization progress record is not found (Prompt 15B Item 21)."""
+
+    def __init__(self, identifier: str) -> None:
+        super().__init__(
+            f"First synchronization progress for '{identifier}' not found.",
+            error_code="FIRST_SYNC_NOT_FOUND",
+        )
+        self.identifier = identifier

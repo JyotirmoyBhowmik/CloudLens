@@ -86,9 +86,64 @@ class PreCompletionEstimate(BaseModel):
     )
 
 
+class QuotaMonitoringConfig(BaseModel):
+    """Quota monitoring and exhaustion configuration for step 11 per AM-07 (Prompt 15B Item 26)."""
+
+    quota_monitoring_enabled: bool = Field(
+        default=True,
+        description="Enable continuous tracking of service limits and quota consumption",
+    )
+    quota_headroom_threshold_percent: float = Field(
+        default=20.0,
+        ge=1.0,
+        le=100.0,
+        description="Warning threshold percentage for quota headroom",
+    )
+    predicted_exhaustion_alert_hours: int = Field(
+        default=24, ge=1, description="Lead time in hours for predicted quota exhaustion alerting"
+    )
+    rate_limit_throttle_protection: bool = Field(
+        default=True,
+        description="Automatically throttle polling upon approaching provider rate limits",
+    )
+
+
+class OnboardingCompletionSummary(BaseModel):
+    """Consolidated summary presented upon onboarding wizard completion (Prompt 15B Item 27)."""
+
+    session_id: str = Field(..., description="Wizard session ID")
+    connector_id: str = Field(..., description="Active cloud connector ID")
+    provider: ProviderType = Field(..., description="Cloud provider type")
+    scopes_selected: list[str] = Field(..., description="Cloud scope IDs chosen for monitoring")
+    capabilities_available: list[str] = Field(
+        ..., description="Capabilities verified and operational on the connector"
+    )
+    capabilities_unavailable_with_consequences: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="Unavailable capabilities with business/operational consequences",
+    )
+    schedules_configured: list[dict[str, Any]] = Field(
+        default_factory=list, description="Configured sync intervals per capability"
+    )
+    estimated_time_to_first_cost_data: str = Field(
+        ..., description="Human-readable estimate of when first billing data will arrive"
+    )
+    estimated_time_to_first_cost_seconds: int = Field(
+        default=14400, description="Estimated seconds until first cost export lands"
+    )
+    alert_test_result: dict[str, Any] = Field(
+        ..., description="Consolidated report from the alert delivery test step"
+    )
+    landing_destination: str = Field(
+        ..., description="Route destination for observing live first-sync progress"
+    )
+
+
 __all__ = [
     "WizardSession",
     "PermissionConsequenceReport",
     "PreCompletionEstimate",
     "WizardStep",
+    "QuotaMonitoringConfig",
+    "OnboardingCompletionSummary",
 ]

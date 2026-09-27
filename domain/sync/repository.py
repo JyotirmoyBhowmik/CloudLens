@@ -13,6 +13,7 @@ import threading
 from typing import Any
 
 from domain.models.enums import ConnectorCapability, QuarantineStatus, SyncJobStatus
+from domain.sync.first_sync_models import FirstSyncProgressReport
 from domain.sync.models import ConnectorSchedule, QuarantineRecord, SyncJob
 from domain.tenant.context import TenantContext
 from domain.tenant.repository import TenantAwareRepository
@@ -282,6 +283,87 @@ class ConnectorScheduleRepository(TenantAwareRepository[ConnectorSchedule]):
 _sync_job_repository = SyncJobRepository()
 _quarantine_repository = QuarantineRepository()
 _connector_schedule_repository = ConnectorScheduleRepository()
+
+
+class FirstSyncProgressRepository(TenantAwareRepository[FirstSyncProgressReport]):
+    """Tenant-isolated repository for FirstSyncProgressReport state tracking (Prompt 15B Items 21, 22)."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        # (tenant_id, id) -> FirstSyncProgressReport
+        self._reports: dict[tuple[str, str], FirstSyncProgressReport] = {}
+
+    def get(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport | None:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            return self._reports.get((tenant_context.tenant_id, entity_id))
+
+    def get_by_session_id(
+        self, session_id: str, *, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport | None:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            for (tid, _), report in self._reports.items():
+                if tid == tenant_context.tenant_id and report.session_id == session_id:
+                    return report
+        return None
+
+    def get_by_connector_id(
+        self, connector_id: str, *, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport | None:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            for (tid, _), report in self._reports.items():
+                if tid == tenant_context.tenant_id and report.connector_id == connector_id:
+                    return report
+        return None
+
+    def list(
+        self,
+        *,
+        tenant_context: TenantContext,
+        filter_params: Any = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> builtins.list[FirstSyncProgressReport]:
+        self._validate_tenant_context(tenant_context)
+        _ = filter_params
+        with self._lock:
+            items = [r for (tid, _), r in self._reports.items() if tid == tenant_context.tenant_id]
+        sorted_items = sorted(items, key=lambda r: r.created_at, reverse=True)
+        return sorted_items[offset : offset + limit]
+
+    def save(
+        self, entity: FirstSyncProgressReport, *, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            key = (tenant_context.tenant_id, entity.id)
+            self._reports[key] = entity
+            return entity
+
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            key = (tenant_context.tenant_id, entity_id)
+            if key in self._reports:
+                del self._reports[key]
+                return True
+            return False
+
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        self._validate_tenant_context(tenant_context)
+        with self._lock:
+            return (tenant_context.tenant_id, entity_id) in self._reports
+
+
+_first_sync_progress_repository = FirstSyncProgressRepository()
+
+
+def get_first_sync_progress_repository() -> FirstSyncProgressRepository:
+    return _first_sync_progress_repository
 
 
 def get_sync_job_repository() -> SyncJobRepository:

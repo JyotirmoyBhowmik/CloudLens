@@ -39,6 +39,7 @@ from domain.models.exceptions import (
     CrossTenantStorageAccessException,
     CustomRoleInvalidException,
     DomainModelException,
+    FirstSyncNotFoundException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
@@ -130,6 +131,7 @@ async def correlation_id_and_timing_middleware(request: Request, call_next):
             ).observe(duration_s)
             logger.error(
                 "Request failed with unhandled internal server error",
+                exc_info=True,
                 extra={
                     "method": request.method,
                     "path": request.url.path,
@@ -303,7 +305,9 @@ async def standardized_connector_exception_handler(request: Request, exc: Connec
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     elif isinstance(exc, QuotaExhaustedException):
         status_code = status.HTTP_429_TOO_MANY_REQUESTS
-    elif isinstance(exc, (SyncJobNotFoundException, WizardSessionNotFoundException)):
+    elif isinstance(
+        exc, (SyncJobNotFoundException, WizardSessionNotFoundException, FirstSyncNotFoundException)
+    ):
         status_code = status.HTTP_404_NOT_FOUND
     else:
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY

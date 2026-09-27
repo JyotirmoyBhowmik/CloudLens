@@ -15,13 +15,19 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any
 
 from connectors.contract.lifecycle import connector_lifecycle_manager
 from connectors.simulator.connector import ProviderSimulatorConnector
+from connectors.sync.first_sync import FirstSyncService, get_first_sync_service
 from connectors.sync.orchestrator import get_sync_orchestrator
 from connectors.sync.scheduler import get_sync_scheduler
+from connectors.wizard.notification_tester import (
+    NotificationTester,
+    get_notification_tester,
+)
 from domain.audit.models import AuditEventCreate
 from domain.audit.service import get_audit_service
 from domain.config.tenant_settings import tenant_settings_store
@@ -32,20 +38,31 @@ from domain.models.enums import (
     ConnectorCapability,
     ConnectorLifecycleState,
     CredentialType,
+    OverrideClass,
     ProviderCapability,
     ProviderType,
     SyncType,
     WizardStep,
 )
 from domain.models.exceptions import (
+    AlertDeliveryFailedException,
     CredentialValidationFailedException,
     InvalidWizardStepException,
+    WizardException,
     WizardSessionNotFoundException,
 )
+from domain.notification.models import (
+    AlertDeliveryTestReport,
+    ChannelTestInput,
+)
+from domain.overrides.service import OverrideService
+from domain.sync.first_sync_models import FirstSyncProgressReport
 from domain.tenant.context import TenantContext
 from domain.wizard.models import (
+    OnboardingCompletionSummary,
     PermissionConsequenceReport,
     PreCompletionEstimate,
+    QuotaMonitoringConfig,
     WizardSession,
 )
 from domain.wizard.repository import (
@@ -55,7 +72,7 @@ from domain.wizard.repository import (
 
 logger = logging.getLogger(__name__)
 
-# Canonical sequence of the 13 wizard steps
+# Canonical sequence of the onboarding wizard steps (Prompt 15 & 15B)
 WIZARD_STEP_SEQUENCE: list[WizardStep] = [
     WizardStep.SELECT_PROVIDER,
     WizardStep.SELECT_CONNECTION_METHOD,
@@ -69,22 +86,29 @@ WIZARD_STEP_SEQUENCE: list[WizardStep] = [
     WizardStep.CONFIGURE_RESOURCE_DISCOVERY,
     WizardStep.CONFIGURE_USAGE_MONITORING,
     WizardStep.CONFIGURE_BUDGETS_THRESHOLDS,
+    WizardStep.TEST_ALERT_DELIVERY,
     WizardStep.COMPLETE,
 ]
 
 
 class OnboardingWizardService:
-    """Manages the 13-step onboarding workflow, step validations, and finalization."""
+    """Manages the onboarding workflow, step validations, alert testing, and finalization."""
 
     def __init__(
         self,
         wizard_repo: WizardRepository | None = None,
+        notification_tester: NotificationTester | None = None,
+        first_sync_service: FirstSyncService | None = None,
+        override_service: OverrideService | None = None,
     ) -> None:
         self._wizard_repo = wizard_repo or get_wizard_repository()
         self._credential_service = get_credential_service()
         self._audit_service = get_audit_service()
         self._sync_orchestrator = get_sync_orchestrator()
         self._sync_scheduler = get_sync_scheduler()
+        self._notification_tester = notification_tester or get_notification_tester()
+        self._first_sync_service = first_sync_service or get_first_sync_service()
+        self._override_service = override_service or OverrideService()
 
     def start_session(self, user_id: str, tenant_context: TenantContext) -> WizardSession:
         """Starts a new wizard session or resumes an existing in-progress session (Item 100)."""
@@ -195,6 +219,35 @@ class OnboardingWizardService:
             session.selected_scopes = step_payload.get("selected_scopes", [])
             session.include_future_scopes = bool(step_payload.get("include_future_scopes", True))
 
+        elif step == WizardStep.CONFIGURE_USAGE_MONITORING:
+            # Item 26: Add quota monitoring configuration per AM-07
+            quota_cfg = QuotaMonitoringConfig(
+                quota_monitoring_enabled=bool(step_payload.get("quota_monitoring_enabled", True)),
+                quota_headroom_threshold_percent=float(
+                    step_payload.get("quota_headroom_threshold_percent", 20.0)
+                ),
+                predicted_exhaustion_alert_hours=int(
+                    step_payload.get("predicted_exhaustion_alert_hours", 24)
+                ),
+                rate_limit_throttle_protection=bool(
+                    step_payload.get("rate_limit_throttle_protection", True)
+                ),
+            )
+            session.wizard_data["quota_monitoring_config"] = quota_cfg.model_dump()
+
+        elif step == WizardStep.TEST_ALERT_DELIVERY:
+            # Item 24: Test configured channels
+            channels_input = [
+                ChannelTestInput(**c) if isinstance(c, dict) else c
+                for c in step_payload.get("channels", [])
+            ]
+            test_report = await self._notification_tester.execute_alert_delivery_test(
+                session_id=session_id,
+                channels=channels_input,
+                tenant_context=tenant_context,
+            )
+            session.wizard_data["test_alert_delivery"] = test_report.model_dump()
+
         if step not in session.completed_steps:
             session.completed_steps.append(step)
 
@@ -224,6 +277,31 @@ class OnboardingWizardService:
             logger.warning("Audit emission failed: %s", exc)
 
         return saved
+
+    async def test_alert_delivery_step(
+        self,
+        session_id: str,
+        channels: Sequence[ChannelTestInput | dict[str, Any]] | None,
+        tenant_context: TenantContext,
+    ) -> AlertDeliveryTestReport:
+        """Executes the alert delivery test step (Prompt 15B Item 24)."""
+        session = self.get_session(session_id, tenant_context=tenant_context)
+        channels_input = [
+            c if isinstance(c, ChannelTestInput) else ChannelTestInput(**c)
+            for c in (channels or [])
+        ]
+        report = await self._notification_tester.execute_alert_delivery_test(
+            session_id=session_id,
+            channels=channels_input,
+            tenant_context=tenant_context,
+        )
+        session.wizard_data["test_alert_delivery"] = report.model_dump()
+        if WizardStep.TEST_ALERT_DELIVERY not in session.completed_steps:
+            session.completed_steps.append(WizardStep.TEST_ALERT_DELIVERY)
+        session.current_step = WizardStep.COMPLETE
+        session.updated_at = datetime.now(UTC)
+        self._wizard_repo.save(session, tenant_context=tenant_context)
+        return report
 
     async def validate_credentials_step(
         self,
@@ -416,9 +494,45 @@ class OnboardingWizardService:
     async def complete_wizard(
         self, session_id: str, tenant_context: TenantContext
     ) -> dict[str, Any]:
-        """Finalizes connector onboarding, activates schedules, and starts initial sync (Item 100/103)."""
+        """Finalizes connector onboarding, activates schedules, and starts initial sync (Item 100/103 & Prompt 15B)."""
         session = self.get_session(session_id, tenant_context=tenant_context)
         provider = session.provider or ProviderType.AWS
+
+        # Item 24: Verify Alert Delivery Test results
+        alert_test_data = session.wizard_data.get(WizardStep.TEST_ALERT_DELIVERY.value)
+        if not alert_test_data:
+            # Run default verification test probe if not explicitly executed earlier
+            test_report = await self._notification_tester.execute_alert_delivery_test(
+                session_id=session_id,
+                channels=[],
+                tenant_context=tenant_context,
+            )
+            alert_test_data = test_report.model_dump()
+            session.wizard_data[WizardStep.TEST_ALERT_DELIVERY.value] = alert_test_data
+        else:
+            test_report = AlertDeliveryTestReport(**alert_test_data)
+
+        # Check if alert delivery test succeeded or has override
+        if test_report.successful_channels == 0:
+            # Check for active administrative override
+            active_overrides = self._override_service.repository.list_active(
+                tenant_context=tenant_context
+            )
+            has_override = any(
+                ovr.override_class == OverrideClass.ALERT_DELIVERY_FAILURE
+                and (ovr.what in (session_id, "*", "alert_delivery", "wizard"))
+                for ovr in active_overrides
+            )
+            if not has_override:
+                raise AlertDeliveryFailedException(
+                    message=(
+                        f"Alert delivery test failed across all configured channels for session '{session_id}'. "
+                        "Onboarding completion requires at least one verified delivery channel or an administrative override."
+                    ),
+                    details=alert_test_data,
+                )
+            test_report.override_applied = True
+            session.wizard_data[WizardStep.TEST_ALERT_DELIVERY.value] = test_report.model_dump()
 
         connector_id = f"conn-{provider.value.lower()}-{uuid.uuid4().hex[:8]}"
         staged_creds = session.wizard_data.get("_staged_credentials", {})
@@ -502,7 +616,7 @@ class OnboardingWizardService:
         )
 
         # 3. Initialize Default Schedules (Item 98)
-        self._sync_scheduler.initialize_connector_schedules(
+        schedules = self._sync_scheduler.initialize_connector_schedules(
             connector_id=connector_id, tenant_context=tenant_context
         )
 
@@ -515,7 +629,56 @@ class OnboardingWizardService:
             target_scopes=initial_scopes,
         )
 
-        # 5. Mark Session Completed
+        # 5. Execute First-Sync Stages (Prompt 15B Item 21)
+        first_sync_report = await self._first_sync_service.execute_first_sync_stages(
+            session_id=session_id,
+            connector=simulator,
+            job_id=sync_job.id,
+            tenant_context=tenant_context,
+        )
+
+        # 6. Build Onboarding Completion Summary (Prompt 15B Item 27)
+        ref = PermissionReferenceService.get_reference(provider)
+        unavailable_caps_with_consequences: list[dict[str, str]] = []
+        for cap in ref.capabilities:
+            if any(p in missing_perms for p in cap.minimum_permissions):
+                unavailable_caps_with_consequences.append(
+                    {
+                        "capability": cap.capability_code.value,
+                        "name": cap.capability_name,
+                        "consequence": cap.consequence_if_not_granted,
+                    }
+                )
+
+        schedules_configured = [
+            {
+                "capability": s.capability.value,
+                "interval_minutes": s.interval_minutes,
+                "cron_expression": s.cron_expression,
+                "is_enabled": s.is_enabled,
+            }
+            for s in schedules
+        ]
+
+        landing_destination = (
+            f"/onboarding/first-sync-progress?session_id={session_id}&connector_id={connector_id}"
+        )
+        summary = OnboardingCompletionSummary(
+            session_id=session_id,
+            connector_id=connector_id,
+            provider=provider,
+            scopes_selected=initial_scopes,
+            capabilities_available=[c.value for c in active_caps],
+            capabilities_unavailable_with_consequences=unavailable_caps_with_consequences,
+            schedules_configured=schedules_configured,
+            estimated_time_to_first_cost_data="4 to 8 hours (provider asynchronous billing batch export generation)",
+            estimated_time_to_first_cost_seconds=14400,
+            alert_test_result=test_report.model_dump(),
+            landing_destination=landing_destination,
+        )
+        session.wizard_data["completion_summary"] = summary.model_dump()
+
+        # 7. Mark Session Completed
         now = datetime.now(UTC)
         session.status = "COMPLETED"
         session.created_connector_id = connector_id
@@ -525,7 +688,7 @@ class OnboardingWizardService:
         session.updated_at = now
         self._wizard_repo.save(session, tenant_context=tenant_context)
 
-        # 6. Emit Completion Audit Event
+        # 8. Emit Completion Audit Event
         try:
             self._audit_service.append_event(
                 tenant_context=tenant_context,
@@ -541,6 +704,7 @@ class OnboardingWizardService:
                         "provider": provider.value,
                         "scopes_count": len(initial_scopes),
                         "initial_sync_job_id": sync_job.id,
+                        "landing_destination": landing_destination,
                     },
                     correlation_id=tenant_context.correlation_id,
                 ),
@@ -556,7 +720,28 @@ class OnboardingWizardService:
             "initial_sync_job_id": sync_job.id,
             "sync_status": sync_job.status.value,
             "rows_ingested": sync_job.rows_ingested,
+            "landing_destination": landing_destination,
+            "first_sync_progress": first_sync_report.model_dump(),
+            "completion_summary": summary.model_dump(),
         }
+
+    def get_first_sync_progress(
+        self, session_id: str, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport:
+        """Retrieves live first sync progress (Item 21)."""
+        return self._first_sync_service.get_progress(session_id, tenant_context=tenant_context)
+
+    def get_completion_summary(
+        self, session_id: str, tenant_context: TenantContext
+    ) -> OnboardingCompletionSummary:
+        """Retrieves the completion summary for a completed session (Item 27)."""
+        session = self.get_session(session_id, tenant_context=tenant_context)
+        summary_data = session.wizard_data.get("completion_summary")
+        if not summary_data:
+            raise WizardException(
+                f"Completion summary not found for session '{session_id}'. Wizard may not be completed."
+            )
+        return OnboardingCompletionSummary(**summary_data)
 
 
 # Global singleton wizard service
