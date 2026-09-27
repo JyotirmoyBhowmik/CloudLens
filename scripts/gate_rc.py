@@ -46,15 +46,22 @@ def main() -> None:
         ),
         (
             "WCAG 2.1 AA Accessibility Compliance Audit",
-            [sys.executable, "scripts/check_accessibility.py"],
+            [sys.executable, "scripts/run.py", "python", "scripts/check_accessibility.py"],
         ),
         (
             "Synthetic Multi-Provider Estate Generation (100k Resources with 0.00 Mathematical Drift)",
-            [sys.executable, "scripts/generate_synthetic_estate.py", "--count", "100000"],
+            [
+                sys.executable,
+                "scripts/run.py",
+                "python",
+                "scripts/generate_synthetic_estate.py",
+                "--count",
+                "100000",
+            ],
         ),
         (
             "Reproducible Container Build, CycloneDX SBOM & HMAC Signature Generation",
-            [sys.executable, "scripts/build_signed_container.py"],
+            [sys.executable, "scripts/run.py", "python", "scripts/build_signed_container.py"],
         ),
     ]
 

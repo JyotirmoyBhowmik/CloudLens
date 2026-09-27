@@ -840,3 +840,52 @@ class FirstSyncNotFoundException(WizardException):
             error_code="FIRST_SYNC_NOT_FOUND",
         )
         self.identifier = identifier
+
+
+class PricingException(DomainModelException):
+    """Base exception for all pricing catalogue violations (Prompt 20 / Rule 2.2)."""
+
+    def __init__(self, message: str, error_code: str = "PRICING_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class PricingRecordNotFoundException(PricingException):
+    """Raised when a pricing record cannot be found for given criteria and effective date."""
+
+    def __init__(
+        self,
+        provider: str,
+        sku: str,
+        region: str | None = None,
+        date_str: str | None = None,
+    ) -> None:
+        super().__init__(
+            f"No effective pricing record found for provider='{provider}', sku='{sku}', "
+            f"region='{region or 'any'}' on date='{date_str or 'current'}'.",
+            error_code="PRICING_RECORD_NOT_FOUND",
+        )
+        self.provider = provider
+        self.sku = sku
+        self.region = region
+        self.date_str = date_str
+
+
+class PricingSCDConflictException(PricingException):
+    """Raised when an illegal slowly changing dimension operation is attempted."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="PRICING_SCD_CONFLICT")
+
+
+class InvalidPricingTierException(PricingException):
+    """Raised when tier brackets are invalid (e.g. non-monotonic, negative)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_PRICING_TIER")
+
+
+class InvalidFreeAllowanceException(PricingException):
+    """Raised when free allowance structure is invalid or modeled as a boolean."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_FREE_ALLOWANCE")

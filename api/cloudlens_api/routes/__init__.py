@@ -13,6 +13,7 @@ from api.cloudlens_api.routes.diagnostics import router as diagnostics_router
 from api.cloudlens_api.routes.health import router as health_router
 from api.cloudlens_api.routes.masterdata import router as masterdata_router
 from api.cloudlens_api.routes.overrides import router as overrides_router
+from api.cloudlens_api.routes.pricing import router as pricing_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
 from api.cloudlens_api.routes.storage import router as storage_router
 from api.cloudlens_api.routes.sync import router as sync_router
@@ -32,6 +33,7 @@ __all__ = [
     "health_router",
     "masterdata_router",
     "overrides_router",
+    "pricing_router",
     "rbac_router",
     "storage_router",
     "sync_router",

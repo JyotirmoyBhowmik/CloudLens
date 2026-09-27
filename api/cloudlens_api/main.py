@@ -24,6 +24,7 @@ from api.cloudlens_api.routes import (
     health_router,
     masterdata_router,
     overrides_router,
+    pricing_router,
     rbac_router,
     storage_router,
     sync_router,
@@ -40,9 +41,14 @@ from domain.models.exceptions import (
     CustomRoleInvalidException,
     DomainModelException,
     FirstSyncNotFoundException,
+    InvalidFreeAllowanceException,
+    InvalidPricingTierException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
+    PricingException,
+    PricingRecordNotFoundException,
+    PricingSCDConflictException,
     QuotaExhaustedException,
     RBACException,
     SyncJobNotFoundException,
@@ -325,6 +331,33 @@ async def standardized_connector_exception_handler(request: Request, exc: Connec
     )
 
 
+@app.exception_handler(PricingException)
+async def standardized_pricing_exception_handler(request: Request, exc: PricingException):
+    """Pricing catalogue exception handler (Prompt 20 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, PricingRecordNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(
+        exc,
+        (InvalidPricingTierException, InvalidFreeAllowanceException, PricingSCDConflictException),
+    ):
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -342,6 +375,7 @@ app.include_router(storage_router)
 app.include_router(sync_router)
 app.include_router(wizard_router)
 app.include_router(diagnostics_router)
+app.include_router(pricing_router)
 
 
 class HealthResponse(BaseModel):
