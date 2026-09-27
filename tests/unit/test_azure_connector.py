@@ -23,6 +23,8 @@ Validates:
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from connectors.azure.auth import AzureAuthService
@@ -170,6 +172,58 @@ async def test_azure_discover_organizations_and_accounts(azure_connector: AzureC
     assert all(a["native_type"] == "subscription" for a in accounts)
 
 
+def test_azure_hierarchy_live_sandbox_and_custom_recorded_fixtures(
+    azure_connector: AzureConnector,
+):
+    """Verifies that recorded fixtures and live sandbox both produce correct canonical scope tree with ancestry."""
+    # 1. Live sandbox default estate
+    sandbox_tree = azure_connector.hierarchy_service.build_canonical_scope_tree()
+    assert len(sandbox_tree) >= 5
+    assert all("scope_path" in node and "ancestor_chain" in node for node in sandbox_tree)
+
+    # 2. Recorded custom ARM fixtures
+    recorded_fixtures: list[dict[str, Any]] = [
+        {
+            "id": "/providers/Microsoft.Management/managementGroups/mg-tenant-root",
+            "name": "mg-tenant-root",
+            "type": "Microsoft.Management/managementGroups",
+            "properties": {"displayName": "Recorded Root", "details": {"parent": None}},
+        },
+        {
+            "id": "/providers/Microsoft.Management/managementGroups/mg-custom-bu",
+            "name": "mg-custom-bu",
+            "type": "Microsoft.Management/managementGroups",
+            "properties": {
+                "displayName": "Recorded BU",
+                "details": {
+                    "parent": {
+                        "id": "/providers/Microsoft.Management/managementGroups/mg-tenant-root"
+                    }
+                },
+            },
+        },
+        {
+            "id": "/subscriptions/sub-rec-001",
+            "subscriptionId": "sub-rec-001",
+            "displayName": "Recorded Subscription",
+            "parent_id": "/providers/Microsoft.Management/managementGroups/mg-custom-bu",
+            "type": "Microsoft.Resources/subscriptions",
+        },
+    ]
+    custom_tree = azure_connector.hierarchy_service.build_canonical_scope_tree(
+        raw_items=recorded_fixtures
+    )
+    assert len(custom_tree) == 3
+
+    sub_rec = next(n for n in custom_tree if n["scope_id"] == "/subscriptions/sub-rec-001")
+    assert sub_rec["native_type"] == "subscription"
+    assert sub_rec["ancestor_chain"] == [
+        "/providers/Microsoft.Management/managementGroups/mg-tenant-root",
+        "/providers/Microsoft.Management/managementGroups/mg-custom-bu",
+    ]
+    assert sub_rec["scope_path"] == "/mg-tenant-root/mg-custom-bu/sub-rec-001"
+
+
 # ==============================================================================
 # 3. Resource Inventory & Latency Caveat
 # ==============================================================================
@@ -307,6 +361,31 @@ async def test_azure_cost_query_fallback(azure_connector: AzureConnector):
 
 
 @pytest.mark.asyncio
+async def test_azure_cost_ingestion_both_agreement_types_and_idempotency(
+    azure_connector: AzureConnector,
+):
+    """Cost ingestion works for both agreement types (EA and MCA) and is idempotent across re-runs."""
+    ea_scope = "/providers/Microsoft.Billing/billingAccounts/1234567/enrollmentAccounts/987"
+    mca_scope = "/providers/Microsoft.Billing/billingAccounts/ba-guid:0001/billingProfiles/bp-01"
+
+    # 1. EA scope ingestion run 1 and run 2
+    ea_records_1 = await azure_connector.collect_cost_bulk(scope_uri=ea_scope)
+    ea_records_2 = await azure_connector.collect_cost_bulk(scope_uri=ea_scope)
+
+    assert len(ea_records_1) >= 3
+    assert len(ea_records_1) == len(ea_records_2)
+    assert ea_records_1 == ea_records_2  # Idempotent across re-runs
+
+    # 2. MCA scope ingestion run 1 and run 2
+    mca_records_1 = await azure_connector.collect_cost_bulk(scope_uri=mca_scope)
+    mca_records_2 = await azure_connector.collect_cost_bulk(scope_uri=mca_scope)
+
+    assert len(mca_records_1) >= 3
+    assert len(mca_records_1) == len(mca_records_2)
+    assert mca_records_1 == mca_records_2  # Idempotent across re-runs
+
+
+@pytest.mark.asyncio
 async def test_azure_unsupported_offers_capability_gaps(azure_connector: AzureConnector):
     """Unsupported subscription offer types (Free Trial, Sponsored, MSDN) handled as capability gaps."""
     assert is_unsupported_cost_offer(AzureSubscriptionOffer.FREE_TRIAL.value) is True
@@ -368,6 +447,29 @@ async def test_azure_pricing_retail_and_negotiated_precedence(azure_connector: A
     assert quote_retail.is_negotiated is False
     assert quote_retail.effective_price == 0.192
     assert quote_retail.pricing_source == "retail_prices"
+
+
+@pytest.mark.asyncio
+async def test_azure_pricing_prohibits_usd_retail_as_local_currency_actuals(
+    azure_connector: AzureConnector,
+):
+    """Enforces Do Not rule: USD retail rates must never be presented as local-currency actuals."""
+    public_quotes = await azure_connector.collect_pricing_public()
+    for q in public_quotes:
+        # Must be strictly USD reference rate
+        assert q["retail_currency"] == "USD"
+        # Must be unambiguously labeled as retail
+        assert q["is_retail"] is True
+        assert q["is_negotiated"] is False
+        assert q["pricing_source"] == "retail_prices"
+
+    # When Price Sheet is present, retail rate is NOT effective price
+    meter_vm = "00000000-1111-2222-3333-444444444444"
+    entitled_quote = azure_connector.get_effective_pricing(meter_vm)
+    assert entitled_quote is not None
+    assert entitled_quote.is_retail is False
+    assert entitled_quote.is_negotiated is True
+    assert entitled_quote.effective_price < entitled_quote.retail_price
 
 
 # ==============================================================================
