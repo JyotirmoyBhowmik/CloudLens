@@ -997,3 +997,66 @@ class InvalidAssumptionException(CostCalculationException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="INVALID_ASSUMPTION")
+
+
+# ==============================================================================
+# Cost Reconciliation Exceptions (Prompt 24)
+# ==============================================================================
+
+
+class ReconciliationException(CostException):
+    """Base exception for cost reconciliation and tolerance violations (Prompt 24)."""
+
+    def __init__(self, message: str, error_code: str = "RECONCILIATION_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class ReconciliationReportNotFoundException(ReconciliationException):
+    """Raised when a reconciliation report cannot be found."""
+
+    def __init__(self, report_id: str) -> None:
+        super().__init__(
+            f"Reconciliation report '{report_id}' was not found.",
+            error_code="RECONCILIATION_REPORT_NOT_FOUND",
+        )
+        self.report_id = report_id
+
+
+class ReconciliationInvestigationNotFoundException(ReconciliationException):
+    """Raised when a reconciliation investigation item cannot be found."""
+
+    def __init__(self, item_id: str) -> None:
+        super().__init__(
+            f"Reconciliation investigation item '{item_id}' was not found.",
+            error_code="RECONCILIATION_INVESTIGATION_NOT_FOUND",
+        )
+        self.item_id = item_id
+
+
+class ReconciliationPeriodNotClosedException(ReconciliationException):
+    """Raised when attempting to execute authoritative reconciliation before period close and finalisation lag."""
+
+    def __init__(self, billing_period: str, provider: str, finalisation_date: str) -> None:
+        super().__init__(
+            f"Billing period '{billing_period}' for provider '{provider}' is not yet finalized. "
+            f"Authoritative finalisation lag requires waiting until '{finalisation_date}'.",
+            error_code="RECONCILIATION_PERIOD_NOT_CLOSED",
+        )
+        self.billing_period = billing_period
+        self.provider = provider
+        self.finalisation_date = finalisation_date
+
+
+class ReconciliationAdjustmentForbiddenException(ReconciliationException):
+    """Raised when an attempt is made to adjust ingested cost facts to force reconciliation.
+
+    STRICT: Negative constraint in Prompt 24: 'Do not adjust ingested cost data to force a match.'
+    """
+
+    def __init__(self, cost_fact_id: str) -> None:
+        super().__init__(
+            f"Adjustment of cost fact '{cost_fact_id}' to force reconciliation match is strictly prohibited. "
+            "Ingested cost data must remain authoritative and immutable.",
+            error_code="RECONCILIATION_ADJUSTMENT_FORBIDDEN",
+        )
+        self.cost_fact_id = cost_fact_id

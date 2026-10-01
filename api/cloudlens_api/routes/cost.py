@@ -37,8 +37,26 @@ from domain.cost.models import (
     IngestionJobResult,
 )
 from domain.cost.pipeline import CostIngestionPipeline, get_cost_pipeline
+from domain.cost.reconciliation import (
+    CostReconciliationEngine,
+    EstimateVsActualItem,
+    EstimateVsActualReport,
+    ExecutiveTrustIndicator,
+    InvestigationStatus,
+    ReconciliationHistorySummary,
+    ReconciliationInvestigationItem,
+    ReconciliationReport,
+    ReconciliationRepository,
+    ReconciliationStatus,
+    RunReconciliationRequest,
+    get_cost_reconciliation_engine,
+    get_reconciliation_repository,
+)
 from domain.cost.repository import CostFactRepository, get_cost_repository
 from domain.models.enums import ChargeCategory
+from domain.models.exceptions import (
+    ReconciliationReportNotFoundException,
+)
 from domain.pricing.traceability import FreshnessIndicator
 from domain.tenant.context import TenantContext
 
@@ -285,3 +303,238 @@ async def get_estimate_supported_services(
         },
         "extensible": True,
     }
+
+
+# ==============================================================================
+# Cost Reconciliation & Executive Trust Endpoints (Prompt 24)
+# ==============================================================================
+
+
+class UpdateInvestigationRequest(BaseModel):
+    """Payload to update investigation status and auditor notes."""
+
+    status: InvestigationStatus
+    notes: str | None = None
+
+
+class EvaluateEstimateVsActualRequest(BaseModel):
+    """Payload to evaluate pre-deployment estimates against actual FOCUS billed costs."""
+
+    billing_period: str = Field(
+        ..., min_length=7, max_length=7, description="Billing period YYYY-MM"
+    )
+    estimates: list[dict[str, Any]] = Field(
+        ..., min_length=1, description="List of pre-deployment estimates"
+    )
+
+
+class AdjustCostFactRequest(BaseModel):
+    """Payload attempting to adjust cost data (strictly forbidden by Prompt 24)."""
+
+    cost_fact_id: str = Field(..., min_length=1, description="Cost fact ID")
+    adjusted_amount: Decimal = Field(..., description="Target adjusted amount")
+
+
+@router.post(
+    "/reconciliation/run",
+    response_model=ReconciliationReport,
+    status_code=status.HTTP_200_OK,
+)
+async def run_cost_reconciliation(
+    request: RunReconciliationRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    engine: CostReconciliationEngine = Depends(get_cost_reconciliation_engine),
+) -> ReconciliationReport:
+    """Executes period reconciliation comparing platform normalised total against authoritative provider total.
+
+    Enforces finalisation lag check, tolerance evaluation, deterministic variance classification,
+    and non-editorialised framing statement.
+    """
+    return engine.run_reconciliation(request, tenant_context=tenant_context)
+
+
+@router.get(
+    "/reconciliation/reports",
+    response_model=list[ReconciliationReport],
+    status_code=status.HTTP_200_OK,
+)
+async def list_reconciliation_reports(
+    billing_period: str | None = Query(default=None, description="Billing period format YYYY-MM"),
+    provider: str | None = Query(default=None, description="Cloud provider identifier"),
+    scope_id: str | None = Query(default=None, description="Scope identifier"),
+    recon_status: ReconciliationStatus | None = Query(
+        default=None, alias="status", description="Filter by PASS or FAILED"
+    ),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    repository: ReconciliationRepository = Depends(get_reconciliation_repository),
+) -> list[ReconciliationReport]:
+    """Lists reconciliation audit reports for tenant with optional filters."""
+    filters = {
+        "billing_period": billing_period,
+        "provider": provider,
+        "scope_id": scope_id,
+        "status": recon_status,
+    }
+    return repository.list(
+        tenant_context=tenant_context,
+        filter_params=filters,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get(
+    "/reconciliation/reports/{report_id}",
+    response_model=ReconciliationReport,
+    status_code=status.HTTP_200_OK,
+)
+async def get_reconciliation_report(
+    report_id: str,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    repository: ReconciliationRepository = Depends(get_reconciliation_repository),
+) -> ReconciliationReport:
+    """Retrieves a single reconciliation report by ID.
+
+    Returns 404 if report is not found.
+    """
+    report = repository.get(report_id, tenant_context=tenant_context)
+    if not report:
+        raise ReconciliationReportNotFoundException(report_id)
+    return report
+
+
+@router.get(
+    "/reconciliation/executive-trust",
+    response_model=ExecutiveTrustIndicator,
+    status_code=status.HTTP_200_OK,
+)
+async def get_executive_trust_indicator(
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    engine: CostReconciliationEngine = Depends(get_cost_reconciliation_engine),
+) -> ExecutiveTrustIndicator:
+    """Surfaces the executive adoption trust indicator.
+
+    Single most important number for platform credibility.
+    STRICT: Failed reconciliations are NEVER suppressed from this metric.
+    """
+    return engine.compute_executive_trust_indicator(tenant_context=tenant_context)
+
+
+@router.get(
+    "/reconciliation/investigations",
+    response_model=list[ReconciliationInvestigationItem],
+    status_code=status.HTTP_200_OK,
+)
+async def list_reconciliation_investigations(
+    investigation_status: InvestigationStatus | None = Query(
+        default=None, alias="status", description="Investigation status filter"
+    ),
+    provider: str | None = Query(default=None, description="Provider filter"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    repository: ReconciliationRepository = Depends(get_reconciliation_repository),
+) -> list[ReconciliationInvestigationItem]:
+    """Lists reconciliation investigation items raised when tolerance failed."""
+    return repository.list_investigation_items(
+        tenant_context=tenant_context,
+        status=investigation_status,
+        provider=provider,
+    )
+
+
+@router.patch(
+    "/reconciliation/investigations/{item_id}",
+    response_model=ReconciliationInvestigationItem,
+    status_code=status.HTTP_200_OK,
+)
+async def update_reconciliation_investigation(
+    item_id: str,
+    body: UpdateInvestigationRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    repository: ReconciliationRepository = Depends(get_reconciliation_repository),
+) -> ReconciliationInvestigationItem:
+    """Updates investigation item lifecycle status and auditor investigation notes."""
+    return repository.update_investigation_item(
+        item_id=item_id,
+        status=body.status,
+        notes=body.notes,
+        tenant_context=tenant_context,
+    )
+
+
+@router.get(
+    "/reconciliation/history",
+    response_model=ReconciliationHistorySummary,
+    status_code=status.HTTP_200_OK,
+)
+async def get_reconciliation_history(
+    provider: str | None = Query(default=None, description="Optional provider filter"),
+    scope_id: str | None = Query(default=None, description="Optional scope filter"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    engine: CostReconciliationEngine = Depends(get_cost_reconciliation_engine),
+) -> ReconciliationHistorySummary:
+    """Returns chronological reconciliation history and variance trend direction."""
+    return engine.get_reconciliation_history_trend(
+        tenant_context=tenant_context,
+        provider=provider,
+        scope_id=scope_id,
+    )
+
+
+@router.post(
+    "/reconciliation/estimate-vs-actual/evaluate",
+    response_model=EstimateVsActualReport,
+    status_code=status.HTTP_200_OK,
+)
+async def evaluate_estimate_accuracy(
+    payload: EvaluateEstimateVsActualRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    engine: CostReconciliationEngine = Depends(get_cost_reconciliation_engine),
+) -> EstimateVsActualReport:
+    """Evaluates pre-deployment estimates against actual billed FOCUS costs.
+
+    Separate from platform-vs-provider reconciliation to evaluate platform estimation accuracy.
+    """
+    return engine.evaluate_estimate_vs_actual(
+        billing_period=payload.billing_period,
+        estimates=payload.estimates,
+        tenant_context=tenant_context,
+    )
+
+
+@router.get(
+    "/reconciliation/estimate-vs-actual",
+    response_model=list[EstimateVsActualItem],
+    status_code=status.HTTP_200_OK,
+)
+async def list_estimate_vs_actual_items(
+    billing_period: str | None = Query(default=None, description="Billing period format YYYY-MM"),
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    repository: ReconciliationRepository = Depends(get_reconciliation_repository),
+) -> list[EstimateVsActualItem]:
+    """Lists line-by-line estimate vs actual comparison items."""
+    return repository.list_estimate_vs_actual(
+        tenant_context=tenant_context,
+        billing_period=billing_period,
+    )
+
+
+@router.post(
+    "/reconciliation/adjust-fact",
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+)
+async def adjust_cost_fact_for_match(
+    payload: AdjustCostFactRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    engine: CostReconciliationEngine = Depends(get_cost_reconciliation_engine),
+) -> None:
+    """Strictly forbidden endpoint demonstrating enforcement of Prompt 24 negative constraint.
+
+    'Do not adjust ingested cost data to force a match.'
+    Always raises ReconciliationAdjustmentForbiddenException.
+    """
+    engine.adjust_cost_data_for_match(
+        cost_fact_id=payload.cost_fact_id,
+        tenant_context=tenant_context,
+    )

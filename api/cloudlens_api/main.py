@@ -54,6 +54,8 @@ from domain.models.exceptions import (
     PricingSCDConflictException,
     QuotaExhaustedException,
     RBACException,
+    ReconciliationInvestigationNotFoundException,
+    ReconciliationReportNotFoundException,
     SyncJobNotFoundException,
     TenantContextException,
     UndeclaredCapabilityException,
@@ -368,6 +370,10 @@ async def standardized_cost_exception_handler(request: Request, exc: CostExcepti
     correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
     if isinstance(exc, (UnknownSchemaVersionException, CurrencyConversionException)):
         status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(
+        exc, (ReconciliationReportNotFoundException, ReconciliationInvestigationNotFoundException)
+    ):
+        status_code = status.HTTP_404_NOT_FOUND
     else:
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
 

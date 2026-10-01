@@ -3,7 +3,7 @@
 Enforces **Mandate M2** and **Prompt 48 Item 35**.
 Every allow-listed literal in application code must be approved with a named reason and reviewer.
 
-**Last Updated:** 2026-10-01 17:26:58Z | **Total Exceptions:** 2
+**Last Updated:** 2026-10-01 18:16:58Z | **Total Exceptions:** 2
 
 | File Path | Line | Literal | Business Rationale | Approving Reviewer |
 | :--- | :--- | :--- | :--- | :--- |
