@@ -18,6 +18,7 @@ from api.cloudlens_api.routes.pricing import router as pricing_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
 from api.cloudlens_api.routes.storage import router as storage_router
 from api.cloudlens_api.routes.sync import router as sync_router
+from api.cloudlens_api.routes.usage import router as usage_router
 from api.cloudlens_api.routes.wizard import router as wizard_router
 
 __all__ = [
@@ -39,5 +40,6 @@ __all__ = [
     "rbac_router",
     "storage_router",
     "sync_router",
+    "usage_router",
     "wizard_router",
 ]

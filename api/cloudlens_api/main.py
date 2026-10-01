@@ -29,6 +29,7 @@ from api.cloudlens_api.routes import (
     rbac_router,
     storage_router,
     sync_router,
+    usage_router,
     wizard_router,
 )
 from domain.models.exceptions import (
@@ -43,9 +44,13 @@ from domain.models.exceptions import (
     CurrencyConversionException,
     CustomRoleInvalidException,
     DomainModelException,
+    ExpectationNotFoundException,
     FirstSyncNotFoundException,
+    InterpolationLabelRequiredException,
     InvalidFreeAllowanceException,
     InvalidPricingTierException,
+    MetricNotApplicableException,
+    MonitoringTypeNotFoundException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
@@ -56,10 +61,12 @@ from domain.models.exceptions import (
     RBACException,
     ReconciliationInvestigationNotFoundException,
     ReconciliationReportNotFoundException,
+    SubHourlyCollectionForbiddenException,
     SyncJobNotFoundException,
     TenantContextException,
     UndeclaredCapabilityException,
     UnknownSchemaVersionException,
+    UsageException,
     WizardSessionNotFoundException,
 )
 from domain.observability import (
@@ -390,6 +397,37 @@ async def standardized_cost_exception_handler(request: Request, exc: CostExcepti
     )
 
 
+@app.exception_handler(UsageException)
+async def standardized_usage_exception_handler(request: Request, exc: UsageException):
+    """Usage telemetry and monitoring exception handler (Prompt 25 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(
+        exc,
+        (
+            SubHourlyCollectionForbiddenException,
+            MetricNotApplicableException,
+            InterpolationLabelRequiredException,
+        ),
+    ):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, (ExpectationNotFoundException, MonitoringTypeNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -409,6 +447,7 @@ app.include_router(wizard_router)
 app.include_router(diagnostics_router)
 app.include_router(pricing_router)
 app.include_router(cost_router)
+app.include_router(usage_router)
 
 
 class HealthResponse(BaseModel):

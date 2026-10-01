@@ -1060,3 +1060,88 @@ class ReconciliationAdjustmentForbiddenException(ReconciliationException):
             error_code="RECONCILIATION_ADJUSTMENT_FORBIDDEN",
         )
         self.cost_fact_id = cost_fact_id
+
+
+# ==============================================================================
+# Usage & Metric Collection Exceptions (Prompt 25 / BBP Section 19)
+# ==============================================================================
+
+
+class UsageException(DomainModelException):
+    """Base domain exception for usage collection and monitoring violations."""
+
+    def __init__(self, message: str, error_code: str = "USAGE_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class SubHourlyCollectionForbiddenException(UsageException):
+    """Raised when an attempt is made to configure or collect telemetry at sub-hourly granularity.
+
+    STRICT: Negative constraint in Prompt 25: 'Do not implement sub-hourly collection.'
+    """
+
+    def __init__(self, granularity: str | int) -> None:
+        super().__init__(
+            f"Sub-hourly usage collection ('{granularity}') is strictly prohibited. "
+            "CloudLens enforces coarse-grained usage collection (hourly or daily) to prevent "
+            "excessive provider API call costs and avoid becoming an operational monitoring platform.",
+            error_code="SUB_HOURLY_COLLECTION_FORBIDDEN",
+        )
+        self.granularity = granularity
+
+
+class MetricNotApplicableException(UsageException):
+    """Raised when attempting to collect or ingest a metric not permitted for the resource's monitoring type.
+
+    STRICT: Negative constraint in Prompt 25: 'Do not collect metrics a monitoring type does not require.'
+    """
+
+    def __init__(
+        self, metric_name: str, monitoring_type: str, resource_id: str | None = None
+    ) -> None:
+        target_info = f" on resource '{resource_id}'" if resource_id else ""
+        super().__init__(
+            f"Metric '{metric_name}' is not permitted for monitoring type '{monitoring_type}'{target_info}. "
+            "Cardinality discipline restricts collection strictly to metrics required by the monitoring type.",
+            error_code="METRIC_NOT_APPLICABLE",
+        )
+        self.metric_name = metric_name
+        self.monitoring_type = monitoring_type
+        self.resource_id = resource_id
+
+
+class InterpolationLabelRequiredException(UsageException):
+    """Raised when attempting to interpolate a telemetry gap without an explicit label.
+
+    STRICT: Negative constraint in Prompt 25: 'Do not interpolate a gap without labelling it.'
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Interpolation of telemetry gaps must be explicitly labeled. "
+            "Silent gap interpolation is forbidden per Prompt 25 cardinality and truth discipline.",
+            error_code="INTERPOLATION_LABEL_REQUIRED",
+        )
+
+
+class ExpectationNotFoundException(UsageException):
+    """Raised when a usage expectation cannot be found."""
+
+    def __init__(self, expectation_id: str) -> None:
+        super().__init__(
+            f"Usage expectation '{expectation_id}' was not found.",
+            error_code="EXPECTATION_NOT_FOUND",
+        )
+        self.expectation_id = expectation_id
+
+
+class MonitoringTypeNotFoundException(UsageException):
+    """Raised when an unknown monitoring type is referenced."""
+
+    def __init__(self, monitoring_type: str) -> None:
+        super().__init__(
+            f"Monitoring type '{monitoring_type}' is invalid or unknown. "
+            "Supported types are MT-01 through MT-15.",
+            error_code="MONITORING_TYPE_NOT_FOUND",
+        )
+        self.monitoring_type = monitoring_type
