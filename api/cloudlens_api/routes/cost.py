@@ -19,6 +19,12 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
+from domain.cost.calculation import (
+    PreDeploymentEstimateRequest,
+    PreDeploymentEstimateResult,
+    PreDeploymentEstimator,
+    get_pre_deployment_estimator,
+)
 from domain.cost.currency_service import (
     CurrencyConversionService,
     get_currency_service,
@@ -236,3 +242,46 @@ async def drill_through_cost(
         billing_period=billing_period,
         has_financial_permission=has_financial_permission,
     )
+
+
+@router.post(
+    "/estimate",
+    response_model=PreDeploymentEstimateResult,
+    status_code=status.HTTP_200_OK,
+)
+async def calculate_pre_deployment_estimate(
+    request: PreDeploymentEstimateRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    estimator: PreDeploymentEstimator = Depends(get_pre_deployment_estimator),
+) -> PreDeploymentEstimateResult:
+    """Calculates pre-deployment estimated costs ('What will this cost?') across time horizons (Prompt 23).
+
+    Produces hourly, daily, monthly, and annualised costs with cost-driver decomposition
+    and full derivation.
+    """
+    # Inherit tenant scope if not explicitly overridden
+    effective_req = request.model_copy(
+        update={"tenant_id": request.tenant_id or tenant_context.tenant_id}
+    )
+    return estimator.estimate(effective_req)
+
+
+@router.get(
+    "/estimate/supported-services",
+    status_code=status.HTTP_200_OK,
+)
+async def get_estimate_supported_services(
+    _tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> dict[str, Any]:
+    """Returns supported cloud providers, core services, and default configurations."""
+    return {
+        "providers": ["aws", "azure", "gcp", "oci"],
+        "core_categories": ["COMPUTE", "DATABASE", "OBJECT_STORAGE", "BLOCK_STORAGE"],
+        "services": {
+            "aws": ["AmazonEC2", "AmazonRDS", "AmazonS3", "AmazonEBS"],
+            "azure": ["Virtual Machines", "Azure SQL Database", "Blob Storage", "Managed Disks"],
+            "gcp": ["Compute Engine", "Cloud SQL", "Cloud Storage", "Persistent Disk"],
+            "oci": ["Compute", "Base Database Service", "Object Storage", "Block Volume"],
+        },
+        "extensible": True,
+    }

@@ -150,6 +150,85 @@ class ForecastCost(CostValue):
     confidence_interval_high: float | None = Field(default=None, description="Upper bound")
     forecast_horizon_days: int = Field(default=30, ge=1)
 
+    def __add__(self, other: Any) -> ForecastCost:
+        """Enforces type safety: ForecastCost can ONLY be added to another ForecastCost."""
+        if not isinstance(other, ForecastCost):
+            raise IncompatibleCostTypeError(
+                f"Cannot sum ForecastCost with {type(other).__name__}. "
+                "The four core cost types must remain strictly separated per Prompt 23."
+            )
+        if self.currency != other.currency:
+            raise IncompatibleCostTypeError(
+                f"Currency mismatch in ForecastCost summation: '{self.currency}' != '{other.currency}'."
+            )
+        return ForecastCost(
+            amount=round(self.amount + other.amount, 6),
+            currency=self.currency,
+            forecast_model=self.forecast_model,
+            forecast_horizon_days=max(self.forecast_horizon_days, other.forecast_horizon_days),
+        )
+
+    def __radd__(self, other: Any) -> ForecastCost:
+        """Enforces type safety on reverse addition."""
+        if not isinstance(other, ForecastCost):
+            raise IncompatibleCostTypeError(
+                f"Cannot sum ForecastCost with {type(other).__name__}. "
+                "The four core cost types must remain strictly separated per Prompt 23."
+            )
+        return self.__add__(other)
+
+
+class ProviderListPrice(CostValue):
+    """Provider public list/retail price per Prompt 23 (Four-Value Separation)."""
+
+    source_classification: Literal[CostSourceClassification.MANUAL] = (
+        CostSourceClassification.MANUAL
+    )
+    is_actual: Literal[False] = False
+    is_estimate: Literal[False] = False
+    is_list_price: Literal[True] = True
+    provider: str = Field(default="unknown", description="Cloud provider")
+    service: str = Field(default="unknown", description="Service name")
+    sku: str | None = Field(default=None, description="Service SKU")
+    rate_unit: str = Field(default="unit", description="Rate unit of measure")
+
+    def __add__(self, other: Any) -> ProviderListPrice:
+        """Enforces type safety: ProviderListPrice can ONLY be added to another ProviderListPrice."""
+        if not isinstance(other, ProviderListPrice):
+            raise IncompatibleCostTypeError(
+                f"Cannot sum ProviderListPrice with {type(other).__name__}. "
+                "The four core cost types (List Price, Estimated Cost, Actual Cost, Forecast Cost) "
+                "must remain strictly separated per Prompt 23."
+            )
+        if self.currency != other.currency:
+            raise IncompatibleCostTypeError(
+                f"Currency mismatch in ProviderListPrice summation: '{self.currency}' != '{other.currency}'."
+            )
+        return ProviderListPrice(
+            amount=round(self.amount + other.amount, 6),
+            currency=self.currency,
+            provider=self.provider,
+            service=self.service,
+            sku=f"{self.sku}+{other.sku}" if self.sku and other.sku else (self.sku or other.sku),
+            rate_unit=self.rate_unit,
+        )
+
+    def __radd__(self, other: Any) -> ProviderListPrice:
+        """Enforces type safety on reverse addition."""
+        if not isinstance(other, ProviderListPrice):
+            raise IncompatibleCostTypeError(
+                f"Cannot sum ProviderListPrice with {type(other).__name__}. "
+                "The four core cost types must remain strictly separated per Prompt 23."
+            )
+        return self.__add__(other)
+
+
+# Four-Value Separation First-Class Aliases (Prompt 23)
+ListPrice = ProviderListPrice
+EstimatedEffectiveCost = EstimatedCost
+ActualBilledCost = ActualCost
+ForecastCostValue = ForecastCost
+
 
 class ManualCost(CostValue):
     """Cost value manually entered or overridden by an administrator (Item 160)."""

@@ -7,6 +7,21 @@ and multi-currency presentation.
 
 from __future__ import annotations
 
+from domain.cost.calculation import (
+    CostCalculationEngine,
+    CostCategoryType,
+    CostDerivation,
+    CostDriverComponent,
+    PreDeploymentEstimateRequest,
+    PreDeploymentEstimateResult,
+    PreDeploymentEstimator,
+    RuntimeScheduleType,
+    TierStepDerivation,
+    get_calculation_engine,
+    get_pre_deployment_estimator,
+    reset_calculation_engine,
+    reset_pre_deployment_estimator,
+)
 from domain.cost.currency_service import (
     CurrencyConversionService,
     get_currency_service,
@@ -37,6 +52,10 @@ from domain.cost.schema_guard import SchemaVersionGuard
 __all__ = [
     "ConvertedCostFigure",
     "CostAggregateNode",
+    "CostCalculationEngine",
+    "CostCategoryType",
+    "CostDerivation",
+    "CostDriverComponent",
     "CostFactRepository",
     "CostIngestionPipeline",
     "CostPresentationBasis",
@@ -46,11 +65,20 @@ __all__ = [
     "FocusCostFact",
     "FocusMapper",
     "IngestionJobResult",
+    "PreDeploymentEstimateRequest",
+    "PreDeploymentEstimateResult",
+    "PreDeploymentEstimator",
+    "RuntimeScheduleType",
     "SchemaVersionGuard",
+    "TierStepDerivation",
+    "get_calculation_engine",
     "get_cost_pipeline",
     "get_cost_repository",
     "get_currency_service",
+    "get_pre_deployment_estimator",
+    "reset_calculation_engine",
     "reset_cost_pipeline",
     "reset_cost_repository",
     "reset_currency_service",
+    "reset_pre_deployment_estimator",
 ]

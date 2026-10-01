@@ -199,6 +199,9 @@ class CurrencyConversionService:
             disclosure=disclosure,
         )
 
+    # Alias for naming consistency
+    convert_query_time = convert_at_query_time
+
 
 _DEFAULT_CURRENCY_SERVICE: CurrencyConversionService | None = None
 

@@ -964,3 +964,36 @@ class CurrencyConversionException(CostException):
         self.from_currency = from_currency
         self.to_currency = to_currency
         self.as_of_date = as_of_date
+
+
+# ==============================================================================
+# Cost Calculation and Estimation Exceptions (Prompt 23)
+# ==============================================================================
+
+
+class CostCalculationException(CostException):
+    """Base exception for cost calculation and pre-deployment estimation violations (Prompt 23)."""
+
+    def __init__(self, message: str, error_code: str = "COST_CALCULATION_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class PricingUnavailableException(CostCalculationException):
+    """Raised when pricing cannot be resolved for a requested service/SKU and a strict quote is required."""
+
+    def __init__(self, provider: str, service: str, region: str, reason: str | None = None) -> None:
+        msg = f"Pricing unavailable for provider='{provider}', service='{service}', region='{region}'."
+        if reason:
+            msg += f" Reason: {reason}"
+        super().__init__(msg, error_code="PRICING_UNAVAILABLE")
+        self.provider = provider
+        self.service = service
+        self.region = region
+        self.reason = reason
+
+
+class InvalidAssumptionException(CostCalculationException):
+    """Raised when user-defined or platform estimation assumptions are invalid."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_ASSUMPTION")

@@ -705,3 +705,421 @@ class PricingRepository:
             None, "oci", "B88298", "us-ashburn-1", "DIM-14", RateType.CONTRACTED
         )
         self._natural_index.setdefault(key_oci_contracted, []).append(oci_vm_contracted)
+
+        # 6. Multi-Cloud Managed Database, Block Storage, and Network Seeds (Prompt 23)
+        # 6a. AWS Seeds
+        aws_rds_record = PricingRecord(
+            provider="aws",
+            service="AmazonRDS",
+            service_sku="AWS-RDS-DB-R5-2XLARGE",
+            resource_type="database_instance",
+            region="us-east-1",
+            pricing_dimension="DIM-03",
+            unit="Hrs",
+            unit_price=0.4800,
+            currency="USD",
+            effective_from=hist_time,
+            source="aws_price_list_bulk",
+            attributes={"engine": "PostgreSQL", "instanceType": "db.r5.2xlarge"},
+        )
+        self._records[aws_rds_record.id] = aws_rds_record
+        k_aws_rds = self._build_key(
+            None, "aws", "AWS-RDS-DB-R5-2XLARGE", "us-east-1", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_aws_rds, []).append(aws_rds_record)
+
+        aws_ebs_record = PricingRecord(
+            provider="aws",
+            service="AmazonEBS",
+            service_sku="AWS-EBS-GP3-STORAGE",
+            resource_type="block_storage",
+            region="us-east-1",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.0800,
+            currency="USD",
+            effective_from=hist_time,
+            source="aws_price_list_bulk",
+            attributes={"volumeType": "gp3"},
+        )
+        self._records[aws_ebs_record.id] = aws_ebs_record
+        k_aws_ebs = self._build_key(
+            None, "aws", "AWS-EBS-GP3-STORAGE", "us-east-1", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_aws_ebs, []).append(aws_ebs_record)
+
+        aws_egress_record = PricingRecord(
+            provider="aws",
+            service="AmazonEC2",
+            service_sku="AWS-DATA-TRANSFER-OUT-INTERNET",
+            resource_type="network_transfer",
+            region="us-east-1",
+            pricing_dimension="DIM-12",
+            unit="GB",
+            unit_price=0.0900,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=100.0,
+                unit="GB",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0900,
+            ),
+            effective_from=hist_time,
+            source="aws_price_list_bulk",
+        )
+        self._records[aws_egress_record.id] = aws_egress_record
+        k_aws_egress = self._build_key(
+            None, "aws", "AWS-DATA-TRANSFER-OUT-INTERNET", "us-east-1", "DIM-12", RateType.LIST
+        )
+        self._natural_index.setdefault(k_aws_egress, []).append(aws_egress_record)
+
+        aws_ip_record = PricingRecord(
+            provider="aws",
+            service="AmazonEC2",
+            service_sku="AWS-PUBLIC-IPV4-ADDRESS",
+            resource_type="ip_address",
+            region="us-east-1",
+            pricing_dimension="DIM-03",
+            unit="Hrs",
+            unit_price=0.0050,
+            currency="USD",
+            effective_from=hist_time,
+            source="aws_price_list_bulk",
+        )
+        self._records[aws_ip_record.id] = aws_ip_record
+        k_aws_ip = self._build_key(
+            None, "aws", "AWS-PUBLIC-IPV4-ADDRESS", "us-east-1", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_aws_ip, []).append(aws_ip_record)
+
+        # 6b. Azure Seeds
+        az_sql_record = PricingRecord(
+            provider="azure",
+            service="Azure SQL Database",
+            service_sku="AZURE-SQL-GEN5-4VCORE",
+            resource_type="database_instance",
+            region="eastus",
+            pricing_dimension="DIM-03",
+            unit="1 Hour",
+            unit_price=0.5400,
+            currency="USD",
+            effective_from=hist_time,
+            source="azure_retail_prices_api",
+            attributes={"tier": "General Purpose", "compute": "4 vCore Gen5"},
+        )
+        self._records[az_sql_record.id] = az_sql_record
+        k_az_sql = self._build_key(
+            None, "azure", "AZURE-SQL-GEN5-4VCORE", "eastus", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_az_sql, []).append(az_sql_record)
+
+        az_disk_record = PricingRecord(
+            provider="azure",
+            service="Managed Disks",
+            service_sku="AZURE-DISK-PREMIUM-SSD-P10",
+            resource_type="block_storage",
+            region="eastus",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.1000,
+            currency="USD",
+            effective_from=hist_time,
+            source="azure_retail_prices_api",
+            attributes={"diskType": "Premium SSD"},
+        )
+        self._records[az_disk_record.id] = az_disk_record
+        k_az_disk = self._build_key(
+            None, "azure", "AZURE-DISK-PREMIUM-SSD-P10", "eastus", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_az_disk, []).append(az_disk_record)
+
+        az_blob_record = PricingRecord(
+            provider="azure",
+            service="Blob Storage",
+            service_sku="AZURE-BLOB-HOT-LRS",
+            resource_type="object_storage",
+            region="eastus",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.0180,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=5.0,
+                unit="GB-Mo",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0180,
+            ),
+            effective_from=hist_time,
+            source="azure_retail_prices_api",
+            attributes={"accessTier": "Hot", "redundancy": "LRS"},
+        )
+        self._records[az_blob_record.id] = az_blob_record
+        k_az_blob = self._build_key(
+            None, "azure", "AZURE-BLOB-HOT-LRS", "eastus", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_az_blob, []).append(az_blob_record)
+
+        az_egress_record = PricingRecord(
+            provider="azure",
+            service="Virtual Machines",
+            service_sku="AZURE-BANDWIDTH-EGRESS-INTERNET",
+            resource_type="network_transfer",
+            region="eastus",
+            pricing_dimension="DIM-12",
+            unit="GB",
+            unit_price=0.0870,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=100.0,
+                unit="GB",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0870,
+            ),
+            effective_from=hist_time,
+            source="azure_retail_prices_api",
+        )
+        self._records[az_egress_record.id] = az_egress_record
+        k_az_egress = self._build_key(
+            None, "azure", "AZURE-BANDWIDTH-EGRESS-INTERNET", "eastus", "DIM-12", RateType.LIST
+        )
+        self._natural_index.setdefault(k_az_egress, []).append(az_egress_record)
+
+        az_ip_record = PricingRecord(
+            provider="azure",
+            service="Virtual Machines",
+            service_sku="AZURE-PUBLIC-IP-STANDARD",
+            resource_type="ip_address",
+            region="eastus",
+            pricing_dimension="DIM-03",
+            unit="1 Hour",
+            unit_price=0.0050,
+            currency="USD",
+            effective_from=hist_time,
+            source="azure_retail_prices_api",
+        )
+        self._records[az_ip_record.id] = az_ip_record
+        k_az_ip = self._build_key(
+            None, "azure", "AZURE-PUBLIC-IP-STANDARD", "eastus", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_az_ip, []).append(az_ip_record)
+
+        # 6c. GCP Seeds
+        gcp_sql_record = PricingRecord(
+            provider="gcp",
+            service="Cloud SQL",
+            service_sku="GCP-CLOUDSQL-PG-CUSTOM-4-16",
+            resource_type="database_instance",
+            region="us-central1",
+            pricing_dimension="DIM-03",
+            unit="h",
+            unit_price=0.2600,
+            currency="USD",
+            effective_from=hist_time,
+            source="gcp_billing_catalog",
+            attributes={"databaseEngine": "PostgreSQL", "tier": "db-custom-4-16384"},
+        )
+        self._records[gcp_sql_record.id] = gcp_sql_record
+        k_gcp_sql = self._build_key(
+            None, "gcp", "GCP-CLOUDSQL-PG-CUSTOM-4-16", "us-central1", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_gcp_sql, []).append(gcp_sql_record)
+
+        gcp_disk_record = PricingRecord(
+            provider="gcp",
+            service="Persistent Disk",
+            service_sku="GCP-DISK-PD-BALANCED",
+            resource_type="block_storage",
+            region="us-central1",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.1000,
+            currency="USD",
+            effective_from=hist_time,
+            source="gcp_billing_catalog",
+            attributes={"diskType": "pd-balanced"},
+        )
+        self._records[gcp_disk_record.id] = gcp_disk_record
+        k_gcp_disk = self._build_key(
+            None, "gcp", "GCP-DISK-PD-BALANCED", "us-central1", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_gcp_disk, []).append(gcp_disk_record)
+
+        gcp_storage_record = PricingRecord(
+            provider="gcp",
+            service="Cloud Storage",
+            service_sku="GCP-STORAGE-STANDARD-REGIONAL",
+            resource_type="object_storage",
+            region="us-central1",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.0200,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=5.0,
+                unit="GB-Mo",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0200,
+            ),
+            effective_from=hist_time,
+            source="gcp_billing_catalog",
+            attributes={"storageClass": "Standard"},
+        )
+        self._records[gcp_storage_record.id] = gcp_storage_record
+        k_gcp_store = self._build_key(
+            None, "gcp", "GCP-STORAGE-STANDARD-REGIONAL", "us-central1", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_gcp_store, []).append(gcp_storage_record)
+
+        gcp_egress_record = PricingRecord(
+            provider="gcp",
+            service="Compute Engine",
+            service_sku="GCP-NETWORK-INTERNET-EGRESS",
+            resource_type="network_transfer",
+            region="us-central1",
+            pricing_dimension="DIM-12",
+            unit="GB",
+            unit_price=0.0850,
+            currency="USD",
+            effective_from=hist_time,
+            source="gcp_billing_catalog",
+        )
+        self._records[gcp_egress_record.id] = gcp_egress_record
+        k_gcp_egress = self._build_key(
+            None, "gcp", "GCP-NETWORK-INTERNET-EGRESS", "us-central1", "DIM-12", RateType.LIST
+        )
+        self._natural_index.setdefault(k_gcp_egress, []).append(gcp_egress_record)
+
+        gcp_ip_record = PricingRecord(
+            provider="gcp",
+            service="Compute Engine",
+            service_sku="GCP-NETWORK-STATIC-IP",
+            resource_type="ip_address",
+            region="us-central1",
+            pricing_dimension="DIM-03",
+            unit="h",
+            unit_price=0.0040,
+            currency="USD",
+            effective_from=hist_time,
+            source="gcp_billing_catalog",
+        )
+        self._records[gcp_ip_record.id] = gcp_ip_record
+        k_gcp_ip = self._build_key(
+            None, "gcp", "GCP-NETWORK-STATIC-IP", "us-central1", "DIM-03", RateType.LIST
+        )
+        self._natural_index.setdefault(k_gcp_ip, []).append(gcp_ip_record)
+
+        # 6d. OCI Seeds
+        oci_db_record = PricingRecord(
+            provider="oci",
+            service="Base Database Service",
+            service_sku="OCI-ADB-ECPU",
+            resource_type="database_instance",
+            region="us-ashburn-1",
+            pricing_dimension="DIM-14",
+            unit="ECPU-Hours",
+            unit_price=0.3360,
+            currency="USD",
+            effective_from=hist_time,
+            source="oci_static_rate_card",
+            attributes={"shape": "ECPU"},
+        )
+        self._records[oci_db_record.id] = oci_db_record
+        k_oci_db = self._build_key(
+            None, "oci", "OCI-ADB-ECPU", "us-ashburn-1", "DIM-14", RateType.LIST
+        )
+        self._natural_index.setdefault(k_oci_db, []).append(oci_db_record)
+
+        oci_block_record = PricingRecord(
+            provider="oci",
+            service="Block Volume",
+            service_sku="OCI-BLOCK-STORAGE-BALANCED",
+            resource_type="block_storage",
+            region="us-ashburn-1",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.0425,
+            currency="USD",
+            effective_from=hist_time,
+            source="oci_static_rate_card",
+            attributes={"performanceTier": "Balanced"},
+        )
+        self._records[oci_block_record.id] = oci_block_record
+        k_oci_block = self._build_key(
+            None, "oci", "OCI-BLOCK-STORAGE-BALANCED", "us-ashburn-1", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_oci_block, []).append(oci_block_record)
+
+        oci_store_record = PricingRecord(
+            provider="oci",
+            service="Object Storage",
+            service_sku="OCI-OBJECT-STORAGE-STANDARD",
+            resource_type="object_storage",
+            region="us-ashburn-1",
+            pricing_dimension="DIM-11",
+            unit="GB-Mo",
+            unit_price=0.0255,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=10.0,
+                unit="GB-Mo",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0255,
+            ),
+            effective_from=hist_time,
+            source="oci_static_rate_card",
+            attributes={"tier": "Standard"},
+        )
+        self._records[oci_store_record.id] = oci_store_record
+        k_oci_store = self._build_key(
+            None, "oci", "OCI-OBJECT-STORAGE-STANDARD", "us-ashburn-1", "DIM-11", RateType.LIST
+        )
+        self._natural_index.setdefault(k_oci_store, []).append(oci_store_record)
+
+        oci_egress_record = PricingRecord(
+            provider="oci",
+            service="Compute",
+            service_sku="OCI-NETWORKING-OUTBOUND-DATA",
+            resource_type="network_transfer",
+            region="us-ashburn-1",
+            pricing_dimension="DIM-12",
+            unit="GB",
+            unit_price=0.0085,
+            currency="USD",
+            free_allowance=FreeAllowance(
+                quantity=10240.0,  # 10 TB free outbound data transfer per month!
+                unit="GB",
+                reset_period="MONTHLY",
+                post_allowance_rate=0.0085,
+            ),
+            effective_from=hist_time,
+            source="oci_static_rate_card",
+        )
+        self._records[oci_egress_record.id] = oci_egress_record
+        k_oci_egress = self._build_key(
+            None, "oci", "OCI-NETWORKING-OUTBOUND-DATA", "us-ashburn-1", "DIM-12", RateType.LIST
+        )
+        self._natural_index.setdefault(k_oci_egress, []).append(oci_egress_record)
+
+        oci_ip_record = PricingRecord(
+            provider="oci",
+            service="Compute",
+            service_sku="OCI-NETWORKING-RESERVED-PUBLIC-IP",
+            resource_type="ip_address",
+            region="us-ashburn-1",
+            pricing_dimension="DIM-03",
+            unit="Hrs",
+            unit_price=0.0000,  # OCI includes 1 public IP per instance for free
+            currency="USD",
+            effective_from=hist_time,
+            source="oci_static_rate_card",
+        )
+        self._records[oci_ip_record.id] = oci_ip_record
+        k_oci_ip = self._build_key(
+            None,
+            "oci",
+            "OCI-NETWORKING-RESERVED-PUBLIC-IP",
+            "us-ashburn-1",
+            "DIM-03",
+            RateType.LIST,
+        )
+        self._natural_index.setdefault(k_oci_ip, []).append(oci_ip_record)
