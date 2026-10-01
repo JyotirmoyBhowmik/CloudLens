@@ -10,7 +10,7 @@ Acceptance:
 """
 
 from decimal import Decimal
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Self, TypeVar
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
@@ -95,7 +95,7 @@ class Measure(Generic[T]):
 
     # Factory constructors
     @classmethod
-    def of(cls, val: T | str | int | float) -> "Measure[T]":
+    def of(cls, val: T | str | int | float) -> Self:
         """Creates a present measure."""
         if val is None:
             raise MeasureNullForbiddenException()
@@ -105,22 +105,22 @@ class Measure(Generic[T]):
         return cls(value=val)  # type: ignore[arg-type]
 
     @classmethod
-    def no_cost(cls) -> "Measure[T]":
+    def no_cost(cls) -> Self:
         """Explicitly represents zero cost / verified free consumption."""
         return cls(null_state=MeasureNullState.NO_COST)
 
     @classmethod
-    def no_data(cls) -> "Measure[T]":
+    def no_data(cls) -> Self:
         """Explicitly represents missing or uncollected telemetry/billing."""
         return cls(null_state=MeasureNullState.NO_DATA)
 
     @classmethod
-    def not_applicable(cls) -> "Measure[T]":
+    def not_applicable(cls) -> Self:
         """Explicitly represents an irrelevant or inapplicable metric."""
         return cls(null_state=MeasureNullState.NOT_APPLICABLE)
 
     @classmethod
-    def not_supported(cls) -> "Measure[T]":
+    def not_supported(cls) -> Self:
         """Explicitly represents a metric unsupported by the underlying cloud provider."""
         return cls(null_state=MeasureNullState.NOT_SUPPORTED)
 

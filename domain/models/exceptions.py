@@ -916,3 +916,51 @@ class MissingTraceabilityException(PricingException):
         message: str = "Pricing and cost statements strictly require a source reference and effective date.",
     ) -> None:
         super().__init__(message, error_code="MISSING_TRACEABILITY")
+
+
+# ==============================================================================
+# Cost Ingestion and Normalisation Exceptions (Prompt 22)
+# ==============================================================================
+
+
+class CostException(DomainModelException):
+    """Base exception for all cost ingestion and FOCUS normalisation violations (Prompt 22)."""
+
+    def __init__(self, message: str, error_code: str = "COST_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class UnknownSchemaVersionException(CostException):
+    """Raised when an unknown dataset schema version is encountered during ingestion (Prompt 22 Item 7).
+
+    STRICT: Halts ingestion and alerts connector. Never guesses a mapping.
+    """
+
+    def __init__(self, provider: str, schema_version: str) -> None:
+        super().__init__(
+            f"Unknown or unsupported billing dataset schema version '{schema_version}' for provider '{provider}'. "
+            "Ingestion halted to prevent corrupted cost facts. Guessing a mapping is strictly prohibited.",
+            error_code="UNKNOWN_SCHEMA_VERSION",
+        )
+        self.provider = provider
+        self.schema_version = schema_version
+
+
+class RestatementException(CostException):
+    """Raised when a restatement operation fails validation or consistency checks."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="RESTATEMENT_ERROR")
+
+
+class CurrencyConversionException(CostException):
+    """Raised when an effective exchange rate cannot be found for query-time conversion."""
+
+    def __init__(self, from_currency: str, to_currency: str, as_of_date: str) -> None:
+        super().__init__(
+            f"No effective exchange rate found from '{from_currency}' to '{to_currency}' as of '{as_of_date}'.",
+            error_code="CURRENCY_CONVERSION_ERROR",
+        )
+        self.from_currency = from_currency
+        self.to_currency = to_currency
+        self.as_of_date = as_of_date

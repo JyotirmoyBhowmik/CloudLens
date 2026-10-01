@@ -6,13 +6,20 @@ Enforces Prompt 05 Item 33 & 36:
    Bare nulls are banned.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from pydantic import Field
 
 from domain.models.base import CanonicalEntity
-from domain.models.enums import ChargeCategory, CostSourceType, PricingModel, RuntimeStatus
+from domain.models.enums import (
+    ChargeCategory,
+    CostSourceType,
+    PricingModel,
+    RuntimeStatus,
+    ServiceCategory,
+)
 from domain.models.measures import FinancialMeasure, QuantityMeasure
 
 
@@ -24,8 +31,22 @@ class CostFact(CanonicalEntity):
     resource_id: str | None = Field(
         default=None, description="Optional associated canonical Resource ID"
     )
+    provider: str = Field(
+        default="aws", description="Cloud provider identifier (aws, azure, gcp, oci)"
+    )
+    service_id: str = Field(default="unknown-service", description="Canonical or native service ID")
+    service_name: str | None = Field(default=None, description="Human-readable service name")
+    service_category: ServiceCategory = Field(
+        default=ServiceCategory.OTHER, description="Standardized service category"
+    )
     charge_period_start: datetime = Field(..., description="Start of charge interval in UTC")
     charge_period_end: datetime = Field(..., description="End of charge interval in UTC")
+    billing_period_start: date | None = Field(
+        default=None, description="Calendar billing cycle start date"
+    )
+    billing_period_end: date | None = Field(
+        default=None, description="Calendar billing cycle end date"
+    )
     charge_category: ChargeCategory = Field(
         default=ChargeCategory.USAGE, description="FOCUS charge category"
     )
@@ -34,6 +55,9 @@ class CostFact(CanonicalEntity):
     )
     charge_subcategory: str | None = Field(
         default=None, description="Pricing construct: On-Demand, Spot, Reserved"
+    )
+    charge_description: str | None = Field(
+        default=None, description="Detailed line item charge description"
     )
     billed_cost: FinancialMeasure = Field(
         ..., description="Invoice billed cost enforcing four-state null discipline (no bare nulls)"
@@ -57,6 +81,50 @@ class CostFact(CanonicalEntity):
     pricing_unit: str | None = Field(
         default=None, description="Unit of measure (e.g. Hours, GB-Month)"
     )
+    commitment_id: str | None = Field(
+        default=None, description="Associated Reservation or Savings Plan ID"
+    )
+    commitment_type: str | None = Field(
+        default=None, description="Commitment type (e.g. RESERVED_INSTANCE, SAVINGS_PLAN)"
+    )
+    is_commitment_covered: bool = Field(
+        default=False, description="Whether usage was covered by a committed discount"
+    )
+    realised_discount_value: FinancialMeasure = Field(
+        default_factory=FinancialMeasure.not_applicable,
+        description="Realized discount value (list_cost - effective_cost)",
+    )
+    is_restated: bool = Field(default=False, description="Whether this fact row has been restated")
+    restatement_version: int = Field(default=1, description="Sequential restatement version number")
+    restatement_detected_at: datetime | None = Field(
+        default=None, description="Timestamp when restatement was detected in UTC"
+    )
+    prior_billed_cost: FinancialMeasure | None = Field(
+        default=None, description="Prior billed cost value before restatement"
+    )
+    prior_effective_cost: FinancialMeasure | None = Field(
+        default=None, description="Prior effective cost value before restatement"
+    )
+    restatement_reason: str | None = Field(
+        default=None, description="Provider or audit explanation for restatement"
+    )
+    tags: dict[str, str] = Field(
+        default_factory=dict, description="Resource and cost allocation tags"
+    )
+    cost_categories: dict[str, str] = Field(
+        default_factory=dict, description="Enterprise cost categories"
+    )
+    provider_native: dict[str, Any] = Field(
+        default_factory=dict, description="Verbatim raw provider line item attributes"
+    )
+    schema_version: str = Field(
+        default="focus_1_0", description="Source billing dataset schema version"
+    )
+
+    @property
+    def currency(self) -> str:
+        """Alias property returning the native billing currency."""
+        return self.billing_currency
 
 
 class UsageFact(CanonicalEntity):
