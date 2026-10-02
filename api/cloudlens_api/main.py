@@ -10,6 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.conventions.exceptions import PublicAPIException
+from api.cloudlens_api.conventions.middleware import (
+    conventions_dispatch_middleware,
+    make_problem_details,
+)
 from api.cloudlens_api.routes import (
     alerts_router,
     attribution_router,
@@ -27,6 +32,7 @@ from api.cloudlens_api.routes import (
     diagnostics_router,
     forecasting_router,
     health_router,
+    inventory_router,
     masterdata_router,
     overrides_router,
     policies_router,
@@ -34,12 +40,16 @@ from api.cloudlens_api.routes import (
     quotas_router,
     rbac_router,
     remediation_router,
+    reports_router,
+    roles_router,
     runtime_router,
+    scopes_router,
     storage_router,
     sync_router,
     thresholds_router,
     topology_router,
     usage_router,
+    users_router,
     wizard_router,
     workflows_router,
 )
@@ -262,18 +272,63 @@ async def correlation_id_and_timing_middleware(request: Request, call_next):
         return response
 
 
+@app.middleware("http")
+async def conventions_middleware(request: Request, call_next):
+    """Enforces per-token rate limiting, idempotency keys, and metadata headers (Prompt 34)."""
+    return await conventions_dispatch_middleware(request, call_next)
+
+
+@app.exception_handler(PublicAPIException)
+async def standardized_public_api_exception_handler(request: Request, exc: PublicAPIException):
+    """Handles standard platform API exceptions formatted as RFC 7807/9457 Problem Details (Prompt 34)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    content = make_problem_details(
+        status_code=exc.status_code,
+        error_code=exc.error_code,
+        detail=exc.message,
+        instance=request.url.path,
+        correlation_id=correlation_id,
+        title=exc.title,
+        last_successful_ingestion_at=exc.last_successful_ingestion_at,
+        invalid_params=exc.invalid_params,
+    )
+    headers = {"X-Correlation-ID": correlation_id}
+    if exc.status_code == 429:
+        headers["Retry-After"] = "60"
+    return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
+
+
 @app.exception_handler(HTTPException)
 async def standardized_http_exception_handler(request: Request, exc: HTTPException):
-    """Sanitized and standardized error response (Enterprise Rule 2.4)."""
+    """Sanitized and standardized error response formatted as RFC 7807 Problem Details (Rule 2.4 / Prompt 34)."""
     correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    status_to_code = {
+        400: "INVALID_REQUEST",
+        401: "UNAUTHENTICATED",
+        403: "FORBIDDEN",
+        404: "NOT_FOUND",
+        409: "CONFLICT",
+        412: "PRECONDITION_FAILED",
+        422: "INVALID_REQUEST",
+        429: "RATE_LIMITED",
+        500: "INTERNAL_ERROR",
+        503: "DATA_UNAVAILABLE",
+    }
+    code_val = status_to_code.get(exc.status_code, "HTTP_ERROR")
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "timestamp": datetime.now(UTC).isoformat(),
+            "type": f"https://api.cloudlens.io/errors/{code_val}",
+            "title": exc.detail if isinstance(exc.detail, str) else "Error",
+            "status": exc.status_code,
             "status_code": exc.status_code,
+            "detail": str(exc.detail),
+            "message": str(exc.detail),
+            "instance": request.url.path,
+            "code": code_val,
             "error_code": "HTTP_ERROR",
             "correlation_id": correlation_id,
-            "message": str(exc.detail),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         headers={"X-Correlation-ID": correlation_id},
     )
@@ -820,6 +875,11 @@ async def topology_exception_handler(request: Request, exc: TopologyException):
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(roles_router)
+app.include_router(scopes_router)
+app.include_router(inventory_router)
+app.include_router(reports_router)
 app.include_router(rbac_router)
 app.include_router(health_router)
 app.include_router(masterdata_router)

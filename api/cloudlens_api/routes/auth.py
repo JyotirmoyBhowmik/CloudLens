@@ -625,3 +625,71 @@ def verify_step_up(
 def get_me(authorization: str | None = Header(default=None)) -> AuthContext:
     """Returns caller identity, roles, and effective permissions from Bearer token."""
     return _extract_auth_context(authorization)
+
+
+class SessionStateResponse(BaseModel):
+    """Current authenticated session state and user identity (API-002)."""
+
+    user_id: str
+    tenant_id: str
+    email: str
+    display_name: str
+    roles: list[str]
+    session_id: str
+    is_active: bool = True
+    auth_method: str = "OIDC"
+    created_at: str | None = None
+    expires_at: str | None = None
+
+
+@router.get("/session", response_model=SessionStateResponse, summary="Get current session state")
+def get_session_state(
+    authorization: str | None = Header(default=None),
+) -> SessionStateResponse:
+    """Current authenticated session state and user identity (API-002)."""
+    service = get_identity_service()
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or malformed Bearer authorization token.",
+        )
+    token = authorization[len("Bearer ") :].strip()
+    try:
+        ctx = service.token_engine.extract_auth_context(token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid or expired token: {e}",
+        ) from e
+
+    sess = service.get_session(ctx.session_id) if ctx.session_id else None
+    user = service.get_user(ctx.user_id) if ctx.user_id else None
+    auth_method_str = (
+        user.auth_method.value
+        if user and hasattr(user, "auth_method") and hasattr(user.auth_method, "value")
+        else "OIDC"
+    )
+    return SessionStateResponse(
+        user_id=ctx.user_id,
+        tenant_id=ctx.tenant_id,
+        email=ctx.email,
+        display_name=ctx.email.split("@")[0].capitalize(),
+        roles=[r.value if hasattr(r, "value") else str(r) for r in ctx.roles],
+        session_id=ctx.session_id or "sess-default",
+        is_active=sess.is_active if sess else True,
+        auth_method=auth_method_str,
+        created_at=sess.created_at.isoformat() if sess else None,
+        expires_at=sess.expires_at.isoformat() if sess else None,
+    )
+
+
+@router.post(
+    "/login", response_model=TokenPair, summary="Local superuser break-glass authentication"
+)
+def local_login(
+    payload: BreakGlassLoginRequest,
+    request: Request,
+    x_correlation_id: str | None = Header(default=None),
+) -> TokenPair:
+    """Local superuser break-glass authentication (API-003 / Prompt 10 Item 65)."""
+    return break_glass_login(payload, request, x_correlation_id)

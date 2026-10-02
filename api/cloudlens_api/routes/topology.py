@@ -15,9 +15,11 @@ import datetime as dt
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, status
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
+from domain.dependency.models import DependencyEdge, ManualEdgeCreateRequest, TopologyGraph
+from domain.dependency.service import DependencyService, get_dependency_service
 from domain.models.enums import EntityReferenceType
 from domain.tenant.context import TenantContext
 from domain.topology.models import (
@@ -119,3 +121,28 @@ def export_topology_graph(
 ) -> GraphExportResult:
     """Exports projected topology graph to JSON, CSV, GraphML, DOT, or SVG formats."""
     return service.export_graph(payload, tenant_context=tenant_context)
+
+
+# ==============================================================================
+# 5. Direct Dependency Graph Dataset & Manual Edge Management (API-045 & API-046)
+# ==============================================================================
+
+
+@router.get("/graph", response_model=TopologyGraph, status_code=status.HTTP_200_OK)
+def get_topology_graph(
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    dep_service: DependencyService = Depends(get_dependency_service),
+) -> TopologyGraph:
+    """Directed dependency graph node-link dataset (API-045 / Prompt 32)."""
+    return dep_service.get_topology_graph(tenant_context=tenant_context)
+
+
+@router.post("/edges", response_model=DependencyEdge, status_code=status.HTTP_201_CREATED)
+def create_topology_edge(
+    payload: ManualEdgeCreateRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    dep_service: DependencyService = Depends(get_dependency_service),
+) -> DependencyEdge:
+    """Manually create or verify a dependency edge (API-046 / Prompt 32)."""
+    actor = tenant_context.user_id or "human-operator"
+    return dep_service.create_manual_edge(payload, actor=actor, tenant_context=tenant_context)

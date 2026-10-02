@@ -16,6 +16,7 @@ from api.cloudlens_api.routes.dependency import router as dependency_router
 from api.cloudlens_api.routes.diagnostics import router as diagnostics_router
 from api.cloudlens_api.routes.forecasting import router as forecasting_router
 from api.cloudlens_api.routes.health import router as health_router
+from api.cloudlens_api.routes.inventory import router as inventory_router
 from api.cloudlens_api.routes.masterdata import router as masterdata_router
 from api.cloudlens_api.routes.overrides import router as overrides_router
 from api.cloudlens_api.routes.policies import router as policies_router
@@ -23,12 +24,16 @@ from api.cloudlens_api.routes.pricing import router as pricing_router
 from api.cloudlens_api.routes.quotas import router as quotas_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
 from api.cloudlens_api.routes.remediation import router as remediation_router
+from api.cloudlens_api.routes.reports import router as reports_router
+from api.cloudlens_api.routes.roles import router as roles_router
 from api.cloudlens_api.routes.runtime import router as runtime_router
+from api.cloudlens_api.routes.scopes import router as scopes_router
 from api.cloudlens_api.routes.storage import router as storage_router
 from api.cloudlens_api.routes.sync import router as sync_router
 from api.cloudlens_api.routes.thresholds import router as thresholds_router
 from api.cloudlens_api.routes.topology import router as topology_router
 from api.cloudlens_api.routes.usage import router as usage_router
+from api.cloudlens_api.routes.users import router as users_router
 from api.cloudlens_api.routes.wizard import router as wizard_router
 from api.cloudlens_api.routes.workflows import router as workflows_router
 
@@ -49,6 +54,7 @@ __all__ = [
     "diagnostics_router",
     "forecasting_router",
     "health_router",
+    "inventory_router",
     "masterdata_router",
     "overrides_router",
     "policies_router",
@@ -56,12 +62,16 @@ __all__ = [
     "quotas_router",
     "rbac_router",
     "remediation_router",
+    "reports_router",
+    "roles_router",
     "runtime_router",
+    "scopes_router",
     "storage_router",
     "sync_router",
     "thresholds_router",
     "topology_router",
     "usage_router",
+    "users_router",
     "wizard_router",
     "workflows_router",
 ]

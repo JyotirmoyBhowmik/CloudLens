@@ -395,13 +395,14 @@ async def get_alert(
 
 
 @router.post("/{alert_id}/acknowledge", response_model=AlertEntity)
+@router.post("/{alert_id}/ack", response_model=AlertEntity)
 async def acknowledge_alert(
     alert_id: str,
     payload: AlertAcknowledgeDTO,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
     alert_service: AlertService = Depends(get_alert_service),
 ) -> AlertEntity:
-    """Acknowledges an active alert."""
+    """Acknowledges an active alert (API-044)."""
     return alert_service.acknowledge_alert(
         alert_id=alert_id,
         actor=payload.actor,

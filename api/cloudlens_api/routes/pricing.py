@@ -16,6 +16,12 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 
+from domain.cost.calculation import (
+    PreDeploymentEstimateRequest,
+    PreDeploymentEstimateResult,
+    PreDeploymentEstimator,
+    get_pre_deployment_estimator,
+)
 from domain.models.exceptions import PricingRecordNotFoundException
 from domain.pricing.information_panel import (
     InformationPanelBuilder,
@@ -307,3 +313,47 @@ async def get_pricing_information_panel(
         raise PricingRecordNotFoundException(provider=provider, sku=sku_or_id, region=region)
 
     return InformationPanelBuilder.build_from_record(record=rec)
+
+
+@router.get("/status", response_model=PricingStatusClassification, status_code=status.HTTP_200_OK)
+async def get_pricing_status(
+    provider: str = Query(default="aws", description="Cloud provider (aws, azure, gcp, oci)"),
+    sku: str | None = Query(default=None, description="Service SKU code"),
+    resource_type: str | None = Query(default=None, description="Canonical resource type"),
+    region: str = Query(default="us-east-1", description="Datacenter region"),
+    dimension: str = Query(default="DIM-03", description="Pricing dimension code"),
+    is_estimated: bool = Query(default=False, description="Whether pricing is estimated"),
+    service_engine: PricingCatalogueService = Depends(get_pricing_service),
+) -> PricingStatusClassification:
+    """Pricing status classification for services and resources (API-029 / PR-002).
+
+    STRICT: Never defaults an unpriced or unclassified SKU to free or zero.
+    """
+    record: PricingRecord | None = None
+    if sku:
+        records = service_engine.repository.find_at_date(
+            provider=provider,
+            sku=sku,
+            region=region,
+            dimension=dimension,
+            query_date=datetime.now(UTC),
+        )
+        if records:
+            record = records[0]
+
+    return PricingStatusEngine.evaluate(
+        record=record,
+        resource_type=resource_type or "compute/virtual-machine",
+        is_estimated=is_estimated,
+    )
+
+
+@router.post(
+    "/estimate", response_model=PreDeploymentEstimateResult, status_code=status.HTTP_200_OK
+)
+async def calculate_pricing_estimate(
+    request: PreDeploymentEstimateRequest,
+    estimator: PreDeploymentEstimator = Depends(get_pre_deployment_estimator),
+) -> PreDeploymentEstimateResult:
+    """Calculate workload cost estimate from configuration (API-030 / Prompt 23)."""
+    return estimator.estimate(request)
