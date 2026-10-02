@@ -1502,3 +1502,55 @@ class InvalidBudgetDatesException(BudgetException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="INVALID_BUDGET_DATES")
+
+
+# ==============================================================================
+# Forecasting Engine Exceptions (Prompt 29)
+# ==============================================================================
+
+
+class ForecastingException(DomainModelException):
+    """Base exception for all forecasting domain errors."""
+
+
+class InsufficientHistoryException(ForecastingException):
+    """Raised when data history is strictly insufficient for a method without fallback."""
+
+    def __init__(self, method: str, required_days: int, actual_days: int) -> None:
+        super().__init__(
+            f"Forecast method '{method}' requires at least {required_days} days of history; only {actual_days} days provided.",
+            error_code="INSUFFICIENT_FORECAST_HISTORY",
+        )
+        self.method = method
+        self.required_days = required_days
+        self.actual_days = actual_days
+
+
+class ForecastNotFoundException(ForecastingException):
+    """Raised when a requested forecast entity cannot be located."""
+
+    def __init__(self, forecast_id: str) -> None:
+        super().__init__(
+            f"Forecast '{forecast_id}' was not found.",
+            error_code="FORECAST_NOT_FOUND",
+        )
+        self.forecast_id = forecast_id
+
+
+class FeatureFlagDisabledException(ForecastingException):
+    """Raised when a Phase 2 forecast method is invoked while its feature flag is disabled."""
+
+    def __init__(self, flag_key: str, method: str) -> None:
+        super().__init__(
+            f"Phase 2 forecast method '{method}' is disabled because feature flag '{flag_key}' is not active.",
+            error_code="FEATURE_FLAG_DISABLED",
+        )
+        self.flag_key = flag_key
+        self.method = method
+
+
+class ForecastAccuracyEvaluationException(ForecastingException):
+    """Raised when an error occurs during milestone accuracy evaluation."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="FORECAST_ACCURACY_EVALUATION_ERROR")

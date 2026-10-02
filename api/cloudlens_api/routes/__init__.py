@@ -12,6 +12,7 @@ from api.cloudlens_api.routes.credentials import router as credentials_router
 from api.cloudlens_api.routes.demo import router as demo_router
 from api.cloudlens_api.routes.demo_mode import router as demo_mode_router
 from api.cloudlens_api.routes.diagnostics import router as diagnostics_router
+from api.cloudlens_api.routes.forecasting import router as forecasting_router
 from api.cloudlens_api.routes.health import router as health_router
 from api.cloudlens_api.routes.masterdata import router as masterdata_router
 from api.cloudlens_api.routes.overrides import router as overrides_router
@@ -38,6 +39,7 @@ __all__ = [
     "demo_mode_router",
     "demo_router",
     "diagnostics_router",
+    "forecasting_router",
     "health_router",
     "masterdata_router",
     "overrides_router",

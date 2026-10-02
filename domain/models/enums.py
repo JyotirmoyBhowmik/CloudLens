@@ -561,6 +561,12 @@ class AuditEventType(StrEnum):
     QUOTA_INCREASE_STATUS_UPDATED = "QUOTA_INCREASE_STATUS_UPDATED"
     QUOTA_REMEDIATION_TASK_CREATED = "QUOTA_REMEDIATION_TASK_CREATED"
 
+    # Forecasting Engine (Prompt 29)
+    FORECAST_GENERATED = "FORECAST_GENERATED"
+    FORECAST_FALLBACK_TRIGGERED = "FORECAST_FALLBACK_TRIGGERED"
+    FORECAST_RECOMPUTED_AFTER_RESTATEMENT = "FORECAST_RECOMPUTED_AFTER_RESTATEMENT"
+    FORECAST_ACCURACY_RECORDED = "FORECAST_ACCURACY_RECORDED"
+
 
 class OverrideClass(StrEnum):
     """Categorisation of operational and governance overrides (Prompt 13 Item 87)."""
@@ -578,6 +584,7 @@ class OverrideClass(StrEnum):
     RUNTIME_EXEMPTION = "RUNTIME_EXEMPTION"
     THRESHOLD_RULE = "THRESHOLD_RULE"
     QUOTA_LIMIT = "QUOTA_LIMIT"
+    FORECAST_RULE = "FORECAST_RULE"
 
 
 class OverrideStatus(StrEnum):
@@ -728,3 +735,90 @@ class BudgetSourceType(StrEnum):
 
     CLOUDLENS_LOGICAL = "CLOUDLENS_LOGICAL"
     PROVIDER_NATIVE = "PROVIDER_NATIVE"
+
+
+# ==============================================================================
+# Forecasting Engine Enums (Prompt 29)
+# ==============================================================================
+
+
+class ForecastMethod(StrEnum):
+    """Forecasting algorithms supporting MVP and Phase 2 progression (Prompt 29)."""
+
+    # MVP methods
+    RUN_RATE = "RUN_RATE"
+    HISTORICAL_AVERAGE = "HISTORICAL_AVERAGE"
+    MOVING_AVERAGE = "MOVING_AVERAGE"
+
+    # Phase 2 methods (flag-gated)
+    TREND_REGRESSION = "TREND_REGRESSION"
+    SEASONALITY_DECOMPOSITION = "SEASONALITY_DECOMPOSITION"
+    PROVIDER_PUBLISHED = "PROVIDER_PUBLISHED"
+    USER_ADJUSTMENT = "USER_ADJUSTMENT"
+
+    def is_mvp(self) -> bool:
+        """Returns True if method is part of MVP baseline."""
+        return self in (
+            ForecastMethod.RUN_RATE,
+            ForecastMethod.HISTORICAL_AVERAGE,
+            ForecastMethod.MOVING_AVERAGE,
+        )
+
+    def is_phase2(self) -> bool:
+        """Returns True if method is gated behind a Phase 2 feature flag."""
+        return not self.is_mvp()
+
+    def minimum_history_days(self) -> int:
+        """Returns the documented minimum history in days required for this method."""
+        if self == ForecastMethod.RUN_RATE:
+            return 3
+        elif self == ForecastMethod.MOVING_AVERAGE:
+            return 7
+        elif self == ForecastMethod.HISTORICAL_AVERAGE:
+            return 14
+        elif self == ForecastMethod.TREND_REGRESSION:
+            return 14
+        elif self == ForecastMethod.SEASONALITY_DECOMPOSITION:
+            return 28
+        elif self == ForecastMethod.PROVIDER_PUBLISHED:
+            return 1
+        elif self == ForecastMethod.USER_ADJUSTMENT:
+            return 3
+        return 3
+
+    def feature_flag_key(self) -> str | None:
+        """Returns the associated feature flag key if Phase 2 gated."""
+        flags = {
+            ForecastMethod.TREND_REGRESSION: "enable_trend_regression_forecasting",
+            ForecastMethod.SEASONALITY_DECOMPOSITION: "enable_seasonality_forecasting",
+            ForecastMethod.PROVIDER_PUBLISHED: "enable_provider_published_forecasting",
+            ForecastMethod.USER_ADJUSTMENT: "enable_user_adjustment_forecasting",
+        }
+        return flags.get(self)
+
+
+class ForecastConfidence(StrEnum):
+    """Confidence rating of the forecast based on data sufficiency and volatility (Prompt 29)."""
+
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class CostTrend(StrEnum):
+    """Cost momentum and trajectory direction (Prompt 29)."""
+
+    STABLE = "STABLE"
+    INCREASING = "INCREASING"
+    DECREASING = "DECREASING"
+    SPIKING = "SPIKING"
+    VOLATILE = "VOLATILE"
+
+
+class ForecastMilestone(StrEnum):
+    """Evaluation checkpoint for tracking forecast error and accuracy over period lifecycle (Prompt 29)."""
+
+    M25 = "M25"
+    M50 = "M50"
+    M75 = "M75"
+    PERIOD_CLOSE = "PERIOD_CLOSE"

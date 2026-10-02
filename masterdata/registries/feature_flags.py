@@ -98,6 +98,38 @@ CANONICAL_FEATURE_FLAGS: list[FeatureFlagDefinition] = [
         stage="ga",
         category="finops",
     ),
+    FeatureFlagDefinition(
+        key="enable_trend_regression_forecasting",
+        name="Trend-Based Regression Forecasting",
+        description="Enables linear regression trend spend forecasting for long-tail resource trajectories (Prompt 29 Phase 2)",
+        default_enabled=False,
+        stage="beta",
+        category="finops",
+    ),
+    FeatureFlagDefinition(
+        key="enable_seasonality_forecasting",
+        name="Seasonality-Aware Decomposition Forecasting",
+        description="Enables day-of-week and cyclical seasonality decomposition forecasting (Prompt 29 Phase 2)",
+        default_enabled=False,
+        stage="beta",
+        category="finops",
+    ),
+    FeatureFlagDefinition(
+        key="enable_provider_published_forecasting",
+        name="Provider-Published Forecast Comparison",
+        description="Enables ingesting and comparing cloud provider native published forecasts against CloudLens models (Prompt 29 Phase 2)",
+        default_enabled=False,
+        stage="beta",
+        category="finops",
+    ),
+    FeatureFlagDefinition(
+        key="enable_user_adjustment_forecasting",
+        name="User-Defined Forecast Adjustment Rules",
+        description="Enables user-specified adjustments for planned migrations and scheduled future events (Prompt 29 Phase 2)",
+        default_enabled=False,
+        stage="beta",
+        category="finops",
+    ),
 ]
 
 FEATURE_FLAG_REGISTRY: dict[str, FeatureFlagDefinition] = {

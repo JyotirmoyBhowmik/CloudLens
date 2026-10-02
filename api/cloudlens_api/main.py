@@ -23,6 +23,7 @@ from api.cloudlens_api.routes import (
     demo_mode_router,
     demo_router,
     diagnostics_router,
+    forecasting_router,
     health_router,
     masterdata_router,
     overrides_router,
@@ -54,7 +55,12 @@ from domain.models.exceptions import (
     CustomRoleInvalidException,
     DomainModelException,
     ExpectationNotFoundException,
+    FeatureFlagDisabledException,
     FirstSyncNotFoundException,
+    ForecastAccuracyEvaluationException,
+    ForecastingException,
+    ForecastNotFoundException,
+    InsufficientHistoryException,
     InterpolationLabelRequiredException,
     InvalidBudgetAmountException,
     InvalidBudgetDatesException,
@@ -565,6 +571,34 @@ async def standardized_budget_exception_handler(request: Request, exc: BudgetExc
     )
 
 
+@app.exception_handler(ForecastingException)
+async def standardized_forecasting_exception_handler(request: Request, exc: ForecastingException):
+    """Forecasting engine exception handler (Prompt 29 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, ForecastNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, FeatureFlagDisabledException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(exc, ForecastAccuracyEvaluationException):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, InsufficientHistoryException):
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -589,6 +623,7 @@ app.include_router(runtime_router)
 app.include_router(thresholds_router)
 app.include_router(quotas_router)
 app.include_router(budgets_router)
+app.include_router(forecasting_router)
 
 
 class HealthResponse(BaseModel):
