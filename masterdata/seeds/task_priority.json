@@ -1,0 +1,54 @@
+[
+  {
+    "code": "CRITICAL",
+    "display_name": "Critical",
+    "description": "Immediate security or severe budget violation requiring prompt action within 24 working hours.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "default_sla_working_hours": 24,
+      "escalate_after_hours": 12,
+      "color_hex": "#EF4444"
+    }
+  },
+  {
+    "code": "HIGH",
+    "display_name": "High",
+    "description": "Material cost breach or unowned infrastructure requiring resolution within 48 working hours.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "default_sla_working_hours": 48,
+      "escalate_after_hours": 24,
+      "color_hex": "#F97316"
+    }
+  },
+  {
+    "code": "MEDIUM",
+    "display_name": "Medium",
+    "description": "Governance hygiene issue or moderate forecast variance requiring resolution within 72 working hours.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "default_sla_working_hours": 72,
+      "escalate_after_hours": 36,
+      "color_hex": "#FBBF24"
+    }
+  },
+  {
+    "code": "LOW",
+    "display_name": "Low",
+    "description": "Minor tagging gap or advisory observation requiring resolution within 120 working hours.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "default_sla_working_hours": 120,
+      "escalate_after_hours": 60,
+      "color_hex": "#3B82F6"
+    }
+  }
+]

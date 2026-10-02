@@ -1,0 +1,171 @@
+[
+  {
+    "code": "UNOWNED_RESOURCE",
+    "display_name": "Unowned Resource",
+    "description": "Cloud resource lacks an accountable technical or business owner.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "INVENTORY_ATTRIBUTION",
+      "default_priority": "HIGH",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "TAG_COMPLIANCE",
+    "display_name": "Missing Mandatory Tag",
+    "description": "Resource lacks mandatory cost allocation, environment, or governance tags.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "TAG_POLICY_ENGINE",
+      "default_priority": "MEDIUM",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "SCHEDULE_BREACH",
+    "display_name": "Schedule Runtime Breach",
+    "description": "Resource is running outside its declared operational window generating excess cost.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "RUNTIME_SCHEDULE_ENGINE",
+      "default_priority": "HIGH",
+      "requires_approval_to_defer": true
+    }
+  },
+  {
+    "code": "BUDGET_BREACH",
+    "display_name": "Budget Allocation Breach",
+    "description": "Actual spend exceeded configured budget threshold or ceiling.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "BUDGET_ENGINE",
+      "default_priority": "HIGH",
+      "requires_approval_to_defer": true
+    }
+  },
+  {
+    "code": "FORECAST_BREACH",
+    "display_name": "Predicted Budget Breach",
+    "description": "Projected run-rate spend is predicted to breach budget allocation before period end.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "FORECASTING_ENGINE",
+      "default_priority": "MEDIUM",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "IDLE_RESOURCE",
+    "display_name": "Idle or Orphaned Resource",
+    "description": "Dormant compute, unattached storage, or orphaned load balancer generating unnecessary cost.",
+    "sort_order": 6,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "USAGE_COLLECTION_ENGINE",
+      "default_priority": "LOW",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "STALE_CONNECTOR",
+    "display_name": "Stale Cloud Connector",
+    "description": "Cloud billing or telemetry connector synchronization latency exceeds freshness threshold.",
+    "sort_order": 7,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "CONNECTOR_FRAMEWORK",
+      "default_priority": "HIGH",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "CREDENTIAL_EXPIRING",
+    "display_name": "Expiring Cloud Credentials",
+    "description": "Service principal, API key, or OAuth token nearing expiry and requiring rotation.",
+    "sort_order": 8,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "CREDENTIAL_SERVICE",
+      "default_priority": "CRITICAL",
+      "requires_approval_to_defer": true
+    }
+  },
+  {
+    "code": "RECONCILIATION_VARIANCE",
+    "display_name": "Reconciliation Variance Beyond Tolerance",
+    "description": "Discrepancy detected between provider invoice and internal ingestion records.",
+    "sort_order": 9,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "RECONCILIATION_ENGINE",
+      "default_priority": "MEDIUM",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "UNKNOWN_SKU",
+    "display_name": "Unknown Provider SKU",
+    "description": "Encountered line item SKU missing from canonical pricing catalogue.",
+    "sort_order": 10,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "PRICING_CATALOGUE",
+      "default_priority": "LOW",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "UNCLASSIFIED_RESOURCE",
+    "display_name": "Unclassified Resource Type",
+    "description": "Discovered infrastructure resource type not registered in canonical taxonomy.",
+    "sort_order": 11,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "INVENTORY_ENGINE",
+      "default_priority": "LOW",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "MASTERDATA_GAP",
+    "display_name": "Master Data Gap",
+    "description": "Missing unit of measure, currency code, or service category mapping.",
+    "sort_order": 12,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "MASTER_DATA_SERVICE",
+      "default_priority": "MEDIUM",
+      "requires_approval_to_defer": false
+    }
+  },
+  {
+    "code": "CUSTOM",
+    "display_name": "Custom Governance Finding",
+    "description": "Custom governance or FinOps remediation task.",
+    "sort_order": 13,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "detection_source": "MANUAL",
+      "default_priority": "MEDIUM",
+      "requires_approval_to_defer": false
+    }
+  }
+]

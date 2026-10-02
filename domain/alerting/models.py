@@ -184,6 +184,7 @@ class AlertEntity(CanonicalEntity):
     quiet_hours_suppressed: bool = Field(
         default=False, description="True if suppressed due to quiet hours"
     )
+    remediation_task_id: str | None = Field(default=None, description="Linked remediation task ID")
 
     @field_validator("evidence", mode="before")
     @classmethod
@@ -205,12 +206,19 @@ class AlertEntity(CanonicalEntity):
         raw = f"{self.tenant_id}|{self.alert_type}|{target}|{self.rule_id or 'none'}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
-    def acknowledge(self, actor: str, reason: str | None = None) -> None:
+    def acknowledge(
+        self,
+        actor: str,
+        reason: str | None = None,
+        remediation_task_id: str | None = None,
+    ) -> None:
         """Acknowledges the alert by a verified human actor."""
         self.status = AlertLifecycleStatus.ACKNOWLEDGED
         self.acknowledged_by = actor
         self.acknowledgement_reason = reason
         self.acknowledged_at = dt.datetime.now(dt.UTC)
+        if remediation_task_id is not None:
+            self.remediation_task_id = remediation_task_id
         if (
             self.escalation_state == EscalationState.PENDING
             or self.escalation_state == EscalationState.ESCALATED

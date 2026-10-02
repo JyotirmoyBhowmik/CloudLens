@@ -32,6 +32,7 @@ from api.cloudlens_api.routes import (
     pricing_router,
     quotas_router,
     rbac_router,
+    remediation_router,
     runtime_router,
     storage_router,
     sync_router,
@@ -79,13 +80,16 @@ from domain.models.exceptions import (
     InvalidPricingTierException,
     InvalidQuotaLimitException,
     InvalidSubscriptionException,
+    InvalidTaskTransitionException,
     InvalidWorkflowTransitionException,
+    MandatoryReasonException,
     ManualQuotaSourceNoteRequiredException,
     MetricNotApplicableException,
     MissingAlertEvidenceException,
     MonitoringTypeNotFoundException,
     NativeBudgetReadOnlyException,
     NoResolvableApproverException,
+    NoResolvableAssigneeException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
@@ -103,11 +107,14 @@ from domain.models.exceptions import (
     RBACException,
     ReconciliationInvestigationNotFoundException,
     ReconciliationReportNotFoundException,
+    RemediationException,
+    RemediationTaskNotFoundException,
     RuntimeException,
     ScheduleBreachValuationException,
     ScheduleNotFoundException,
     SubHourlyCollectionForbiddenException,
     SyncJobNotFoundException,
+    TaskAlreadyClosedException,
     TenantContextException,
     ThresholdException,
     ThresholdOverrideExpiredException,
@@ -119,6 +126,7 @@ from domain.models.exceptions import (
     UndeclaredCapabilityException,
     UnknownSchemaVersionException,
     UsageException,
+    VerificationFailedException,
     WizardSessionNotFoundException,
     WorkflowAlreadyFinalizedException,
     WorkflowApplicationFailedException,
@@ -722,6 +730,34 @@ async def workflow_exception_handler(request: Request, exc: WorkflowException) -
     )
 
 
+@app.exception_handler(RemediationException)
+async def standardized_remediation_exception_handler(request: Request, exc: RemediationException):
+    """Remediation and accountability exception handler (Prompt 51 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, RemediationTaskNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, TaskAlreadyClosedException):
+        status_code = status.HTTP_409_CONFLICT
+    elif isinstance(exc, (InvalidTaskTransitionException, MandatoryReasonException)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, (NoResolvableAssigneeException, VerificationFailedException)):
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    else:
+        status_code = status.HTTP_400_BAD_REQUEST
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -750,6 +786,7 @@ app.include_router(budgets_router)
 app.include_router(forecasting_router)
 app.include_router(policies_router)
 app.include_router(workflows_router)
+app.include_router(remediation_router)
 
 
 class HealthResponse(BaseModel):

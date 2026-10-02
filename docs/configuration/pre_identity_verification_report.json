@@ -279,6 +279,36 @@
       "record_count": 11,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/workflow_definition.json"
+    },
+    "TASK_STATE": {
+      "master_code": "TASK_STATE",
+      "record_count": 11,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/task_state.json"
+    },
+    "TASK_PRIORITY": {
+      "master_code": "TASK_PRIORITY",
+      "record_count": 4,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/task_priority.json"
+    },
+    "TASK_CATEGORY": {
+      "master_code": "TASK_CATEGORY",
+      "record_count": 13,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/task_category.json"
+    },
+    "TASK_CLOSURE_CODE": {
+      "master_code": "TASK_CLOSURE_CODE",
+      "record_count": 5,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/task_closure_code.json"
+    },
+    "TASK_CREATION_RULE": {
+      "master_code": "TASK_CREATION_RULE",
+      "record_count": 12,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/task_creation_rule.json"
     }
   },
   "roles_defined": [
@@ -344,11 +374,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-316b3b0f4b8c",
+  "first_audit_event_id": "aud-boot-b9aaab2671fb",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-10-02T11:36:12.865753Z",
-  "correlation_id": "corr-boot-c42a83bf"
+  "timestamp": "2026-10-02T12:44:27.946653Z",
+  "correlation_id": "corr-boot-522230bb"
 }

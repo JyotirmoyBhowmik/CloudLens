@@ -106,10 +106,15 @@ class AlertService:
         *,
         tenant_context: TenantContext,
         reason: str | None = None,
+        remediation_task_id: str | None = None,
     ) -> AlertEntity:
         """Acknowledges an active alert."""
         return self.engine.acknowledge_alert(
-            alert_id, actor, tenant_context=tenant_context, reason=reason
+            alert_id,
+            actor,
+            tenant_context=tenant_context,
+            reason=reason,
+            remediation_task_id=remediation_task_id,
         )
 
     def resolve_alert(

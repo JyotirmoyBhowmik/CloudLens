@@ -1,0 +1,206 @@
+[
+  {
+    "code": "RULE_UNOWNED_RESOURCE",
+    "display_name": "Automatic Task for Unowned Resource",
+    "description": "Creates an assigned remediation task whenever an unowned cloud resource is discovered.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "UNOWNED_RESOURCE",
+      "enabled": true,
+      "category": "UNOWNED_RESOURCE",
+      "default_priority": "HIGH",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 48
+    }
+  },
+  {
+    "code": "RULE_TAG_COMPLIANCE",
+    "display_name": "Automatic Task for Missing Mandatory Tags",
+    "description": "Creates a remediation task when a resource violates mandatory tagging policy.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "TAG_COMPLIANCE",
+      "enabled": true,
+      "category": "TAG_COMPLIANCE",
+      "default_priority": "MEDIUM",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 72
+    }
+  },
+  {
+    "code": "RULE_SCHEDULE_BREACH",
+    "display_name": "Automatic Task for Schedule Runtime Breach",
+    "description": "Creates a task with excess cost when an instance runs outside declared schedule.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "SCHEDULE_BREACH",
+      "enabled": true,
+      "category": "SCHEDULE_BREACH",
+      "default_priority": "HIGH",
+      "estimated_saving_formula": "excess_cost",
+      "auto_assign": true,
+      "default_sla_hours": 48
+    }
+  },
+  {
+    "code": "RULE_BUDGET_BREACH",
+    "display_name": "Automatic Task for Budget Allocation Breach",
+    "description": "Creates a task when an organizational budget exceeds its allocation ceiling.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "BUDGET_BREACH",
+      "enabled": true,
+      "category": "BUDGET_BREACH",
+      "default_priority": "HIGH",
+      "estimated_saving_formula": "budget_variance",
+      "auto_assign": true,
+      "default_sla_hours": 48
+    }
+  },
+  {
+    "code": "RULE_FORECAST_BREACH",
+    "display_name": "Automatic Task for Predicted Budget Breach",
+    "description": "Creates an early remediation task when run-rate forecast predicts a threshold breach.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "FORECAST_BREACH",
+      "enabled": true,
+      "category": "FORECAST_BREACH",
+      "default_priority": "MEDIUM",
+      "estimated_saving_formula": "forecast_variance",
+      "auto_assign": true,
+      "default_sla_hours": 72
+    }
+  },
+  {
+    "code": "RULE_IDLE_RESOURCE",
+    "display_name": "Automatic Task for Idle or Orphaned Resource",
+    "description": "Creates a rightsizing or termination task when idle infrastructure is detected.",
+    "sort_order": 6,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "IDLE_RESOURCE",
+      "enabled": true,
+      "category": "IDLE_RESOURCE",
+      "default_priority": "LOW",
+      "estimated_saving_formula": "idle_cost",
+      "auto_assign": true,
+      "default_sla_hours": 120
+    }
+  },
+  {
+    "code": "RULE_STALE_CONNECTOR",
+    "display_name": "Automatic Task for Stale Connector",
+    "description": "Creates a task when cloud telemetry connector sync lag exceeds freshness SLA.",
+    "sort_order": 7,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "STALE_CONNECTOR",
+      "enabled": true,
+      "category": "STALE_CONNECTOR",
+      "default_priority": "HIGH",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 24
+    }
+  },
+  {
+    "code": "RULE_CREDENTIAL_EXPIRING",
+    "display_name": "Automatic Task for Expiring Credentials",
+    "description": "Creates a critical task when cloud provider credentials approach expiry.",
+    "sort_order": 8,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "CREDENTIAL_EXPIRING",
+      "enabled": true,
+      "category": "CREDENTIAL_EXPIRING",
+      "default_priority": "CRITICAL",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 24
+    }
+  },
+  {
+    "code": "RULE_RECONCILIATION_VARIANCE",
+    "display_name": "Automatic Task for Reconciliation Variance",
+    "description": "Creates a task when invoice versus ingestion variance exceeds threshold.",
+    "sort_order": 9,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "RECONCILIATION_VARIANCE",
+      "enabled": true,
+      "category": "RECONCILIATION_VARIANCE",
+      "default_priority": "MEDIUM",
+      "estimated_saving_formula": "reconciliation_variance",
+      "auto_assign": true,
+      "default_sla_hours": 72
+    }
+  },
+  {
+    "code": "RULE_UNKNOWN_SKU",
+    "display_name": "Automatic Task for Unknown Provider SKU",
+    "description": "Creates a task to catalog unknown cloud service SKUs in pricing master.",
+    "sort_order": 10,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "UNKNOWN_SKU",
+      "enabled": true,
+      "category": "UNKNOWN_SKU",
+      "default_priority": "LOW",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 120
+    }
+  },
+  {
+    "code": "RULE_UNCLASSIFIED_RESOURCE",
+    "display_name": "Automatic Task for Unclassified Resource Type",
+    "description": "Creates a task to classify discovered resources into FOCUS taxonomy.",
+    "sort_order": 11,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "UNCLASSIFIED_RESOURCE",
+      "enabled": true,
+      "category": "UNCLASSIFIED_RESOURCE",
+      "default_priority": "LOW",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 120
+    }
+  },
+  {
+    "code": "RULE_MASTERDATA_GAP",
+    "display_name": "Automatic Task for Master Data Gap",
+    "description": "Creates a task for missing unit conversions or service categories.",
+    "sort_order": 12,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "source_code": "MASTERDATA_GAP",
+      "enabled": true,
+      "category": "MASTERDATA_GAP",
+      "default_priority": "MEDIUM",
+      "estimated_saving_formula": null,
+      "auto_assign": true,
+      "default_sla_hours": 72
+    }
+  }
+]

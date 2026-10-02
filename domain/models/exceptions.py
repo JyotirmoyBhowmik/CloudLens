@@ -1818,3 +1818,85 @@ class WorkflowAlreadyFinalizedException(WorkflowException):
         )
         self.request_id = request_id
         self.state = state
+
+
+# ==============================================================================
+# Remediation and Accountability Engine Exceptions (Prompt 51)
+# ==============================================================================
+
+
+class RemediationException(DomainModelException):
+    """Base exception for remediation tasks and accountability failures (Prompt 51)."""
+
+    def __init__(self, message: str, error_code: str = "REMEDIATION_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class RemediationTaskNotFoundException(RemediationException):
+    """Raised when a requested remediation task does not exist."""
+
+    def __init__(self, task_id: str) -> None:
+        super().__init__(
+            f"Remediation task '{task_id}' was not found in the current tenant context.",
+            error_code="REMEDIATION_TASK_NOT_FOUND",
+        )
+        self.task_id = task_id
+
+
+class NoResolvableAssigneeException(RemediationException):
+    """Raised when ownership resolution and fallback queues all fail to resolve an assignee."""
+
+    def __init__(self, entity_id: str, details: str = "") -> None:
+        super().__init__(
+            f"No accountable owner or fallback queue could be resolved for entity '{entity_id}'. {details}",
+            error_code="NO_RESOLVABLE_ASSIGNEE",
+        )
+        self.entity_id = entity_id
+
+
+class InvalidTaskTransitionException(RemediationException):
+    """Raised when attempting an illegal state transition on a remediation task."""
+
+    def __init__(self, task_id: str, from_state: str, to_state: str) -> None:
+        super().__init__(
+            f"Cannot transition remediation task '{task_id}' from '{from_state}' to '{to_state}'.",
+            error_code="INVALID_TASK_TRANSITION",
+        )
+        self.task_id = task_id
+        self.from_state = from_state
+        self.to_state = to_state
+
+
+class MandatoryReasonException(RemediationException):
+    """Raised when rejecting, deferring, or overriding a task without a mandatory justification."""
+
+    def __init__(self, action: str) -> None:
+        super().__init__(
+            f"A mandatory reason code/justification is required to perform '{action}'.",
+            error_code="MANDATORY_REASON_REQUIRED",
+        )
+        self.action = action
+
+
+class TaskAlreadyClosedException(RemediationException):
+    """Raised when attempting to modify an already closed or terminal remediation task."""
+
+    def __init__(self, task_id: str, state: str) -> None:
+        super().__init__(
+            f"Remediation task '{task_id}' is in terminal state '{state}' and cannot be altered.",
+            error_code="TASK_ALREADY_CLOSED",
+        )
+        self.task_id = task_id
+        self.state = state
+
+
+class VerificationFailedException(RemediationException):
+    """Raised when automated condition verification fails for a resolved task."""
+
+    def __init__(self, task_id: str, reason: str) -> None:
+        super().__init__(
+            f"Automated verification for task '{task_id}' failed: {reason}",
+            error_code="VERIFICATION_FAILED",
+        )
+        self.task_id = task_id
+        self.reason = reason

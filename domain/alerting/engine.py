@@ -363,13 +363,14 @@ class AlertEngine:
         *,
         tenant_context: TenantContext,
         reason: str | None = None,
+        remediation_task_id: str | None = None,
     ) -> AlertEntity:
         """Acknowledges an active alert."""
         alert = self.repository.get_alert(alert_id, tenant_context=tenant_context)
         if not alert:
             raise AlertNotFoundException(alert_id)
 
-        alert.acknowledge(actor, reason=reason)
+        alert.acknowledge(actor, reason=reason, remediation_task_id=remediation_task_id)
         saved = self.repository.save_alert(alert, tenant_context=tenant_context)
 
         self._emit_audit(
@@ -378,7 +379,11 @@ class AlertEngine:
             tenant_context=tenant_context,
             target_id=alert.id,
             target_type="AlertEntity",
-            details={"acknowledged_by": actor, "reason": reason},
+            details={
+                "acknowledged_by": actor,
+                "reason": reason,
+                "remediation_task_id": remediation_task_id,
+            },
         )
         return saved
 

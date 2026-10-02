@@ -1,0 +1,62 @@
+[
+  {
+    "code": "FIXED_AND_VERIFIED",
+    "display_name": "Fixed and Verified",
+    "description": "Remediation verified by automated platform re-test; condition confirmed cleared.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_verified_cleared": true,
+      "records_saving": true
+    }
+  },
+  {
+    "code": "FALSE_POSITIVE",
+    "display_name": "False Positive",
+    "description": "Identified condition was determined to be a detection false positive.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_verified_cleared": false,
+      "records_saving": false
+    }
+  },
+  {
+    "code": "RISK_ACCEPTED",
+    "display_name": "Risk Formally Accepted",
+    "description": "Authorized stakeholder accepted the governance or financial risk with expiration.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_verified_cleared": false,
+      "records_saving": false
+    }
+  },
+  {
+    "code": "DUPLICATE_SUPERSEDED",
+    "display_name": "Duplicate Superseded",
+    "description": "Closed as duplicate in favor of a canonical parent remediation task.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_verified_cleared": false,
+      "records_saving": false
+    }
+  },
+  {
+    "code": "RESOURCE_TERMINATED",
+    "display_name": "Resource Decommissioned",
+    "description": "Underlying cloud resource was terminated or deallocated completely.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_verified_cleared": true,
+      "records_saving": true
+    }
+  }
+]

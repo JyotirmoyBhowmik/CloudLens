@@ -381,7 +381,7 @@ def test_acceptance_ac_062_temporary_exemption_suppresses_alert_and_expires_auto
 ) -> None:
     """AC-062: Temporary runtime exemption suppresses alert, appears in active reports, and expires."""
     service = get_runtime_service()
-    now = datetime.now(UTC)
+    now = datetime(2026, 10, 11, 12, 0, tzinfo=UTC)  # Sunday (weekend)
 
     resource_id = "vm-loadtest-runner"
     w_start = now - timedelta(hours=6)

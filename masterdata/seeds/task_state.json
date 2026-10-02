@@ -1,0 +1,134 @@
+[
+  {
+    "code": "OPEN",
+    "display_name": "Open",
+    "description": "Initial state when a problem or violation is detected by the platform.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "ASSIGNED",
+    "display_name": "Assigned",
+    "description": "Accountable owner resolved and assigned to the remediation task.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "IN_PROGRESS",
+    "display_name": "In Progress",
+    "description": "Remediation actively being investigated or worked on by the assignee.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "BLOCKED",
+    "display_name": "Blocked",
+    "description": "Remediation blocked pending external dependency or blocker.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "AWAITING_VERIFICATION",
+    "display_name": "Awaiting Verification",
+    "description": "Claimed resolved by assignee; awaiting automated platform re-test.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": true
+    }
+  },
+  {
+    "code": "RESOLVED",
+    "display_name": "Resolved",
+    "description": "Preliminary resolution marked by assignee before verification run.",
+    "sort_order": 6,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": true
+    }
+  },
+  {
+    "code": "VERIFIED",
+    "display_name": "Verified",
+    "description": "Underlying condition was re-tested by the platform and verified cleared.",
+    "sort_order": 7,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "CLOSED",
+    "display_name": "Closed",
+    "description": "Finalized remediation task after verified completion or authorized disposition.",
+    "sort_order": 8,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": true,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "REJECTED",
+    "display_name": "Rejected",
+    "description": "Dismissed as false positive or non-actionable with mandatory justification.",
+    "sort_order": 9,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": true,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "DEFERRED",
+    "display_name": "Deferred",
+    "description": "Formally postponed with mandatory justification, expiry, and approval.",
+    "sort_order": 10,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": false,
+      "requires_verification": false
+    }
+  },
+  {
+    "code": "DUPLICATE",
+    "display_name": "Duplicate",
+    "description": "Superseded by a canonical parent task addressing the same underlying condition.",
+    "sort_order": 11,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "is_terminal": true,
+      "requires_verification": false
+    }
+  }
+]
