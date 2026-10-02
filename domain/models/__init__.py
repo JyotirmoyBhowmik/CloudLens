@@ -10,6 +10,8 @@ from domain.models.enums import (
     AlertSeverity,
     AlertStatus,
     AlertType,
+    ApprovalChainMode,
+    ApproverResolutionType,
     AuditEventType,
     AuthMethod,
     BudgetPeriod,
@@ -22,6 +24,7 @@ from domain.models.enums import (
     ContextualAlertVisibility,
     CostSourceType,
     CredentialType,
+    DecisionOutcome,
     DeliveryOutcome,
     DependencyDirection,
     DependencyType,
@@ -57,6 +60,8 @@ from domain.models.enums import (
     TokenType,
     UserStatus,
     WizardStep,
+    WorkflowRequestType,
+    WorkflowState,
 )
 from domain.models.exceptions import (
     AlertException,
@@ -356,4 +361,9 @@ __all__ = [
     "SyncJob",
     "AuditEvent",
     "Override",
+    "WorkflowState",
+    "ApprovalChainMode",
+    "DecisionOutcome",
+    "ApproverResolutionType",
+    "WorkflowRequestType",
 ]

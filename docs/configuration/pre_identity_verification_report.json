@@ -273,6 +273,12 @@
       "record_count": 8,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/quota.json"
+    },
+    "WORKFLOW_DEFINITION": {
+      "master_code": "WORKFLOW_DEFINITION",
+      "record_count": 11,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/workflow_definition.json"
     }
   },
   "roles_defined": [
@@ -338,11 +344,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-606bb506c025",
+  "first_audit_event_id": "aud-boot-316b3b0f4b8c",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-10-02T10:25:51.692933Z",
-  "correlation_id": "corr-boot-7526a479"
+  "timestamp": "2026-10-02T11:36:12.865753Z",
+  "correlation_id": "corr-boot-c42a83bf"
 }

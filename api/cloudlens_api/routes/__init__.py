@@ -27,6 +27,7 @@ from api.cloudlens_api.routes.sync import router as sync_router
 from api.cloudlens_api.routes.thresholds import router as thresholds_router
 from api.cloudlens_api.routes.usage import router as usage_router
 from api.cloudlens_api.routes.wizard import router as wizard_router
+from api.cloudlens_api.routes.workflows import router as workflows_router
 
 __all__ = [
     "alerts_router",
@@ -56,4 +57,5 @@ __all__ = [
     "thresholds_router",
     "usage_router",
     "wizard_router",
+    "workflows_router",
 ]

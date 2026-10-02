@@ -743,6 +743,30 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/quota.json",
         expected_review_period_days=90,
     ),
+    "WORKFLOW_DEFINITION": MasterRegistryEntry(
+        code="WORKFLOW_DEFINITION",
+        name="Workflow Definitions",
+        purpose="Defines approval chains, trigger conditions, serial/parallel/quorum rules, SLAs, escalation paths, and auto-approval policies.",
+        schema_def={
+            "request_type": "string",
+            "entity_type": "string",
+            "trigger_condition": "object",
+            "stages": "array",
+            "approval_mode": "string",
+            "quorum": "number",
+            "sla_working_hours": "number",
+            "working_schedule_id": "string",
+            "escalation_path": "object",
+            "auto_approve_conditions": "object",
+            "auto_reject_on_expiry": "boolean",
+        },
+        is_tenant_scoped=True,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["workflows", "budgets", "overrides", "policies", "rbac", "tenants"],
+        seed_file="masterdata/seeds/workflow_definition.json",
+        expected_review_period_days=90,
+    ),
 }
 
 

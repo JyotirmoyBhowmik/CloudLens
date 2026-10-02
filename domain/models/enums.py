@@ -687,6 +687,21 @@ class AuditEventType(StrEnum):
     )
     GOVERNANCE_TASK_CREATED = "GOVERNANCE_TASK_CREATED"
 
+    # Workflow & Approval Engine (Prompt 50)
+    WORKFLOW_REQUEST_CREATED = "WORKFLOW_REQUEST_CREATED"
+    WORKFLOW_REQUEST_SUBMITTED = "WORKFLOW_REQUEST_SUBMITTED"
+    WORKFLOW_STAGE_APPROVED = "WORKFLOW_STAGE_APPROVED"
+    WORKFLOW_STAGE_REJECTED = "WORKFLOW_STAGE_REJECTED"
+    WORKFLOW_REQUEST_APPROVED = "WORKFLOW_REQUEST_APPROVED"
+    WORKFLOW_REQUEST_REJECTED = "WORKFLOW_REQUEST_REJECTED"
+    WORKFLOW_REQUEST_WITHDRAWN = "WORKFLOW_REQUEST_WITHDRAWN"
+    WORKFLOW_REQUEST_ESCALATED = "WORKFLOW_REQUEST_ESCALATED"
+    WORKFLOW_REQUEST_EXPIRED = "WORKFLOW_REQUEST_EXPIRED"
+    WORKFLOW_REQUEST_APPLIED = "WORKFLOW_REQUEST_APPLIED"
+    WORKFLOW_APPLICATION_FAILED = "WORKFLOW_APPLICATION_FAILED"
+    WORKFLOW_DELEGATION_REGISTERED = "WORKFLOW_DELEGATION_REGISTERED"
+    WORKFLOW_INFO_REQUESTED = "WORKFLOW_INFO_REQUESTED"
+
 
 class OverrideClass(StrEnum):
     """Categorisation of operational and governance overrides (Prompt 13 Item 87)."""
@@ -1039,3 +1054,61 @@ class LogicalOperator(StrEnum):
     AND = "AND"
     OR = "OR"
     NOT = "NOT"
+
+
+class WorkflowState(StrEnum):
+    """Lifecycle states of a workflow request (Prompt 50).
+
+    States: Draft, Submitted, In Review, Approved, Rejected, Withdrawn, Expired, Applied.
+    """
+
+    DRAFT = "DRAFT"
+    SUBMITTED = "SUBMITTED"
+    IN_REVIEW = "IN_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    WITHDRAWN = "WITHDRAWN"
+    EXPIRED = "EXPIRED"
+    APPLIED = "APPLIED"
+
+
+class ApprovalChainMode(StrEnum):
+    """Execution mode of an approval chain stage (Prompt 50)."""
+
+    SERIAL = "SERIAL"
+    PARALLEL = "PARALLEL"
+
+
+class DecisionOutcome(StrEnum):
+    """Actions an approver can take on a pending request (Prompt 50)."""
+
+    APPROVE = "APPROVE"
+    REJECT = "REJECT"
+    REQUEST_MORE_INFO = "REQUEST_MORE_INFO"
+
+
+class ApproverResolutionType(StrEnum):
+    """Dynamic resolution strategy for stage approvers (Prompt 50)."""
+
+    ROLE = "ROLE"
+    SCOPE_OWNERSHIP = "SCOPE_OWNERSHIP"
+    COST_CENTRE_OWNER = "COST_CENTRE_OWNER"
+    BUSINESS_UNIT_OWNER = "BUSINESS_UNIT_OWNER"
+    BUDGET_OWNER = "BUDGET_OWNER"
+    EXPLICIT_LIST = "EXPLICIT_LIST"
+
+
+class WorkflowRequestType(StrEnum):
+    """Canonical request types wired into the generic workflow engine (Prompt 50)."""
+
+    BUDGET_APPROVAL = "BUDGET_APPROVAL"
+    OVERRIDE_APPROVAL = "OVERRIDE_APPROVAL"
+    POLICY_EXEMPTION = "POLICY_EXEMPTION"
+    CUSTOM_ROLE_CREATION = "CUSTOM_ROLE_CREATION"
+    MASTER_DATA_CHANGE = "MASTER_DATA_CHANGE"
+    TENANT_LIFECYCLE = "TENANT_LIFECYCLE"
+    CONNECTOR_DELETION = "CONNECTOR_DELETION"
+    COST_MODEL_CHANGE = "COST_MODEL_CHANGE"
+    ALLOCATION_RULE_CHANGE = "ALLOCATION_RULE_CHANGE"
+    RETENTION_CHANGE = "RETENTION_CHANGE"
+    RATE_CARD_UPLOAD = "RATE_CARD_UPLOAD"

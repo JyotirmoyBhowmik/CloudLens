@@ -38,6 +38,7 @@ from api.cloudlens_api.routes import (
     thresholds_router,
     usage_router,
     wizard_router,
+    workflows_router,
 )
 from domain.models.exceptions import (
     AlertException,
@@ -78,11 +79,13 @@ from domain.models.exceptions import (
     InvalidPricingTierException,
     InvalidQuotaLimitException,
     InvalidSubscriptionException,
+    InvalidWorkflowTransitionException,
     ManualQuotaSourceNoteRequiredException,
     MetricNotApplicableException,
     MissingAlertEvidenceException,
     MonitoringTypeNotFoundException,
     NativeBudgetReadOnlyException,
+    NoResolvableApproverException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
@@ -112,10 +115,18 @@ from domain.models.exceptions import (
     ThresholdOverrideReasonTooShortException,
     ThresholdPreviewDisabledException,
     ThresholdRuleNotFoundException,
+    UnauthorizedApproverException,
     UndeclaredCapabilityException,
     UnknownSchemaVersionException,
     UsageException,
     WizardSessionNotFoundException,
+    WorkflowAlreadyFinalizedException,
+    WorkflowApplicationFailedException,
+    WorkflowDefinitionNotFoundException,
+    WorkflowDelegationExpiredException,
+    WorkflowException,
+    WorkflowMandatoryCommentException,
+    WorkflowNotFoundException,
 )
 from domain.observability import (
     current_correlation_id,
@@ -674,6 +685,43 @@ async def standardized_alert_exception_handler(request: Request, exc: AlertExcep
     )
 
 
+@app.exception_handler(WorkflowException)
+async def workflow_exception_handler(request: Request, exc: WorkflowException) -> JSONResponse:
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, (WorkflowNotFoundException, WorkflowDefinitionNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, UnauthorizedApproverException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(
+        exc,
+        (
+            WorkflowMandatoryCommentException,
+            InvalidWorkflowTransitionException,
+            WorkflowDelegationExpiredException,
+            WorkflowAlreadyFinalizedException,
+        ),
+    ):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, NoResolvableApproverException):
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    elif isinstance(exc, WorkflowApplicationFailedException):
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    else:
+        status_code = status.HTTP_400_BAD_REQUEST
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -701,6 +749,7 @@ app.include_router(quotas_router)
 app.include_router(budgets_router)
 app.include_router(forecasting_router)
 app.include_router(policies_router)
+app.include_router(workflows_router)
 
 
 class HealthResponse(BaseModel):

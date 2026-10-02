@@ -1695,3 +1695,126 @@ class AlertValidationException(AlertException):
             message,
             error_code="ALERT_VALIDATION_ERROR",
         )
+
+
+# ==============================================================================
+# Workflow & Approval Engine Exceptions (Prompt 50)
+# ==============================================================================
+
+
+class WorkflowException(DomainModelException):
+    """Base exception for all workflow and approval engine errors (Prompt 50)."""
+
+    def __init__(self, message: str, error_code: str = "WORKFLOW_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class WorkflowNotFoundException(WorkflowException):
+    """Raised when a requested workflow request does not exist."""
+
+    def __init__(self, request_id: str) -> None:
+        super().__init__(
+            f"Workflow request '{request_id}' was not found.",
+            error_code="WORKFLOW_NOT_FOUND",
+        )
+        self.request_id = request_id
+
+
+class WorkflowDefinitionNotFoundException(WorkflowException):
+    """Raised when a workflow definition is not found for a request type."""
+
+    def __init__(self, request_type: str) -> None:
+        super().__init__(
+            f"No workflow definition registered for request type '{request_type}'.",
+            error_code="WORKFLOW_DEFINITION_NOT_FOUND",
+        )
+        self.request_type = request_type
+
+
+class NoResolvableApproverException(WorkflowException):
+    """Governance exception raised when no approver can be resolved (Prompt 50).
+
+    Prevents requests from silently vanishing.
+    """
+
+    def __init__(self, request_id: str, stage_name: str, resolution_type: str) -> None:
+        super().__init__(
+            f"Governance exception: No approver could be resolved for workflow request '{request_id}' "
+            f"at stage '{stage_name}' using resolution '{resolution_type}', and fallback exhausted.",
+            error_code="NO_RESOLVABLE_APPROVER_EXCEPTION",
+        )
+        self.request_id = request_id
+        self.stage_name = stage_name
+        self.resolution_type = resolution_type
+
+
+class InvalidWorkflowTransitionException(WorkflowException):
+    """Raised when an illegal workflow state transition is attempted."""
+
+    def __init__(self, request_id: str, current_state: str, attempted_state: str) -> None:
+        super().__init__(
+            f"Cannot transition workflow '{request_id}' from state '{current_state}' to '{attempted_state}'.",
+            error_code="INVALID_WORKFLOW_TRANSITION",
+        )
+        self.request_id = request_id
+        self.current_state = current_state
+        self.attempted_state = attempted_state
+
+
+class WorkflowApplicationFailedException(WorkflowException):
+    """Raised when an approved change fails to apply atomically."""
+
+    def __init__(self, request_id: str, reason: str) -> None:
+        super().__init__(
+            f"Failed to apply approved change for workflow '{request_id}': {reason}",
+            error_code="WORKFLOW_APPLICATION_FAILED",
+        )
+        self.request_id = request_id
+        self.reason = reason
+
+
+class UnauthorizedApproverException(WorkflowException):
+    """Raised when an actor is not authorized to approve the current stage."""
+
+    def __init__(self, request_id: str, actor_id: str, stage_name: str) -> None:
+        super().__init__(
+            f"Actor '{actor_id}' is not an authorized approver or delegate for request '{request_id}' at stage '{stage_name}'.",
+            error_code="UNAUTHORIZED_APPROVER",
+        )
+        self.request_id = request_id
+        self.actor_id = actor_id
+        self.stage_name = stage_name
+
+
+class WorkflowMandatoryCommentException(WorkflowException):
+    """Raised when rejecting a request without a mandatory comment."""
+
+    def __init__(self, request_id: str) -> None:
+        super().__init__(
+            f"A mandatory comment is required when rejecting workflow request '{request_id}'.",
+            error_code="WORKFLOW_MANDATORY_COMMENT_REQUIRED",
+        )
+        self.request_id = request_id
+
+
+class WorkflowDelegationExpiredException(WorkflowException):
+    """Raised when attempting to act on an expired delegation."""
+
+    def __init__(self, delegation_id: str) -> None:
+        super().__init__(
+            f"Delegation '{delegation_id}' is expired or inactive.",
+            error_code="WORKFLOW_DELEGATION_EXPIRED",
+        )
+        self.delegation_id = delegation_id
+
+
+class WorkflowAlreadyFinalizedException(WorkflowException):
+    """Raised when attempting to modify a finalized workflow request."""
+
+    def __init__(self, request_id: str, state: str) -> None:
+        super().__init__(
+            f"Workflow request '{request_id}' is already finalized in state '{state}' and cannot be altered.",
+            error_code="WORKFLOW_ALREADY_FINALIZED",
+        )
+        self.request_id = request_id
+        self.state = state

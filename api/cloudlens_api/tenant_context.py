@@ -144,11 +144,20 @@ def get_authenticated_tenant_context(
 
     # 3. Fallback for unauthenticated test callers / internal test harness
     fallback_tenant = x_tenant_id or "default-tenant"
+    actor_id = request.headers.get("X-Actor-ID") or request.headers.get("X-User-ID") or "anonymous"
+    roles_header = request.headers.get("X-User-Roles")
+    roles = (
+        [r.strip() for r in roles_header.split(",") if r.strip()]
+        if roles_header
+        else ["TENANT_USER"]
+    )
     tc = TenantContext(
         tenant_id=fallback_tenant,
-        user_id="anonymous",
-        roles=["TENANT_USER"],
+        user_id=actor_id,
+        email=request.headers.get("X-User-Email"),
+        roles=roles,
         correlation_id=correlation_id,
+        is_superuser=("GLOBAL_ADMIN" in roles),
     )
     request.state.tenant_context = tc
     current_tenant_id.set(tc.tenant_id)

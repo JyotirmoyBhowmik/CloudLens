@@ -1,0 +1,579 @@
+[
+  {
+    "code": "BUDGET_APPROVAL",
+    "display_name": "High-Value Budget Approval Workflow",
+    "description": "Formal approval chain required for cloud budgets exceeding the allocation approval ceiling.",
+    "sort_order": 1,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-budget-approval",
+      "tenant_id": null,
+      "request_type": "BUDGET_APPROVAL",
+      "entity_type": "budget",
+      "name": "High-Value Budget Approval Workflow",
+      "description": "Formal approval chain required for cloud budgets exceeding the allocation approval ceiling.",
+      "trigger_condition": {
+        "amount_gt": 10000.0,
+        "attributes_match": {},
+        "always": false
+      },
+      "stages": [
+        {
+          "stage_id": "stage-budget-finops",
+          "name": "FinOps Lead Review",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "FINOPS_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        },
+        {
+          "stage_id": "stage-budget-exec",
+          "name": "Budget Scope Authority Approval",
+          "sequence_order": 2,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "SCOPE_OWNERSHIP",
+            "target_role": null,
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "GLOBAL_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "OVERRIDE_APPROVAL",
+    "display_name": "Governance & Operational Override Approval",
+    "description": "Mandatory sign-off for temporary or permanent operational and threshold overrides.",
+    "sort_order": 2,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-override-approval",
+      "tenant_id": null,
+      "request_type": "OVERRIDE_APPROVAL",
+      "entity_type": "override",
+      "name": "Governance & Operational Override Approval",
+      "description": "Mandatory sign-off for temporary or permanent operational and threshold overrides.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-override-security",
+          "name": "Security & Compliance Review",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "SECURITY_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 24,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 12,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "POLICY_EXEMPTION",
+    "display_name": "Time-Boxed Policy Exemption Authorization",
+    "description": "Formal sign-off for granting exceptions to platform governance guardrails.",
+    "sort_order": 3,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-policy-exemption",
+      "tenant_id": null,
+      "request_type": "POLICY_EXEMPTION",
+      "entity_type": "policy_exemption",
+      "name": "Time-Boxed Policy Exemption Authorization",
+      "description": "Formal sign-off for granting exceptions to platform governance guardrails.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-exemption-gov",
+          "name": "Governance Authority Review",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "SECURITY_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "CUSTOM_ROLE_CREATION",
+    "display_name": "Custom RBAC Role Composition Approval",
+    "description": "Parallel dual-authorization by Security Admin and Tenant Admin.",
+    "sort_order": 4,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-custom-role",
+      "tenant_id": null,
+      "request_type": "CUSTOM_ROLE_CREATION",
+      "entity_type": "role",
+      "name": "Custom RBAC Role Composition Approval",
+      "description": "Parallel dual-authorization by Security Admin and Tenant Admin.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-role-dual-auth",
+          "name": "Dual Security & Admin Sign-off",
+          "sequence_order": 1,
+          "mode": "PARALLEL",
+          "quorum": 2,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "SECURITY_ADMIN",
+            "explicit_approvers": [
+              "sec-lead",
+              "tenant-admin-1"
+            ],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "PARALLEL",
+      "quorum": 2,
+      "sla_working_hours": 72,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "GLOBAL_ADMIN",
+        "escalate_after_hours": 36,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "MASTER_DATA_CHANGE",
+    "display_name": "Master Data Registry Mutation Approval",
+    "description": "Data steward sign-off before publishing modified master records.",
+    "sort_order": 5,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-master-data",
+      "tenant_id": null,
+      "request_type": "MASTER_DATA_CHANGE",
+      "entity_type": "master_data",
+      "name": "Master Data Registry Mutation Approval",
+      "description": "Data steward sign-off before publishing modified master records.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-md-steward",
+          "name": "Data Steward Review",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "FINOPS_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "GLOBAL_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "TENANT_LIFECYCLE",
+    "display_name": "Tenant Lifecycle Sign-off",
+    "description": "Global administration approval for tenant onboarding or suspension.",
+    "sort_order": 6,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-tenant-lifecycle",
+      "tenant_id": null,
+      "request_type": "TENANT_LIFECYCLE",
+      "entity_type": "tenant",
+      "name": "Tenant Lifecycle Sign-off",
+      "description": "Global administration approval for tenant onboarding or suspension.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-tenant-lifecycle",
+          "name": "Platform Global Admin Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "GLOBAL_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "GLOBAL_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 24,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "GLOBAL_ADMIN",
+        "escalate_after_hours": 12,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "CONNECTOR_DELETION",
+    "display_name": "Cloud Connector Decommission Approval",
+    "description": "Approval required before disconnecting telemetry and billing connectors.",
+    "sort_order": 7,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-connector-deletion",
+      "tenant_id": null,
+      "request_type": "CONNECTOR_DELETION",
+      "entity_type": "connector",
+      "name": "Cloud Connector Decommission Approval",
+      "description": "Approval required before disconnecting telemetry and billing connectors.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-connector-cloud-admin",
+          "name": "Cloud Operations Lead Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "CLOUD_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 24,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 12,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "COST_MODEL_CHANGE",
+    "display_name": "Cost Model Adjustment Approval",
+    "description": "FinOps and Finance review for cost calculation formulas and amortization rules.",
+    "sort_order": 8,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-cost-model",
+      "tenant_id": null,
+      "request_type": "COST_MODEL_CHANGE",
+      "entity_type": "cost_model",
+      "name": "Cost Model Adjustment Approval",
+      "description": "FinOps and Finance review for cost calculation formulas and amortization rules.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-cost-finance",
+          "name": "Finance Controller Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "FINANCE_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "ALLOCATION_RULE_CHANGE",
+    "display_name": "Cost Allocation Rule Modification Approval",
+    "description": "Review for business unit attribution and split-cost allocation rules.",
+    "sort_order": 9,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-allocation-rule",
+      "tenant_id": null,
+      "request_type": "ALLOCATION_RULE_CHANGE",
+      "entity_type": "allocation_rule",
+      "name": "Cost Allocation Rule Modification Approval",
+      "description": "Review for business unit attribution and split-cost allocation rules.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-alloc-finops",
+          "name": "FinOps Governance Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "FINOPS_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "RETENTION_CHANGE",
+    "display_name": "Data Retention & Pruning Policy Alteration",
+    "description": "Legal and compliance sign-off for reducing or extending data retention windows.",
+    "sort_order": 10,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-retention-change",
+      "tenant_id": null,
+      "request_type": "RETENTION_CHANGE",
+      "entity_type": "retention_policy",
+      "name": "Data Retention & Pruning Policy Alteration",
+      "description": "Legal and compliance sign-off for reducing or extending data retention windows.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-retention-security",
+          "name": "Data Governance Officer Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "SECURITY_ADMIN",
+            "explicit_approvers": [],
+            "fallback_role": "TENANT_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 72,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 36,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  },
+  {
+    "code": "RATE_CARD_UPLOAD",
+    "display_name": "Negotiated Enterprise Rate Card Approval",
+    "description": "Procurement and commercial validation before applying custom negotiated discount matrices.",
+    "sort_order": 11,
+    "parent_code": null,
+    "is_active": true,
+    "attributes": {
+      "id": "wf-def-rate-card",
+      "tenant_id": null,
+      "request_type": "RATE_CARD_UPLOAD",
+      "entity_type": "rate_card",
+      "name": "Negotiated Enterprise Rate Card Approval",
+      "description": "Procurement and commercial validation before applying custom negotiated discount matrices.",
+      "trigger_condition": {
+        "amount_gt": null,
+        "attributes_match": {},
+        "always": true
+      },
+      "stages": [
+        {
+          "stage_id": "stage-rate-procurement",
+          "name": "Procurement Category Manager Sign-off",
+          "sequence_order": 1,
+          "mode": "SERIAL",
+          "quorum": 1,
+          "approver_spec": {
+            "resolution_type": "ROLE",
+            "target_role": "PROCUREMENT",
+            "explicit_approvers": [],
+            "fallback_role": "FINOPS_ADMIN"
+          }
+        }
+      ],
+      "approval_mode": "SERIAL",
+      "quorum": 1,
+      "sla_working_hours": 48,
+      "working_schedule_id": "WW_STANDARD_MON_FRI",
+      "escalation_path": {
+        "escalate_to_role": "TENANT_ADMIN",
+        "escalate_after_hours": 24,
+        "escalated_to": [],
+        "escalated_at": null,
+        "is_escalated": false
+      },
+      "auto_approve_conditions": null,
+      "auto_reject_on_expiry": true,
+      "is_active": true,
+      "version": 1
+    }
+  }
+]

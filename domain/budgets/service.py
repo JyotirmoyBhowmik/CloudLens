@@ -169,6 +169,39 @@ class BudgetService:
             tenant_context=tenant_context,
         )
 
+        # Wire into Unified Workflow & Approval Engine (Prompt 50)
+        if saved.approval_status == BudgetApprovalStatus.PENDING_APPROVAL:
+            try:
+                from domain.workflows.models import SubjectEntity, WorkflowSubmitRequest
+                from domain.workflows.service import get_workflow_service
+
+                wf_service = get_workflow_service()
+                wf_service.submit_request(
+                    WorkflowSubmitRequest(
+                        request_type="BUDGET_APPROVAL",
+                        title=f"Budget Approval: {saved.name} ({saved.currency} {saved.amount:,.2f})",
+                        subject_entity=SubjectEntity(
+                            entity_type="budget",
+                            entity_id=saved.id,
+                            scope_type=saved.scope_type.value,
+                            scope_id=saved.scope_id,
+                            metadata={"owner": saved.owner, "amount": saved.amount},
+                        ),
+                        justification=saved.notes
+                        or f"Approval required for budget exceeding limit ({saved.amount} > {self.approval_threshold})",
+                        payload={
+                            "budget_id": saved.id,
+                            "name": saved.name,
+                            "amount": saved.amount,
+                            "currency": saved.currency,
+                        },
+                        financial_impact=saved.amount,
+                    ),
+                    tenant_context=tenant_context,
+                )
+            except Exception as e:
+                logger.debug("Unified workflow engine submission for budget creation: %s", e)
+
         return saved, warnings
 
     # ==========================================================================
@@ -238,6 +271,40 @@ class BudgetService:
             tenant_context=tenant_context,
         )
 
+        # Wire into Unified Workflow & Approval Engine (Prompt 50)
+        if saved.approval_status == BudgetApprovalStatus.PENDING_APPROVAL:
+            try:
+                from domain.workflows.models import SubjectEntity, WorkflowSubmitRequest
+                from domain.workflows.service import get_workflow_service
+
+                wf_service = get_workflow_service()
+                wf_service.submit_request(
+                    WorkflowSubmitRequest(
+                        request_type="BUDGET_APPROVAL",
+                        title=f"Budget Amendment Approval: {saved.name} ({saved.currency} {saved.amount:,.2f})",
+                        subject_entity=SubjectEntity(
+                            entity_type="budget",
+                            entity_id=saved.id,
+                            scope_type=saved.scope_type.value,
+                            scope_id=saved.scope_id,
+                            metadata={"owner": saved.owner, "amount": saved.amount},
+                        ),
+                        justification=request.reason
+                        or f"Amended budget ceiling exceeds limit ({request.new_amount} > {self.approval_threshold})",
+                        payload={
+                            "budget_id": saved.id,
+                            "new_amount": request.new_amount,
+                            "previous_amount": previous_amount,
+                            "reason": request.reason,
+                        },
+                        previous_values={"amount": previous_amount},
+                        financial_impact=request.new_amount,
+                    ),
+                    tenant_context=tenant_context,
+                )
+            except Exception as e:
+                logger.debug("Unified workflow engine submission for budget amendment: %s", e)
+
         return saved
 
     # ==========================================================================
@@ -300,6 +367,34 @@ class BudgetService:
             tenant_context=tenant_context,
         )
 
+        # Synchronize with Unified Workflow Engine (Prompt 50)
+        try:
+            from domain.models.enums import DecisionOutcome, WorkflowState
+            from domain.workflows.models import WorkflowDecisionRequest
+            from domain.workflows.service import get_workflow_service
+
+            wf_service = get_workflow_service()
+            open_requests = wf_service.list_requests(
+                tenant_context=tenant_context,
+                filter_params={"request_type": "BUDGET_APPROVAL"},
+            )
+            for wf_req in open_requests:
+                if wf_req.subject_entity.entity_id == budget_id and wf_req.state in {
+                    WorkflowState.SUBMITTED,
+                    WorkflowState.IN_REVIEW,
+                }:
+                    wf_service.record_decision(
+                        wf_req.id,
+                        WorkflowDecisionRequest(
+                            decision=DecisionOutcome.APPROVE,
+                            comment=request.comment,
+                        ),
+                        tenant_context=tenant_context,
+                    )
+                    break
+        except Exception as e:
+            logger.debug("Unified workflow engine synchronization on budget approval: %s", e)
+
         return saved
 
     def reject_budget(
@@ -348,6 +443,34 @@ class BudgetService:
             },
             tenant_context=tenant_context,
         )
+
+        # Synchronize with Unified Workflow Engine (Prompt 50)
+        try:
+            from domain.models.enums import DecisionOutcome, WorkflowState
+            from domain.workflows.models import WorkflowDecisionRequest
+            from domain.workflows.service import get_workflow_service
+
+            wf_service = get_workflow_service()
+            open_requests = wf_service.list_requests(
+                tenant_context=tenant_context,
+                filter_params={"request_type": "BUDGET_APPROVAL"},
+            )
+            for wf_req in open_requests:
+                if wf_req.subject_entity.entity_id == budget_id and wf_req.state in {
+                    WorkflowState.SUBMITTED,
+                    WorkflowState.IN_REVIEW,
+                }:
+                    wf_service.record_decision(
+                        wf_req.id,
+                        WorkflowDecisionRequest(
+                            decision=DecisionOutcome.REJECT,
+                            comment=request.comment,
+                        ),
+                        tenant_context=tenant_context,
+                    )
+                    break
+        except Exception as e:
+            logger.debug("Unified workflow engine synchronization on budget rejection: %s", e)
 
         return saved
 
