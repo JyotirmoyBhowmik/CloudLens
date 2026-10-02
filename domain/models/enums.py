@@ -13,6 +13,10 @@ class ProviderType(StrEnum):
     CANONICAL = "canonical"
 
 
+# Alias for CloudProvider across domain layers
+CloudProvider = ProviderType
+
+
 class ScopeRole(StrEnum):
     """Canonical roles for multi-cloud scope hierarchy (Prompt 05 Item 31)."""
 
@@ -540,6 +544,14 @@ class AuditEventType(StrEnum):
     THRESHOLD_OVERRIDE_EXPIRED = "THRESHOLD_OVERRIDE_EXPIRED"
     THRESHOLD_STORM_GROUPED = "THRESHOLD_STORM_GROUPED"
 
+    # Quota & Limits Headroom (Prompt 54)
+    QUOTA_DISCOVERED = "QUOTA_DISCOVERED"
+    QUOTA_MANUAL_RECORDED = "QUOTA_MANUAL_RECORDED"
+    QUOTA_HEADROOM_ALERT_DISPATCHED = "QUOTA_HEADROOM_ALERT_DISPATCHED"
+    QUOTA_INCREASE_REQUESTED = "QUOTA_INCREASE_REQUESTED"
+    QUOTA_INCREASE_STATUS_UPDATED = "QUOTA_INCREASE_STATUS_UPDATED"
+    QUOTA_REMEDIATION_TASK_CREATED = "QUOTA_REMEDIATION_TASK_CREATED"
+
 
 class OverrideClass(StrEnum):
     """Categorisation of operational and governance overrides (Prompt 13 Item 87)."""
@@ -556,6 +568,7 @@ class OverrideClass(StrEnum):
     RUNTIME_SCHEDULE = "RUNTIME_SCHEDULE"
     RUNTIME_EXEMPTION = "RUNTIME_EXEMPTION"
     THRESHOLD_RULE = "THRESHOLD_RULE"
+    QUOTA_LIMIT = "QUOTA_LIMIT"
 
 
 class OverrideStatus(StrEnum):
@@ -565,3 +578,62 @@ class OverrideStatus(StrEnum):
     REVERTED = "REVERTED"
     EXPIRED = "EXPIRED"
     CANCELLED = "CANCELLED"
+
+
+# ==============================================================================
+# Quota & Service Limits Enums (Prompt 54)
+# ==============================================================================
+
+
+class QuotaScopeType(StrEnum):
+    """Scope level at which a service limit or capacity constraint applies (Prompt 54)."""
+
+    ACCOUNT = "ACCOUNT"
+    SUBSCRIPTION = "SUBSCRIPTION"
+    PROJECT = "PROJECT"
+    COMPARTMENT = "COMPARTMENT"
+    REGION = "REGION"
+    GLOBAL = "GLOBAL"
+
+
+class QuotaServiceAffectingType(StrEnum):
+    """Whether quota exhaustion causes service outages or request throttling (Prompt 54)."""
+
+    SERVICE_AFFECTING = "SERVICE_AFFECTING"
+    THROTTLING = "THROTTLING"
+
+
+class QuotaSourceType(StrEnum):
+    """Source classification for a quota limit value (Prompt 54)."""
+
+    PROVIDER = "PROVIDER"
+    MANUAL = "MANUAL"
+
+
+class QuotaHeadroomState(StrEnum):
+    """Operational health state of quota headroom (Prompt 54)."""
+
+    NORMAL = "NORMAL"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+    EXHAUSTED = "EXHAUSTED"
+    UNKNOWN = "UNKNOWN"
+    NOT_SUPPORTED = "NOT_SUPPORTED"
+
+
+class QuotaIncreaseRequestStatus(StrEnum):
+    """Status of a quota increase request with the cloud provider (Prompt 54)."""
+
+    REQUESTED = "REQUESTED"
+    PENDING_PROVIDER = "PENDING_PROVIDER"
+    GRANTED = "GRANTED"
+    REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
+
+
+class QuotaCoverage(StrEnum):
+    """Degree of programmatic quota coverage exposed by the provider (Prompt 54)."""
+
+    COMPLETE = "COMPLETE"
+    PARTIAL = "PARTIAL"
+    NOT_SUPPORTED = "NOT_SUPPORTED"

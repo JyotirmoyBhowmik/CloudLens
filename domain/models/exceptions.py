@@ -1348,3 +1348,71 @@ class ThresholdPreviewDisabledException(ThresholdException):
             "Threshold preview and historical simulation is a Phase 2 capability and is disabled in MVP.",
             error_code="THRESHOLD_PREVIEW_DISABLED",
         )
+
+
+# ==============================================================================
+# Quota & Service Limits Exceptions (Prompt 54)
+# ==============================================================================
+
+
+class QuotaException(DomainModelException):
+    """Base exception for quota, service limit, and headroom domain errors."""
+
+    def __init__(self, message: str, error_code: str = "QUOTA_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class QuotaNotFoundException(QuotaException):
+    """Raised when a requested cloud quota record is not found."""
+
+    def __init__(self, quota_id: str) -> None:
+        super().__init__(
+            f"Quota '{quota_id}' was not found.",
+            error_code="QUOTA_NOT_FOUND",
+        )
+        self.quota_id = quota_id
+
+
+class QuotaNotSupportedException(QuotaException):
+    """Raised when attempting an operation on a quota that the provider does not expose programmatically."""
+
+    def __init__(self, quota_code: str, provider: str) -> None:
+        super().__init__(
+            f"Quota '{quota_code}' is Not Supported by provider '{provider}'. "
+            "Unknown provider quotas must render as Not Supported, never as unlimited and never as zero.",
+            error_code="QUOTA_NOT_SUPPORTED",
+        )
+        self.quota_code = quota_code
+        self.provider = provider
+
+
+class QuotaIncreaseRequestNotFoundException(QuotaException):
+    """Raised when a quota increase request record cannot be found."""
+
+    def __init__(self, request_id: str) -> None:
+        super().__init__(
+            f"Quota increase request '{request_id}' was not found.",
+            error_code="QUOTA_INCREASE_REQUEST_NOT_FOUND",
+        )
+        self.request_id = request_id
+
+
+class InvalidQuotaLimitException(QuotaException):
+    """Raised when a manual or ingested quota limit value is invalid."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_QUOTA_LIMIT")
+
+
+class ManualQuotaSourceNoteRequiredException(QuotaException):
+    """Raised when manually entering a quota limit without the mandatory source note."""
+
+    def __init__(self, message: str | None = None) -> None:
+        msg = (
+            message
+            or "Manually recorded quota limits require a mandatory source note describing origin and authority."
+        )
+        super().__init__(
+            msg,
+            error_code="MANUAL_QUOTA_SOURCE_NOTE_REQUIRED",
+        )

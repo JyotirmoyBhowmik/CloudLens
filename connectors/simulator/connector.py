@@ -16,6 +16,7 @@ import logging
 import time
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
@@ -25,15 +26,24 @@ from connectors.contract.models import (
     PagedResult,
     PermissionValidationResult,
     ProviderMetadataResult,
+    QuotaItemRecord,
+    QuotaProbeResult,
 )
 from connectors.simulator.models import (
     PaginationParams,
     RawLandingPayload,
     SimulatorProfile,
 )
-from domain.models.enums import ConnectorCapability, ProviderCapability, ProviderType
+from domain.models.enums import (
+    ConnectorCapability,
+    ProviderCapability,
+    ProviderType,
+    QuotaCoverage,
+    QuotaScopeType,
+)
 
 logger = logging.getLogger(__name__)
+
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
 
@@ -709,4 +719,199 @@ class ProviderSimulatorConnector(BaseCloudConnector):
                 }
             ],
             continuation_token=None,
+        )
+
+    # ==========================================================================
+    # Quota & Limits Capability Implementation (Prompt 54)
+    # ==========================================================================
+
+    def collect_quotas(
+        self,
+        scope_id: str = "root",
+        region: str | None = None,
+        pagination: PaginationParams | None = None,
+        *,
+        tenant_context: Any = None,
+    ) -> list[QuotaItemRecord]:
+        """Enumerates cloud service limits, capacity constraints, and quota consumption (Prompt 54)."""
+        _ = (pagination, tenant_context)
+        self._enforce_rate_limit()
+        reg = region or "us-east-1"
+        provider_type = ProviderType(self.profile.value)
+
+        if self.profile == SimulatorProfile.AWS:
+            return [
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="aws-ec2-vcpus",
+                    display_name="Running On-Demand Standard (A, C, D, I, M, R, T, Z) instances",
+                    service_id="ec2",
+                    service_name="Amazon Elastic Compute Cloud",
+                    consumed_value=Decimal("64.0"),
+                    limit_value=Decimal("128.0"),
+                    unit="vCPUs",
+                    scope_type=QuotaScopeType.ACCOUNT,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="aws-vpc-count",
+                    display_name="VPCs per Region",
+                    service_id="vpc",
+                    service_name="Amazon Virtual Private Cloud",
+                    consumed_value=Decimal("4.0"),
+                    limit_value=Decimal("5.0"),
+                    unit="Count",
+                    scope_type=QuotaScopeType.REGION,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="aws-s3-buckets",
+                    display_name="Buckets per Account",
+                    service_id="s3",
+                    service_name="Amazon Simple Storage Service",
+                    consumed_value=Decimal("45.0"),
+                    limit_value=Decimal("100.0"),
+                    unit="Count",
+                    scope_type=QuotaScopeType.ACCOUNT,
+                    scope_id=scope_id,
+                    region=None,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+            ]
+        elif self.profile == SimulatorProfile.AZURE:
+            return [
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="azure-compute-cores",
+                    display_name="Total Regional vCPUs",
+                    service_id="compute",
+                    service_name="Azure Virtual Machines",
+                    consumed_value=Decimal("80.0"),
+                    limit_value=Decimal("100.0"),
+                    unit="Cores",
+                    scope_type=QuotaScopeType.SUBSCRIPTION,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="azure-public-ips",
+                    display_name="Public IP Addresses - Standard",
+                    service_id="network",
+                    service_name="Azure Virtual Network",
+                    consumed_value=Decimal("18.0"),
+                    limit_value=Decimal("20.0"),
+                    unit="Count",
+                    scope_type=QuotaScopeType.SUBSCRIPTION,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+            ]
+        elif self.profile == SimulatorProfile.GCP:
+            return [
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="gcp-compute-cpus",
+                    display_name="CPUs (all regions)",
+                    service_id="compute",
+                    service_name="Compute Engine",
+                    consumed_value=Decimal("150.0"),
+                    limit_value=Decimal("200.0"),
+                    unit="CPUs",
+                    scope_type=QuotaScopeType.PROJECT,
+                    scope_id=scope_id,
+                    region=None,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="gcp-compute-ips",
+                    display_name="In-use IP addresses",
+                    service_id="compute",
+                    service_name="Compute Engine",
+                    consumed_value=Decimal("15.0"),
+                    limit_value=Decimal("16.0"),
+                    unit="Count",
+                    scope_type=QuotaScopeType.REGION,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+            ]
+        else:  # OCI
+            return [
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="oci-compute-ocpus",
+                    display_name="Standard E4 OCPU Count",
+                    service_id="compute",
+                    service_name="Compute Service",
+                    consumed_value=Decimal("32.0"),
+                    limit_value=Decimal("50.0"),
+                    unit="OCPUs",
+                    scope_type=QuotaScopeType.COMPARTMENT,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+                QuotaItemRecord(
+                    provider=provider_type,
+                    quota_code="oci-vcn-count",
+                    display_name="VCN Count per Compartment",
+                    service_id="networking",
+                    service_name="Virtual Cloud Network",
+                    consumed_value=Decimal("8.0"),
+                    limit_value=Decimal("10.0"),
+                    unit="Count",
+                    scope_type=QuotaScopeType.COMPARTMENT,
+                    scope_id=scope_id,
+                    region=reg,
+                    is_adjustable=True,
+                    is_supported=True,
+                    coverage=QuotaCoverage.PARTIAL,
+                ),
+            ]
+
+    def probe_quota_coverage(
+        self,
+        scope_id: str = "root",
+        *,
+        tenant_context: Any = None,
+    ) -> QuotaProbeResult:
+        """Probes provider quota coverage and reports whether full, partial, or not supported (Prompt 54)."""
+        _ = scope_id
+        self._enforce_rate_limit()
+        quotas = self.collect_quotas(scope_id=scope_id, tenant_context=tenant_context)
+        return QuotaProbeResult(
+            provider=self.profile.value,
+            is_supported=True,
+            coverage=QuotaCoverage.PARTIAL,
+            supported_services=list({q.service_id for q in quotas}),
+            unsupported_services=["ai_ml", "iot", "quantum"],
+            quota_count=len(quotas),
+            details={"mode": "simulated", "note": "Partial quota coverage across core services."},
         )

@@ -11,6 +11,7 @@ Enforces:
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
@@ -21,6 +22,8 @@ from domain.models.enums import (
     CircuitBreakerState,
     ConnectorCapability,
     ProviderType,
+    QuotaCoverage,
+    QuotaScopeType,
 )
 
 T = TypeVar("T")
@@ -275,3 +278,70 @@ class ProviderMetadataResult(BaseModel):
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional provider metadata"
     )
+
+
+# ==============================================================================
+# Quota & Limits Capability Models (Prompt 54)
+# ==============================================================================
+
+
+class QuotaItemRecord(BaseModel):
+    """Normalized cloud quota, service limit, or capacity constraint record (Prompt 54)."""
+
+    provider: ProviderType = Field(default=ProviderType.AWS, description="Target cloud provider")
+    quota_code: str = Field(..., description="Unique provider or canonical quota code")
+    display_name: str = Field(..., description="Human-readable quota or limit descriptor")
+    description: str | None = Field(default=None, description="Detailed quota description")
+    service_id: str = Field(
+        ..., description="Associated cloud service identifier (e.g. ec2, vpc, compute)"
+    )
+    service_name: str = Field(..., description="Display name of service")
+    consumed_value: Decimal | None = Field(
+        default=None, description="Current consumed or utilized amount (None if Not Supported)"
+    )
+    limit_value: Decimal | None = Field(
+        default=None,
+        description="Authoritative capacity constraint or service limit (None if Not Supported)",
+    )
+    unit: str = Field(..., description="Unit of measurement (vCPUs, IPs, Count, Requests/sec)")
+    scope_type: QuotaScopeType = Field(
+        ...,
+        description="Scope level: account, subscription, project, compartment, region, or global",
+    )
+    scope_id: str = Field(..., description="Cloud account, subscription, or project ID")
+    region: str | None = Field(default=None, description="Cloud region if regional, None if global")
+    is_adjustable: bool = Field(default=True, description="Whether increase requests are supported")
+    is_supported: bool = Field(
+        default=True, description="Whether exposed programmatically by provider"
+    )
+    coverage: QuotaCoverage = Field(
+        default=QuotaCoverage.COMPLETE,
+        description="Coverage status: COMPLETE, PARTIAL, or NOT_SUPPORTED",
+    )
+
+    @property
+    def quota_name(self) -> str:
+        """Alias for display_name."""
+        return self.display_name
+
+    @property
+    def service_code(self) -> str:
+        """Alias for service_id."""
+        return self.service_id
+
+
+class QuotaProbeResult(BaseModel):
+    """Outcome of probing provider quota and limits capability (Prompt 54)."""
+
+    provider: str
+    is_supported: bool
+    coverage: QuotaCoverage
+    supported_services: list[str] = Field(default_factory=list)
+    unsupported_services: list[str] = Field(default_factory=list)
+    quota_count: int = 0
+    details: dict[str, Any] = Field(default_factory=dict)
+
+    @property
+    def supported_service_codes(self) -> list[str]:
+        """Alias for supported_services."""
+        return self.supported_services

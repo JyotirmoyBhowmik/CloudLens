@@ -1,0 +1,146 @@
+[
+  {
+    "code": "aws-ec2-running-vcpus",
+    "display_name": "Running On-Demand Standard (A, C, D, I, M, R, T, Z) instances",
+    "description": "Amazon EC2 vCPU limit for on-demand instances.",
+    "sort_order": 1,
+    "attributes": {
+      "provider": "aws",
+      "service_code": "ec2",
+      "unit": "vCPU",
+      "category": "COMPUTE",
+      "default_warning_headroom_pct": 20.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 2,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "aws-vpc-per-region",
+    "display_name": "VPCs per Region",
+    "description": "Maximum number of Virtual Private Clouds per AWS region.",
+    "sort_order": 2,
+    "attributes": {
+      "provider": "aws",
+      "service_code": "vpc",
+      "unit": "count",
+      "category": "NETWORK",
+      "default_warning_headroom_pct": 20.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 1,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "azure-compute-total-regional-cores",
+    "display_name": "Total Regional Cores",
+    "description": "Azure virtual machine regional core quota limit.",
+    "sort_order": 3,
+    "attributes": {
+      "provider": "azure",
+      "service_code": "compute",
+      "unit": "Cores",
+      "category": "COMPUTE",
+      "default_warning_headroom_pct": 15.0,
+      "default_critical_headroom_pct": 5.0,
+      "lead_time_days": 3,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "azure-network-public-ips",
+    "display_name": "Public IP Addresses",
+    "description": "Maximum dynamic and static public IP addresses.",
+    "sort_order": 4,
+    "attributes": {
+      "provider": "azure",
+      "service_code": "network",
+      "unit": "count",
+      "category": "NETWORK",
+      "default_warning_headroom_pct": 25.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 2,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "gcp-compute-cpus-all-regions",
+    "display_name": "CPUs (all regions)",
+    "description": "Google Cloud Compute Engine global vCPU limit.",
+    "sort_order": 5,
+    "attributes": {
+      "provider": "gcp",
+      "service_code": "compute",
+      "unit": "CPUs",
+      "category": "COMPUTE",
+      "default_warning_headroom_pct": 20.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 2,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "gcp-compute-in-use-addresses",
+    "display_name": "In-use IP addresses (global)",
+    "description": "Maximum in-use external IP addresses across all regions.",
+    "sort_order": 6,
+    "attributes": {
+      "provider": "gcp",
+      "service_code": "compute",
+      "unit": "count",
+      "category": "NETWORK",
+      "default_warning_headroom_pct": 20.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 3,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "oci-compute-standard-e4-count",
+    "display_name": "Standard.E4 Core Count",
+    "description": "Oracle Cloud Infrastructure standard AMD core limit.",
+    "sort_order": 7,
+    "attributes": {
+      "provider": "oci",
+      "service_code": "compute",
+      "unit": "OCPU",
+      "category": "COMPUTE",
+      "default_warning_headroom_pct": 20.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 3,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  },
+  {
+    "code": "oci-network-vcn-count",
+    "display_name": "VCN Count",
+    "description": "Oracle Cloud Infrastructure Virtual Cloud Networks per compartment.",
+    "sort_order": 8,
+    "attributes": {
+      "provider": "oci",
+      "service_code": "core",
+      "unit": "count",
+      "category": "NETWORK",
+      "default_warning_headroom_pct": 25.0,
+      "default_critical_headroom_pct": 10.0,
+      "lead_time_days": 2,
+      "safety_margin_pct": 5.0,
+      "exhaustion_impact": "SERVICE_AFFECTING",
+      "is_adjustable": true
+    }
+  }
+]

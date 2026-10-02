@@ -26,6 +26,11 @@ class TenantContext(BaseModel):
     )
     is_system: bool = Field(default=False, description="True for internal background jobs")
 
+    @property
+    def actor_id(self) -> str:
+        """Alias for user_id to support actor_id access across domain layers."""
+        return self.user_id
+
     @field_validator("tenant_id")
     @classmethod
     def validate_tenant_id_non_empty(cls, v: str) -> str:

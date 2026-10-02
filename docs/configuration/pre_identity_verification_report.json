@@ -267,6 +267,12 @@
       "record_count": 5,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/service.json"
+    },
+    "QUOTA": {
+      "master_code": "QUOTA",
+      "record_count": 8,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/quota.json"
     }
   },
   "roles_defined": [
@@ -332,11 +338,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-76f210bc9d75",
+  "first_audit_event_id": "aud-boot-62e2d9d3dfb1",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-10-02T03:57:28.801477Z",
-  "correlation_id": "corr-boot-65ebeb4f"
+  "timestamp": "2026-10-02T04:39:05.448536Z",
+  "correlation_id": "corr-boot-d3a40a9a"
 }

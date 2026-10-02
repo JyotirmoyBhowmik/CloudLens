@@ -721,6 +721,28 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/service.json",
         expected_review_period_days=180,
     ),
+    "QUOTA": MasterRegistryEntry(
+        code="QUOTA",
+        name="Canonical Cloud Service Quotas",
+        purpose="Defines cloud service quotas, default limits, warning/critical headroom thresholds, review periods, lead times, and exhaustion impact types.",
+        schema_def={
+            "provider": "string",
+            "service_code": "string",
+            "unit": "string",
+            "category": "string",
+            "default_warning_headroom_pct": "number",
+            "default_critical_headroom_pct": "number",
+            "lead_time_days": "number",
+            "exhaustion_impact": "string",
+            "is_adjustable": "boolean",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["quotas", "inventory", "thresholds", "governance"],
+        seed_file="masterdata/seeds/quota.json",
+        expected_review_period_days=90,
+    ),
 }
 
 

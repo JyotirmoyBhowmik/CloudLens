@@ -126,6 +126,7 @@ class TestThresholdStatesAndBases:
             "VARIANCE_FROM_BASELINE",
             "HISTORICAL_AVERAGE",
             "SEASONAL_BASELINE",
+            "QUOTA_HEADROOM",
         }
         actual_bases = {b.value for b in ThresholdBasis}
         assert expected_bases == actual_bases

@@ -38,8 +38,10 @@ from connectors.contract.models import (
     PaginationParams,
     PermissionValidationResult,
     ProviderMetadataResult,
+    QuotaItemRecord,
+    QuotaProbeResult,
 )
-from domain.models.enums import ConnectorCapability
+from domain.models.enums import ConnectorCapability, QuotaCoverage
 from domain.models.exceptions import UndeclaredCapabilityException
 
 logger = logging.getLogger(__name__)
@@ -336,3 +338,34 @@ class BaseCloudConnector(ABC):
             "provider": self.provider_name,
             "capabilities": [c.value for c in self.declared_capabilities],
         }
+
+    # ==========================================================================
+    # Quota & Service Limits Capability (Prompt 54)
+    # ==========================================================================
+
+    def collect_quotas(
+        self,
+        scope_id: str = "root",
+        region: str | None = None,
+        pagination: PaginationParams | None = None,
+        *,
+        tenant_context: Any = None,
+    ) -> list[QuotaItemRecord]:
+        """Enumerates cloud service limits, capacity constraints, and quota consumption (Prompt 54)."""
+        _ = (scope_id, region, pagination, tenant_context)
+        return []
+
+    def probe_quota_coverage(
+        self,
+        scope_id: str = "root",
+        *,
+        tenant_context: Any = None,
+    ) -> QuotaProbeResult:
+        """Probes provider quota coverage and reports whether full, partial, or not supported (Prompt 54)."""
+        _ = (scope_id, tenant_context)
+        return QuotaProbeResult(
+            provider=self.provider_name,
+            is_supported=False,
+            coverage=QuotaCoverage.NOT_SUPPORTED,
+            details={"message": "Quota capability not supported by this connector."},
+        )
