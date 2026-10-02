@@ -1250,3 +1250,101 @@ class RuntimeStateNonComplianceException(RuntimeException):
             "Unknown and No Data must never be rendered as compliant and never coloured green.",
             error_code="RUNTIME_STATE_NON_COMPLIANCE",
         )
+
+
+# ==============================================================================
+# Threshold Engine Exceptions (Prompt 27)
+# ==============================================================================
+
+
+class ThresholdException(DomainModelException):
+    """Base exception for threshold engine, evaluation, and anti-flapping (Prompt 27)."""
+
+    def __init__(self, message: str, error_code: str = "THRESHOLD_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class ThresholdRuleNotFoundException(ThresholdException):
+    """Raised when a referenced threshold rule cannot be found."""
+
+    def __init__(self, rule_id: str) -> None:
+        super().__init__(
+            f"Threshold rule '{rule_id}' was not found.",
+            error_code="THRESHOLD_RULE_NOT_FOUND",
+        )
+        self.rule_id = rule_id
+
+
+class InvalidThresholdBandsException(ThresholdException):
+    """Raised when threshold band definitions fail contiguity or overlap validation."""
+
+    def __init__(self, message: str, error_code: str = "INVALID_THRESHOLD_BANDS") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class BandOverlapException(InvalidThresholdBandsException):
+    """Raised when threshold bands overlap.
+
+    Prompt 27 Rule: 'Bands are contiguous and non-overlapping, rejected at save time if not.'
+    """
+
+    def __init__(self, band1_name: str, band2_name: str, detail: str) -> None:
+        super().__init__(
+            f"Threshold bands '{band1_name}' and '{band2_name}' overlap: {detail}. "
+            "Bands must be strictly non-overlapping and contiguous.",
+            error_code="BAND_OVERLAP_DETECTED",
+        )
+
+
+class BandDiscontinuityException(InvalidThresholdBandsException):
+    """Raised when threshold bands have gaps/holes between boundaries."""
+
+    def __init__(self, band1_name: str, band2_name: str, gap_detail: str) -> None:
+        super().__init__(
+            f"Discontinuity between band '{band1_name}' and '{band2_name}': {gap_detail}. "
+            "Bands must form a contiguous uninterrupted partition.",
+            error_code="BAND_DISCONTINUITY_DETECTED",
+        )
+
+
+class ThresholdOverrideNotFoundException(ThresholdException):
+    """Raised when a threshold override cannot be found."""
+
+    def __init__(self, override_id: str) -> None:
+        super().__init__(
+            f"Threshold override '{override_id}' was not found.",
+            error_code="THRESHOLD_OVERRIDE_NOT_FOUND",
+        )
+        self.override_id = override_id
+
+
+class ThresholdOverrideExpiredException(ThresholdException):
+    """Raised when attempting to apply an expired threshold override."""
+
+    def __init__(self, override_id: str) -> None:
+        super().__init__(
+            f"Threshold override '{override_id}' has expired.",
+            error_code="THRESHOLD_OVERRIDE_EXPIRED",
+        )
+        self.override_id = override_id
+
+
+class ThresholdOverrideReasonTooShortException(ThresholdException):
+    """Raised when an override justification does not satisfy the mandatory length (>= 20 chars)."""
+
+    def __init__(self, length: int, min_length: int = 20) -> None:
+        super().__init__(
+            f"Threshold override justification must be at least {min_length} characters (provided {length}). "
+            "Substantive business rationale is required for auditability.",
+            error_code="THRESHOLD_OVERRIDE_REASON_TOO_SHORT",
+        )
+
+
+class ThresholdPreviewDisabledException(ThresholdException):
+    """Raised when threshold preview simulation is requested while the feature flag is disabled."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Threshold preview and historical simulation is a Phase 2 capability and is disabled in MVP.",
+            error_code="THRESHOLD_PREVIEW_DISABLED",
+        )
