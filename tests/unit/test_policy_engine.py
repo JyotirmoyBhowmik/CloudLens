@@ -129,8 +129,10 @@ class TestDefaultPoliciesAndSeeding:
         assert "POL-11" in policy_ids  # Zero-usage cost
         assert "POL-12" in policy_ids  # Region compliance
 
-        # Check total default count >= 16
-        assert len(policies) >= 16
+        # Check total default count is exactly 18 (Prompt 31B, FR-746)
+        assert len(policies) == 18
+        assert "POL-17" in policy_ids  # Quota Capacity (Prompt 31B)
+        assert "POL-18" in policy_ids  # Provisioning Governance (Prompt 31B)
 
         # Check enablement status
         for p in policies:
@@ -142,6 +144,69 @@ class TestDefaultPoliciesAndSeeding:
                 assert p.enabled is False, (
                     f"Policy '{p.id}' ({p.name}) MUST be disabled by default to prevent platform shouting"
                 )
+
+    def test_pol_17_quota_headroom_evaluation_detects_risk(
+        self, policy_service: PolicyService, tenant_ctx: TenantContext
+    ):
+        """POL-17: Quota headroom below configured threshold (10%) raises a finding (Prompt 31B, closes D-09)."""
+        p17 = policy_service.get_policy("POL-17", tenant_context=tenant_ctx)
+        assert p17 is not None
+        assert p17.category == PolicyCategory.QUOTA_CAPACITY
+        assert p17.enabled is False  # Negative constraint: disabled by default!
+
+        # Enable for evaluation in SIMULATE mode
+        p17.enabled = True
+        policy_service.repo.save_policy(p17, tenant_context=tenant_ctx)
+
+        # Entity at 4% headroom (violates >= 10.0%)
+        at_risk_quota = {
+            "id": "quota-ec2-spot",
+            "quota_code": "L-1216C47A",
+            "quota_headroom_pct": 4.0,
+            "provider": "AWS",
+        }
+        res = policy_service.evaluate_batch(
+            [at_risk_quota], tenant_context=tenant_ctx, policy_ids=["POL-17"]
+        )
+        assert res.violations_detected == 1
+        assert res.new_findings_created == 1
+
+        findings = policy_service.list_findings(tenant_context=tenant_ctx, policy_id="POL-17")
+        assert len(findings) == 1
+        assert findings[0].severity == PolicySeverity.HIGH
+        assert findings[0].observed_value == 4.0
+
+    def test_pol_18_gated_scope_provisioning_approval_evaluation(
+        self, policy_service: PolicyService, tenant_ctx: TenantContext
+    ):
+        """POL-18: Resource deployed in gated scope without approved provisioning raises exception (Prompt 31B, closes D-09)."""
+        p18 = policy_service.get_policy("POL-18", tenant_context=tenant_ctx)
+        assert p18 is not None
+        assert p18.category == PolicyCategory.PROVISIONING_GOVERNANCE
+        assert p18.enabled is False  # Negative constraint: disabled by default!
+        assert p18.effect == PolicyEffect.GOVERNANCE_EXCEPTION
+
+        # Enable for evaluation in ENFORCE mode
+        p18.enabled = True
+        p18.mode = PolicyMode.ENFORCE
+        policy_service.repo.save_policy(p18, tenant_context=tenant_ctx)
+
+        # Resource in gated scope with no approved provisioning request
+        unapproved_resource = {
+            "id": "vm-shadow-db",
+            "has_approved_provisioning_request": False,
+            "scope_id": "scope-prod-gated",
+            "provider": "AZURE",
+        }
+        res = policy_service.evaluate_batch(
+            [unapproved_resource], tenant_context=tenant_ctx, policy_ids=["POL-18"]
+        )
+        assert res.violations_detected == 1
+        assert res.new_findings_created == 1
+
+        findings = policy_service.list_findings(tenant_context=tenant_ctx, policy_id="POL-18")
+        assert len(findings) == 1
+        assert findings[0].severity == PolicySeverity.CRITICAL
 
 
 # ==============================================================================

@@ -21,6 +21,12 @@ import pytest
 from starlette.testclient import TestClient
 
 from api.cloudlens_api.main import app
+from domain.alerting.catalogue import (
+    get_alert_catalogue_map,
+    get_alert_definition_by_id,
+    get_alert_definition_by_type,
+    get_default_alert_catalogue,
+)
 from domain.alerting.channels.email import EmailChannelAdapter
 from domain.alerting.channels.in_app import InAppChannelAdapter
 from domain.alerting.channels.registry import ChannelAdapterRegistry
@@ -112,8 +118,8 @@ def create_sample_evidence(summary: str = "Metric breached threshold") -> AlertE
 # ==============================================================================
 
 
-class TestSixteenAlertTypes:
-    """Validates that all sixteen canonical alert types are fully supported."""
+class TestTwentyCanonicalAlertTypes:
+    """Validates that all twenty canonical alert types (AL-01 to AL-20) are fully supported (Prompt 31B, FR-560)."""
 
     @pytest.mark.parametrize(
         "alert_type",
@@ -134,15 +140,20 @@ class TestSixteenAlertTypes:
             AlertType.UNEXPECTED_RESOURCE_CREATION,
             AlertType.CREDENTIAL_EXPIRING,
             AlertType.RECONCILIATION_FAILED,
+            # Extended Addendum B alert types (Prompt 31B)
+            AlertType.QUOTA_HEADROOM_LOW,
+            AlertType.COMMITMENT_EXPIRING,
+            AlertType.PROVISIONING_REQUEST_DECIDED,
+            AlertType.ANALYTICAL_EXTRACT_LATE_OR_EMPTY,
         ],
     )
-    def test_all_sixteen_alert_types_can_be_raised_with_evidence(
+    def test_all_twenty_alert_types_can_be_raised_with_evidence(
         self,
         alert_service: AlertService,
         tenant_ctx: TenantContext,
         alert_type: AlertType,
     ):
-        """Every one of the 16 alert types can be raised with attached empirical evidence."""
+        """Every one of the 20 alert types can be raised with attached empirical evidence."""
         alert = AlertEntity(
             tenant_id=tenant_ctx.tenant_id,
             alert_type=alert_type,
@@ -994,3 +1005,415 @@ class TestAlertingRESTAPIContracts:
         # List delivery logs
         res_logs = client.get("/api/v1/alerts/delivery-logs", headers=auth_headers)
         assert res_logs.status_code == 200
+
+
+# ==============================================================================
+# 11. Extended Alert Catalogue & Master Data Routing Tests (Prompt 31B, FR-560)
+# ==============================================================================
+
+
+class TestExtendedAlertCatalogueAndMasterDataRouting:
+    """Verifies that AL-17 to AL-20 resolve from master data and inherit all behaviors without special casing."""
+
+    def test_default_alert_catalogue_contains_twenty_entries(self):
+        """FR-560: Alert catalogue contains all twenty canonical alert types (AL-01 to AL-20)."""
+        catalogue = get_default_alert_catalogue()
+        assert len(catalogue) == 20
+
+        ids = [entry.id for entry in catalogue]
+        expected_ids = [f"AL-{i:02d}" for i in range(1, 21)]
+        assert ids == expected_ids
+
+        # Every entry has mandatory master data fields
+        for entry in catalogue:
+            assert entry.id.startswith("AL-")
+            assert len(entry.code) > 0
+            assert len(entry.name) > 0
+            assert entry.alert_type in AlertType
+            assert entry.default_severity in AlertSeverity
+            assert len(entry.description) > 0
+            assert len(entry.trigger_condition) > 0
+            assert len(entry.default_routing_roles) > 0
+            assert entry.event_name.startswith("alert.")
+
+    def test_catalogue_lookup_helpers(self):
+        """Lookup by ID and lookup by AlertType resolve accurately from master data."""
+        # By ID
+        al17 = get_alert_definition_by_id("AL-17")
+        assert al17 is not None
+        assert al17.alert_type == AlertType.QUOTA_HEADROOM_LOW
+        assert al17.code == "QUOTA_HEADROOM_LOW"
+        assert al17.default_severity == AlertSeverity.WARNING
+        assert "technical_owner" in al17.default_routing_roles
+        assert "cloud_administrator" in al17.default_routing_roles
+
+        al18 = get_alert_definition_by_id("AL-18")
+        assert al18 is not None
+        assert al18.alert_type == AlertType.COMMITMENT_EXPIRING
+        assert "commitment_owner" in al18.default_routing_roles
+        assert "procurement" in al18.default_routing_roles
+
+        al19 = get_alert_definition_by_id("AL-19")
+        assert al19 is not None
+        assert al19.alert_type == AlertType.PROVISIONING_REQUEST_DECIDED
+        assert al19.default_severity == AlertSeverity.INFO
+        assert "requester" in al19.default_routing_roles
+
+        al20 = get_alert_definition_by_id("AL-20")
+        assert al20 is not None
+        assert al20.alert_type == AlertType.ANALYTICAL_EXTRACT_LATE_OR_EMPTY
+        assert al20.default_severity == AlertSeverity.INFO
+        assert "platform_administrator" in al20.default_routing_roles
+
+        # By Type
+        assert get_alert_definition_by_type(AlertType.QUOTA_HEADROOM_LOW) is not None
+        assert get_alert_definition_by_type(AlertType.COMMITMENT_EXPIRING) is not None
+        assert get_alert_definition_by_type(AlertType.PROVISIONING_REQUEST_DECIDED) is not None
+        assert get_alert_definition_by_type(AlertType.ANALYTICAL_EXTRACT_LATE_OR_EMPTY) is not None
+
+        # Catalogue map
+        cat_map = get_alert_catalogue_map()
+        assert len(cat_map) == 20
+        assert "AL-17" in cat_map
+        assert "AL-20" in cat_map
+
+    def test_master_data_routing_al_17_technical_owner_and_cloud_admin(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-17 routes to technical owner and cloud administrator without code-side special casing."""
+        alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.QUOTA_HEADROOM_LOW,
+            severity=AlertSeverity.WARNING,
+            title="Compute Quota Headroom Low",
+            description="Exhaustion predicted in 4 days",
+            source="quota_engine",
+            scope_id="sub-prod-01",
+            evidence=create_sample_evidence("Quota consumed 94% with 4 days until exhaustion"),
+        )
+        res_meta = {"technical_owner": "tech-lead@company.internal"}
+        scope_meta = {"cloud_administrator": "cloud-admin@company.internal"}
+
+        raised = alert_service.raise_alert(
+            alert,
+            tenant_context=tenant_ctx,
+            resource_metadata=res_meta,
+            scope_metadata=scope_meta,
+            auto_dispatch=False,
+        )
+
+        assert "tech-lead@company.internal" in raised.recipients
+        assert "cloud-admin@company.internal" in raised.recipients
+        assert len(raised.recipients) == 2
+        assert raised.governance_exception_raised is False
+
+    def test_master_data_routing_al_18_commitment_owner_and_procurement(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-18 routes to commitment owner and procurement without code-side special casing."""
+        alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.COMMITMENT_EXPIRING,
+            severity=AlertSeverity.WARNING,
+            title="AWS 3-Year Reserved Instance Expiring",
+            description="30 days until RI renewal date",
+            source="pricing_engine",
+            scope_id="acc-aws-prod",
+            evidence=create_sample_evidence("RI ri-123456 expires on 2026-11-01"),
+        )
+        res_meta = {"commitment_owner": "finops-ri-owner@company.internal"}
+        scope_meta = {"procurement": "cloud-procurement@company.internal"}
+
+        raised = alert_service.raise_alert(
+            alert,
+            tenant_context=tenant_ctx,
+            resource_metadata=res_meta,
+            scope_metadata=scope_meta,
+            auto_dispatch=False,
+        )
+
+        assert "finops-ri-owner@company.internal" in raised.recipients
+        assert "cloud-procurement@company.internal" in raised.recipients
+        assert len(raised.recipients) == 2
+        assert raised.governance_exception_raised is False
+
+    def test_master_data_routing_al_19_requester(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-19 routes to requester without code-side special casing."""
+        alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.PROVISIONING_REQUEST_DECIDED,
+            severity=AlertSeverity.INFO,
+            title="Provisioning Request PR-982 Approved",
+            description="Production cluster provisioning request was approved",
+            source="governance_portal",
+            evidence=create_sample_evidence("Approval granted by Architecture Review Board"),
+        )
+        res_meta = {"requester": "engineer-jane@company.internal"}
+
+        raised = alert_service.raise_alert(
+            alert,
+            tenant_context=tenant_ctx,
+            resource_metadata=res_meta,
+            auto_dispatch=False,
+        )
+
+        assert raised.recipients == ["engineer-jane@company.internal"]
+        assert raised.governance_exception_raised is False
+
+    def test_master_data_routing_al_20_platform_administrator(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-20 routes to platform administrator without code-side special casing."""
+        alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.ANALYTICAL_EXTRACT_LATE_OR_EMPTY,
+            severity=AlertSeverity.INFO,
+            title="Daily FOCUS Extract Delayed",
+            description="Nightly export pipeline ran 3 hours past SLA",
+            source="export_pipeline",
+            evidence=create_sample_evidence("Extract job extract-2026-10-02 produced 0 rows"),
+        )
+        scope_meta = {"platform_administrator": "platform-ops@company.internal"}
+
+        raised = alert_service.raise_alert(
+            alert,
+            tenant_context=tenant_ctx,
+            scope_metadata=scope_meta,
+            auto_dispatch=False,
+        )
+
+        assert raised.recipients == ["platform-ops@company.internal"]
+        assert raised.governance_exception_raised is False
+
+    def test_extended_alerts_fallback_to_admin_when_roles_unmapped(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """Extended alerts with empty metadata fall back to default admin and raise governance exception."""
+        alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.QUOTA_HEADROOM_LOW,
+            severity=AlertSeverity.WARNING,
+            title="Quota Low Without Owner",
+            description="No owner tags on unmapped scope",
+            source="quota_engine",
+            scope_id="sub-unmapped",
+            evidence=create_sample_evidence("Quota headroom at 5%"),
+        )
+        raised = alert_service.raise_alert(
+            alert,
+            tenant_context=tenant_ctx,
+            resource_metadata={},
+            scope_metadata={},
+            auto_dispatch=False,
+        )
+        assert raised.recipients == ["governance-admin@cloudlens.internal"]
+        assert raised.governance_exception_raised is True
+
+    def test_extended_alerts_inherit_deduplication(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-17 inherits alert deduplication without special casing."""
+        evidence1 = create_sample_evidence("Cycle 1 quota 92%")
+        alert1 = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.QUOTA_HEADROOM_LOW,
+            severity=AlertSeverity.WARNING,
+            title="EC2 vCPU Quota Low",
+            description="92% consumed",
+            source="quota_engine",
+            scope_id="acc-aws-prod",
+            affected_resource_id="quota-ec2-vcpu",
+            evidence=evidence1,
+        )
+        r1 = alert_service.raise_alert(alert1, tenant_context=tenant_ctx, auto_dispatch=False)
+        assert r1.repeat_count == 1
+
+        evidence2 = create_sample_evidence("Cycle 2 quota 95%")
+        alert2 = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.QUOTA_HEADROOM_LOW,
+            severity=AlertSeverity.HIGH,  # Severity elevated as date approaches!
+            title="EC2 vCPU Quota Critical",
+            description="95% consumed",
+            source="quota_engine",
+            scope_id="acc-aws-prod",
+            affected_resource_id="quota-ec2-vcpu",
+            evidence=evidence2,
+        )
+        r2 = alert_service.raise_alert(alert2, tenant_context=tenant_ctx, auto_dispatch=False)
+
+        # Reuses same active alert ID, increments occurrences
+        assert r2.id == r1.id
+        assert r2.repeat_count == 2
+        assert r2.evidence.summary == "Cycle 2 quota 95%"
+
+    def test_extended_alerts_inherit_scope_storm_grouping(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-17 to AL-20 inherit scope storm grouping without special casing."""
+        scope_id = "scope-quota-storm"
+
+        # Raise 10 alerts in scope
+        for i in range(10):
+            alert = AlertEntity(
+                tenant_id=tenant_ctx.tenant_id,
+                alert_type=AlertType.QUOTA_HEADROOM_LOW,
+                severity=AlertSeverity.WARNING,
+                title=f"Quota {i} headroom low",
+                description="Approaching capacity",
+                source="quota_engine",
+                scope_id=scope_id,
+                affected_resource_id=f"quota-{i}",
+                evidence=create_sample_evidence(f"Quota {i} at 92%"),
+            )
+            alert_service.raise_alert(alert, tenant_context=tenant_ctx, auto_dispatch=False)
+
+        # 11th alert triggers scope storm grouping
+        alert11 = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.COMMITMENT_EXPIRING,
+            severity=AlertSeverity.WARNING,
+            title="Commitment 11 expiring",
+            description="Reservation ending",
+            source="pricing_engine",
+            scope_id=scope_id,
+            affected_resource_id="ri-11",
+            evidence=create_sample_evidence("RI-11 expiring"),
+        )
+        grouped_result = alert_service.raise_alert(
+            alert11, tenant_context=tenant_ctx, auto_dispatch=False
+        )
+
+        assert grouped_result.alert_type == AlertType.SCOPE_STORM_GROUPED
+        assert len(grouped_result.child_alert_ids) == 11
+
+    def test_extended_alerts_inherit_quiet_hours_and_escalation(
+        self, alert_service: AlertService, tenant_ctx: TenantContext
+    ):
+        """AL-19 (INFO) is suppressed during quiet hours; AL-17 (HIGH) bypasses quiet hours and escalates."""
+        qh = QuietHoursConfig(
+            enabled=True,
+            start_time="22:00",
+            end_time="08:00",
+        )
+        night_time = dt.datetime(2026, 10, 2, 23, 30, tzinfo=dt.UTC)
+
+        sub = RecipientSubscription(
+            tenant_id=tenant_ctx.tenant_id,
+            recipient="oncall@company.internal",
+            channel=NotificationChannel.EMAIL,
+            quiet_hours=qh,
+        )
+        alert_service.create_subscription(sub, tenant_context=tenant_ctx)
+
+        # 1. INFO alert (AL-19) during quiet hours -> Suppressed
+        info_alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.PROVISIONING_REQUEST_DECIDED,
+            severity=AlertSeverity.INFO,
+            title="PR Decided During Quiet Hours",
+            description="Informational event",
+            source="governance_portal",
+            evidence=create_sample_evidence("PR decided"),
+        )
+        routing_info = alert_service.router.resolve_recipients(
+            info_alert, tenant_context=tenant_ctx, subscriptions=[sub], now=night_time
+        )
+        assert len(routing_info.recipients) == 0
+        assert info_alert.quiet_hours_suppressed is True
+
+        # 2. HIGH alert (AL-17) during quiet hours -> Bypasses quiet hours
+        high_alert = AlertEntity(
+            tenant_id=tenant_ctx.tenant_id,
+            alert_type=AlertType.QUOTA_HEADROOM_LOW,
+            severity=AlertSeverity.HIGH,  # High severity quota breach
+            title="Urgent Quota Exhaustion",
+            description="Exhaustion imminent within 12 hours",
+            source="quota_engine",
+            evidence=create_sample_evidence("vCPU quota at 99%"),
+        )
+        routing_high = alert_service.router.resolve_recipients(
+            high_alert, tenant_context=tenant_ctx, subscriptions=[sub], now=night_time
+        )
+        assert high_alert.quiet_hours_suppressed is False
+        assert "oncall@company.internal" in routing_high.recipients
+
+        # 3. Escalation: simulate timeout elapsing on high alert
+        r_high = alert_service.raise_alert(
+            high_alert, tenant_context=tenant_ctx, auto_dispatch=False
+        )
+        r_high.created_at = night_time - dt.timedelta(seconds=4000)
+        alert_service.repository.save(r_high, tenant_context=tenant_ctx)
+
+        escalated = alert_service.evaluate_escalations(
+            tenant_context=tenant_ctx, escalation_timeout_seconds=3600, now=night_time
+        )
+        assert any(a.id == r_high.id for a in escalated)
+        refreshed = alert_service.get_alert(r_high.id, tenant_context=tenant_ctx)
+        assert refreshed is not None
+        assert refreshed.escalation_state == EscalationState.ESCALATED
+
+    def test_webhook_outbound_event_names_for_extended_alerts(self, tenant_ctx: TenantContext):
+        """Prompt 60 outbound event model: webhook dispatches correct event name headers for AL-17 to AL-20."""
+        webhook_adapter = WebhookChannelAdapter()
+
+        test_cases = [
+            (AlertType.QUOTA_HEADROOM_LOW, "alert.quota_headroom_low"),
+            (AlertType.COMMITMENT_EXPIRING, "alert.commitment_expiring"),
+            (AlertType.PROVISIONING_REQUEST_DECIDED, "alert.provisioning_request_decided"),
+            (AlertType.ANALYTICAL_EXTRACT_LATE_OR_EMPTY, "alert.analytical_extract_late_or_empty"),
+        ]
+
+        for alert_type, expected_event in test_cases:
+            alert = AlertEntity(
+                tenant_id=tenant_ctx.tenant_id,
+                alert_type=alert_type,
+                severity=AlertSeverity.WARNING,
+                title=f"Test {alert_type.value}",
+                description="Test description",
+                source="test",
+                evidence=create_sample_evidence(f"Evidence for {alert_type.value}"),
+            )
+            log = webhook_adapter.send(
+                alert,
+                "https://webhook.internal.org/alerts",
+                tenant_context=tenant_ctx,
+            )
+            assert log.outcome == DeliveryOutcome.DELIVERED
+            assert log.payload is not None
+            headers = log.payload["headers"]
+            assert headers["X-CloudLens-Event"] == expected_event
+            assert log.payload["body"]["event"] == expected_event
+
+    def test_api_alerts_catalogue_endpoint(self):
+        """REST API endpoint GET /api/v1/alerts/catalogue returns all 20 master data entries."""
+        client = TestClient(app)
+        res = client.get("/api/v1/alerts/catalogue")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total"] == 20
+        assert len(data["items"]) == 20
+
+        # Check AL-17 to AL-20 are in response items
+        items_by_id = {item["id"]: item for item in data["items"]}
+        assert "AL-17" in items_by_id
+        assert items_by_id["AL-17"]["code"] == "QUOTA_HEADROOM_LOW"
+        assert items_by_id["AL-17"]["event_name"] == "alert.quota_headroom_low"
+        assert items_by_id["AL-17"]["default_routing_roles"] == [
+            "technical_owner",
+            "cloud_administrator",
+        ]
+
+        assert "AL-18" in items_by_id
+        assert items_by_id["AL-18"]["code"] == "COMMITMENT_EXPIRING"
+        assert items_by_id["AL-18"]["event_name"] == "alert.commitment_expiring"
+
+        assert "AL-19" in items_by_id
+        assert items_by_id["AL-19"]["code"] == "PROVISIONING_REQUEST_DECIDED"
+        assert items_by_id["AL-19"]["event_name"] == "alert.provisioning_request_decided"
+
+        assert "AL-20" in items_by_id
+        assert items_by_id["AL-20"]["code"] == "ANALYTICAL_EXTRACT_LATE_OR_EMPTY"
+        assert items_by_id["AL-20"]["event_name"] == "alert.analytical_extract_late_or_empty"

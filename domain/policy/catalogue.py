@@ -367,31 +367,9 @@ def get_default_policy_definitions() -> list[PolicyDefinition]:
             created_at=now,
             updated_at=now,
         ),
-        # POL-16: Quota Capacity
+        # POL-16: Financial Governance
         PolicyDefinition(
             id="POL-16",
-            version=1,
-            name="Service Quota Exhaustion Guardrail",
-            description="Flags service limits and quotas whose consumed headroom drops below 10% remaining capacity.",
-            category=PolicyCategory.QUOTA_CAPACITY,
-            target_selector=TargetSelector(),
-            condition=DeclarativeCondition(
-                operator=ConditionOperator.GREATER_THAN_OR_EQUAL,
-                field="quota_headroom_pct",
-                value=10.0,
-            ),
-            effect=PolicyEffect.AUDIT_FINDING,
-            severity=PolicySeverity.HIGH,
-            evaluation_schedule="DAILY",
-            mode=PolicyMode.SIMULATE,
-            enabled=False,
-            is_default=True,
-            created_at=now,
-            updated_at=now,
-        ),
-        # POL-17: Financial Governance
-        PolicyDefinition(
-            id="POL-17",
             version=1,
             name="Currency & Exchange Rate Freshness SLA",
             description="Flags stale exchange rates where published currency conversion latency exceeds 48 hours.",
@@ -411,24 +389,46 @@ def get_default_policy_definitions() -> list[PolicyDefinition]:
             created_at=now,
             updated_at=now,
         ),
-        # POL-18: Billing Integrity
+        # POL-17: Quota Capacity (Prompt 31B, Addendum B, closes D-09)
         PolicyDefinition(
-            id="POL-18",
+            id="POL-17",
             version=1,
-            name="Unrecognised Billing Charge & Line Item Anomaly",
-            description="Detects unmapped SKU charge lines or rate items missing from the authoritative pricing catalogue.",
-            category=PolicyCategory.BILLING_INTEGRITY,
+            name="Quota Headroom Capacity Guardrail",
+            description="Quota headroom below the configured threshold raises a finding and a task.",
+            category=PolicyCategory.QUOTA_CAPACITY,
             target_selector=TargetSelector(),
             condition=DeclarativeCondition(
-                operator=ConditionOperator.EQUALS,
-                field="is_unrecognised_charge",
-                value=False,
+                operator=ConditionOperator.GREATER_THAN_OR_EQUAL,
+                field="quota_headroom_pct",
+                value=10.0,
             ),
             effect=PolicyEffect.AUDIT_FINDING,
             severity=PolicySeverity.HIGH,
             evaluation_schedule="DAILY",
             mode=PolicyMode.SIMULATE,
-            enabled=False,
+            enabled=False,  # Disabled by default
+            is_default=True,
+            created_at=now,
+            updated_at=now,
+        ),
+        # POL-18: Gated Scope Provisioning Approval (Prompt 31B, Addendum B, closes D-09)
+        PolicyDefinition(
+            id="POL-18",
+            version=1,
+            name="Gated Scope Provisioning Approval Guardrail",
+            description="A resource deployed in a gated scope with no matching approved provisioning request raises a governance exception and a task.",
+            category=PolicyCategory.PROVISIONING_GOVERNANCE,
+            target_selector=TargetSelector(),
+            condition=DeclarativeCondition(
+                operator=ConditionOperator.EQUALS,
+                field="has_approved_provisioning_request",
+                value=True,
+            ),
+            effect=PolicyEffect.GOVERNANCE_EXCEPTION,
+            severity=PolicySeverity.CRITICAL,
+            evaluation_schedule="CONTINUOUS",
+            mode=PolicyMode.SIMULATE,
+            enabled=False,  # Disabled by default
             is_default=True,
             created_at=now,
             updated_at=now,

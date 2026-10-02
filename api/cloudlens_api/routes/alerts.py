@@ -17,6 +17,10 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
+from domain.alerting.catalogue import (
+    AlertCatalogueDefinition,
+    get_default_alert_catalogue,
+)
 from domain.alerting.models import (
     AlertDeliveryLog,
     AlertEntity,
@@ -160,9 +164,23 @@ class DeliveryLogListResponse(BaseModel):
     total: int
 
 
+class AlertCatalogueListResponse(BaseModel):
+    """Response envelope for the default master data alert catalogue (AL-01 to AL-20)."""
+
+    items: list[AlertCatalogueDefinition]
+    total: int
+
+
 # ==============================================================================
 # 1. Literal Path Endpoints (Registered FIRST before /{alert_id})
 # ==============================================================================
+
+
+@router.get("/catalogue", response_model=AlertCatalogueListResponse)
+async def get_catalogue() -> AlertCatalogueListResponse:
+    """Returns the authoritative default alert catalogue (AL-01 to AL-20) from master data."""
+    catalogue = get_default_alert_catalogue()
+    return AlertCatalogueListResponse(items=catalogue, total=len(catalogue))
 
 
 @router.post("", response_model=AlertEntity, status_code=status.HTTP_201_CREATED)

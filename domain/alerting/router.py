@@ -15,6 +15,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
+from domain.alerting.catalogue import get_alert_definition_by_type
 from domain.alerting.models import (
     AlertEntity,
     QuietHoursConfig,
@@ -26,6 +27,31 @@ from domain.models.enums import (
     NotificationChannel,
 )
 from domain.tenant.context import TenantContext
+
+
+def _extract_role_contacts(meta: dict[str, Any] | None, role: str) -> list[str]:
+    """Helper to extract contacts for a given role name from metadata or tags."""
+    if not meta or not isinstance(meta, dict):
+        return []
+    tags = meta.get("tags", {}) if isinstance(meta.get("tags"), dict) else {}
+    lookup_keys = [
+        role,
+        role.lower(),
+        role.replace("_", "-"),
+        role.replace("-", "_"),
+        role.title(),
+        role.replace("_", " ").title().replace(" ", ""),
+    ]
+    contacts: list[str] = []
+    for k in lookup_keys:
+        val = meta.get(k) if k in meta else tags.get(k)
+        if val is not None:
+            if isinstance(val, str) and val.strip():
+                contacts.append(val.strip())
+            elif isinstance(val, (list, tuple)):
+                contacts.extend(str(item).strip() for item in val if str(item).strip())
+            break
+    return contacts
 
 
 class RecipientRouter:
@@ -57,9 +83,34 @@ class RecipientRouter:
         governance_exception_raised = False
         fallback_reason: str | None = None
 
-        # Stage 1: Resource / Entity Ownership
-        if resource_metadata:
-            tags = resource_metadata.get("tags", {})
+        # Stage 0: Master Data Role Resolution (Prompt 31B, FR-560)
+        # Dynamically queries master data catalogue for required roles without code-side special casing
+        alert_def = get_alert_definition_by_type(alert.alert_type)
+        if alert_def and alert_def.default_routing_roles:
+            seen_contacts: set[str] = set()
+            for role_name in alert_def.default_routing_roles:
+                contacts = _extract_role_contacts(resource_metadata, role_name)
+                if not contacts:
+                    contacts = _extract_role_contacts(scope_metadata, role_name)
+                for contact in contacts:
+                    if contact not in seen_contacts:
+                        seen_contacts.add(contact)
+                        channel = (
+                            NotificationChannel.EMAIL
+                            if "@" in contact
+                            else NotificationChannel.IN_APP
+                        )
+                        candidates.append((contact, channel, None))
+                        if not resolution_source:
+                            resolution_source = "master_data_role_routing"
+
+        # Stage 1: Resource / Entity Ownership (if Stage 0 produced nothing)
+        if not candidates and resource_metadata:
+            tags = (
+                resource_metadata.get("tags", {})
+                if isinstance(resource_metadata.get("tags"), dict)
+                else {}
+            )
             owner = (
                 tags.get("owner")
                 or tags.get("Owner")
@@ -72,7 +123,7 @@ class RecipientRouter:
                 candidates.append((owner.strip(), channel, None))
                 resolution_source = "entity_owner"
 
-        # Stage 2: Scope Ownership (if Stage 1 produced nothing)
+        # Stage 2: Scope Ownership (if Stage 0 and Stage 1 produced nothing)
         if not candidates and scope_metadata:
             scope_owner = (
                 scope_metadata.get("owner")
