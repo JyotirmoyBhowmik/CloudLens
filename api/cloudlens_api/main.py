@@ -15,6 +15,7 @@ from api.cloudlens_api.routes import (
     audit_router,
     auth_router,
     bootstrap_router,
+    budgets_router,
     config_router,
     connectors_router,
     cost_router,
@@ -39,6 +40,11 @@ from domain.models.exceptions import (
     AuditRecordNotFoundException,
     AuditStreamException,
     AuditTamperForbiddenException,
+    BudgetApprovalNotAllowedException,
+    BudgetException,
+    BudgetNotFoundException,
+    BudgetPendingApprovalException,
+    BudgetTemplateNotFoundException,
     CircuitBreakerOpenException,
     ConnectorException,
     CostException,
@@ -50,12 +56,15 @@ from domain.models.exceptions import (
     ExpectationNotFoundException,
     FirstSyncNotFoundException,
     InterpolationLabelRequiredException,
+    InvalidBudgetAmountException,
+    InvalidBudgetDatesException,
     InvalidFreeAllowanceException,
     InvalidPricingTierException,
     InvalidQuotaLimitException,
     ManualQuotaSourceNoteRequiredException,
     MetricNotApplicableException,
     MonitoringTypeNotFoundException,
+    NativeBudgetReadOnlyException,
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
@@ -526,6 +535,36 @@ async def standardized_quota_exception_handler(request: Request, exc: QuotaExcep
     )
 
 
+@app.exception_handler(BudgetException)
+async def standardized_budget_exception_handler(request: Request, exc: BudgetException):
+    """Budget and allocation exception handler (Prompt 28 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, (BudgetNotFoundException, BudgetTemplateNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, (InvalidBudgetAmountException, InvalidBudgetDatesException)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, BudgetPendingApprovalException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(exc, BudgetApprovalNotAllowedException):
+        status_code = status.HTTP_409_CONFLICT
+    elif isinstance(exc, NativeBudgetReadOnlyException):
+        status_code = status.HTTP_409_CONFLICT
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -549,6 +588,7 @@ app.include_router(usage_router)
 app.include_router(runtime_router)
 app.include_router(thresholds_router)
 app.include_router(quotas_router)
+app.include_router(budgets_router)
 
 
 class HealthResponse(BaseModel):

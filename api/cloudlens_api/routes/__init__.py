@@ -4,6 +4,7 @@ from api.cloudlens_api.routes.attribution import router as attribution_router
 from api.cloudlens_api.routes.audit import router as audit_router
 from api.cloudlens_api.routes.auth import router as auth_router
 from api.cloudlens_api.routes.bootstrap import router as bootstrap_router
+from api.cloudlens_api.routes.budgets import router as budgets_router
 from api.cloudlens_api.routes.config import router as config_router
 from api.cloudlens_api.routes.connectors import router as connectors_router
 from api.cloudlens_api.routes.cost import router as cost_router
@@ -29,6 +30,7 @@ __all__ = [
     "audit_router",
     "auth_router",
     "bootstrap_router",
+    "budgets_router",
     "config_router",
     "connectors_router",
     "cost_router",

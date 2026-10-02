@@ -1416,3 +1416,89 @@ class ManualQuotaSourceNoteRequiredException(QuotaException):
             msg,
             error_code="MANUAL_QUOTA_SOURCE_NOTE_REQUIRED",
         )
+
+
+# ==============================================================================
+# Budget Model & Allocation Exceptions (Prompt 28)
+# ==============================================================================
+
+
+class BudgetException(DomainModelException):
+    """Base exception for budget model and allocation violations (Prompt 28)."""
+
+    def __init__(self, message: str, error_code: str = "BUDGET_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class BudgetNotFoundException(BudgetException):
+    """Raised when the requested budget cannot be found."""
+
+    def __init__(self, budget_id: str) -> None:
+        super().__init__(
+            f"Budget '{budget_id}' was not found.",
+            error_code="BUDGET_NOT_FOUND",
+        )
+        self.budget_id = budget_id
+
+
+class BudgetPendingApprovalException(BudgetException):
+    """Raised when attempting to activate a budget exceeding the approval limit without approval."""
+
+    def __init__(self, budget_id: str, amount: float, threshold: float) -> None:
+        super().__init__(
+            f"Budget '{budget_id}' amount ({amount:,.2f}) exceeds the approval threshold ({threshold:,.2f}) "
+            "and cannot become active without a recorded formal approval decision.",
+            error_code="BUDGET_PENDING_APPROVAL",
+        )
+        self.budget_id = budget_id
+        self.amount = amount
+        self.threshold = threshold
+
+
+class BudgetApprovalNotAllowedException(BudgetException):
+    """Raised when approval or rejection cannot be performed on a budget."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="BUDGET_APPROVAL_NOT_ALLOWED")
+
+
+class InvalidBudgetAmountException(BudgetException):
+    """Raised when a budget amount is negative or non-positive."""
+
+    def __init__(self, amount: float) -> None:
+        super().__init__(
+            f"Budget amount must be strictly greater than zero; got {amount}.",
+            error_code="INVALID_BUDGET_AMOUNT",
+        )
+        self.amount = amount
+
+
+class BudgetTemplateNotFoundException(BudgetException):
+    """Raised when the requested budget template does not exist."""
+
+    def __init__(self, template_code: str) -> None:
+        super().__init__(
+            f"Budget template '{template_code}' was not found.",
+            error_code="BUDGET_TEMPLATE_NOT_FOUND",
+        )
+        self.template_code = template_code
+
+
+class NativeBudgetReadOnlyException(BudgetException):
+    """Raised when attempting to modify, amend, approve, or delete a provider-imported budget."""
+
+    def __init__(self, budget_id: str, provider: str | None = None) -> None:
+        super().__init__(
+            f"Budget '{budget_id}' is a provider-native budget imported from {provider or 'cloud provider'}. "
+            "Native budgets are read-only for comparison and cannot be mutated through CloudLens.",
+            error_code="NATIVE_BUDGET_READ_ONLY",
+        )
+        self.budget_id = budget_id
+        self.provider = provider
+
+
+class InvalidBudgetDatesException(BudgetException):
+    """Raised when budget dates are invalid (e.g. expiry before effective)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_BUDGET_DATES")

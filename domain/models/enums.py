@@ -131,11 +131,13 @@ class PricingModel(StrEnum):
 
 
 class BudgetPeriod(StrEnum):
-    """Budget cycle frequency."""
+    """Budget cycle frequency (Prompt 28)."""
 
     MONTHLY = "MONTHLY"
     QUARTERLY = "QUARTERLY"
     ANNUAL = "ANNUAL"
+    FISCAL_YEAR = "FISCAL_YEAR"
+    CUSTOM = "CUSTOM"
 
 
 class PolicySeverity(StrEnum):
@@ -485,6 +487,13 @@ class AuditEventType(StrEnum):
 
     # Budgets and Thresholds
     BUDGET_CHANGED = "BUDGET_CHANGED"
+    BUDGET_CREATED = "BUDGET_CREATED"
+    BUDGET_AMENDED = "BUDGET_AMENDED"
+    BUDGET_APPROVED = "BUDGET_APPROVED"
+    BUDGET_REJECTED = "BUDGET_REJECTED"
+    BUDGET_EVALUATED = "BUDGET_EVALUATED"
+    BUDGET_NATIVE_IMPORTED = "BUDGET_NATIVE_IMPORTED"
+    BUDGET_OVERLAP_DETECTED = "BUDGET_OVERLAP_DETECTED"
     THRESHOLD_CHANGED = "THRESHOLD_CHANGED"
 
     # Dependencies
@@ -637,3 +646,85 @@ class QuotaCoverage(StrEnum):
     COMPLETE = "COMPLETE"
     PARTIAL = "PARTIAL"
     NOT_SUPPORTED = "NOT_SUPPORTED"
+
+
+# ==============================================================================
+# Budget Model Enums (Prompt 28)
+# ==============================================================================
+
+
+class BudgetScopeType(StrEnum):
+    """Seventeen canonical scope types at which budgets can be defined (Prompt 28)."""
+
+    ORGANISATION = "ORGANISATION"
+    PROVIDER = "PROVIDER"
+    MANAGEMENT_GROUP = "MANAGEMENT_GROUP"
+    SUBSCRIPTION = "SUBSCRIPTION"
+    AWS_OU = "AWS_OU"
+    AWS_ACCOUNT = "AWS_ACCOUNT"
+    GCP_FOLDER = "GCP_FOLDER"
+    GCP_PROJECT = "GCP_PROJECT"
+    OCI_COMPARTMENT = "OCI_COMPARTMENT"
+    RESOURCE_GROUP = "RESOURCE_GROUP"
+    APPLICATION = "APPLICATION"
+    ENVIRONMENT = "ENVIRONMENT"
+    SERVICE = "SERVICE"
+    RESOURCE = "RESOURCE"
+    COST_CENTRE = "COST_CENTRE"
+    BUSINESS_UNIT = "BUSINESS_UNIT"
+    PROJECT = "PROJECT"
+
+    def is_logical(self) -> bool:
+        """Returns True if the scope is an organizational or application logical grouping."""
+        return self in (
+            BudgetScopeType.ORGANISATION,
+            BudgetScopeType.BUSINESS_UNIT,
+            BudgetScopeType.COST_CENTRE,
+            BudgetScopeType.APPLICATION,
+            BudgetScopeType.ENVIRONMENT,
+            BudgetScopeType.PROJECT,
+            BudgetScopeType.SERVICE,
+        )
+
+    def is_native(self) -> bool:
+        """Returns True if the scope is a cloud provider native infrastructure boundary."""
+        return self in (
+            BudgetScopeType.PROVIDER,
+            BudgetScopeType.MANAGEMENT_GROUP,
+            BudgetScopeType.SUBSCRIPTION,
+            BudgetScopeType.AWS_OU,
+            BudgetScopeType.AWS_ACCOUNT,
+            BudgetScopeType.GCP_FOLDER,
+            BudgetScopeType.GCP_PROJECT,
+            BudgetScopeType.OCI_COMPARTMENT,
+            BudgetScopeType.RESOURCE_GROUP,
+            BudgetScopeType.RESOURCE,
+        )
+
+
+class BudgetApprovalStatus(StrEnum):
+    """Lifecycle workflow approval status of a budget (Prompt 28)."""
+
+    DRAFT = "DRAFT"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    ACTIVE = "ACTIVE"
+    EXPIRED = "EXPIRED"
+    ARCHIVED = "ARCHIVED"
+
+
+class BudgetRolloverPolicy(StrEnum):
+    """Policy for unspent or overspent funds at period close (Prompt 28 Phase 2)."""
+
+    NONE = "NONE"
+    ROLLOVER_SURPLUS = "ROLLOVER_SURPLUS"
+    ROLLOVER_DEFICIT = "ROLLOVER_DEFICIT"
+    RESET = "RESET"
+
+
+class BudgetSourceType(StrEnum):
+    """Source provenance of a budget: CloudLens logical vs imported provider-native (Prompt 28)."""
+
+    CLOUDLENS_LOGICAL = "CLOUDLENS_LOGICAL"
+    PROVIDER_NATIVE = "PROVIDER_NATIVE"
