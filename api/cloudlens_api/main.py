@@ -27,6 +27,7 @@ from api.cloudlens_api.routes import (
     health_router,
     masterdata_router,
     overrides_router,
+    policies_router,
     pricing_router,
     quotas_router,
     rbac_router,
@@ -54,6 +55,7 @@ from domain.models.exceptions import (
     CurrencyConversionException,
     CustomRoleInvalidException,
     DomainModelException,
+    DuplicatePolicyException,
     ExpectationNotFoundException,
     FeatureFlagDisabledException,
     FirstSyncNotFoundException,
@@ -64,6 +66,7 @@ from domain.models.exceptions import (
     InterpolationLabelRequiredException,
     InvalidBudgetAmountException,
     InvalidBudgetDatesException,
+    InvalidExemptionException,
     InvalidFreeAllowanceException,
     InvalidPricingTierException,
     InvalidQuotaLimitException,
@@ -74,6 +77,9 @@ from domain.models.exceptions import (
     OverrideException,
     OverrideNotFoundException,
     PermanentOverrideNotAllowedException,
+    PolicyException,
+    PolicyNotFoundException,
+    PolicyValidationException,
     PricingException,
     PricingRecordNotFoundException,
     PricingSCDConflictException,
@@ -599,6 +605,32 @@ async def standardized_forecasting_exception_handler(request: Request, exc: Fore
     )
 
 
+@app.exception_handler(PolicyException)
+async def standardized_policy_exception_handler(request: Request, exc: PolicyException):
+    """Policy engine exception handler (Prompt 30 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, PolicyNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, DuplicatePolicyException):
+        status_code = status.HTTP_409_CONFLICT
+    elif isinstance(exc, (InvalidExemptionException, PolicyValidationException)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -624,6 +656,7 @@ app.include_router(thresholds_router)
 app.include_router(quotas_router)
 app.include_router(budgets_router)
 app.include_router(forecasting_router)
+app.include_router(policies_router)
 
 
 class HealthResponse(BaseModel):

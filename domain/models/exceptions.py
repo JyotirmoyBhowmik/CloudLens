@@ -1554,3 +1554,55 @@ class ForecastAccuracyEvaluationException(ForecastingException):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, error_code="FORECAST_ACCURACY_EVALUATION_ERROR")
+
+
+# ==============================================================================
+# Policy Engine Exceptions (Prompt 30)
+# ==============================================================================
+
+
+class PolicyException(DomainModelException):
+    """Base exception for all policy engine domain errors."""
+
+
+class PolicyNotFoundException(PolicyException):
+    """Raised when a requested policy definition cannot be found."""
+
+    def __init__(self, policy_id: str) -> None:
+        super().__init__(
+            f"Policy '{policy_id}' was not found.",
+            error_code="POLICY_NOT_FOUND",
+        )
+        self.policy_id = policy_id
+
+
+class PolicyValidationException(PolicyException):
+    """Raised when a policy definition has invalid conditions, syntax, or attributes."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_POLICY_DEFINITION")
+
+
+class InvalidExemptionException(PolicyException):
+    """Raised when a policy exemption violates mandatory justification or expiry rules."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_POLICY_EXEMPTION")
+
+
+class PolicyConditionEvaluationException(PolicyException):
+    """Raised when an unrecoverable runtime evaluation failure occurs."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="POLICY_EVALUATION_ERROR")
+
+
+class DuplicatePolicyException(PolicyException):
+    """Raised when creating a policy with an ID that already exists."""
+
+    def __init__(self, policy_id: str) -> None:
+        super().__init__(
+            f"Policy '{policy_id}' already exists in registry.",
+            error_code="DUPLICATE_POLICY",
+        )
+        self.policy_id = policy_id

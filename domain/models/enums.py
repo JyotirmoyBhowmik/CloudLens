@@ -567,6 +567,18 @@ class AuditEventType(StrEnum):
     FORECAST_RECOMPUTED_AFTER_RESTATEMENT = "FORECAST_RECOMPUTED_AFTER_RESTATEMENT"
     FORECAST_ACCURACY_RECORDED = "FORECAST_ACCURACY_RECORDED"
 
+    # Policy Engine (Prompt 30)
+    POLICY_CREATED = "POLICY_CREATED"
+    POLICY_UPDATED = "POLICY_UPDATED"
+    POLICY_VERSIONED = "POLICY_VERSIONED"
+    POLICY_ENABLED = "POLICY_ENABLED"
+    POLICY_DISABLED = "POLICY_DISABLED"
+    POLICY_EVALUATED = "POLICY_EVALUATED"
+    POLICY_FINDING_RECORDED = "POLICY_FINDING_RECORDED"
+    POLICY_FINDING_CLEARED = "POLICY_FINDING_CLEARED"
+    POLICY_EXEMPTION_CREATED = "POLICY_EXEMPTION_CREATED"
+    POLICY_EXEMPTION_EXPIRED = "POLICY_EXEMPTION_EXPIRED"
+
 
 class OverrideClass(StrEnum):
     """Categorisation of operational and governance overrides (Prompt 13 Item 87)."""
@@ -585,6 +597,7 @@ class OverrideClass(StrEnum):
     THRESHOLD_RULE = "THRESHOLD_RULE"
     QUOTA_LIMIT = "QUOTA_LIMIT"
     FORECAST_RULE = "FORECAST_RULE"
+    POLICY_EXEMPTION = "POLICY_EXEMPTION"
 
 
 class OverrideStatus(StrEnum):
@@ -822,3 +835,96 @@ class ForecastMilestone(StrEnum):
     M50 = "M50"
     M75 = "M75"
     PERIOD_CLOSE = "PERIOD_CLOSE"
+
+
+# ==============================================================================
+# Policy Engine Enums (Prompt 30)
+# ==============================================================================
+
+
+class PolicyCategory(StrEnum):
+    """Functional taxonomy of governance policies (Prompt 30, BBP Section 34)."""
+
+    BUDGET = "BUDGET"
+    RUNTIME = "RUNTIME"
+    USAGE = "USAGE"
+    COST_THRESHOLD = "COST_THRESHOLD"
+    TAGGING = "TAGGING"
+    NAMING = "NAMING"
+    OWNERSHIP = "OWNERSHIP"
+    CONNECTOR_HEALTH = "CONNECTOR_HEALTH"
+    DATA_RETENTION = "DATA_RETENTION"
+    ACCESS = "ACCESS"
+    ZERO_USAGE_COST = "ZERO_USAGE_COST"
+    REGION_COMPLIANCE = "REGION_COMPLIANCE"
+    IDLE_RESOURCE = "IDLE_RESOURCE"
+    STORAGE_HYGIENE = "STORAGE_HYGIENE"
+    SKU_RESTRICTION = "SKU_RESTRICTION"
+    QUOTA_CAPACITY = "QUOTA_CAPACITY"
+    FINANCIAL_GOVERNANCE = "FINANCIAL_GOVERNANCE"
+    BILLING_INTEGRITY = "BILLING_INTEGRITY"
+
+
+class PolicyMode(StrEnum):
+    """Execution mode of a governance policy (Prompt 30)."""
+
+    SIMULATE = "SIMULATE"
+    ENFORCE = "ENFORCE"
+
+
+class PolicyEffect(StrEnum):
+    """Remediation or governance consequence of a policy violation (Prompt 30)."""
+
+    AUDIT_FINDING = "AUDIT_FINDING"
+    DENY = "DENY"
+    FLAG = "FLAG"
+    QUARANTINE_TAG = "QUARANTINE_TAG"
+    NOTIFY = "NOTIFY"
+
+
+class EvaluationOutcome(StrEnum):
+    """Result of policy condition evaluation against an entity (Prompt 30)."""
+
+    COMPLIANT = "COMPLIANT"
+    VIOLATION = "VIOLATION"
+    NOT_EVALUABLE = "NOT_EVALUABLE"
+    EXEMPTED = "EXEMPTED"
+
+
+class FindingLifecycleStatus(StrEnum):
+    """Lifecycle status of a policy violation finding (Prompt 30)."""
+
+    OPEN = "OPEN"
+    CLEARED = "CLEARED"
+    EXEMPTED = "EXEMPTED"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+
+
+class ConditionOperator(StrEnum):
+    """Declarative operators for policy condition expressions (Prompt 30)."""
+
+    EQUALS = "EQUALS"
+    NOT_EQUALS = "NOT_EQUALS"
+    GREATER_THAN = "GREATER_THAN"
+    GREATER_THAN_OR_EQUAL = "GREATER_THAN_OR_EQUAL"
+    LESS_THAN = "LESS_THAN"
+    LESS_THAN_OR_EQUAL = "LESS_THAN_OR_EQUAL"
+    CONTAINS = "CONTAINS"
+    NOT_CONTAINS = "NOT_CONTAINS"
+    IN = "IN"
+    NOT_IN = "NOT_IN"
+    MATCHES_REGEX = "MATCHES_REGEX"
+    IS_NULL = "IS_NULL"
+    IS_NOT_NULL = "IS_NOT_NULL"
+    ALL_PRESENT = "ALL_PRESENT"
+    ANY_PRESENT = "ANY_PRESENT"
+    IN_APPROVED_LIST = "IN_APPROVED_LIST"
+    NOT_IN_APPROVED_LIST = "NOT_IN_APPROVED_LIST"
+
+
+class LogicalOperator(StrEnum):
+    """Compound condition combinators (Prompt 30)."""
+
+    AND = "AND"
+    OR = "OR"
+    NOT = "NOT"

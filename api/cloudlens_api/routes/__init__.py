@@ -16,6 +16,7 @@ from api.cloudlens_api.routes.forecasting import router as forecasting_router
 from api.cloudlens_api.routes.health import router as health_router
 from api.cloudlens_api.routes.masterdata import router as masterdata_router
 from api.cloudlens_api.routes.overrides import router as overrides_router
+from api.cloudlens_api.routes.policies import router as policies_router
 from api.cloudlens_api.routes.pricing import router as pricing_router
 from api.cloudlens_api.routes.quotas import router as quotas_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
@@ -43,6 +44,7 @@ __all__ = [
     "health_router",
     "masterdata_router",
     "overrides_router",
+    "policies_router",
     "pricing_router",
     "quotas_router",
     "rbac_router",
