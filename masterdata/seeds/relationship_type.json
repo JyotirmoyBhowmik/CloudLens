@@ -1,0 +1,90 @@
+[
+  {
+    "code": "LOGICAL_DEPENDENCY",
+    "display_name": "Logical Dependency",
+    "description": "Software components and services logically linked or communicating.",
+    "sort_order": 1,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "STRUCTURAL",
+      "supports_billing": false
+    }
+  },
+  {
+    "code": "NETWORK_CONNECTIVITY",
+    "display_name": "Network Connectivity",
+    "description": "Network layer connectivity via interfaces, subnets, route tables, gateways, and peering.",
+    "sort_order": 2,
+    "attributes": {
+      "default_direction": "BIDIRECTIONAL",
+      "discovery_layer": "NETWORK",
+      "supports_billing": false
+    }
+  },
+  {
+    "code": "APPLICATION_DEPENDENCY",
+    "display_name": "Application Dependency",
+    "description": "Application components, services, and backing stores required for application execution.",
+    "sort_order": 3,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "CURATED_APPLICATION",
+      "supports_billing": false
+    }
+  },
+  {
+    "code": "DATA_FLOW",
+    "display_name": "Data Flow",
+    "description": "Data pipeline, streaming, replication, or message queue publication/subscription.",
+    "sort_order": 4,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "PROVIDER_PLATFORM",
+      "supports_billing": false
+    }
+  },
+  {
+    "code": "SECURITY_RELATIONSHIP",
+    "display_name": "Security Relationship",
+    "description": "IAM roles, trust policies, service accounts, and security boundary links.",
+    "sort_order": 5,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "STRUCTURAL",
+      "supports_billing": false
+    }
+  },
+  {
+    "code": "SHARED_SERVICE",
+    "display_name": "Shared Service",
+    "description": "Shared infrastructure cluster, platform service, or common gateway supporting multiple workloads.",
+    "sort_order": 6,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "CURATED_APPLICATION",
+      "supports_billing": true
+    }
+  },
+  {
+    "code": "BILLING_RELATIONSHIP",
+    "display_name": "Billing Relationship",
+    "description": "Cost attribution and allocation linkage from shared services to consuming entities.",
+    "sort_order": 7,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "CURATED_APPLICATION",
+      "supports_billing": true
+    }
+  },
+  {
+    "code": "PARENT_CHILD",
+    "display_name": "Parent-Child Hierarchy",
+    "description": "Containment hierarchy linking scopes, resource groups, or nested cloud resources.",
+    "sort_order": 8,
+    "attributes": {
+      "default_direction": "OUTBOUND",
+      "discovery_layer": "STRUCTURAL",
+      "supports_billing": false
+    }
+  }
+]

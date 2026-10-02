@@ -1900,3 +1900,83 @@ class VerificationFailedException(RemediationException):
         )
         self.task_id = task_id
         self.reason = reason
+
+
+# ==============================================================================
+# Dependency & Topology Exceptions (Prompt 32 / BBP Section 24)
+# ==============================================================================
+
+
+class DependencyException(DomainModelException):
+    """Base exception for all dependency and topology graph errors."""
+
+    def __init__(self, message: str, error_code: str = "DEPENDENCY_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class DependencyEdgeNotFoundException(DependencyException):
+    """Raised when a requested dependency edge does not exist."""
+
+    def __init__(self, edge_id: str) -> None:
+        super().__init__(
+            f"Dependency edge '{edge_id}' was not found.",
+            error_code="DEPENDENCY_EDGE_NOT_FOUND",
+        )
+        self.edge_id = edge_id
+
+
+class DependencyConflictException(DependencyException):
+    """Raised when a conflict between manual and discovered edges occurs or cannot be reconciled."""
+
+    def __init__(self, conflict_id: str, reason: str) -> None:
+        super().__init__(
+            f"Dependency conflict '{conflict_id}': {reason}",
+            error_code="DEPENDENCY_CONFLICT_ERROR",
+        )
+        self.conflict_id = conflict_id
+        self.reason = reason
+
+
+class InvalidEdgeReferenceException(DependencyException):
+    """Raised when source or target entity reference is malformed or invalid."""
+
+    def __init__(self, ref_str: str, reason: str) -> None:
+        super().__init__(
+            f"Invalid dependency entity reference '{ref_str}': {reason}",
+            error_code="INVALID_EDGE_REFERENCE",
+        )
+        self.ref_str = ref_str
+
+
+class CyclicDependencyException(DependencyException):
+    """Raised when an illegal dependency cycle is detected during strict acyclic validation."""
+
+    def __init__(self, cycle_path: list[str]) -> None:
+        path_str = " -> ".join(cycle_path)
+        super().__init__(
+            f"Cyclic dependency detected: {path_str}",
+            error_code="CYCLIC_DEPENDENCY_DETECTED",
+        )
+        self.cycle_path = cycle_path
+
+
+class NamingInferenceRuleException(DependencyException):
+    """Raised when a naming convention inference rule is invalid or produces invalid edges."""
+
+    def __init__(self, rule_name: str, reason: str) -> None:
+        super().__init__(
+            f"Naming inference rule '{rule_name}' error: {reason}",
+            error_code="NAMING_INFERENCE_RULE_ERROR",
+        )
+        self.rule_name = rule_name
+
+
+class ManualEdgeProtectedException(DependencyException):
+    """Raised when a discovered edge attempts to silently overwrite a manual edge."""
+
+    def __init__(self, edge_id: str) -> None:
+        super().__init__(
+            f"Manual edge '{edge_id}' is protected from automated overwriting. Conflict must be surfaced.",
+            error_code="MANUAL_EDGE_PROTECTED",
+        )
+        self.edge_id = edge_id

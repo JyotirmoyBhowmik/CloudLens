@@ -158,13 +158,28 @@ class PolicyStatus(StrEnum):
 
 
 class DependencyType(StrEnum):
-    """Cross-resource dependency relationships."""
+    """Cross-resource dependency relationships (Prompt 32 / BBP Section 24)."""
 
+    # Eight Canonical Relationship Types (Prompt 32)
+    LOGICAL_DEPENDENCY = "LOGICAL_DEPENDENCY"
+    NETWORK_CONNECTIVITY = "NETWORK_CONNECTIVITY"
+    APPLICATION_DEPENDENCY = "APPLICATION_DEPENDENCY"
+    DATA_FLOW = "DATA_FLOW"
+    SECURITY_RELATIONSHIP = "SECURITY_RELATIONSHIP"
+    SHARED_SERVICE = "SHARED_SERVICE"
+    BILLING_RELATIONSHIP = "BILLING_RELATIONSHIP"
+    PARENT_CHILD = "PARENT_CHILD"
+
+    # Backward-compatible values for legacy fixtures
     NETWORK = "NETWORK"
     STORAGE_ATTACHMENT = "STORAGE_ATTACHMENT"
     IAM_ROLE = "IAM_ROLE"
     DATABASE_CLIENT = "DATABASE_CLIENT"
     EVENT_SUBSCRIPTION = "EVENT_SUBSCRIPTION"
+
+
+# Canonical alias for relationship type
+RelationshipType = DependencyType
 
 
 class DependencyDirection(StrEnum):
@@ -585,8 +600,17 @@ class AuditEventType(StrEnum):
     BUDGET_OVERLAP_DETECTED = "BUDGET_OVERLAP_DETECTED"
     THRESHOLD_CHANGED = "THRESHOLD_CHANGED"
 
-    # Dependencies
+    # Dependencies (Prompt 32)
     MANUAL_DEPENDENCY_EDIT = "MANUAL_DEPENDENCY_EDIT"
+    DEPENDENCY_EDGE_CREATED = "DEPENDENCY_EDGE_CREATED"
+    DEPENDENCY_EDGE_UPDATED = "DEPENDENCY_EDGE_UPDATED"
+    DEPENDENCY_EDGE_DELETED = "DEPENDENCY_EDGE_DELETED"
+    DEPENDENCY_DISCOVERY_COMPLETED = "DEPENDENCY_DISCOVERY_COMPLETED"
+    DEPENDENCY_CONFLICT_SURFACED = "DEPENDENCY_CONFLICT_SURFACED"
+    DEPENDENCY_CONFLICT_RESOLVED = "DEPENDENCY_CONFLICT_RESOLVED"
+    DEPENDENCY_EDGE_MARKED_STALE = "DEPENDENCY_EDGE_MARKED_STALE"
+    DEPENDENCY_BULK_IMPORTED = "DEPENDENCY_BULK_IMPORTED"
+    DEPENDENCY_BILLING_SYNCED = "DEPENDENCY_BILLING_SYNCED"
 
     # Reports
     REPORT_GENERATED = "REPORT_GENERATED"
@@ -1225,3 +1249,73 @@ class RealisedSavingMethod(StrEnum):
     RUN_RATE_ELIMINATION = "RUN_RATE_ELIMINATION"
     RIGHTSIZING_DIFF = "RIGHTSIZING_DIFF"
     DIRECT_ESTIMATE_VERIFIED = "DIRECT_ESTIMATE_VERIFIED"
+
+
+# ==============================================================================
+# Dependency & Topology Enums (Prompt 32 / BBP Section 24)
+# ==============================================================================
+
+
+class EntityReferenceType(StrEnum):
+    """Supported entity reference types for dependency edges (Prompt 32)."""
+
+    RESOURCE = "RESOURCE"
+    SERVICE = "SERVICE"
+    APPLICATION = "APPLICATION"
+    SCOPE = "SCOPE"
+
+
+class EdgeConfidenceLevel(StrEnum):
+    """Honest confidence ratings across discovery and curation layers (Prompt 32)."""
+
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+    AS_ASSERTED = "AS_ASSERTED"
+
+
+class EdgeCriticality(StrEnum):
+    """Operational criticality of a dependency edge (Prompt 32)."""
+
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class EdgeStatus(StrEnum):
+    """Lifecycle status of a dependency relationship edge (Prompt 32)."""
+
+    ACTIVE = "ACTIVE"
+    STALE = "STALE"
+    CONFLICT = "CONFLICT"
+    RESOLVED = "RESOLVED"
+    DELETED = "DELETED"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class EdgeProvenanceType(StrEnum):
+    """Provenance origin of a dependency edge (Prompt 32)."""
+
+    DISCOVERED = "DISCOVERED"
+    MANUAL = "MANUAL"
+    IMPORTED = "IMPORTED"
+    INFERRED = "INFERRED"
+
+
+class DiscoveryLayer(StrEnum):
+    """The four discovery layers + explicit naming inference (Prompt 32)."""
+
+    STRUCTURAL = "STRUCTURAL"
+    NETWORK = "NETWORK"
+    PROVIDER_PLATFORM = "PROVIDER_PLATFORM"
+    CURATED_APPLICATION = "CURATED_APPLICATION"
+    INFERRED_NAMING = "INFERRED_NAMING"
+
+
+class ConflictResolutionAction(StrEnum):
+    """Action taken to resolve a discovered vs manual edge conflict (Prompt 32)."""
+
+    KEEP_MANUAL = "KEEP_MANUAL"
+    ACCEPT_DISCOVERED = "ACCEPT_DISCOVERED"
+    MERGE = "MERGE"

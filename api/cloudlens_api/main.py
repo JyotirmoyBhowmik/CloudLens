@@ -23,6 +23,7 @@ from api.cloudlens_api.routes import (
     credentials_router,
     demo_mode_router,
     demo_router,
+    dependency_router,
     diagnostics_router,
     forecasting_router,
     health_router,
@@ -63,6 +64,7 @@ from domain.models.exceptions import (
     CurrencyConversionException,
     CustomRoleInvalidException,
     DeliveryFailedException,
+    DependencyException,
     DomainModelException,
     DuplicatePolicyException,
     ExpectationNotFoundException,
@@ -758,6 +760,30 @@ async def standardized_remediation_exception_handler(request: Request, exc: Reme
     )
 
 
+@app.exception_handler(DependencyException)
+async def dependency_exception_handler(request: Request, exc: DependencyException):
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    status_code = status.HTTP_400_BAD_REQUEST
+    if "NOT_FOUND" in exc.error_code:
+        status_code = status.HTTP_404_NOT_FOUND
+    elif "CONFLICT" in exc.error_code or "PROTECTED" in exc.error_code:
+        status_code = status.HTTP_409_CONFLICT
+    elif "CYCLIC" in exc.error_code:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -787,6 +813,7 @@ app.include_router(forecasting_router)
 app.include_router(policies_router)
 app.include_router(workflows_router)
 app.include_router(remediation_router)
+app.include_router(dependency_router)
 
 
 class HealthResponse(BaseModel):

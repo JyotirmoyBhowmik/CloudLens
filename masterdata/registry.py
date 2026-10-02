@@ -843,6 +843,22 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/task_creation_rule.json",
         expected_review_period_days=90,
     ),
+    "RELATIONSHIP_TYPE": MasterRegistryEntry(
+        code="RELATIONSHIP_TYPE",
+        name="Dependency Relationship Types",
+        purpose="Defines canonical dependency and topology graph relationship types (Prompt 32).",
+        schema_def={
+            "default_direction": "string",
+            "discovery_layer": "string",
+            "supports_billing": "boolean",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["dependency", "topology", "billing", "governance", "impact"],
+        seed_file="masterdata/seeds/relationship_type.json",
+        expected_review_period_days=180,
+    ),
 }
 
 
