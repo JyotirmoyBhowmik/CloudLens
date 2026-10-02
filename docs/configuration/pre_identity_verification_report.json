@@ -315,6 +315,12 @@
       "record_count": 8,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/relationship_type.json"
+    },
+    "TOPOLOGY_VIEW": {
+      "master_code": "TOPOLOGY_VIEW",
+      "record_count": 8,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/topology_view.json"
     }
   },
   "roles_defined": [
@@ -380,11 +386,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-beb7de14cdca",
+  "first_audit_event_id": "aud-boot-a94db7eedc5d",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-10-02T17:05:55.919781Z",
-  "correlation_id": "corr-boot-b0fc8e22"
+  "timestamp": "2026-10-02T17:35:24.780524Z",
+  "correlation_id": "corr-boot-7796105f"
 }

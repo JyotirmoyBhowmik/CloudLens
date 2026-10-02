@@ -611,6 +611,9 @@ class AuditEventType(StrEnum):
     DEPENDENCY_EDGE_MARKED_STALE = "DEPENDENCY_EDGE_MARKED_STALE"
     DEPENDENCY_BULK_IMPORTED = "DEPENDENCY_BULK_IMPORTED"
     DEPENDENCY_BILLING_SYNCED = "DEPENDENCY_BILLING_SYNCED"
+    TOPOLOGY_VIEW_PROJECTED = "TOPOLOGY_VIEW_PROJECTED"
+    TOPOLOGY_CHAIN_COST_CALCULATED = "TOPOLOGY_CHAIN_COST_CALCULATED"
+    TOPOLOGY_GRAPH_EXPORTED = "TOPOLOGY_GRAPH_EXPORTED"
 
     # Reports
     REPORT_GENERATED = "REPORT_GENERATED"
@@ -1319,3 +1322,77 @@ class ConflictResolutionAction(StrEnum):
     KEEP_MANUAL = "KEEP_MANUAL"
     ACCEPT_DISCOVERED = "ACCEPT_DISCOVERED"
     MERGE = "MERGE"
+
+
+# ==============================================================================
+# Cost-Aware Topology & Graph Visualization Enums (Prompt 33 / BBP Section 25)
+# ==============================================================================
+
+
+class TopologyViewType(StrEnum):
+    """Eight canonical topology projection graph views (Prompt 33)."""
+
+    SERVICE_DEPENDENCY = "SERVICE_DEPENDENCY"
+    APPLICATION_DEPENDENCY = "APPLICATION_DEPENDENCY"
+    ACCOUNT_TOPOLOGY = "ACCOUNT_TOPOLOGY"
+    SUBSCRIPTION_TOPOLOGY = "SUBSCRIPTION_TOPOLOGY"
+    PROJECT_TOPOLOGY = "PROJECT_TOPOLOGY"
+    COMPARTMENT_TOPOLOGY = "COMPARTMENT_TOPOLOGY"
+    RESOURCE_RELATIONSHIP = "RESOURCE_RELATIONSHIP"
+    COST_AWARE_DEPENDENCY = "COST_AWARE_DEPENDENCY"
+
+
+class NodeCostTrend(StrEnum):
+    """Directional cost movement comparing current period spend to baseline (Prompt 33)."""
+
+    UP = "UP"
+    DOWN = "DOWN"
+    STABLE = "STABLE"
+
+
+class NodeScheduleState(StrEnum):
+    """Operational schedule and runtime compliance state of a topology node (Prompt 33)."""
+
+    RUNNING_ON_SCHEDULE = "RUNNING_ON_SCHEDULE"
+    RUNNING_OUTSIDE_SCHEDULE = "RUNNING_OUTSIDE_SCHEDULE"
+    IDLE = "IDLE"
+    ORPHANED = "ORPHANED"
+    UNKNOWN = "UNKNOWN"
+
+
+class ThresholdBadge(StrEnum):
+    """Health badge state rendered on a topology node based on threshold rules (Prompt 33)."""
+
+    GREEN = "GREEN"
+    AMBER = "AMBER"
+    RED = "RED"
+
+
+class TopologyBudgetStatus(StrEnum):
+    """Budget utilization classification for an enriched topology node (Prompt 33)."""
+
+    OK = "OK"
+    WARN = "WARN"
+    BREACH = "BREACH"
+    NOT_CONFIGURED = "NOT_CONFIGURED"
+
+
+class TopologyPricingClassification(StrEnum):
+    """Procurement and pricing model classification for a topology node (Prompt 33)."""
+
+    ON_DEMAND = "ON_DEMAND"
+    SPOT = "SPOT"
+    RESERVED = "RESERVED"
+    SAVINGS_PLAN = "SAVINGS_PLAN"
+    UNKNOWN = "UNKNOWN"
+
+
+class GraphExportFormat(StrEnum):
+    """Supported graph export formats (Prompt 33 BBP Section 25.5)."""
+
+    JSON = "JSON"
+    CSV = "CSV"
+    SVG = "SVG"
+    PNG = "PNG"
+    GRAPHML = "GRAPHML"
+    DOT = "DOT"

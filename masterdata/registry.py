@@ -859,6 +859,23 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/relationship_type.json",
         expected_review_period_days=180,
     ),
+    "TOPOLOGY_VIEW": MasterRegistryEntry(
+        code="TOPOLOGY_VIEW",
+        name="Topology Graph Views",
+        purpose="Defines canonical dependency graph views, default traversal depths, and supported relationships (Prompt 33).",
+        schema_def={
+            "root_node_type": "string",
+            "default_depth": "integer",
+            "supported_relationships": "array",
+            "supports_cost_overlay": "boolean",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["topology", "dependency", "visualization", "reporting"],
+        seed_file="masterdata/seeds/topology_view.json",
+        expected_review_period_days=180,
+    ),
 }
 
 

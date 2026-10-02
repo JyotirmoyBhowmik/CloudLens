@@ -38,6 +38,7 @@ from api.cloudlens_api.routes import (
     storage_router,
     sync_router,
     thresholds_router,
+    topology_router,
     usage_router,
     wizard_router,
     workflows_router,
@@ -73,6 +74,7 @@ from domain.models.exceptions import (
     ForecastAccuracyEvaluationException,
     ForecastingException,
     ForecastNotFoundException,
+    GraphExportException,
     InsufficientHistoryException,
     InterpolationLabelRequiredException,
     InvalidBudgetAmountException,
@@ -83,6 +85,7 @@ from domain.models.exceptions import (
     InvalidQuotaLimitException,
     InvalidSubscriptionException,
     InvalidTaskTransitionException,
+    InvalidTraversalDepthException,
     InvalidWorkflowTransitionException,
     MandatoryReasonException,
     ManualQuotaSourceNoteRequiredException,
@@ -111,6 +114,8 @@ from domain.models.exceptions import (
     ReconciliationReportNotFoundException,
     RemediationException,
     RemediationTaskNotFoundException,
+    RestrictedNodeAccessException,
+    RootNodeNotFoundException,
     RuntimeException,
     ScheduleBreachValuationException,
     ScheduleNotFoundException,
@@ -124,6 +129,8 @@ from domain.models.exceptions import (
     ThresholdOverrideReasonTooShortException,
     ThresholdPreviewDisabledException,
     ThresholdRuleNotFoundException,
+    TopologyException,
+    TopologyViewNotFoundException,
     UnauthorizedApproverException,
     UndeclaredCapabilityException,
     UnknownSchemaVersionException,
@@ -784,6 +791,32 @@ async def dependency_exception_handler(request: Request, exc: DependencyExceptio
     )
 
 
+@app.exception_handler(TopologyException)
+async def topology_exception_handler(request: Request, exc: TopologyException):
+    """Standardized exception handler for Cost-Aware Topology (Prompt 33 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, (TopologyViewNotFoundException, RootNodeNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, RestrictedNodeAccessException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif isinstance(exc, (InvalidTraversalDepthException, GraphExportException)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -814,6 +847,7 @@ app.include_router(policies_router)
 app.include_router(workflows_router)
 app.include_router(remediation_router)
 app.include_router(dependency_router)
+app.include_router(topology_router)
 
 
 class HealthResponse(BaseModel):

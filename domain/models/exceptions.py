@@ -1980,3 +1980,89 @@ class ManualEdgeProtectedException(DependencyException):
             error_code="MANUAL_EDGE_PROTECTED",
         )
         self.edge_id = edge_id
+
+
+# ==============================================================================
+# Cost-Aware Topology & Graph Projection Exceptions (Prompt 33)
+# ==============================================================================
+
+
+class TopologyException(DomainModelException):
+    """Base domain exception for cost-aware topology and graph projection."""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "TOPOLOGY_ERROR",
+        status_code: int = 400,
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class TopologyViewNotFoundException(TopologyException):
+    """Raised when an unrecognized or unregistered topology view type is requested."""
+
+    def __init__(self, view_type: str) -> None:
+        super().__init__(
+            f"Topology view type '{view_type}' not found or not supported.",
+            error_code="TOPOLOGY_VIEW_NOT_FOUND",
+            status_code=404,
+        )
+        self.view_type = view_type
+
+
+class RootNodeNotFoundException(TopologyException):
+    """Raised when a required root entity for graph projection cannot be resolved."""
+
+    def __init__(self, entity_id: str, view_type: str) -> None:
+        super().__init__(
+            f"Root node '{entity_id}' could not be resolved for view '{view_type}'.",
+            error_code="ROOT_NODE_NOT_FOUND",
+            status_code=404,
+        )
+        self.entity_id = entity_id
+        self.view_type = view_type
+
+
+class InvalidTraversalDepthException(TopologyException):
+    """Raised when traversal depth is out of acceptable bounds."""
+
+    def __init__(self, depth: int, max_allowed: int = 10) -> None:
+        super().__init__(
+            f"Traversal depth {depth} is invalid. Must be between 1 and {max_allowed}.",
+            error_code="INVALID_TRAVERSAL_DEPTH",
+            status_code=400,
+        )
+        self.depth = depth
+        self.max_allowed = max_allowed
+
+
+class GraphExportException(TopologyException):
+    """Raised when rendering or exporting a topology graph fails."""
+
+    def __init__(self, format_name: str, reason: str = "") -> None:
+        msg = (
+            f"Failed to export graph in '{format_name}' format: {reason}"
+            if reason
+            else f"Failed to export graph in '{format_name}' format."
+        )
+        super().__init__(
+            msg,
+            error_code="GRAPH_EXPORT_FAILED",
+            status_code=500,
+        )
+        self.format_name = format_name
+        self.reason = reason
+
+
+class RestrictedNodeAccessException(TopologyException):
+    """Raised when direct access to restricted node attributes is attempted without privilege."""
+
+    def __init__(self, node_id: str) -> None:
+        super().__init__(
+            f"Node '{node_id}' is restricted under caller scope grants and cannot be inspected directly.",
+            error_code="RESTRICTED_NODE_ACCESS_DENIED",
+            status_code=403,
+        )
+        self.node_id = node_id

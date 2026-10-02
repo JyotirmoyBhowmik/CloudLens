@@ -1,0 +1,138 @@
+[
+  {
+    "code": "SERVICE_DEPENDENCY",
+    "display_name": "Service Dependency Graph",
+    "description": "Projects service-to-service and service-to-resource interactions and couplings.",
+    "sort_order": 1,
+    "attributes": {
+      "root_node_type": "SERVICE",
+      "default_depth": 3,
+      "supported_relationships": [
+        "APPLICATION_DEPENDENCY",
+        "LOGICAL_DEPENDENCY",
+        "SHARED_SERVICE",
+        "DATA_FLOW"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "APPLICATION_DEPENDENCY",
+    "display_name": "Application Dependency Graph",
+    "description": "Projects business applications and their underlying services, databases, and shared platform resources.",
+    "sort_order": 2,
+    "attributes": {
+      "root_node_type": "APPLICATION",
+      "default_depth": 4,
+      "supported_relationships": [
+        "APPLICATION_DEPENDENCY",
+        "DATA_FLOW",
+        "SHARED_SERVICE",
+        "BILLING_RELATIONSHIP",
+        "LOGICAL_DEPENDENCY"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "ACCOUNT_TOPOLOGY",
+    "display_name": "Account-Level Topology",
+    "description": "Cloud provider account boundary view aggregating contained regional VPCs, clusters, and resource groups.",
+    "sort_order": 3,
+    "attributes": {
+      "root_node_type": "SCOPE",
+      "default_depth": 2,
+      "supported_relationships": [
+        "PARENT_CHILD",
+        "NETWORK_CONNECTIVITY",
+        "SECURITY_RELATIONSHIP"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "SUBSCRIPTION_TOPOLOGY",
+    "display_name": "Subscription Topology",
+    "description": "Azure subscription hierarchy containing resource groups, vnets, and shared express routes.",
+    "sort_order": 4,
+    "attributes": {
+      "root_node_type": "SCOPE",
+      "default_depth": 2,
+      "supported_relationships": [
+        "PARENT_CHILD",
+        "NETWORK_CONNECTIVITY",
+        "SECURITY_RELATIONSHIP"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "PROJECT_TOPOLOGY",
+    "display_name": "Project Topology",
+    "description": "GCP project boundaries containing VPC networks, GKE clusters, and service projects.",
+    "sort_order": 5,
+    "attributes": {
+      "root_node_type": "SCOPE",
+      "default_depth": 2,
+      "supported_relationships": [
+        "PARENT_CHILD",
+        "NETWORK_CONNECTIVITY",
+        "SECURITY_RELATIONSHIP"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "COMPARTMENT_TOPOLOGY",
+    "display_name": "Compartment Topology",
+    "description": "OCI compartment governance boundaries containing compute, storage, and VCNs.",
+    "sort_order": 6,
+    "attributes": {
+      "root_node_type": "SCOPE",
+      "default_depth": 2,
+      "supported_relationships": [
+        "PARENT_CHILD",
+        "SECURITY_RELATIONSHIP"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "RESOURCE_RELATIONSHIP",
+    "display_name": "Resource Relationship Graph",
+    "description": "Fine-grained infrastructure resource linkages (VM, NIC, Subnet, SG, Volume).",
+    "sort_order": 7,
+    "attributes": {
+      "root_node_type": "RESOURCE",
+      "default_depth": 2,
+      "supported_relationships": [
+        "NETWORK_CONNECTIVITY",
+        "SECURITY_RELATIONSHIP",
+        "LOGICAL_DEPENDENCY",
+        "DATA_FLOW"
+      ],
+      "supports_cost_overlay": true
+    }
+  },
+  {
+    "code": "COST_AWARE_DEPENDENCY",
+    "display_name": "Cost-Aware Dependency Graph",
+    "description": "Financial dependency graph with node spend sizing, chain cost decomposition, and shared service allocation.",
+    "sort_order": 8,
+    "attributes": {
+      "root_node_type": "APPLICATION",
+      "default_depth": 3,
+      "supported_relationships": [
+        "LOGICAL_DEPENDENCY",
+        "NETWORK_CONNECTIVITY",
+        "APPLICATION_DEPENDENCY",
+        "DATA_FLOW",
+        "SECURITY_RELATIONSHIP",
+        "SHARED_SERVICE",
+        "BILLING_RELATIONSHIP",
+        "PARENT_CHILD"
+      ],
+      "supports_cost_overlay": true
+    }
+  }
+]
