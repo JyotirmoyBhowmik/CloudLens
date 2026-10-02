@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.routes import (
+    alerts_router,
     attribution_router,
     audit_router,
     auth_router,
@@ -39,6 +40,9 @@ from api.cloudlens_api.routes import (
     wizard_router,
 )
 from domain.models.exceptions import (
+    AlertException,
+    AlertNotFoundException,
+    AlertValidationException,
     AuditRecordNotFoundException,
     AuditStreamException,
     AuditTamperForbiddenException,
@@ -47,13 +51,16 @@ from domain.models.exceptions import (
     BudgetNotFoundException,
     BudgetPendingApprovalException,
     BudgetTemplateNotFoundException,
+    ChannelNotSupportedException,
     CircuitBreakerOpenException,
     ConnectorException,
+    ContextualAlertNotFoundException,
     CostException,
     CrossTenantAccessForbiddenException,
     CrossTenantStorageAccessException,
     CurrencyConversionException,
     CustomRoleInvalidException,
+    DeliveryFailedException,
     DomainModelException,
     DuplicatePolicyException,
     ExpectationNotFoundException,
@@ -70,8 +77,10 @@ from domain.models.exceptions import (
     InvalidFreeAllowanceException,
     InvalidPricingTierException,
     InvalidQuotaLimitException,
+    InvalidSubscriptionException,
     ManualQuotaSourceNoteRequiredException,
     MetricNotApplicableException,
+    MissingAlertEvidenceException,
     MonitoringTypeNotFoundException,
     NativeBudgetReadOnlyException,
     OverrideException,
@@ -631,6 +640,41 @@ async def standardized_policy_exception_handler(request: Request, exc: PolicyExc
     )
 
 
+@app.exception_handler(AlertException)
+async def standardized_alert_exception_handler(request: Request, exc: AlertException):
+    """Alerting and notification exception handler (Prompt 31 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, (AlertNotFoundException, ContextualAlertNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(
+        exc,
+        (
+            MissingAlertEvidenceException,
+            ChannelNotSupportedException,
+            InvalidSubscriptionException,
+            AlertValidationException,
+        ),
+    ):
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, DeliveryFailedException):
+        status_code = status.HTTP_502_BAD_GATEWAY
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
+app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)

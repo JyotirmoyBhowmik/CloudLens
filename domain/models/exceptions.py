@@ -1606,3 +1606,92 @@ class DuplicatePolicyException(PolicyException):
             error_code="DUPLICATE_POLICY",
         )
         self.policy_id = policy_id
+
+
+# ==============================================================================
+# Alerting & Notification Exceptions (Prompt 31)
+# ==============================================================================
+
+
+class AlertException(DomainModelException):
+    """Base exception for all alerting domain errors."""
+
+
+class AlertNotFoundException(AlertException):
+    """Raised when an alert entity is not found."""
+
+    def __init__(self, alert_id: str) -> None:
+        super().__init__(
+            f"Alert '{alert_id}' was not found.",
+            error_code="ALERT_NOT_FOUND",
+        )
+        self.alert_id = alert_id
+
+
+class MissingAlertEvidenceException(AlertException):
+    """Raised when an alert is constructed or dispatched without empirical evidence."""
+
+    def __init__(
+        self,
+        message: str = "Alert cannot be generated without empirical evidence. Raising an alert without evidence is strictly forbidden.",
+    ) -> None:
+        super().__init__(
+            message,
+            error_code="MISSING_ALERT_EVIDENCE",
+        )
+
+
+class ChannelNotSupportedException(AlertException):
+    """Raised when an unsupported or forbidden channel (e.g. SMS, Voice) is requested."""
+
+    def __init__(self, channel: str) -> None:
+        super().__init__(
+            f"Channel '{channel}' is not supported. SMS and Voice channels are strictly forbidden: "
+            "CloudLens is a cloud governance and FinOps platform, not an incident response paging system.",
+            error_code="CHANNEL_NOT_SUPPORTED",
+        )
+        self.channel = channel
+
+
+class DeliveryFailedException(AlertException):
+    """Raised when outbound alert delivery fails across all attempts."""
+
+    def __init__(self, channel: str, recipient: str, reason: str) -> None:
+        super().__init__(
+            f"Failed to deliver alert to recipient '{recipient}' via channel '{channel}': {reason}",
+            error_code="ALERT_DELIVERY_FAILED",
+        )
+        self.channel = channel
+        self.recipient = recipient
+        self.reason = reason
+
+
+class ContextualAlertNotFoundException(AlertException):
+    """Raised when a contextual inline alert is not found."""
+
+    def __init__(self, alert_id: str) -> None:
+        super().__init__(
+            f"Contextual alert '{alert_id}' was not found.",
+            error_code="CONTEXTUAL_ALERT_NOT_FOUND",
+        )
+        self.alert_id = alert_id
+
+
+class InvalidSubscriptionException(AlertException):
+    """Raised when an alert subscription rule violates validation constraints."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            error_code="INVALID_ALERT_SUBSCRIPTION",
+        )
+
+
+class AlertValidationException(AlertException):
+    """Raised when alert entity validation fails."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            error_code="ALERT_VALIDATION_ERROR",
+        )
