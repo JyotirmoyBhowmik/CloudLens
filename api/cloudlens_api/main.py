@@ -27,6 +27,7 @@ from api.cloudlens_api.routes import (
     overrides_router,
     pricing_router,
     rbac_router,
+    runtime_router,
     storage_router,
     sync_router,
     usage_router,
@@ -61,6 +62,9 @@ from domain.models.exceptions import (
     RBACException,
     ReconciliationInvestigationNotFoundException,
     ReconciliationReportNotFoundException,
+    RuntimeException,
+    ScheduleBreachValuationException,
+    ScheduleNotFoundException,
     SubHourlyCollectionForbiddenException,
     SyncJobNotFoundException,
     TenantContextException,
@@ -428,6 +432,30 @@ async def standardized_usage_exception_handler(request: Request, exc: UsageExcep
     )
 
 
+@app.exception_handler(RuntimeException)
+async def standardized_runtime_exception_handler(request: Request, exc: RuntimeException):
+    """Runtime model, schedule adherence, and exemption exception handler (Prompt 26 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, ScheduleNotFoundException):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, (ScheduleBreachValuationException,)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(config_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
@@ -448,6 +476,7 @@ app.include_router(diagnostics_router)
 app.include_router(pricing_router)
 app.include_router(cost_router)
 app.include_router(usage_router)
+app.include_router(runtime_router)
 
 
 class HealthResponse(BaseModel):

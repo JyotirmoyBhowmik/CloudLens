@@ -1145,3 +1145,108 @@ class MonitoringTypeNotFoundException(UsageException):
             error_code="MONITORING_TYPE_NOT_FOUND",
         )
         self.monitoring_type = monitoring_type
+
+
+# ==============================================================================
+# Runtime Model and Schedule Adherence Exceptions (Prompt 26)
+# ==============================================================================
+
+
+class RuntimeException(DomainModelException):
+    """Base exception for runtime model, schedule adherence, and exemption operations (Prompt 26)."""
+
+    def __init__(self, message: str, error_code: str = "RUNTIME_ERROR") -> None:
+        super().__init__(message, error_code=error_code)
+
+
+class ScheduleNotFoundException(RuntimeException):
+    """Raised when an operational runtime schedule cannot be found."""
+
+    def __init__(self, schedule_id: str) -> None:
+        super().__init__(
+            f"Runtime schedule '{schedule_id}' was not found.",
+            error_code="SCHEDULE_NOT_FOUND",
+        )
+        self.schedule_id = schedule_id
+
+
+class ExemptionNotFoundException(RuntimeException):
+    """Raised when a runtime exemption cannot be found."""
+
+    def __init__(self, exemption_id: str) -> None:
+        super().__init__(
+            f"Runtime exemption '{exemption_id}' was not found.",
+            error_code="EXEMPTION_NOT_FOUND",
+        )
+        self.exemption_id = exemption_id
+
+
+class InvalidScheduleException(RuntimeException):
+    """Raised when a schedule specification has invalid parameters."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message, error_code="INVALID_SCHEDULE")
+
+
+class ExemptionReasonTooShortException(RuntimeException):
+    """Raised when an exemption reason is below the mandatory minimum length (>= 20 chars)."""
+
+    def __init__(self, length: int, min_length: int = 20) -> None:
+        super().__init__(
+            f"Exemption justification must be at least {min_length} characters (provided {length}). "
+            "Mandatory audit discipline requires substantive business rationale.",
+            error_code="EXEMPTION_REASON_TOO_SHORT",
+        )
+
+
+class ExemptionExpiredException(RuntimeException):
+    """Raised when attempting to activate or apply an expired exemption."""
+
+    def __init__(self, exemption_id: str) -> None:
+        super().__init__(
+            f"Runtime exemption '{exemption_id}' has expired and cannot be applied.",
+            error_code="EXEMPTION_EXPIRED",
+        )
+        self.exemption_id = exemption_id
+
+
+class ScheduleBreachValuationException(RuntimeException):
+    """Raised when a schedule breach is generated without a valid monetary valuation.
+
+    Prompt 26 Negative Constraint: 'Do not raise a schedule exception without a monetary value.'
+    """
+
+    def __init__(self, resource_id: str) -> None:
+        super().__init__(
+            f"Schedule breach for resource '{resource_id}' cannot be computed without a monetary valuation. "
+            "Every schedule exception must carry a defensible monetary value.",
+            error_code="SCHEDULE_BREACH_VALUATION_MISSING",
+        )
+        self.resource_id = resource_id
+
+
+class IdleDetectionDisabledException(RuntimeException):
+    """Raised when idle detection is invoked while the feature flag is disabled.
+
+    Prompt 26 Negative Constraint: 'Do not enable idle detection in MVP.'
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Idle and underutilisation detection is a Phase 2 feature and is disabled in MVP.",
+            error_code="IDLE_DETECTION_DISABLED",
+        )
+
+
+class RuntimeStateNonComplianceException(RuntimeException):
+    """Raised when an invalid runtime state compliance or color rendering is attempted.
+
+    Prompt 26 Strict Rule: 'Enforce that Unknown and No Data are never rendered as compliant and never coloured green.'
+    """
+
+    def __init__(self, state: str, detail: str) -> None:
+        super().__init__(
+            f"Runtime state '{state}' violation: {detail}. "
+            "Unknown and No Data must never be rendered as compliant and never coloured green.",
+            error_code="RUNTIME_STATE_NON_COMPLIANCE",
+        )
