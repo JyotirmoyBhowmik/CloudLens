@@ -2344,3 +2344,86 @@ class FinancialDetailAccessForbiddenException(StatementException):
             status_code=403,
         )
         self.user_id = user_id
+
+
+# ==============================================================================
+# Cost-Aware Provisioning Gate Exceptions (Prompt 55)
+# ==============================================================================
+
+
+class ProvisioningGateException(DomainModelException):
+    """Base exception for Cost-Aware Provisioning Gate operations."""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "PROVISIONING_GATE_ERROR",
+        status_code: int = 400,
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class EstimateNotFoundException(ProvisioningGateException):
+    """Raised when a referenced saved estimate cannot be found."""
+
+    def __init__(self, estimate_id: str) -> None:
+        super().__init__(
+            f"Saved pricing estimate '{estimate_id}' was not found.",
+            error_code="ESTIMATE_NOT_FOUND",
+            status_code=404,
+        )
+        self.estimate_id = estimate_id
+
+
+class EstimateExpiredException(ProvisioningGateException):
+    """Raised when attempting to use an estimate whose validity window has expired."""
+
+    def __init__(self, estimate_id: str, valid_until: str) -> None:
+        super().__init__(
+            f"Saved pricing estimate '{estimate_id}' expired at '{valid_until}'. "
+            "Re-pricing is required because rates may have moved.",
+            error_code="ESTIMATE_EXPIRED",
+            status_code=400,
+        )
+        self.estimate_id = estimate_id
+        self.valid_until = valid_until
+
+
+class ProvisioningRequestNotFoundException(ProvisioningGateException):
+    """Raised when a provisioning request cannot be found."""
+
+    def __init__(self, request_id: str) -> None:
+        super().__init__(
+            f"Provisioning request '{request_id}' was not found.",
+            error_code="PROVISIONING_REQUEST_NOT_FOUND",
+            status_code=404,
+        )
+        self.request_id = request_id
+
+
+class ProvisioningRequestInvalidStateException(ProvisioningGateException):
+    """Raised when an operation is invalid for the current provisioning request status."""
+
+    def __init__(self, request_id: str, current_status: str, action: str) -> None:
+        super().__init__(
+            f"Cannot perform '{action}' on provisioning request '{request_id}' with status '{current_status}'.",
+            error_code="PROVISIONING_REQUEST_INVALID_STATE",
+            status_code=409,
+        )
+        self.request_id = request_id
+        self.current_status = current_status
+        self.action = action
+
+
+class UnapprovedDeploymentException(ProvisioningGateException):
+    """Raised when an unapproved resource deployment is detected in a gated scope."""
+
+    def __init__(self, resource_id: str, scope_code: str) -> None:
+        super().__init__(
+            f"Unapproved deployment detected: resource '{resource_id}' was deployed into gated scope '{scope_code}' without an approved provisioning request.",
+            error_code="UNAPPROVED_DEPLOYMENT_DETECTED",
+            status_code=400,
+        )
+        self.resource_id = resource_id
+        self.scope_code = scope_code

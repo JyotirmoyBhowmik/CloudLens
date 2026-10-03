@@ -29697,6 +29697,1174 @@
         }
       }
     },
+    "/api/v1/provisioning-requests/estimates": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Save a priced estimate with validity TTL",
+        "description": "Creates a saved estimate with 4 computed values, full derivation, and validity window.",
+        "operationId": "save_estimate_api_v1_provisioning_requests_estimates_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSavedEstimateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/estimates/{estimate_id}": {
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Get saved estimate by ID",
+        "description": "Retrieves a previously saved estimate.",
+        "operationId": "get_estimate_api_v1_provisioning_requests_estimates__estimate_id__get",
+        "parameters": [
+          {
+            "name": "estimate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Estimate Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Submit a cost-aware provisioning request",
+        "description": "Submits a deployment proposal evaluated against pre-checks, budget impact, and gate triggers.",
+        "operationId": "submit_provisioning_request_api_v1_provisioning_requests_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitProvisioningRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisioningRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "List provisioning requests",
+        "description": "Lists provisioning requests with optional status and scope filtering.",
+        "operationId": "list_provisioning_requests_api_v1_provisioning_requests_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "scope_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope Code"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProvisioningRequest"
+                  },
+                  "title": "Response List Provisioning Requests Api V1 Provisioning Requests Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/accuracy/report": {
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Get 3-period estimate vs actual accuracy report",
+        "description": "Reports estimate accuracy across requesters, services, and approvers.",
+        "operationId": "get_accuracy_report_api_v1_provisioning_requests_accuracy_report_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccuracyReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/gate-triggers": {
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "List master-data gate trigger rules",
+        "description": "Lists configured gate trigger rules for the tenant.",
+        "operationId": "list_gate_triggers_api_v1_provisioning_requests_gate_triggers_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GateTriggerRule-Output"
+                  },
+                  "title": "Response List Gate Triggers Api V1 Provisioning Requests Gate Triggers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Configure master-data gate trigger rule",
+        "description": "Registers or updates a gate trigger rule.",
+        "operationId": "configure_gate_trigger_api_v1_provisioning_requests_gate_triggers_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateTriggerRule-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GateTriggerRule-Output"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/authority-rules": {
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "List AM-12 approval authority rules",
+        "description": "Lists configured AM-12 approval authority rules for the tenant.",
+        "operationId": "list_authority_rules_api_v1_provisioning_requests_authority_rules_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalAuthorityRule-Output"
+                  },
+                  "title": "Response List Authority Rules Api V1 Provisioning Requests Authority Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Configure AM-12 approval authority rule",
+        "description": "Registers an AM-12 approval authority rule.",
+        "operationId": "configure_authority_rule_api_v1_provisioning_requests_authority_rules_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalAuthorityRule-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalAuthorityRule-Output"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/unapproved/detect": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Detect unapproved deployments in gated scopes",
+        "description": "Scans inventory for untracked deployments in gated scopes with advisory notice.",
+        "operationId": "detect_unapproved_deployments_api_v1_provisioning_requests_unapproved_detect_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetectUnapprovedDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UnapprovedDeploymentFinding"
+                  },
+                  "title": "Response Detect Unapproved Deployments Api V1 Provisioning Requests Unapproved Detect Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/scenarios/compare": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Compare architecture scenarios side by side",
+        "description": "Compares 2-4 architecture configurations against budget impact and cost drivers.",
+        "operationId": "compare_scenarios_api_v1_provisioning_requests_scenarios_compare_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareScenariosDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioComparisonView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/{request_id}": {
+      "get": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Get single provisioning request by ID",
+        "description": "Retrieves full details of a provisioning request.",
+        "operationId": "get_provisioning_request_api_v1_provisioning_requests__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisioningRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/{request_id}/bypass": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Execute emergency bypass with post-hoc justification",
+        "description": "Bypasses a pending gate with mandatory recorded justification.",
+        "operationId": "bypass_provisioning_request_api_v1_provisioning_requests__request_id__bypass_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BypassRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisioningRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/{request_id}/link-resource": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Link newly inventoried resource and begin 3-period tracking",
+        "description": "Links an approved request to a cloud resource ID to initiate 3-period reconciliation.",
+        "operationId": "link_resource_api_v1_provisioning_requests__request_id__link_resource_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkResourceDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Link Resource Api V1 Provisioning Requests  Request Id  Link Resource Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/provisioning-requests/{request_id}/actuals": {
+      "post": {
+        "tags": [
+          "Cost-Aware Provisioning Gate"
+        ],
+        "summary": "Record period actual billed spend for 3-period reconciliation",
+        "description": "Records billed cost for a period and evaluates estimate accuracy.",
+        "operationId": "record_period_actual_api_v1_provisioning_requests__request_id__actuals_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPeriodActualDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateVsActualTracking"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -29766,6 +30934,75 @@
         "type": "object",
         "title": "AcceptStatementRequest",
         "description": "Payload for formal recipient statement acceptance."
+      },
+      "AccuracyReport": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "total_tracked": {
+            "type": "integer",
+            "title": "Total Tracked"
+          },
+          "three_period_completed_count": {
+            "type": "integer",
+            "title": "Three Period Completed Count"
+          },
+          "within_band_pct": {
+            "type": "string",
+            "title": "Within Band Pct"
+          },
+          "under_estimated_pct": {
+            "type": "string",
+            "title": "Under Estimated Pct"
+          },
+          "over_estimated_pct": {
+            "type": "string",
+            "title": "Over Estimated Pct"
+          },
+          "mean_absolute_percentage_error": {
+            "type": "string",
+            "title": "Mean Absolute Percentage Error"
+          },
+          "by_requester": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "By Requester"
+          },
+          "by_service": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "By Service"
+          },
+          "by_approver": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "By Approver"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "total_tracked",
+          "three_period_completed_count",
+          "within_band_pct",
+          "under_estimated_pct",
+          "over_estimated_pct",
+          "mean_absolute_percentage_error"
+        ],
+        "title": "AccuracyReport",
+        "description": "Executive accuracy report across requesters, services, and approvers."
       },
       "AdherenceEvaluateRequest": {
         "properties": {
@@ -32537,6 +33774,164 @@
         "title": "ApplicationBreakdownItem",
         "description": "Cost breakdown attributed to business application workloads."
       },
+      "ApprovalAuthorityRule-Input": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Unique authority rule ID"
+          },
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type",
+            "description": "Scope level (BU, COST_CENTRE, ORG)",
+            "default": "BUSINESS_UNIT"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Specific scope code or '*'",
+            "default": "*"
+          },
+          "min_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Min Monthly Amount",
+            "description": "Minimum monthly threshold",
+            "default": "0.00"
+          },
+          "max_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Monthly Amount",
+            "description": "Maximum monthly threshold"
+          },
+          "approver_role": {
+            "type": "string",
+            "title": "Approver Role",
+            "description": "Authorized approver role (NEVER resolved to named individual in code)",
+            "default": "FINOPS_ADMIN"
+          },
+          "approver_resolution": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApproverResolutionType"
+              }
+            ],
+            "description": "Resolution strategy (ROLE, SCOPE_OWNER, COST_CENTRE_OWNER, BU_OWNER)",
+            "default": "ROLE"
+          },
+          "chain_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalChainMode"
+              }
+            ],
+            "default": "SERIAL"
+          },
+          "sla_working_hours": {
+            "type": "integer",
+            "title": "Sla Working Hours",
+            "description": "SLA in business working hours",
+            "default": 24
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id"
+        ],
+        "title": "ApprovalAuthorityRule",
+        "description": "Approval-authority master (AM-12) mapping scope, threshold, and approver role."
+      },
+      "ApprovalAuthorityRule-Output": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Unique authority rule ID"
+          },
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type",
+            "description": "Scope level (BU, COST_CENTRE, ORG)",
+            "default": "BUSINESS_UNIT"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Specific scope code or '*'",
+            "default": "*"
+          },
+          "min_monthly_amount": {
+            "type": "string",
+            "title": "Min Monthly Amount",
+            "description": "Minimum monthly threshold",
+            "default": "0.00"
+          },
+          "max_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Monthly Amount",
+            "description": "Maximum monthly threshold"
+          },
+          "approver_role": {
+            "type": "string",
+            "title": "Approver Role",
+            "description": "Authorized approver role (NEVER resolved to named individual in code)",
+            "default": "FINOPS_ADMIN"
+          },
+          "approver_resolution": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApproverResolutionType"
+              }
+            ],
+            "description": "Resolution strategy (ROLE, SCOPE_OWNER, COST_CENTRE_OWNER, BU_OWNER)",
+            "default": "ROLE"
+          },
+          "chain_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalChainMode"
+              }
+            ],
+            "default": "SERIAL"
+          },
+          "sla_working_hours": {
+            "type": "integer",
+            "title": "Sla Working Hours",
+            "description": "SLA in business working hours",
+            "default": 24
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id"
+        ],
+        "title": "ApprovalAuthorityRule",
+        "description": "Approval-authority master (AM-12) mapping scope, threshold, and approver role."
+      },
       "ApprovalChainMode": {
         "type": "string",
         "enum": [
@@ -33025,7 +34420,14 @@
           "STATEMENT_DISPUTED",
           "STATEMENT_DISPUTE_RESOLVED",
           "STATEMENT_ADJUSTED_AFTER_RESTATEMENT",
-          "STATEMENT_DISTRIBUTED"
+          "STATEMENT_DISTRIBUTED",
+          "PROVISIONING_ESTIMATE_SAVED",
+          "PROVISIONING_REQUEST_CREATED",
+          "PROVISIONING_GATE_TRIGGERED",
+          "PROVISIONING_GATE_BYPASSED",
+          "PROVISIONING_RESOURCE_LINKED",
+          "UNAPPROVED_DEPLOYMENT_DETECTED",
+          "PROVISIONING_ACCURACY_EVALUATED"
         ],
         "title": "AuditEventType",
         "description": "Full canonical taxonomy of audit event types (Prompt 13 Item 86)."
@@ -34319,6 +35721,107 @@
         "title": "BudgetHierarchySummary",
         "description": "Hierarchy allocation and unallocated remainder summary."
       },
+      "BudgetImpactAssessment": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Billing period partition, e.g. '2026-10'"
+          },
+          "period_budget": {
+            "type": "string",
+            "title": "Period Budget",
+            "description": "Assigned budget ceiling for the period"
+          },
+          "actual_spend": {
+            "type": "string",
+            "title": "Actual Spend",
+            "description": "Current actual spend to date"
+          },
+          "remaining_budget": {
+            "type": "string",
+            "title": "Remaining Budget",
+            "description": "Remaining unspent budget before request"
+          },
+          "request_monthly_cost": {
+            "type": "string",
+            "title": "Request Monthly Cost",
+            "description": "Estimated monthly consumption of this request"
+          },
+          "projected_spend": {
+            "type": "string",
+            "title": "Projected Spend",
+            "description": "Projected spend (actual + request)"
+          },
+          "projected_utilisation_pct": {
+            "type": "string",
+            "title": "Projected Utilisation Pct",
+            "description": "Projected budget utilisation percentage (projected / budget * 100)"
+          },
+          "consumption_of_remaining_pct": {
+            "type": "string",
+            "title": "Consumption Of Remaining Pct",
+            "description": "Percentage of remaining budget this request consumes"
+          },
+          "current_forecast": {
+            "type": "string",
+            "title": "Current Forecast",
+            "description": "Existing month-end forecast before request"
+          },
+          "revised_forecast": {
+            "type": "string",
+            "title": "Revised Forecast",
+            "description": "Revised forecast including this request"
+          },
+          "forecast_variance_change": {
+            "type": "string",
+            "title": "Forecast Variance Change",
+            "description": "Shift in forecasted month-end budget variance"
+          },
+          "impact_tier": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BudgetImpactTier"
+              }
+            ],
+            "description": "Visual materiality tier (NEGLIGIBLE, MODERATE, SUBSTANTIAL, CRITICAL)"
+          },
+          "commentary": {
+            "type": "string",
+            "title": "Commentary",
+            "description": "Narrative executive summary of budget impact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "period_budget",
+          "actual_spend",
+          "remaining_budget",
+          "request_monthly_cost",
+          "projected_spend",
+          "projected_utilisation_pct",
+          "consumption_of_remaining_pct",
+          "current_forecast",
+          "revised_forecast",
+          "forecast_variance_change",
+          "impact_tier",
+          "commentary"
+        ],
+        "title": "BudgetImpactAssessment",
+        "description": "Comprehensive budget impact analysis presenting all 4 key dimensions."
+      },
+      "BudgetImpactTier": {
+        "type": "string",
+        "enum": [
+          "NEGLIGIBLE",
+          "MODERATE",
+          "SUBSTANTIAL",
+          "CRITICAL"
+        ],
+        "title": "BudgetImpactTier",
+        "description": "Visual materiality tier of budget consumption."
+      },
       "BudgetListResponse": {
         "properties": {
           "items": {
@@ -34927,6 +36430,71 @@
         ],
         "title": "BulkReprioritiseRequest",
         "description": "Payload to bulk-reprioritize multiple remediation tasks."
+      },
+      "BypassRecord": {
+        "properties": {
+          "bypass_id": {
+            "type": "string",
+            "title": "Bypass Id",
+            "description": "Unique bypass transaction ID"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Associated provisioning request ID"
+          },
+          "bypassed_by": {
+            "type": "string",
+            "title": "Bypassed By",
+            "description": "User ID who executed bypass"
+          },
+          "bypassed_at": {
+            "type": "string",
+            "title": "Bypassed At"
+          },
+          "justification": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Justification",
+            "description": "Mandatory post-hoc business rationale"
+          },
+          "governance_exception_id": {
+            "type": "string",
+            "title": "Governance Exception Id",
+            "description": "Recorded governance exception ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bypass_id",
+          "request_id",
+          "bypassed_by",
+          "justification",
+          "governance_exception_id"
+        ],
+        "title": "BypassRecord",
+        "description": "Recorded emergency bypass path with post-hoc justification."
+      },
+      "BypassRequestDTO": {
+        "properties": {
+          "bypassed_by": {
+            "type": "string",
+            "title": "Bypassed By",
+            "description": "User ID performing emergency bypass"
+          },
+          "justification": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Justification",
+            "description": "Mandatory post-hoc justification"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bypassed_by",
+          "justification"
+        ],
+        "title": "BypassRequestDTO"
       },
       "CadenceWarning": {
         "properties": {
@@ -35667,6 +37235,72 @@
         "type": "object",
         "title": "CommitmentInfo",
         "description": "Commitment, reservation, and savings plan parameters."
+      },
+      "CompareScenariosDTO": {
+        "properties": {
+          "target_scope": {
+            "type": "string",
+            "title": "Target Scope",
+            "description": "Evaluation target scope"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Billing period"
+          },
+          "baseline_estimate_id": {
+            "type": "string",
+            "title": "Baseline Estimate Id",
+            "description": "Baseline estimate ID"
+          },
+          "alternative_estimate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Alternative Estimate Ids",
+            "description": "1 to 3 alternative estimate IDs"
+          },
+          "period_budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Period Budget",
+            "default": "50000.00"
+          },
+          "actual_spend": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Actual Spend",
+            "default": "30000.00"
+          },
+          "recommendation_notes": {
+            "type": "string",
+            "title": "Recommendation Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_scope",
+          "period",
+          "baseline_estimate_id",
+          "alternative_estimate_ids"
+        ],
+        "title": "CompareScenariosDTO"
       },
       "CompleteWizardResponse": {
         "properties": {
@@ -38811,6 +40445,111 @@
         ],
         "title": "CreateRecordRequest"
       },
+      "CreateSavedEstimateRequest": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider (aws, azure, gcp, oci)"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service code, e.g. AmazonEC2"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Datacenter region"
+          },
+          "size": {
+            "type": "string",
+            "title": "Size",
+            "description": "Instance type or SKU size"
+          },
+          "hourly_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Hourly Cost",
+            "description": "Hourly cost"
+          },
+          "daily_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Daily Cost",
+            "description": "Daily cost (24h)"
+          },
+          "monthly_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Monthly Cost",
+            "description": "Monthly cost (730h)"
+          },
+          "annualised_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Annualised Cost",
+            "description": "Annualised cost (12m)"
+          },
+          "options": {
+            "type": "object",
+            "title": "Options"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "pricing_source": {
+            "type": "string",
+            "title": "Pricing Source",
+            "default": "cloudlens_catalog"
+          },
+          "validity_days": {
+            "type": "integer",
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Validity Days",
+            "default": 7
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "service",
+          "region",
+          "size",
+          "hourly_cost",
+          "daily_cost",
+          "monthly_cost",
+          "annualised_cost"
+        ],
+        "title": "CreateSavedEstimateRequest"
+      },
       "CredentialCreateRequest": {
         "properties": {
           "name": {
@@ -39942,6 +41681,39 @@
         "title": "DemoTenantSeedResult",
         "description": "Structured report returned upon seeding the demonstration tenant."
       },
+      "DependencyComponentCost": {
+        "properties": {
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Inferred dependent service (e.g. ALB, NAT Gateway, Backup)"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Service category (Compute, Storage, Network, Database)"
+          },
+          "estimated_monthly_cost": {
+            "type": "string",
+            "title": "Estimated Monthly Cost",
+            "description": "Estimated monthly cost for this component"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis",
+            "description": "Derivation rationale or topology rule"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_name",
+          "category",
+          "estimated_monthly_cost",
+          "basis"
+        ],
+        "title": "DependencyComponentCost",
+        "description": "Discrete dependent service implied by the proposed deployment."
+      },
       "DependencyDirection": {
         "type": "string",
         "enum": [
@@ -40157,6 +41929,47 @@
         "title": "DependencyEdge",
         "description": "Typed, directed relationship edge with provenance, confidence, and history (Prompt 32)."
       },
+      "DependencyPreCheckResult": {
+        "properties": {
+          "primary_monthly_cost": {
+            "type": "string",
+            "title": "Primary Monthly Cost",
+            "description": "Monthly cost of the primary requested resource"
+          },
+          "inferred_dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyComponentCost"
+            },
+            "type": "array",
+            "title": "Inferred Dependencies",
+            "description": "Downstream dependent services"
+          },
+          "total_chain_monthly_cost": {
+            "type": "string",
+            "title": "Total Chain Monthly Cost",
+            "description": "Total monthly cost of primary resource + all dependent services"
+          },
+          "shared_service_apportionment": {
+            "type": "string",
+            "title": "Shared Service Apportionment",
+            "description": "Apportioned share of central platform shared services",
+            "default": "0.00"
+          },
+          "chain_multiplier": {
+            "type": "string",
+            "title": "Chain Multiplier",
+            "description": "Ratio of total chain cost to primary resource cost (chain / primary)",
+            "default": "1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary_monthly_cost",
+          "total_chain_monthly_cost"
+        ],
+        "title": "DependencyPreCheckResult",
+        "description": "Dependency and shared-service pre-check (Prompt 33) assessing complete application chain cost."
+      },
       "DependencyType": {
         "type": "string",
         "enum": [
@@ -40176,6 +41989,32 @@
         ],
         "title": "DependencyType",
         "description": "Cross-resource dependency relationships (Prompt 32 / BBP Section 24)."
+      },
+      "DetectUnapprovedDTO": {
+        "properties": {
+          "inventoried_resources": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Inventoried Resources",
+            "description": "Inventoried cloud resources"
+          },
+          "gated_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gated Scopes",
+            "description": "Gated scope codes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inventoried_resources",
+          "gated_scopes"
+        ],
+        "title": "DetectUnapprovedDTO"
       },
       "DisableUserRequest": {
         "properties": {
@@ -41012,6 +42851,16 @@
         "title": "EscalationState",
         "description": "Escalation progression states for unacknowledged alerts (Prompt 31)."
       },
+      "EstimateAccuracyClassification": {
+        "type": "string",
+        "enum": [
+          "WITHIN_ACCURACY_BAND",
+          "UNDER_ESTIMATED",
+          "OVER_ESTIMATED"
+        ],
+        "title": "EstimateAccuracyClassification",
+        "description": "Classification of estimate vs actual accuracy over 3 periods."
+      },
       "EstimateVsActualItem": {
         "properties": {
           "id": {
@@ -41188,6 +43037,103 @@
         ],
         "title": "EstimateVsActualReport",
         "description": "Comprehensive estimation accuracy report evaluating platform pre-deployment estimates (Prompt 24 Item 6)."
+      },
+      "EstimateVsActualTracking": {
+        "properties": {
+          "tracking_id": {
+            "type": "string",
+            "title": "Tracking Id",
+            "description": "Unique tracking identifier"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Source approved provisioning request ID"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Linked cloud resource identifier"
+          },
+          "requester_id": {
+            "type": "string",
+            "title": "Requester Id",
+            "description": "Requester user ID"
+          },
+          "approver_role": {
+            "type": "string",
+            "title": "Approver Role",
+            "description": "Role that authorized the request"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Cloud service name"
+          },
+          "approved_monthly_estimate": {
+            "type": "string",
+            "title": "Approved Monthly Estimate",
+            "description": "Approved monthly cost figure"
+          },
+          "periods_tracked": {
+            "items": {
+              "$ref": "#/components/schemas/ResourcePeriodActual"
+            },
+            "type": "array",
+            "title": "Periods Tracked",
+            "description": "Observed billing periods (up to 3)"
+          },
+          "latest_variance_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Variance Amount"
+          },
+          "latest_variance_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Variance Pct"
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EstimateAccuracyClassification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_three_periods_complete": {
+            "type": "boolean",
+            "title": "Is Three Periods Complete",
+            "description": "True once 3 full periods have been observed and reconciled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "tracking_id",
+          "request_id",
+          "resource_id",
+          "requester_id",
+          "approver_role",
+          "service",
+          "approved_monthly_estimate"
+        ],
+        "title": "EstimateVsActualTracking",
+        "description": "Three-period reconciliation tracking linking approved estimate to provisioned resource."
       },
       "EstimatedCost": {
         "properties": {
@@ -43305,6 +45251,171 @@
         "title": "FreshnessIndicator",
         "description": "Computed freshness status for provider-derived values (Item 163)."
       },
+      "GateTriggerAction": {
+        "type": "string",
+        "enum": [
+          "NO_GATE",
+          "NOTIFY_ONLY",
+          "APPROVAL_REQUIRED",
+          "APPROVAL_REQUIRED_SPECIFIC_CHAIN"
+        ],
+        "title": "GateTriggerAction",
+        "description": "Configurable gate action evaluated from master data."
+      },
+      "GateTriggerRule-Input": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Unique trigger rule identifier"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Target scope code or '*' for global",
+            "default": "*"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Deployment environment (PROD, STAGING, DEV, or '*')",
+            "default": "*"
+          },
+          "min_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Min Monthly Amount",
+            "description": "Lower boundary of monthly cost value band",
+            "default": "0.00"
+          },
+          "max_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Monthly Amount",
+            "description": "Upper boundary of monthly cost value band (None if unbounded)"
+          },
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GateTriggerAction"
+              }
+            ],
+            "description": "Trigger action (HARD RULE: defaults to NOTIFY_ONLY)",
+            "default": "NOTIFY_ONLY"
+          },
+          "approver_chain_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Chain Id",
+            "description": "Specific workflow chain ID if APPROVAL_REQUIRED_SPECIFIC_CHAIN"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Governance rationale",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id"
+        ],
+        "title": "GateTriggerRule",
+        "description": "Configurable master-data gate trigger rule per scope, environment, and value band."
+      },
+      "GateTriggerRule-Output": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id",
+            "description": "Unique trigger rule identifier"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Target scope code or '*' for global",
+            "default": "*"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Deployment environment (PROD, STAGING, DEV, or '*')",
+            "default": "*"
+          },
+          "min_monthly_amount": {
+            "type": "string",
+            "title": "Min Monthly Amount",
+            "description": "Lower boundary of monthly cost value band",
+            "default": "0.00"
+          },
+          "max_monthly_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Monthly Amount",
+            "description": "Upper boundary of monthly cost value band (None if unbounded)"
+          },
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GateTriggerAction"
+              }
+            ],
+            "description": "Trigger action (HARD RULE: defaults to NOTIFY_ONLY)",
+            "default": "NOTIFY_ONLY"
+          },
+          "approver_chain_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Chain Id",
+            "description": "Specific workflow chain ID if APPROVAL_REQUIRED_SPECIFIC_CHAIN"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Governance rationale",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id"
+        ],
+        "title": "GateTriggerRule",
+        "description": "Configurable master-data gate trigger rule per scope, environment, and value band."
+      },
       "GenerateStatementRequest": {
         "properties": {
           "period": {
@@ -44419,6 +46530,32 @@
         ],
         "title": "LifecycleStatus",
         "description": "Change management workflow states for master data records."
+      },
+      "LinkResourceDTO": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Discovered cloud resource ID"
+          },
+          "approver_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approver Role",
+            "description": "Role that authorized the request"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id"
+        ],
+        "title": "LinkResourceDTO"
       },
       "LoadScenarioRequest": {
         "properties": {
@@ -50151,6 +52288,211 @@
         "title": "ProviderType",
         "description": "Supported cloud providers and canonical system boundary."
       },
+      "ProvisioningRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Unique provisioning request identifier"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant boundary"
+          },
+          "estimate_id": {
+            "type": "string",
+            "title": "Estimate Id",
+            "description": "Source saved estimate ID"
+          },
+          "estimate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SavedEstimate"
+              }
+            ],
+            "description": "Underlying priced estimate"
+          },
+          "target_scope": {
+            "type": "string",
+            "title": "Target Scope",
+            "description": "Target scope code (e.g. BU-RETAIL, CC-ENG)"
+          },
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type",
+            "description": "Target scope type",
+            "default": "BUSINESS_UNIT"
+          },
+          "intended_application": {
+            "type": "string",
+            "title": "Intended Application",
+            "description": "Workload application identifier"
+          },
+          "intended_environment": {
+            "type": "string",
+            "title": "Intended Environment",
+            "description": "Target environment (PROD, STAGING, DEV, etc.)"
+          },
+          "owner_id": {
+            "type": "string",
+            "title": "Owner Id",
+            "description": "Accountable owner user ID"
+          },
+          "owner_email": {
+            "type": "string",
+            "title": "Owner Email",
+            "description": "Accountable owner email"
+          },
+          "cost_centre": {
+            "type": "string",
+            "title": "Cost Centre",
+            "description": "Responsible cost centre code"
+          },
+          "business_justification": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Business Justification",
+            "description": "Business justification"
+          },
+          "intended_start_date": {
+            "type": "string",
+            "title": "Intended Start Date",
+            "description": "Proposed deployment start date (ISO)"
+          },
+          "budget_impact": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BudgetImpactAssessment"
+              }
+            ],
+            "description": "Comprehensive budget impact evaluation"
+          },
+          "quota_pre_check": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuotaPreCheckResult"
+              }
+            ],
+            "description": "Quota headroom evaluation"
+          },
+          "dependency_pre_check": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DependencyPreCheckResult"
+              }
+            ],
+            "description": "Application chain cost evaluation"
+          },
+          "gate_action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GateTriggerAction"
+              }
+            ],
+            "description": "Resolved gate action from master data"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProvisioningRequestStatus"
+              }
+            ],
+            "default": "DRAFT"
+          },
+          "workflow_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Request Id",
+            "description": "ID of linked WorkflowRequest in Prompt 50 engine"
+          },
+          "bypass_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BypassRecord"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bypass record if bypassed"
+          },
+          "linked_resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked Resource Id",
+            "description": "Linked cloud inventory resource ID upon discovery"
+          },
+          "linked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked At"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "advisory_notice": {
+            "type": "string",
+            "title": "Advisory Notice",
+            "description": "Mandatory advisory disclosure stating platform holds read-only credentials",
+            "default": "ADVISORY GATE NOTICE: CloudLens operates with read-only cloud provider credentials and provides governance visibility, cost accountability, and automated workflow tracking. CloudLens does not technically block infrastructure provisioning at the cloud provider API level."
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "tenant_id",
+          "estimate_id",
+          "estimate",
+          "target_scope",
+          "intended_application",
+          "intended_environment",
+          "owner_id",
+          "owner_email",
+          "cost_centre",
+          "business_justification",
+          "intended_start_date",
+          "budget_impact",
+          "quota_pre_check",
+          "dependency_pre_check",
+          "gate_action"
+        ],
+        "title": "ProvisioningRequest",
+        "description": "Formal cost-aware provisioning gate request wired into Prompt 50 workflow engine."
+      },
+      "ProvisioningRequestStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "IN_REVIEW",
+          "APPROVED",
+          "REJECTED",
+          "BYPASSED",
+          "LINKED_TO_RESOURCE"
+        ],
+        "title": "ProvisioningRequestStatus",
+        "description": "Lifecycle status of a provisioning gate request."
+      },
       "PutObjectRequest": {
         "properties": {
           "key": {
@@ -51185,6 +53527,75 @@
         "title": "QuotaOverrideRequest",
         "description": "Payload to customize headroom threshold and lead-time settings."
       },
+      "QuotaPreCheckResult": {
+        "properties": {
+          "is_blocked": {
+            "type": "boolean",
+            "title": "Is Blocked",
+            "description": "True if proposed deployment exceeds quota absolute limit",
+            "default": false
+          },
+          "headroom_warning": {
+            "type": "boolean",
+            "title": "Headroom Warning",
+            "description": "True if remaining headroom drops below warning threshold",
+            "default": false
+          },
+          "current_headroom_pct": {
+            "type": "string",
+            "title": "Current Headroom Pct",
+            "description": "Current available headroom percentage"
+          },
+          "projected_headroom_pct": {
+            "type": "string",
+            "title": "Projected Headroom Pct",
+            "description": "Projected available headroom percentage post-deployment"
+          },
+          "quota_name": {
+            "type": "string",
+            "title": "Quota Name",
+            "description": "Name of the affected service limit"
+          },
+          "quota_code": {
+            "type": "string",
+            "title": "Quota Code",
+            "description": "Machine identifier of quota"
+          },
+          "consumed_units": {
+            "type": "string",
+            "title": "Consumed Units",
+            "description": "Current consumed units"
+          },
+          "limit_units": {
+            "type": "string",
+            "title": "Limit Units",
+            "description": "Maximum allowed limit units"
+          },
+          "projected_units": {
+            "type": "string",
+            "title": "Projected Units",
+            "description": "Total projected units including proposed deployment"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable assessment finding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_headroom_pct",
+          "projected_headroom_pct",
+          "quota_name",
+          "quota_code",
+          "consumed_units",
+          "limit_units",
+          "projected_units",
+          "message"
+        ],
+        "title": "QuotaPreCheckResult",
+        "description": "Pre-check evaluating whether proposed deployment will exhaust or breach quota headroom."
+      },
       "QuotaRemediationTask": {
         "properties": {
           "id": {
@@ -52158,6 +54569,33 @@
         ],
         "title": "ReconciliationStatus",
         "description": "Reconciliation evaluation outcome based on provider tolerance (Prompt 24 Item 4)."
+      },
+      "RecordPeriodActualDTO": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Billing period partition, e.g. '2026-10'"
+          },
+          "billed_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Billed Amount",
+            "description": "Actual billed spend in period"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "billed_amount"
+        ],
+        "title": "RecordPeriodActualDTO"
       },
       "RemediationHistoryEntry": {
         "properties": {
@@ -53879,6 +56317,31 @@
         "title": "ResourcePatchRequest",
         "description": "Payload to update resource owner, application, or custom tags (API-020)."
       },
+      "ResourcePeriodActual": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Billing period (e.g. '2026-10')"
+          },
+          "billed_amount": {
+            "type": "string",
+            "title": "Billed Amount",
+            "description": "Actual billed spend in period"
+          },
+          "recorded_at": {
+            "type": "string",
+            "title": "Recorded At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "billed_amount"
+        ],
+        "title": "ResourcePeriodActual",
+        "description": "Actual billed cost recorded for a post-provisioning billing period."
+      },
       "ResourceTarget": {
         "properties": {
           "resource_id": {
@@ -54709,6 +57172,262 @@
         },
         "type": "object",
         "title": "SaveStepRequest"
+      },
+      "SavedEstimate": {
+        "properties": {
+          "estimate_id": {
+            "type": "string",
+            "title": "Estimate Id",
+            "description": "Unique estimate identifier"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant boundary"
+          },
+          "requester_id": {
+            "type": "string",
+            "title": "Requester Id",
+            "description": "User ID of requester"
+          },
+          "requester_email": {
+            "type": "string",
+            "title": "Requester Email",
+            "description": "Email of requester"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider (aws, azure, gcp, oci)"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Cloud service code (e.g. AmazonEC2, Virtual Machines)"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Datacenter region"
+          },
+          "size": {
+            "type": "string",
+            "title": "Size",
+            "description": "Compute instance type / SKU size"
+          },
+          "options": {
+            "type": "object",
+            "title": "Options",
+            "description": "Configuration options (storage_gb, os, public_ip, etc.)"
+          },
+          "hourly_cost": {
+            "type": "string",
+            "title": "Hourly Cost",
+            "description": "Estimated cost per hour"
+          },
+          "daily_cost": {
+            "type": "string",
+            "title": "Daily Cost",
+            "description": "Estimated cost per day (24 hours)"
+          },
+          "monthly_cost": {
+            "type": "string",
+            "title": "Monthly Cost",
+            "description": "Estimated cost per standard month (730 hours)"
+          },
+          "annualised_cost": {
+            "type": "string",
+            "title": "Annualised Cost",
+            "description": "Annualised estimated cost (monthly * 12)"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency ISO 4217 code",
+            "default": "USD"
+          },
+          "derivation": {
+            "type": "object",
+            "title": "Derivation",
+            "description": "Full mathematical derivation from Prompt 23"
+          },
+          "pricing_source": {
+            "type": "string",
+            "title": "Pricing Source",
+            "description": "Pricing catalog source",
+            "default": "cloudlens_catalog"
+          },
+          "pricing_effective_date": {
+            "type": "string",
+            "title": "Pricing Effective Date",
+            "description": "Date of effective rate card"
+          },
+          "valid_until": {
+            "type": "string",
+            "title": "Valid Until",
+            "description": "Validity expiration timestamp UTC after which estimate must be re-priced"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "Timestamp when estimate was generated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estimate_id",
+          "tenant_id",
+          "requester_id",
+          "requester_email",
+          "provider",
+          "service",
+          "region",
+          "size",
+          "hourly_cost",
+          "daily_cost",
+          "monthly_cost",
+          "annualised_cost",
+          "valid_until"
+        ],
+        "title": "SavedEstimate",
+        "description": "Priced configuration with 4 computed values, full derivation, and validity window."
+      },
+      "ScenarioComparisonView": {
+        "properties": {
+          "comparison_id": {
+            "type": "string",
+            "title": "Comparison Id",
+            "description": "Unique comparison identifier"
+          },
+          "baseline_scenario_id": {
+            "type": "string",
+            "title": "Baseline Scenario Id",
+            "description": "ID of baseline reference scenario"
+          },
+          "target_scope": {
+            "type": "string",
+            "title": "Target Scope",
+            "description": "Evaluation scope code"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Target billing period"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioOption"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 2,
+            "title": "Scenarios",
+            "description": "2 to 4 scenarios compared side by side"
+          },
+          "recommendation_notes": {
+            "type": "string",
+            "title": "Recommendation Notes",
+            "description": "FinOps optimization commentary",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "comparison_id",
+          "baseline_scenario_id",
+          "target_scope",
+          "period",
+          "scenarios"
+        ],
+        "title": "ScenarioComparisonView",
+        "description": "Side-by-side comparison of 2 or 3 architecture configurations as a decision aid."
+      },
+      "ScenarioOption": {
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "title": "Scenario Id",
+            "description": "Option key (e.g. OPTION_A, BASELINE, SERVERLESS)"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Friendly title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Technical summary",
+            "default": ""
+          },
+          "estimate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SavedEstimate"
+              }
+            ],
+            "description": "Priced configuration"
+          },
+          "budget_impact": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BudgetImpactAssessment"
+              }
+            ],
+            "description": "Calculated budget impact"
+          },
+          "quota_pre_check": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuotaPreCheckResult"
+              }
+            ],
+            "description": "Quota headroom evaluation"
+          },
+          "dependency_pre_check": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DependencyPreCheckResult"
+              }
+            ],
+            "description": "Application chain cost"
+          },
+          "monthly_cost": {
+            "type": "string",
+            "title": "Monthly Cost",
+            "description": "Monthly cost"
+          },
+          "annualised_cost": {
+            "type": "string",
+            "title": "Annualised Cost",
+            "description": "Annualised cost"
+          },
+          "delta_from_baseline_monthly": {
+            "type": "string",
+            "title": "Delta From Baseline Monthly",
+            "description": "Delta against baseline option ($)",
+            "default": "0.00"
+          },
+          "delta_from_baseline_pct": {
+            "type": "string",
+            "title": "Delta From Baseline Pct",
+            "description": "Percentage delta against baseline option (%)",
+            "default": "0.00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "name",
+          "estimate",
+          "budget_impact",
+          "quota_pre_check",
+          "dependency_pre_check",
+          "monthly_cost",
+          "annualised_cost"
+        ],
+        "title": "ScenarioOption",
+        "description": "Single architecture configuration scenario evaluated side by side."
       },
       "ScheduleAdherenceEvaluateRequest": {
         "properties": {
@@ -56856,6 +59575,127 @@
         ],
         "title": "StorageObjectInfo",
         "description": "Metadata regarding a stored object."
+      },
+      "SubmitProvisioningRequestDTO": {
+        "properties": {
+          "estimate_id": {
+            "type": "string",
+            "title": "Estimate Id",
+            "description": "Source saved estimate ID"
+          },
+          "target_scope": {
+            "type": "string",
+            "title": "Target Scope",
+            "description": "Target scope code"
+          },
+          "scope_type": {
+            "type": "string",
+            "title": "Scope Type",
+            "default": "BUSINESS_UNIT"
+          },
+          "intended_application": {
+            "type": "string",
+            "title": "Intended Application",
+            "description": "Workload application"
+          },
+          "intended_environment": {
+            "type": "string",
+            "title": "Intended Environment",
+            "description": "Target environment (PROD, STAGING, DEV)"
+          },
+          "owner_id": {
+            "type": "string",
+            "title": "Owner Id",
+            "description": "Owner user ID"
+          },
+          "owner_email": {
+            "type": "string",
+            "title": "Owner Email",
+            "description": "Owner email"
+          },
+          "cost_centre": {
+            "type": "string",
+            "title": "Cost Centre",
+            "description": "Cost centre code"
+          },
+          "business_justification": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Business Justification",
+            "description": "Business rationale"
+          },
+          "intended_start_date": {
+            "type": "string",
+            "title": "Intended Start Date",
+            "description": "Planned deployment start date"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "period_budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Budget"
+          },
+          "actual_spend": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Spend"
+          },
+          "current_forecast": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Forecast"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estimate_id",
+          "target_scope",
+          "intended_application",
+          "intended_environment",
+          "owner_id",
+          "owner_email",
+          "cost_centre",
+          "business_justification",
+          "intended_start_date"
+        ],
+        "title": "SubmitProvisioningRequestDTO"
       },
       "SubscriptionCreateDTO": {
         "properties": {
@@ -60693,6 +63533,79 @@
         ],
         "title": "UnallocatedCostItem",
         "description": "Explicit disclosure of unallocated cost associated with recipient context (Prompt 08 / 52)."
+      },
+      "UnapprovedDeploymentFinding": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id",
+            "description": "Unique finding ID"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Cloud resource identifier"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name",
+            "description": "Resource name or tag"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Cloud service"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Gated scope code"
+          },
+          "detected_at": {
+            "type": "string",
+            "title": "Detected At"
+          },
+          "estimated_monthly_cost": {
+            "type": "string",
+            "title": "Estimated Monthly Cost",
+            "description": "Estimated monthly spend of unapproved resource"
+          },
+          "governance_exception_id": {
+            "type": "string",
+            "title": "Governance Exception Id",
+            "description": "Logged governance exception ID"
+          },
+          "remediation_task_id": {
+            "type": "string",
+            "title": "Remediation Task Id",
+            "description": "Assigned remediation task ID"
+          },
+          "advisory_disclaimer": {
+            "type": "string",
+            "title": "Advisory Disclaimer",
+            "description": "Plain statement of advisory nature (read-only credentials)",
+            "default": "ADVISORY GATE NOTICE: CloudLens operates with read-only cloud provider credentials and provides governance visibility, cost accountability, and automated workflow tracking. CloudLens does not technically block infrastructure provisioning at the cloud provider API level."
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding_id",
+          "resource_id",
+          "resource_name",
+          "provider",
+          "service",
+          "scope_code",
+          "estimated_monthly_cost",
+          "governance_exception_id",
+          "remediation_task_id"
+        ],
+        "title": "UnapprovedDeploymentFinding",
+        "description": "Detection of resource deployed in a gated scope without an approved request."
       },
       "UnknownSkuRecord": {
         "properties": {

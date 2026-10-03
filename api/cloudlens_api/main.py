@@ -38,6 +38,7 @@ from api.cloudlens_api.routes import (
     overrides_router,
     policies_router,
     pricing_router,
+    provisioning_router,
     quotas_router,
     rbac_router,
     remediation_router,
@@ -80,6 +81,8 @@ from domain.models.exceptions import (
     DependencyException,
     DomainModelException,
     DuplicatePolicyException,
+    EstimateExpiredException,
+    EstimateNotFoundException,
     ExpectationNotFoundException,
     FeatureFlagDisabledException,
     FirstSyncNotFoundException,
@@ -116,6 +119,9 @@ from domain.models.exceptions import (
     PricingException,
     PricingRecordNotFoundException,
     PricingSCDConflictException,
+    ProvisioningGateException,
+    ProvisioningRequestInvalidStateException,
+    ProvisioningRequestNotFoundException,
     QuotaException,
     QuotaExhaustedException,
     QuotaIncreaseRequestNotFoundException,
@@ -143,6 +149,7 @@ from domain.models.exceptions import (
     ThresholdRuleNotFoundException,
     TopologyException,
     TopologyViewNotFoundException,
+    UnapprovedDeploymentException,
     UnauthorizedApproverException,
     UndeclaredCapabilityException,
     UnknownSchemaVersionException,
@@ -874,6 +881,32 @@ async def topology_exception_handler(request: Request, exc: TopologyException):
     )
 
 
+@app.exception_handler(ProvisioningGateException)
+async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):
+    """Standardized exception handler for Cost-Aware Provisioning Gate (Prompt 55 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    if isinstance(exc, (EstimateNotFoundException, ProvisioningRequestNotFoundException)):
+        status_code = status.HTTP_404_NOT_FOUND
+    elif isinstance(exc, ProvisioningRequestInvalidStateException):
+        status_code = status.HTTP_409_CONFLICT
+    elif isinstance(exc, (EstimateExpiredException, UnapprovedDeploymentException)):
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -912,6 +945,7 @@ app.include_router(remediation_router)
 app.include_router(dependency_router)
 app.include_router(topology_router)
 app.include_router(statements_router)
+app.include_router(provisioning_router)
 
 
 class HealthResponse(BaseModel):

@@ -411,6 +411,36 @@ DEFAULT_WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         ),
         auto_reject_on_expiry=False,
     ),
+    # 12. Cost-Aware Provisioning Gate (Prompt 55)
+    WorkflowRequestType.PROVISIONING_REQUEST.value: WorkflowDefinition(
+        id="wf-def-provisioning-request",
+        request_type=WorkflowRequestType.PROVISIONING_REQUEST.value,
+        entity_type="provisioning_request",
+        name="Cost-Aware Provisioning Gate Approval Workflow",
+        description="Pre-deployment evaluation and approval workflow for cloud resource provisioning against scope budget and quota headroom.",
+        trigger_condition=WorkflowTriggerCondition(always=True),
+        stages=[
+            WorkflowStageDefinition(
+                stage_id="stage-provisioning-gate-review",
+                name="Scope Owner & FinOps Provisioning Gate Review",
+                sequence_order=1,
+                mode=ApprovalChainMode.SERIAL,
+                quorum=1,
+                approver_spec=WorkflowApproverSpec(
+                    resolution_type=ApproverResolutionType.ROLE,
+                    target_role="FINOPS_ADMIN",
+                    fallback_role="TENANT_ADMIN",
+                ),
+            )
+        ],
+        sla_working_hours=24,
+        working_schedule_id="WW_STANDARD_MON_FRI",
+        escalation_path=WorkflowEscalationPath(
+            escalate_to_role="FINANCE_DIRECTOR",
+            escalate_after_hours=12,
+        ),
+        auto_reject_on_expiry=False,
+    ),
 }
 
 

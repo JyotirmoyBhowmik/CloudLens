@@ -22,6 +22,7 @@ from api.cloudlens_api.routes.masterdata import router as masterdata_router
 from api.cloudlens_api.routes.overrides import router as overrides_router
 from api.cloudlens_api.routes.policies import router as policies_router
 from api.cloudlens_api.routes.pricing import router as pricing_router
+from api.cloudlens_api.routes.provisioning import router as provisioning_router
 from api.cloudlens_api.routes.quotas import router as quotas_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
 from api.cloudlens_api.routes.remediation import router as remediation_router
@@ -62,6 +63,7 @@ __all__ = [
     "overrides_router",
     "policies_router",
     "pricing_router",
+    "provisioning_router",
     "quotas_router",
     "rbac_router",
     "remediation_router",
