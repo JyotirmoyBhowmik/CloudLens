@@ -2427,3 +2427,116 @@ class UnapprovedDeploymentException(ProvisioningGateException):
         )
         self.resource_id = resource_id
         self.scope_code = scope_code
+
+
+# ==============================================================================
+# Bulk Import & Onboarding Exceptions (Prompt 53)
+# ==============================================================================
+
+
+class BulkImportException(DomainModelException):
+    """Base exception for Bulk Import and Onboarding operations (Prompt 53)."""
+
+    def __init__(
+        self, message: str, error_code: str = "BULK_IMPORT_ERROR", status_code: int = 400
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class DryRunRequiredException(BulkImportException):
+    """Raised when attempting to apply an import without prior dry-run validation."""
+
+    def __init__(
+        self,
+        message: str = "Do not apply an import without a dry run. Prior dry run validation is mandatory.",
+    ) -> None:
+        super().__init__(message, error_code="DRY_RUN_REQUIRED", status_code=400)
+
+
+class InvalidMasterReferenceException(BulkImportException):
+    """Raised when an imported field contains a value that does not exist in its registered master."""
+
+    def __init__(
+        self, row_number: int, field_name: str, invalid_value: str, master_type: str
+    ) -> None:
+        super().__init__(
+            f"Row {row_number}: Value '{invalid_value}' for field '{field_name}' does not exist in registered master '{master_type}'. Free-text substitution is forbidden.",
+            error_code="INVALID_MASTER_REFERENCE",
+            status_code=422,
+        )
+        self.row_number = row_number
+        self.field_name = field_name
+        self.invalid_value = invalid_value
+        self.master_type = master_type
+
+
+class ImportValidationException(BulkImportException):
+    """Raised when row-level validation fails under an ALL_OR_NOTHING atomicity policy."""
+
+    def __init__(self, message: str, rejected_count: int = 0) -> None:
+        super().__init__(message, error_code="IMPORT_VALIDATION_FAILED", status_code=422)
+        self.rejected_count = rejected_count
+
+
+class ImportRunNotFoundException(BulkImportException):
+    """Raised when an import run record cannot be found."""
+
+    def __init__(self, import_run_id: str) -> None:
+        super().__init__(
+            f"Import run '{import_run_id}' was not found.",
+            error_code="IMPORT_RUN_NOT_FOUND",
+            status_code=404,
+        )
+        self.import_run_id = import_run_id
+
+
+class MappingProfileNotFoundException(BulkImportException):
+    """Raised when a mapping profile cannot be found."""
+
+    def __init__(self, profile_id: str) -> None:
+        super().__init__(
+            f"Mapping profile '{profile_id}' was not found.",
+            error_code="MAPPING_PROFILE_NOT_FOUND",
+            status_code=404,
+        )
+        self.profile_id = profile_id
+
+
+class RollbackWindowExpiredException(BulkImportException):
+    """Raised when an import reversal is requested after the configured rollback window has expired."""
+
+    def __init__(self, import_run_id: str, elapsed_hours: float, window_hours: int) -> None:
+        super().__init__(
+            f"Import run '{import_run_id}' cannot be reversed: rollback window of {window_hours} hours expired ({elapsed_hours:.1f} hours elapsed).",
+            error_code="ROLLBACK_WINDOW_EXPIRED",
+            status_code=400,
+        )
+        self.import_run_id = import_run_id
+        self.elapsed_hours = elapsed_hours
+        self.window_hours = window_hours
+
+
+class RollbackBlockedException(BulkImportException):
+    """Raised when rollback is blocked because dependent changes have since occurred."""
+
+    def __init__(self, import_run_id: str, reason: str) -> None:
+        super().__init__(
+            f"Import run '{import_run_id}' reversal blocked: {reason}",
+            error_code="ROLLBACK_DEPENDENCY_CONFLICT",
+            status_code=409,
+        )
+        self.import_run_id = import_run_id
+        self.reason = reason
+
+
+class ScheduledImportJobNotFoundException(BulkImportException):
+    """Raised when a scheduled import job cannot be found."""
+
+    def __init__(self, job_id: str) -> None:
+        super().__init__(
+            f"Scheduled import job '{job_id}' was not found.",
+            error_code="SCHEDULED_JOB_NOT_FOUND",
+            status_code=404,
+        )
+        self.job_id = job_id

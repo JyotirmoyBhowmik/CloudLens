@@ -23,6 +23,7 @@ from api.cloudlens_api.routes import (
     auth_router,
     bootstrap_router,
     budgets_router,
+    bulk_import_router,
     config_router,
     connectors_router,
     cost_router,
@@ -68,6 +69,7 @@ from domain.models.exceptions import (
     BudgetNotFoundException,
     BudgetPendingApprovalException,
     BudgetTemplateNotFoundException,
+    BulkImportException,
     ChannelNotSupportedException,
     CircuitBreakerOpenException,
     ConnectorException,
@@ -907,6 +909,25 @@ async def provisioning_gate_exception_handler(request: Request, exc: Provisionin
     )
 
 
+@app.exception_handler(BulkImportException)
+async def bulk_import_exception_handler(request: Request, exc: BulkImportException):
+    """Standardized exception handler for Bulk Import and Onboarding (Prompt 53 / Rule 2.4)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    status_code = getattr(exc, "status_code", status.HTTP_400_BAD_REQUEST)
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status_code,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -946,6 +967,7 @@ app.include_router(dependency_router)
 app.include_router(topology_router)
 app.include_router(statements_router)
 app.include_router(provisioning_router)
+app.include_router(bulk_import_router)
 
 
 class HealthResponse(BaseModel):
