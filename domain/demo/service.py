@@ -108,6 +108,54 @@ SCENARIO_DEFINITIONS: dict[DemoScenario, DemoScenarioInfo] = {
             "consumption_pct": 96.0,
         },
     ),
+    DemoScenario.PROVISIONING_GATE_DECISION: DemoScenarioInfo(
+        scenario=DemoScenario.PROVISIONING_GATE_DECISION,
+        title="Cost-Aware Provisioning Gate Decision & Pre-Deployment Review",
+        description="Evaluates a proposed $730/mo deployment against remaining scope budget, quota headroom, and complete application dependency chain before commitment.",
+        focus_story="Demonstrates pre-deployment pricing, visual materiality tiers, AM-12 role-based approval routing, and emergency bypass workflows.",
+        key_metrics={
+            "requested_monthly_cost": 730.00,
+            "chain_monthly_cost": 1045.00,
+            "budget_impact_tier": "SUBSTANTIAL",
+            "gate_action": "APPROVAL_REQUIRED",
+        },
+    ),
+    DemoScenario.QUOTA_EXHAUSTION_APPROACHING: DemoScenarioInfo(
+        scenario=DemoScenario.QUOTA_EXHAUSTION_APPROACHING,
+        title="Quota Headroom Exhaustion & Automated Remediation",
+        description="Surfaces cloud quota headroom dropping to 12.5% (<20% safe buffer) with predicted exhaustion date inside vendor request lead time.",
+        focus_story="Demonstrates proactive headroom tracking, multi-cloud limits across AWS/Azure/GCP/OCI, Not Supported status handling, and automated increase tasks.",
+        key_metrics={
+            "quota_headroom_pct": 12.5,
+            "lead_time_days": 14,
+            "predicted_exhaustion_days": 9,
+            "status": "BREACH_IMMINENT",
+        },
+    ),
+    DemoScenario.SHOWBACK_DISPUTE: DemoScenarioInfo(
+        scenario=DemoScenario.SHOWBACK_DISPUTE,
+        title="Business Unit Showback Statement & Line-Item Dispute Resolution",
+        description="Presents monthly showback statements across 3 business units with shared platform apportionments and a $14,200 disputed line under active review.",
+        focus_story="Demonstrates transparent cost allocation, audit trail of disputes, versioned restatements, and accountability conversations with BU owners.",
+        key_metrics={
+            "disputed_amount": 14200.00,
+            "business_units_covered": 3,
+            "unallocated_cost": 3450.00,
+            "dispute_status": "UNDER_INVESTIGATION",
+        },
+    ),
+    DemoScenario.REMEDIATION_CLEANUP_SPRINT: DemoScenarioInfo(
+        scenario=DemoScenario.REMEDIATION_CLEANUP_SPRINT,
+        title="Remediation Task Sprint & Automated Verification Reopen",
+        description="Coordinates remediation tasks across all 11 lifecycle states, highlighting a falsely resolved task that automatically reopens when verified against live telemetry.",
+        focus_story="Demonstrates task assignment SLA tracking, evidence linkages, realized savings verification, and defense against premature task closure.",
+        key_metrics={
+            "total_tasks": 11,
+            "reopened_tasks": 1,
+            "realized_monthly_savings": 4850.00,
+            "sla_compliance_pct": 91.0,
+        },
+    ),
 }
 
 
@@ -233,6 +281,14 @@ class DemoModeService:
         if tenant_id not in self._tenant_estates:
             estate = self._generator.generate(tenant_id=tenant_id)
             self._tenant_estates[tenant_id] = estate
+            if estate.governance:
+                from domain.synthetic.governance_generator import (
+                    DeterministicGovernanceMockGenerator,
+                )
+
+                DeterministicGovernanceMockGenerator(seed=self._generator.seed).seed_repositories(
+                    tenant_id, estate.governance
+                )
 
         # Record immutable audit event
         audit_event = AuditEvent(
@@ -327,6 +383,12 @@ class DemoModeService:
         generator = DeterministicMockEstateGenerator(seed=seed)
         new_estate = generator.generate(tenant_id=tenant_id)
         self._tenant_estates[tenant_id] = new_estate
+        if new_estate.governance:
+            from domain.synthetic.governance_generator import DeterministicGovernanceMockGenerator
+
+            DeterministicGovernanceMockGenerator(seed=seed).seed_repositories(
+                tenant_id, new_estate.governance
+            )
 
         # 3. Ensure Demo Mode enabled and scenario recorded
         self._tenant_store.update(

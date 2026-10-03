@@ -17,7 +17,7 @@ DEMO_BANNER_TEXT = "DEMO MODE ACTIVE — SIMULATED CLOUD ESTATE (NOT FOR OPERATI
 
 
 class DemoScenario(StrEnum):
-    """Seven named demonstration scenarios loadable in a single click (Prompt 47 Item 32)."""
+    """Eleven named demonstration scenarios loadable in a single click (Prompt 47 & 47B)."""
 
     MONTH_END_REVIEW = "Month-End Review"
     BUDGET_BREACH_INVESTIGATION = "Budget Breach Investigation"
@@ -26,6 +26,10 @@ class DemoScenario(StrEnum):
     ONBOARDING_NEW_PROVIDER = "Onboarding a New Provider"
     RECONCILIATION_VARIANCE = "Reconciliation Variance"
     FREE_TIER_EXHAUSTION = "Free-Tier Exhaustion"
+    PROVISIONING_GATE_DECISION = "Provisioning Gate Decision"
+    QUOTA_EXHAUSTION_APPROACHING = "Quota Exhaustion Approaching"
+    SHOWBACK_DISPUTE = "Showback Dispute"
+    REMEDIATION_CLEANUP_SPRINT = "Remediation Clean-Up Sprint"
 
 
 class DemoScenarioInfo(BaseModel):

@@ -204,10 +204,10 @@ class TestDemoModeFeaturesAndWatermarks:
 class TestDemoScenarios:
     """Validates all 7 named demonstration scenarios (Item 32)."""
 
-    def test_all_seven_named_scenarios_available(self, clean_demo_service: DemoModeService):
-        """Validates that exactly 7 scenarios are registered with full metadata."""
+    def test_all_eleven_named_scenarios_available(self, clean_demo_service: DemoModeService):
+        """Validates that exactly 11 scenarios are registered with full metadata (Prompt 47 & 47B)."""
         scenarios = clean_demo_service.get_scenarios()
-        assert len(scenarios) == 7
+        assert len(scenarios) == 11
 
         scenario_names = {sc.scenario.value for sc in scenarios}
         expected_names = {
@@ -218,6 +218,10 @@ class TestDemoScenarios:
             "Onboarding a New Provider",
             "Reconciliation Variance",
             "Free-Tier Exhaustion",
+            "Provisioning Gate Decision",
+            "Quota Exhaustion Approaching",
+            "Showback Dispute",
+            "Remediation Clean-Up Sprint",
         }
         assert scenario_names == expected_names
 
@@ -228,7 +232,7 @@ class TestDemoScenarios:
             assert len(sc.key_metrics) >= 1
 
     def test_load_each_named_scenario(self, clean_demo_service: DemoModeService):
-        """Validates that all 7 scenarios can be loaded in one click/call."""
+        """Validates that all 11 scenarios can be loaded in one click/call."""
         tenant_id = "T-DEMO-SCENARIOS"
         for sc_enum in DemoScenario:
             info = clean_demo_service.load_scenario(tenant_id=tenant_id, scenario=sc_enum)
@@ -265,7 +269,7 @@ class TestDemoModeRestApi:
         resp = client.get("/api/v1/system/demo/scenarios")
         assert resp.status_code == 200
         scenarios = resp.json()
-        assert len(scenarios) == 7
+        assert len(scenarios) == 11
 
         # 4. Load Specific Scenario
         resp = client.post(

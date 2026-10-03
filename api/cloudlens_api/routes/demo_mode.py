@@ -22,7 +22,9 @@ from domain.demo import (
     DemoScenarioInfo,
     get_demo_mode_service,
 )
+from domain.demo.screen_verifier import get_screen_verifier
 from domain.models.exceptions import DemoModeSafetyException
+from domain.synthetic.governance_models import ScreenVerificationReport
 
 router = APIRouter(prefix="/api/v1/system/demo", tags=["Demo Mode & Scenarios"])
 
@@ -230,3 +232,12 @@ def export_demo_data_endpoint(
         watermarked_records = [{"_watermark": EXPORT_WATERMARK, "_demo_mode": True}] + records
         content = json.dumps(watermarked_records, indent=2)
         return Response(content=content, media_type="application/json", headers=headers)
+
+
+@router.get("/screens/verify", response_model=ScreenVerificationReport)
+def verify_demo_screens_endpoint(
+    tenant_id: str = Query(default="T-DEMO", description="Target tenant ID"),
+) -> ScreenVerificationReport:
+    """Verifies that all 27 screens (S-01 to S-27) possess meaningful mock data (Mandate M3 / Prompt 47B)."""
+    verifier = get_screen_verifier()
+    return verifier.verify_all_screens(tenant_id=tenant_id)

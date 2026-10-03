@@ -10,6 +10,8 @@ Enforces:
 - Full mock data exercising all four null states and all six cost source types (Item 29).
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import random
@@ -49,6 +51,7 @@ from domain.models.inventory import Application, Resource, Tag
 from domain.models.measures import FinancialMeasure, QuantityMeasure
 from domain.models.scope import Scope
 from domain.rules.thresholds import ThresholdBand
+from domain.synthetic.governance_models import GovernanceMockEstateResult
 
 
 class MockEstateManifest(BaseModel):
@@ -103,6 +106,9 @@ class DeterministicMockEstateResult(BaseModel):
     dependencies: list[Dependency] = Field(default_factory=list)
     sync_jobs: list[SyncJob] = Field(default_factory=list)
     imperfections: list[MockImperfection] = Field(default_factory=list)
+    governance: GovernanceMockEstateResult | None = Field(
+        default=None, description="Prompt 47B governance-layer mock estate"
+    )
 
 
 class DeterministicMockEstateGenerator:
@@ -980,6 +986,12 @@ class DeterministicMockEstateGenerator:
             sha256_hash=sha256_hash,
         )
 
+        # Prompt 47B: Generate deterministic governance-layer mock estate
+        from domain.synthetic.governance_generator import DeterministicGovernanceMockGenerator
+
+        gov_generator = DeterministicGovernanceMockGenerator(seed=self.seed)
+        governance_estate = gov_generator.generate(tenant_id=tenant_id, as_of_date=now)
+
         return DeterministicMockEstateResult(
             tenant_id=tenant_id,
             manifest=manifest,
@@ -998,4 +1010,5 @@ class DeterministicMockEstateGenerator:
             dependencies=dependencies,
             sync_jobs=sync_jobs,
             imperfections=imperfections,
+            governance=governance_estate,
         )
