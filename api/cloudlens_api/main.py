@@ -28,6 +28,7 @@ from api.cloudlens_api.routes import (
     connectors_router,
     cost_router,
     credentials_router,
+    dashboards_router,
     demo_mode_router,
     demo_router,
     dependency_router,
@@ -968,6 +969,7 @@ app.include_router(topology_router)
 app.include_router(statements_router)
 app.include_router(provisioning_router)
 app.include_router(bulk_import_router)
+app.include_router(dashboards_router)
 
 
 class HealthResponse(BaseModel):

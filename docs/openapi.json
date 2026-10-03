@@ -32094,6 +32094,585 @@
         }
       }
     },
+    "/api/v1/dashboards/executive": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Get Executive Dashboard",
+        "description": "Retrieves full Executive Dashboard rendered from pre-computed aggregates (Prompt 37).",
+        "operationId": "get_executive_dashboard_api_v1_dashboards_executive_get",
+        "parameters": [
+          {
+            "name": "period_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Billing period format YYYY-MM or YYYY-QX",
+              "title": "Period Id"
+            },
+            "description": "Billing period format YYYY-MM or YYYY-QX"
+          },
+          {
+            "name": "period_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DashboardPeriodType"
+                }
+              ],
+              "description": "Period type",
+              "default": "MONTH",
+              "title": "Period Type"
+            },
+            "description": "Period type"
+          },
+          {
+            "name": "comparison_basis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ComparisonBasis"
+                }
+              ],
+              "description": "POP or YOY comparison",
+              "default": "POP",
+              "title": "Comparison Basis"
+            },
+            "description": "POP or YOY comparison"
+          },
+          {
+            "name": "custom_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date for custom range",
+              "title": "Custom Start"
+            },
+            "description": "Start date for custom range"
+          },
+          {
+            "name": "custom_end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date for custom range",
+              "title": "Custom End"
+            },
+            "description": "End date for custom range"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutiveDashboardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/providers/{provider}": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Get Provider Dashboard",
+        "description": "Retrieves Provider Dashboard strictly rendered in that provider's native vocabulary.",
+        "operationId": "get_provider_dashboard_api_v1_dashboards_providers__provider__get",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "period_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Billing period",
+              "title": "Period Id"
+            },
+            "description": "Billing period"
+          },
+          {
+            "name": "period_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DashboardPeriodType"
+                }
+              ],
+              "default": "MONTH",
+              "title": "Period Type"
+            }
+          },
+          {
+            "name": "comparison_basis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ComparisonBasis"
+                }
+              ],
+              "default": "POP",
+              "title": "Comparison Basis"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderDashboardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/services/{service_id}": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Get Service Dashboard",
+        "description": "Retrieves Service Dashboard with all 16 canonical panels.",
+        "operationId": "get_service_dashboard_api_v1_dashboards_services__service_id__get",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Service Id"
+            }
+          },
+          {
+            "name": "period_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Billing period",
+              "title": "Period Id"
+            },
+            "description": "Billing period"
+          },
+          {
+            "name": "period_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DashboardPeriodType"
+                }
+              ],
+              "default": "MONTH",
+              "title": "Period Type"
+            }
+          },
+          {
+            "name": "comparison_basis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ComparisonBasis"
+                }
+              ],
+              "default": "POP",
+              "title": "Comparison Basis"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceDashboardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/landing": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Get Role Landing Dashboard",
+        "description": "Retrieves default landing dashboard configuration for user role.",
+        "operationId": "get_role_landing_dashboard_api_v1_dashboards_landing_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "User ID",
+              "default": "usr-current-user",
+              "title": "User Id"
+            },
+            "description": "User ID"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "User active role",
+              "default": "EXECUTIVE",
+              "title": "Role"
+            },
+            "description": "User active role"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleDefaultLanding"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Set User Landing Preference",
+        "description": "Saves user custom default landing dashboard.",
+        "operationId": "set_user_landing_preference_api_v1_dashboards_landing_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLandingPreferenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLandingPreference"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/export/{widget_id}": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "summary": "Export Widget Data",
+        "description": "Exports underlying widget dataset to CSV or JSON format.",
+        "operationId": "export_widget_data_api_v1_dashboards_export__widget_id__get",
+        "parameters": [
+          {
+            "name": "widget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Widget Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Export format: CSV or JSON",
+              "default": "CSV",
+              "title": "Format"
+            },
+            "description": "Export format: CSV or JSON"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -34813,6 +35392,56 @@
         "title": "AnalyticsExtractJob",
         "description": "Lifecycle record for an analytical extract execution."
       },
+      "AnomalyItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "impact_amount": {
+            "type": "string",
+            "title": "Impact Amount"
+          },
+          "detected_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Detected At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "resource_id",
+          "resource_name",
+          "provider",
+          "type",
+          "description",
+          "impact_amount",
+          "detected_at"
+        ],
+        "title": "AnomalyItem",
+        "description": "Operational exception or anomaly."
+      },
       "AntiFlappingConfig-Input": {
         "properties": {
           "dwell_evaluations": {
@@ -35970,6 +36599,46 @@
         "title": "BillingAttributes",
         "description": "Allocation and shared-service metadata for BILLING_RELATIONSHIP edges (Prompt 32)."
       },
+      "BreachItem": {
+        "properties": {
+          "alert_id": {
+            "type": "string",
+            "title": "Alert Id"
+          },
+          "scope_name": {
+            "type": "string",
+            "title": "Scope Name"
+          },
+          "threshold_type": {
+            "type": "string",
+            "title": "Threshold Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "utilization_pct": {
+            "type": "string",
+            "title": "Utilization Pct"
+          },
+          "triggered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Triggered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alert_id",
+          "scope_name",
+          "threshold_type",
+          "severity",
+          "utilization_pct",
+          "triggered_at"
+        ],
+        "title": "BreachItem",
+        "description": "Threshold breach summary."
+      },
       "BreakGlassLoginRequest": {
         "properties": {
           "tenant_id": {
@@ -36075,6 +36744,68 @@
         ],
         "title": "BreakGlassProvisionResponse",
         "description": "Response containing provisioned emergency account details and TOTP configuration."
+      },
+      "BreakdownItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "cost": {
+            "type": "string",
+            "title": "Cost"
+          },
+          "percentage": {
+            "type": "string",
+            "title": "Percentage"
+          },
+          "prior_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Cost"
+          },
+          "delta_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Cost"
+          },
+          "delta_percentage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "cost",
+          "percentage"
+        ],
+        "title": "BreakdownItem",
+        "description": "Categorical slice for breakdown widgets."
       },
       "BudgetAllocation": {
         "properties": {
@@ -37318,6 +38049,59 @@
         ],
         "title": "BudgetThreshold",
         "description": "Notification and alerting trigger line for budget utilisation."
+      },
+      "BudgetUtilisationWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount"
+          },
+          "actual_spend": {
+            "type": "string",
+            "title": "Actual Spend"
+          },
+          "forecast_spend": {
+            "type": "string",
+            "title": "Forecast Spend"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "utilisation_percentage": {
+            "type": "string",
+            "title": "Utilisation Percentage"
+          },
+          "projected_utilisation_percentage": {
+            "type": "string",
+            "title": "Projected Utilisation Percentage"
+          },
+          "threshold_state": {
+            "type": "string",
+            "title": "Threshold State",
+            "default": "NORMAL"
+          },
+          "remaining_budget": {
+            "type": "string",
+            "title": "Remaining Budget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "budget_amount",
+          "actual_spend",
+          "forecast_spend",
+          "utilisation_percentage",
+          "projected_utilisation_percentage",
+          "remaining_budget"
+        ],
+        "title": "BudgetUtilisationWidget",
+        "description": "Budget & Utilisation widget."
       },
       "BudgetVarianceStatus": {
         "type": "string",
@@ -38596,6 +39380,15 @@
           "alternative_estimate_ids"
         ],
         "title": "CompareScenariosDTO"
+      },
+      "ComparisonBasis": {
+        "type": "string",
+        "enum": [
+          "POP",
+          "YOY"
+        ],
+        "title": "ComparisonBasis",
+        "description": "Comparison basis switching (FR-504)."
       },
       "CompleteWizardResponse": {
         "properties": {
@@ -40103,6 +40896,42 @@
         "title": "CostBreakdownSlice",
         "description": "Single dimension category in a cost distribution."
       },
+      "CostBreakdownWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "dimension": {
+            "type": "string",
+            "title": "Dimension"
+          },
+          "total_cost": {
+            "type": "string",
+            "title": "Total Cost"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BreakdownItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "dimension",
+          "total_cost",
+          "items"
+        ],
+        "title": "CostBreakdownWidget",
+        "description": "Multi-category cost breakdown (Provider, BU, App, Service)."
+      },
       "CostBucket": {
         "properties": {
           "bucket_key": {
@@ -41131,6 +41960,76 @@
         "title": "CostLineItemsResponse",
         "description": "Paginated underlying FOCUS cost charge lines (API-026)."
       },
+      "CostMetricWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Aggregated cost amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "presentation_basis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CostPresentationBasis"
+              }
+            ],
+            "default": "BILLED"
+          },
+          "prior_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Amount"
+          },
+          "delta_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Amount"
+          },
+          "delta_percentage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta Percentage"
+          },
+          "cost_source": {
+            "type": "string",
+            "title": "Cost Source",
+            "default": "ACTUAL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "amount"
+        ],
+        "title": "CostMetricWidget",
+        "description": "Standard cost KPI widget with comparison delta."
+      },
       "CostMovementItem": {
         "properties": {
           "item_name": {
@@ -41641,6 +42540,31 @@
         ],
         "title": "CostTrend",
         "description": "Cost momentum and trajectory direction (Prompt 29)."
+      },
+      "CostTrendWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/TimeSeriesPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "comparison_basis": {
+            "$ref": "#/components/schemas/ComparisonBasis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "points",
+          "comparison_basis"
+        ],
+        "title": "CostTrendWidget",
+        "description": "Timeseries spend trend."
       },
       "CostValue": {
         "properties": {
@@ -42386,6 +43310,17 @@
         "title": "DailySpendPoint",
         "description": "Daily cost and consumption telemetry observation."
       },
+      "DashboardPeriodType": {
+        "type": "string",
+        "enum": [
+          "MONTH",
+          "QUARTER",
+          "FISCAL_PERIOD",
+          "CUSTOM"
+        ],
+        "title": "DashboardPeriodType",
+        "description": "Dynamic period selection types (FR-504)."
+      },
       "DataClassType": {
         "type": "string",
         "enum": [
@@ -42397,6 +43332,43 @@
         ],
         "title": "DataClassType",
         "description": "Data classes with discrete freshness policies."
+      },
+      "DataFreshnessWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderFreshnessDetail"
+            },
+            "type": "array",
+            "title": "Providers"
+          },
+          "has_stale_provider": {
+            "type": "boolean",
+            "title": "Has Stale Provider"
+          },
+          "stale_provider_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stale Provider Banner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "providers",
+          "has_stale_provider"
+        ],
+        "title": "DataFreshnessWidget",
+        "description": "Multi-cloud data freshness & staleness tracking."
       },
       "DataValidationSettings": {
         "properties": {
@@ -45164,6 +46136,118 @@
         "title": "EvaluationOutcome",
         "description": "Result of policy condition evaluation against an entity (Prompt 30)."
       },
+      "ExecutiveDashboardResponse": {
+        "properties": {
+          "time_window": {
+            "$ref": "#/components/schemas/TimeWindowContext"
+          },
+          "data_freshness_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Freshness Banner"
+          },
+          "total_cloud_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "current_month_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "actual_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "estimated_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "forecast_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "budget_utilisation": {
+            "$ref": "#/components/schemas/BudgetUtilisationWidget"
+          },
+          "cost_by_provider": {
+            "$ref": "#/components/schemas/CostBreakdownWidget"
+          },
+          "cost_by_business_unit": {
+            "$ref": "#/components/schemas/CostBreakdownWidget"
+          },
+          "cost_by_application": {
+            "$ref": "#/components/schemas/CostBreakdownWidget"
+          },
+          "cost_by_service": {
+            "$ref": "#/components/schemas/CostBreakdownWidget"
+          },
+          "cost_trend": {
+            "$ref": "#/components/schemas/CostTrendWidget"
+          },
+          "top_cost_services": {
+            "$ref": "#/components/schemas/CostBreakdownWidget"
+          },
+          "largest_increases": {
+            "$ref": "#/components/schemas/LargestIncreasesWidget"
+          },
+          "threshold_breaches": {
+            "$ref": "#/components/schemas/ThresholdBreachesWidget"
+          },
+          "service_counts": {
+            "$ref": "#/components/schemas/ServiceCountsWidget"
+          },
+          "runtime_exceptions": {
+            "$ref": "#/components/schemas/OperationalExceptionsWidget"
+          },
+          "usage_anomalies": {
+            "$ref": "#/components/schemas/OperationalExceptionsWidget"
+          },
+          "pricing_changes": {
+            "$ref": "#/components/schemas/PricingChangesWidget"
+          },
+          "data_freshness": {
+            "$ref": "#/components/schemas/DataFreshnessWidget"
+          },
+          "reconciliation_status": {
+            "$ref": "#/components/schemas/ReconciliationStatusWidget"
+          },
+          "governance_exceptions": {
+            "$ref": "#/components/schemas/GovernanceExceptionsWidget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_window",
+          "total_cloud_cost",
+          "current_month_cost",
+          "actual_cost",
+          "estimated_cost",
+          "forecast_cost",
+          "budget",
+          "budget_utilisation",
+          "cost_by_provider",
+          "cost_by_business_unit",
+          "cost_by_application",
+          "cost_by_service",
+          "cost_trend",
+          "top_cost_services",
+          "largest_increases",
+          "threshold_breaches",
+          "service_counts",
+          "runtime_exceptions",
+          "usage_anomalies",
+          "pricing_changes",
+          "data_freshness",
+          "reconciliation_status",
+          "governance_exceptions"
+        ],
+        "title": "ExecutiveDashboardResponse",
+        "description": "Complete Executive Dashboard (Prompt 37)."
+      },
       "ExecutiveTrustIndicator": {
         "properties": {
           "tenant_id": {
@@ -47317,6 +48401,39 @@
         "title": "GeographyComplianceResult",
         "description": "Regional deployment and data residency compliance evaluation."
       },
+      "GovernanceExceptionsWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "unapproved_deployments_count": {
+            "type": "integer",
+            "title": "Unapproved Deployments Count"
+          },
+          "tagging_gaps_count": {
+            "type": "integer",
+            "title": "Tagging Gaps Count"
+          },
+          "quotas_near_limit_count": {
+            "type": "integer",
+            "title": "Quotas Near Limit Count"
+          },
+          "total_exceptions": {
+            "type": "integer",
+            "title": "Total Exceptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "unapproved_deployments_count",
+          "tagging_gaps_count",
+          "quotas_near_limit_count",
+          "total_exceptions"
+        ],
+        "title": "GovernanceExceptionsWidget",
+        "description": "Governance breaches (unapproved deployments, tag debt, quota limits)."
+      },
       "GovernanceTrendPoint": {
         "properties": {
           "date": {
@@ -48338,6 +49455,27 @@
         ],
         "title": "InvestigationStatus",
         "description": "Lifecycle status of a reconciliation investigation item."
+      },
+      "LargestIncreasesWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "movements": {
+            "items": {
+              "$ref": "#/components/schemas/MovementItem"
+            },
+            "type": "array",
+            "title": "Movements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "movements"
+        ],
+        "title": "LargestIncreasesWidget",
+        "description": "Largest cost increases and movements."
       },
       "LeastPrivilegeRequirement": {
         "properties": {
@@ -49577,6 +50715,60 @@
         "title": "MovementDirection",
         "description": "Direction of cost delta compared to prior period."
       },
+      "MovementItem": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "current_cost": {
+            "type": "string",
+            "title": "Current Cost"
+          },
+          "prior_cost": {
+            "type": "string",
+            "title": "Prior Cost"
+          },
+          "delta_cost": {
+            "type": "string",
+            "title": "Delta Cost"
+          },
+          "delta_percentage": {
+            "type": "string",
+            "title": "Delta Percentage"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "name",
+          "category",
+          "provider",
+          "current_cost",
+          "prior_cost",
+          "delta_cost",
+          "delta_percentage",
+          "explanation"
+        ],
+        "title": "MovementItem",
+        "description": "Significant cost movement or driver."
+      },
       "MultiChainAggregationRequest": {
         "properties": {
           "root_entity_ids": {
@@ -49852,6 +51044,67 @@
         ],
         "title": "NativeBudgetImportRequest",
         "description": "Payload to import a provider-native budget as read-only for comparison."
+      },
+      "NativeHierarchyNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "native_id": {
+            "type": "string",
+            "title": "Native Id"
+          },
+          "native_name": {
+            "type": "string",
+            "title": "Native Name"
+          },
+          "native_type": {
+            "type": "string",
+            "title": "Native Type"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "child_count": {
+            "type": "integer",
+            "title": "Child Count"
+          },
+          "cost": {
+            "type": "string",
+            "title": "Cost"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "resource_count": {
+            "type": "integer",
+            "title": "Resource Count"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/NativeHierarchyNode"
+            },
+            "type": "array",
+            "title": "Children"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "native_id",
+          "native_name",
+          "native_type",
+          "level",
+          "child_count",
+          "cost",
+          "resource_count"
+        ],
+        "title": "NativeHierarchyNode",
+        "description": "Node in provider's native structural tree."
       },
       "NodeCostBreakdown": {
         "properties": {
@@ -50537,6 +51790,37 @@
         ],
         "title": "OnboardingCompletionSummary",
         "description": "Consolidated summary presented upon onboarding wizard completion (Prompt 15B Item 27)."
+      },
+      "OperationalExceptionsWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "exception_type": {
+            "type": "string",
+            "title": "Exception Type"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnomalyItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "exception_type",
+          "total_count",
+          "items"
+        ],
+        "title": "OperationalExceptionsWidget",
+        "description": "Runtime exceptions, idle waste, or usage anomalies."
       },
       "OriginType": {
         "type": "string",
@@ -53081,6 +54365,55 @@
         "title": "PricingCatalogResponse",
         "description": "Paginated response model for pricing catalogue queries."
       },
+      "PricingChangeItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "change_type": {
+            "type": "string",
+            "title": "Change Type"
+          },
+          "old_rate": {
+            "type": "string",
+            "title": "Old Rate"
+          },
+          "new_rate": {
+            "type": "string",
+            "title": "New Rate"
+          },
+          "effective_date": {
+            "type": "string",
+            "title": "Effective Date"
+          },
+          "impact_description": {
+            "type": "string",
+            "title": "Impact Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "service_name",
+          "change_type",
+          "old_rate",
+          "new_rate",
+          "effective_date",
+          "impact_description"
+        ],
+        "title": "PricingChangeItem",
+        "description": "Rate card / pricing catalog update."
+      },
       "PricingChangeRecord": {
         "properties": {
           "id": {
@@ -53209,6 +54542,27 @@
         ],
         "title": "PricingChangeRecord",
         "description": "Variance detection record generated when a rate change is discovered (Prompt 20)."
+      },
+      "PricingChangesWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "recent_changes": {
+            "items": {
+              "$ref": "#/components/schemas/PricingChangeItem"
+            },
+            "type": "array",
+            "title": "Recent Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "recent_changes"
+        ],
+        "title": "PricingChangesWidget",
+        "description": "Recent provider pricing updates."
       },
       "PricingInformationPanel": {
         "properties": {
@@ -54106,6 +55460,160 @@
         ],
         "title": "ProviderCapability",
         "description": "Supported cloud provider capability groups (Prompt 49A Item 11, AM-07)."
+      },
+      "ProviderDashboardResponse": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "time_window": {
+            "$ref": "#/components/schemas/TimeWindowContext"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/WidgetFreshness"
+          },
+          "hierarchy_root_name": {
+            "type": "string",
+            "title": "Hierarchy Root Name"
+          },
+          "native_group_term": {
+            "type": "string",
+            "title": "Native Group Term"
+          },
+          "native_account_term": {
+            "type": "string",
+            "title": "Native Account Term"
+          },
+          "native_group_count": {
+            "type": "integer",
+            "title": "Native Group Count"
+          },
+          "native_account_count": {
+            "type": "integer",
+            "title": "Native Account Count"
+          },
+          "resource_count": {
+            "type": "integer",
+            "title": "Resource Count"
+          },
+          "service_count": {
+            "type": "integer",
+            "title": "Service Count"
+          },
+          "actual_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "estimated_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "forecast_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount"
+          },
+          "budget_utilisation_pct": {
+            "type": "string",
+            "title": "Budget Utilisation Pct"
+          },
+          "threshold_state": {
+            "type": "string",
+            "title": "Threshold State"
+          },
+          "usage_volume_headline": {
+            "type": "string",
+            "title": "Usage Volume Headline"
+          },
+          "runtime_active_hours": {
+            "type": "string",
+            "title": "Runtime Active Hours"
+          },
+          "active_alerts_count": {
+            "type": "integer",
+            "title": "Active Alerts Count"
+          },
+          "pricing_model_summary": {
+            "type": "string",
+            "title": "Pricing Model Summary"
+          },
+          "hierarchy_tree": {
+            "$ref": "#/components/schemas/NativeHierarchyNode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "display_name",
+          "time_window",
+          "freshness",
+          "hierarchy_root_name",
+          "native_group_term",
+          "native_account_term",
+          "native_group_count",
+          "native_account_count",
+          "resource_count",
+          "service_count",
+          "actual_cost",
+          "estimated_cost",
+          "forecast_cost",
+          "budget_amount",
+          "budget_utilisation_pct",
+          "threshold_state",
+          "usage_volume_headline",
+          "runtime_active_hours",
+          "active_alerts_count",
+          "pricing_model_summary",
+          "hierarchy_tree"
+        ],
+        "title": "ProviderDashboardResponse",
+        "description": "Per-provider dashboard strictly enforcing native cloud vocabulary."
+      },
+      "ProviderFreshnessDetail": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "last_sync_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Sync Timestamp"
+          },
+          "age_hours": {
+            "type": "string",
+            "title": "Age Hours"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "alert_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Banner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "last_sync_timestamp",
+          "age_hours",
+          "status"
+        ],
+        "title": "ProviderFreshnessDetail",
+        "description": "Freshness status per cloud provider."
       },
       "ProviderPermissionReference": {
         "properties": {
@@ -56504,6 +58012,54 @@
         "title": "ReconciliationStatus",
         "description": "Reconciliation evaluation outcome based on provider tolerance (Prompt 24 Item 4)."
       },
+      "ReconciliationStatusWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "trust_indicator": {
+            "type": "string",
+            "title": "Trust Indicator"
+          },
+          "invoice_total": {
+            "type": "string",
+            "title": "Invoice Total"
+          },
+          "telemetry_total": {
+            "type": "string",
+            "title": "Telemetry Total"
+          },
+          "variance_amount": {
+            "type": "string",
+            "title": "Variance Amount"
+          },
+          "variance_ratio_pct": {
+            "type": "string",
+            "title": "Variance Ratio Pct"
+          },
+          "tolerance_threshold_pct": {
+            "type": "string",
+            "title": "Tolerance Threshold Pct",
+            "default": "1.00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "status",
+          "trust_indicator",
+          "invoice_total",
+          "telemetry_total",
+          "variance_amount",
+          "variance_ratio_pct"
+        ],
+        "title": "ReconciliationStatusWidget",
+        "description": "Invoice vs FOCUS telemetry reconciliation."
+      },
       "RecordPeriodActualDTO": {
         "properties": {
           "period": {
@@ -58552,6 +60108,47 @@
         "title": "RevertOverrideRequest",
         "description": "Payload to manually revert an active override."
       },
+      "RoleDefaultLanding": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "default_dashboard": {
+            "type": "string",
+            "title": "Default Dashboard"
+          },
+          "default_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Provider"
+          },
+          "default_service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Service Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "default_dashboard"
+        ],
+        "title": "RoleDefaultLanding",
+        "description": "Role-based default landing dashboard configuration (FR-503)."
+      },
       "RoleDefinition": {
         "properties": {
           "id": {
@@ -60454,6 +62051,223 @@
         "title": "ServiceCategory",
         "description": "Standardized service categories across all cloud providers."
       },
+      "ServiceCountsWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "free_services_count": {
+            "type": "integer",
+            "title": "Free Services Count"
+          },
+          "paid_services_count": {
+            "type": "integer",
+            "title": "Paid Services Count"
+          },
+          "conditional_services_count": {
+            "type": "integer",
+            "title": "Conditional Services Count"
+          },
+          "total_services_count": {
+            "type": "integer",
+            "title": "Total Services Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "free_services_count",
+          "paid_services_count",
+          "conditional_services_count",
+          "total_services_count"
+        ],
+        "title": "ServiceCountsWidget",
+        "description": "Inventory service tier counts."
+      },
+      "ServiceDashboardResponse": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "title": "Service Id"
+          },
+          "service_code": {
+            "type": "string",
+            "title": "Service Code"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "time_window": {
+            "$ref": "#/components/schemas/TimeWindowContext"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/WidgetFreshness"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "pricing_model": {
+            "type": "string",
+            "title": "Pricing Model"
+          },
+          "free_tier_details": {
+            "type": "object",
+            "title": "Free Tier Details"
+          },
+          "actual_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "estimated_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "forecast_cost": {
+            "$ref": "#/components/schemas/CostMetricWidget"
+          },
+          "budget_allocated": {
+            "type": "string",
+            "title": "Budget Allocated"
+          },
+          "budget_utilisation_pct": {
+            "type": "string",
+            "title": "Budget Utilisation Pct"
+          },
+          "active_instances_count": {
+            "type": "integer",
+            "title": "Active Instances Count"
+          },
+          "total_runtime_hours": {
+            "type": "string",
+            "title": "Total Runtime Hours"
+          },
+          "runtime_status": {
+            "type": "string",
+            "title": "Runtime Status"
+          },
+          "metered_usage_quantity": {
+            "type": "string",
+            "title": "Metered Usage Quantity"
+          },
+          "usage_metric_name": {
+            "type": "string",
+            "title": "Usage Metric Name"
+          },
+          "pricing_units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pricing Units"
+          },
+          "primary_cost_driver": {
+            "type": "string",
+            "title": "Primary Cost Driver"
+          },
+          "secondary_cost_drivers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Secondary Cost Drivers"
+          },
+          "upstream_dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Upstream Dependencies"
+          },
+          "downstream_dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Downstream Dependencies"
+          },
+          "network_endpoints_count": {
+            "type": "integer",
+            "title": "Network Endpoints Count"
+          },
+          "cross_region_egress_gb": {
+            "type": "string",
+            "title": "Cross Region Egress Gb"
+          },
+          "historical_points": {
+            "items": {
+              "$ref": "#/components/schemas/TimeSeriesPoint"
+            },
+            "type": "array",
+            "title": "Historical Points"
+          },
+          "documentation_url": {
+            "type": "string",
+            "title": "Documentation Url"
+          },
+          "finops_guidelines_url": {
+            "type": "string",
+            "title": "Finops Guidelines Url"
+          },
+          "pricing_source_name": {
+            "type": "string",
+            "title": "Pricing Source Name"
+          },
+          "pricing_source_effective_date": {
+            "type": "string",
+            "title": "Pricing Source Effective Date"
+          },
+          "pricing_source_badge": {
+            "type": "string",
+            "title": "Pricing Source Badge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_id",
+          "service_code",
+          "service_name",
+          "provider",
+          "category",
+          "time_window",
+          "freshness",
+          "description",
+          "pricing_model",
+          "free_tier_details",
+          "actual_cost",
+          "estimated_cost",
+          "forecast_cost",
+          "budget_allocated",
+          "budget_utilisation_pct",
+          "active_instances_count",
+          "total_runtime_hours",
+          "runtime_status",
+          "metered_usage_quantity",
+          "usage_metric_name",
+          "pricing_units",
+          "primary_cost_driver",
+          "secondary_cost_drivers",
+          "upstream_dependencies",
+          "downstream_dependencies",
+          "network_endpoints_count",
+          "cross_region_egress_gb",
+          "historical_points",
+          "documentation_url",
+          "finops_guidelines_url",
+          "pricing_source_name",
+          "pricing_source_effective_date",
+          "pricing_source_badge"
+        ],
+        "title": "ServiceDashboardResponse",
+        "description": "Service dashboard with all sixteen canonical panels."
+      },
       "ServiceListResponse": {
         "properties": {
           "items": {
@@ -60596,6 +62410,57 @@
         ],
         "title": "SessionStateResponse",
         "description": "Current authenticated session state and user identity (API-002)."
+      },
+      "SetLandingPreferenceRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Target user identifier"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "Role title (e.g. EXECUTIVE, FINOPS, ENGINEERING)"
+          },
+          "landing_dashboard": {
+            "type": "string",
+            "title": "Landing Dashboard",
+            "description": "Target dashboard view (EXECUTIVE, PROVIDER, SERVICE)"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "Default provider if landing is PROVIDER"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id",
+            "description": "Default service if landing is SERVICE"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role",
+          "landing_dashboard"
+        ],
+        "title": "SetLandingPreferenceRequest",
+        "description": "Payload to configure default landing dashboard per role."
       },
       "SettingAuditEntry": {
         "properties": {
@@ -63678,6 +65543,42 @@
         "title": "ThresholdBasis",
         "description": "The ten canonical threshold bases per Prompt 27."
       },
+      "ThresholdBreachesWidget": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/WidgetMetadata"
+          },
+          "total_breaches": {
+            "type": "integer",
+            "title": "Total Breaches"
+          },
+          "critical_count": {
+            "type": "integer",
+            "title": "Critical Count"
+          },
+          "warning_count": {
+            "type": "integer",
+            "title": "Warning Count"
+          },
+          "breaches": {
+            "items": {
+              "$ref": "#/components/schemas/BreachItem"
+            },
+            "type": "array",
+            "title": "Breaches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata",
+          "total_breaches",
+          "critical_count",
+          "warning_count",
+          "breaches"
+        ],
+        "title": "ThresholdBreachesWidget",
+        "description": "Active threshold breaches."
+      },
       "ThresholdDefaults": {
         "properties": {
           "budget_alert_threshold_percentage": {
@@ -64785,6 +66686,106 @@
         "type": "object",
         "title": "TierStructure",
         "description": "Structured tiered and volume pricing configuration (Prompt 20 / DIM-24, DIM-25)."
+      },
+      "TimeSeriesPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "actual_cost": {
+            "type": "string",
+            "title": "Actual Cost"
+          },
+          "comparison_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Cost"
+          },
+          "forecast_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "actual_cost"
+        ],
+        "title": "TimeSeriesPoint",
+        "description": "Timeseries data point."
+      },
+      "TimeWindowContext": {
+        "properties": {
+          "period_id": {
+            "type": "string",
+            "title": "Period Id",
+            "description": "Canonical period identifier, e.g. '2026-09'"
+          },
+          "period_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DashboardPeriodType"
+              }
+            ],
+            "default": "MONTH"
+          },
+          "comparison_basis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComparisonBasis"
+              }
+            ],
+            "default": "POP"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Start date of active period"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "End date of active period"
+          },
+          "comparison_start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Comparison Start Date",
+            "description": "Start date of comparison period"
+          },
+          "comparison_end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Comparison End Date",
+            "description": "End date of comparison period"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_id",
+          "start_date",
+          "end_date",
+          "comparison_start_date",
+          "comparison_end_date"
+        ],
+        "title": "TimeWindowContext",
+        "description": "Active time window and comparison parameters."
       },
       "TokenPair": {
         "properties": {
@@ -66929,6 +68930,58 @@
         "title": "UserForecastAdjustmentRule",
         "description": "User-defined adjustment rule for planned future events (Prompt 29 Phase 2)."
       },
+      "UserLandingPreference": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "landing_dashboard": {
+            "type": "string",
+            "title": "Landing Dashboard"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "service_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Id"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role",
+          "landing_dashboard",
+          "updated_at"
+        ],
+        "title": "UserLandingPreference",
+        "description": "Stored user preference for landing dashboard."
+      },
       "UserListResponse": {
         "properties": {
           "items": {
@@ -67281,6 +69334,115 @@
         ],
         "title": "WhereUsedReport",
         "description": "Reference analysis showing what live estate records consume this master."
+      },
+      "WidgetFreshness": {
+        "properties": {
+          "refreshed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Refreshed At",
+            "description": "Timestamp when underlying data was aggregated"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "FRESH (<4h), DELAYED (4-24h), STALE (>24h)",
+            "default": "FRESH"
+          },
+          "age_seconds": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Age Seconds",
+            "default": 0
+          },
+          "sla_target_hours": {
+            "type": "integer",
+            "title": "Sla Target Hours",
+            "default": 4
+          },
+          "is_stale": {
+            "type": "boolean",
+            "title": "Is Stale",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "refreshed_at"
+        ],
+        "title": "WidgetFreshness",
+        "description": "Per-widget data freshness attribution (FR-501)."
+      },
+      "WidgetMetadata": {
+        "properties": {
+          "widget_id": {
+            "type": "string",
+            "title": "Widget Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "freshness": {
+            "$ref": "#/components/schemas/WidgetFreshness"
+          },
+          "scope_disclosure": {
+            "$ref": "#/components/schemas/WidgetScopeDisclosure"
+          },
+          "is_precomputed": {
+            "type": "boolean",
+            "title": "Is Precomputed",
+            "description": "Enforces FR-500 pre-aggregated requirement",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "widget_id",
+          "title",
+          "freshness",
+          "scope_disclosure"
+        ],
+        "title": "WidgetMetadata",
+        "description": "Common envelope for all dashboard widgets."
+      },
+      "WidgetScopeDisclosure": {
+        "properties": {
+          "is_filtered": {
+            "type": "boolean",
+            "title": "Is Filtered",
+            "description": "Whether access filtering is active",
+            "default": false
+          },
+          "authorized_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authorized Scopes"
+          },
+          "restricted_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Restricted Count",
+            "default": 0
+          },
+          "disclosure_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclosure Text",
+            "description": "User-facing disclosure message when access filtering has removed data from total"
+          }
+        },
+        "type": "object",
+        "title": "WidgetScopeDisclosure",
+        "description": "Disclosure when user RBAC scope grants restrict data (FR-502)."
       },
       "WizardSession": {
         "properties": {

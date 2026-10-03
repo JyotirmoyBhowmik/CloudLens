@@ -12,6 +12,7 @@ from api.cloudlens_api.routes.config import router as config_router
 from api.cloudlens_api.routes.connectors import router as connectors_router
 from api.cloudlens_api.routes.cost import router as cost_router
 from api.cloudlens_api.routes.credentials import router as credentials_router
+from api.cloudlens_api.routes.dashboards import router as dashboards_router
 from api.cloudlens_api.routes.demo import router as demo_router
 from api.cloudlens_api.routes.demo_mode import router as demo_mode_router
 from api.cloudlens_api.routes.dependency import router as dependency_router
@@ -53,6 +54,7 @@ __all__ = [
     "config_router",
     "connectors_router",
     "cost_router",
+    "dashboards_router",
     "credentials_router",
     "demo_mode_router",
     "demo_router",

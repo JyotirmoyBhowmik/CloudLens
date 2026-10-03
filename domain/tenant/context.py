@@ -20,6 +20,9 @@ class TenantContext(BaseModel):
     user_id: str = Field(default="system", description="Authenticated actor identity")
     email: str | None = Field(default=None, description="Actor email address")
     roles: list[str] = Field(default_factory=list, description="Actor assigned canonical roles")
+    scope_grants: list[str] = Field(
+        default_factory=lambda: ["*"], description="Authorized resource or organizational scope IDs"
+    )
     correlation_id: str | None = Field(default=None, description="Request trace correlation ID")
     is_superuser: bool = Field(
         default=False, description="True for unrestricted platform superuser"

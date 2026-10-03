@@ -2540,3 +2540,25 @@ class ScheduledImportJobNotFoundException(BulkImportException):
             status_code=404,
         )
         self.job_id = job_id
+
+
+class DashboardException(DomainModelException):
+    """Base exception for dashboard domain violations (Prompt 37)."""
+
+    def __init__(
+        self, message: str, error_code: str = "DASHBOARD_ERROR", status_code: int = 400
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class DashboardNotFoundException(DashboardException):
+    """Raised when a requested dashboard or panel cannot be found."""
+
+    def __init__(self, dashboard_id: str) -> None:
+        super().__init__(
+            f"Dashboard '{dashboard_id}' was not found.",
+            error_code="DASHBOARD_NOT_FOUND",
+            status_code=404,
+        )
+        self.dashboard_id = dashboard_id

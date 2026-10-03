@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { MasterDataConsole } from './pages/MasterDataConsole';
 import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
+import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
+import { ProviderDashboard } from './pages/ProviderDashboard';
+import { ServiceDashboard } from './pages/ServiceDashboard';
 
 interface HealthStatus {
   status: string;
@@ -14,7 +17,9 @@ export const App: React.FC = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'overview' | 'masterdata' | 'design-system'>('overview');
+  const [currentView, setCurrentView] = useState<
+    'overview' | 'executive' | 'provider' | 'service' | 'masterdata' | 'design-system'
+  >('executive');
 
   useEffect(() => {
     fetch('/api/v1/health')
@@ -32,6 +37,23 @@ export const App: React.FC = () => {
         setError(err.message);
         setLoading(false);
       });
+
+    // Resolve Role-based Default Landing (FR-503)
+    fetch('/api/v1/dashboards/landing?role=EXECUTIVE')
+      .then((res) => res.json())
+      .then((landing) => {
+        if (landing && landing.default_dashboard) {
+          const map: Record<string, 'executive' | 'provider' | 'service'> = {
+            EXECUTIVE: 'executive',
+            PROVIDER: 'provider',
+            SERVICE: 'service',
+          };
+          if (map[landing.default_dashboard]) {
+            setCurrentView(map[landing.default_dashboard]);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -77,7 +99,52 @@ export const App: React.FC = () => {
             v0.1.0-alpha
           </span>
         </div>
-        <nav style={{ display: 'flex', gap: '0.5rem' }}>
+        <nav style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setCurrentView('executive')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'executive' ? '#0284c7' : 'transparent',
+              color: currentView === 'executive' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Executive
+          </button>
+          <button
+            onClick={() => setCurrentView('provider')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'provider' ? '#0284c7' : 'transparent',
+              color: currentView === 'provider' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Providers
+          </button>
+          <button
+            onClick={() => setCurrentView('service')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'service' ? '#0284c7' : 'transparent',
+              color: currentView === 'service' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Services
+          </button>
           <button
             onClick={() => setCurrentView('overview')}
             style={{
@@ -121,7 +188,7 @@ export const App: React.FC = () => {
               fontSize: '0.875rem',
             }}
           >
-            Master Data Console
+            Master Data
           </button>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -154,7 +221,13 @@ export const App: React.FC = () => {
       </header>
 
       <main style={{ flex: 1, padding: currentView === 'overview' ? '2.5rem' : '1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
-        {currentView === 'design-system' ? (
+        {currentView === 'executive' ? (
+          <ExecutiveDashboard />
+        ) : currentView === 'provider' ? (
+          <ProviderDashboard />
+        ) : currentView === 'service' ? (
+          <ServiceDashboard />
+        ) : currentView === 'design-system' ? (
           <DesignSystemShowcase />
         ) : currentView === 'masterdata' ? (
           <MasterDataConsole />
