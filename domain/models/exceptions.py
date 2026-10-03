@@ -2066,3 +2066,89 @@ class RestrictedNodeAccessException(TopologyException):
             status_code=403,
         )
         self.node_id = node_id
+
+
+# ==============================================================================
+# Reporting & Export Exceptions (Prompt 35 / BBP Section 36)
+# ==============================================================================
+
+
+class ReportingException(DomainModelException):
+    """Base exception for reporting and export failures."""
+
+    def __init__(
+        self, message: str, error_code: str = "REPORTING_ERROR", status_code: int = 500
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class ReportTemplateNotFoundException(ReportingException):
+    """Raised when looking up an unknown report template identifier."""
+
+    def __init__(self, template_id: str) -> None:
+        super().__init__(
+            f"Report template '{template_id}' was not found.",
+            error_code="REPORT_TEMPLATE_NOT_FOUND",
+            status_code=404,
+        )
+        self.template_id = template_id
+
+
+class UnsupportedReportFormatException(ReportingException):
+    """Raised when an export format is not supported for a given report template."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            error_code="UNSUPPORTED_REPORT_FORMAT",
+            status_code=400,
+        )
+
+
+class ReportJobNotFoundException(ReportingException):
+    """Raised when an asynchronous report export job is not found."""
+
+    def __init__(self, job_id: str) -> None:
+        super().__init__(
+            f"Report generation job '{job_id}' was not found.",
+            error_code="REPORT_JOB_NOT_FOUND",
+            status_code=404,
+        )
+        self.job_id = job_id
+
+
+class DownloadLinkExpiredException(ReportingException):
+    """Raised when accessing a time-limited download link that has expired."""
+
+    def __init__(
+        self,
+        message: str = "The download link for this report has expired. Please request a new export.",
+    ) -> None:
+        super().__init__(
+            message,
+            error_code="DOWNLOAD_LINK_EXPIRED",
+            status_code=410,
+        )
+
+
+class InvalidDownloadTokenException(ReportingException):
+    """Raised when a download token is missing, invalid, or unauthorized."""
+
+    def __init__(self, message: str = "Invalid or missing download security token.") -> None:
+        super().__init__(
+            message,
+            error_code="INVALID_DOWNLOAD_TOKEN",
+            status_code=401,
+        )
+
+
+class FeatureNotEnabledException(ReportingException):
+    """Raised when attempting to access a Phase 2 capability whose flag is disabled."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            error_code="FEATURE_NOT_ENABLED",
+            status_code=403,
+        )

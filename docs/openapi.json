@@ -4549,7 +4549,7 @@
           "Reporting & Exports"
         ],
         "summary": "Trigger Report Export",
-        "description": "Triggers asynchronous report export generation (API-048).",
+        "description": "Triggers asynchronous report export generation with provenance footer (API-048).",
         "operationId": "trigger_report_export_api_v1_reports_export_post",
         "parameters": [
           {
@@ -4618,6 +4618,234 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReportExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/downloads/{report_id}": {
+      "get": {
+        "tags": [
+          "Reporting & Exports"
+        ],
+        "summary": "Download Report Artifact",
+        "description": "Downloads generated report artifact with token validation and audit tracking.",
+        "operationId": "download_report_artifact_api_v1_reports_downloads__report_id__get",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Time-limited secure download token",
+              "title": "Token"
+            },
+            "description": "Time-limited secure download token"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/schedules": {
+      "post": {
+        "tags": [
+          "Reporting & Exports"
+        ],
+        "summary": "Create Recurring Schedule",
+        "description": "Creates a recurring report delivery schedule (Phase 2 feature flag gated).",
+        "operationId": "create_recurring_schedule_api_v1_reports_schedules_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/api__cloudlens_api__routes__reports__ScheduleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Reporting & Exports"
+        ],
+        "summary": "List Recurring Schedules",
+        "description": "Lists recurring report delivery schedules (Phase 2 feature flag gated).",
+        "operationId": "list_recurring_schedules_api_v1_reports_schedules_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleResponse"
+                  },
+                  "title": "Response List Recurring Schedules Api V1 Reports Schedules Get"
                 }
               }
             }
@@ -17888,7 +18116,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ScheduleCreateRequest"
+                "$ref": "#/components/schemas/domain__runtime__models__ScheduleCreateRequest"
               }
             }
           }
@@ -51525,95 +51753,6 @@
         "title": "ScheduleAttachment",
         "description": "Attachment of a named schedule at resource, service, scope, environment, or tenant level."
       },
-      "ScheduleCreateRequest": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique schedule identifier"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Human-readable schedule name"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Schedule description"
-          },
-          "timezone": {
-            "type": "string",
-            "title": "Timezone",
-            "description": "IANA timezone",
-            "default": "UTC"
-          },
-          "workload_type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/WorkloadType"
-              }
-            ],
-            "default": "SCHEDULE_BASED"
-          },
-          "working_days": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Working Days"
-          },
-          "daily_start_time": {
-            "type": "string",
-            "title": "Daily Start Time",
-            "default": "08:00"
-          },
-          "daily_end_time": {
-            "type": "string",
-            "title": "Daily End Time",
-            "default": "18:00"
-          },
-          "exclusion_dates": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Exclusion Dates"
-          },
-          "warning_tolerance_hours": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "title": "Warning Tolerance Hours",
-            "default": "1.0"
-          },
-          "critical_tolerance_hours": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "title": "Critical Tolerance Hours",
-            "default": "4.0"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "description"
-        ],
-        "title": "ScheduleCreateRequest",
-        "description": "Request payload to create a named operational runtime schedule."
-      },
       "ScheduleLevel": {
         "type": "string",
         "enum": [
@@ -51625,6 +51764,77 @@
         ],
         "title": "ScheduleLevel",
         "description": "Hierarchy level for attaching operational runtime schedules."
+      },
+      "ScheduleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "template_id": {
+            "type": "string",
+            "title": "Template Id"
+          },
+          "cron_expression": {
+            "type": "string",
+            "title": "Cron Expression"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "recipients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recipients"
+          },
+          "storage_destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Destination"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "next_run_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Run At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "template_id",
+          "cron_expression",
+          "format",
+          "recipients",
+          "storage_destination",
+          "is_active",
+          "created_at",
+          "next_run_at"
+        ],
+        "title": "ScheduleResponse",
+        "description": "Scheduled report response (Phase 2)."
       },
       "ScheduleUpdateResponse": {
         "properties": {
@@ -59384,6 +59594,58 @@
         "title": "WorkloadType",
         "description": "Categorisation of workload execution profile (RUN-009)."
       },
+      "api__cloudlens_api__routes__reports__ScheduleCreateRequest": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "title": "Template Id",
+            "description": "Target report template ID"
+          },
+          "cron_expression": {
+            "type": "string",
+            "title": "Cron Expression",
+            "description": "Cron expression (e.g. '0 8 1 * *')"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "description": "Export format",
+            "default": "PDF"
+          },
+          "recipients": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recipients",
+            "description": "Target email recipients"
+          },
+          "storage_destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Destination",
+            "description": "Object storage URI"
+          },
+          "parameters": {
+            "type": "object",
+            "title": "Parameters",
+            "description": "Filter parameters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "cron_expression"
+        ],
+        "title": "ScheduleCreateRequest",
+        "description": "Payload to create a recurring report schedule (Phase 2)."
+      },
       "domain__remediation__models__SubjectEntity": {
         "properties": {
           "entity_type": {
@@ -59697,6 +59959,95 @@
         ],
         "title": "ScheduleAdherenceResult",
         "description": "Comprehensive adherence evaluation result for a resource over an evaluation window.\n\nEnforces:\n- Mandatory monetary valuation: breach_cost carries a calculated financial amount.\n- Non-compliance discipline: UNKNOWN and NO_DATA are never compliant and never green."
+      },
+      "domain__runtime__models__ScheduleCreateRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique schedule identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable schedule name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Schedule description"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA timezone",
+            "default": "UTC"
+          },
+          "workload_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadType"
+              }
+            ],
+            "default": "SCHEDULE_BASED"
+          },
+          "working_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Working Days"
+          },
+          "daily_start_time": {
+            "type": "string",
+            "title": "Daily Start Time",
+            "default": "08:00"
+          },
+          "daily_end_time": {
+            "type": "string",
+            "title": "Daily End Time",
+            "default": "18:00"
+          },
+          "exclusion_dates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exclusion Dates"
+          },
+          "warning_tolerance_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Warning Tolerance Hours",
+            "default": "1.0"
+          },
+          "critical_tolerance_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Critical Tolerance Hours",
+            "default": "4.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "title": "ScheduleCreateRequest",
+        "description": "Request payload to create a named operational runtime schedule."
       },
       "domain__workflows__models__SubjectEntity": {
         "properties": {
