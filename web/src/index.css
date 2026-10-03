@@ -14,6 +14,19 @@
   color-scheme: dark;
 }
 
+[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent-blue: #0284c7;
+  --accent-cyan: #0891b2;
+  --accent-emerald: #059669;
+  --border-color: #cbd5e1;
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -24,4 +37,68 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+/* Screen reader only utility (WCAG 2.1 AA) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Tabular figures for dense financial numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Skeleton Shimmer Animation */
+@keyframes shimmerAnimation {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.cloudlens-shimmer {
+  animation: shimmerAnimation 1.6s ease-in-out infinite;
+}
+
+/* Reduced Motion Preference (WCAG 2.1 AA requirement) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Responsive viewports (NFR-061: 1024px to 3840px) */
+@media (max-width: 1280px) {
+  .cloudlens-table-container {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  main {
+    padding: 1rem !important;
+  }
+  .cloudlens-search-trigger {
+    width: 180px !important;
+  }
 }

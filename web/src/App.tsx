@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MasterDataConsole } from './pages/MasterDataConsole';
+import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
 
 interface HealthStatus {
   status: string;
@@ -13,7 +14,7 @@ export const App: React.FC = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'overview' | 'masterdata'>('overview');
+  const [currentView, setCurrentView] = useState<'overview' | 'masterdata' | 'design-system'>('overview');
 
   useEffect(() => {
     fetch('/api/v1/health')
@@ -93,6 +94,21 @@ export const App: React.FC = () => {
             Overview
           </button>
           <button
+            onClick={() => setCurrentView('design-system')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'design-system' ? '#0284c7' : 'transparent',
+              color: currentView === 'design-system' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Design System
+          </button>
+          <button
             onClick={() => setCurrentView('masterdata')}
             style={{
               padding: '0.4rem 0.8rem',
@@ -137,8 +153,10 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      <main style={{ flex: 1, padding: currentView === 'masterdata' ? '1.5rem' : '2.5rem', maxWidth: currentView === 'masterdata' ? '1400px' : '1200px', margin: '0 auto', width: '100%' }}>
-        {currentView === 'masterdata' ? (
+      <main style={{ flex: 1, padding: currentView === 'overview' ? '2.5rem' : '1.5rem', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+        {currentView === 'design-system' ? (
+          <DesignSystemShowcase />
+        ) : currentView === 'masterdata' ? (
           <MasterDataConsole />
         ) : (
           <>

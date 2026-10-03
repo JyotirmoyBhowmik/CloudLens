@@ -9486,6 +9486,52 @@
         }
       }
     },
+    "/api/v1/system/demo/screens/verify": {
+      "get": {
+        "tags": [
+          "Demo Mode & Scenarios"
+        ],
+        "summary": "Verify Demo Screens Endpoint",
+        "description": "Verifies that all 27 screens (S-01 to S-27) possess meaningful mock data (Mandate M3 / Prompt 47B).",
+        "operationId": "verify_demo_screens_endpoint_api_v1_system_demo_screens_verify_get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Target tenant ID",
+              "default": "T-DEMO",
+              "title": "Tenant Id"
+            },
+            "description": "Target tenant ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenVerificationReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/credentials/profiles": {
       "post": {
         "tags": [
@@ -30865,6 +30911,1189 @@
         }
       }
     },
+    "/api/v1/imports/entities": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "List Importable Entities",
+        "description": "Lists all registered importable entities with schemas, columns, and atomicity policies.",
+        "operationId": "list_importable_entities_api_v1_imports_entities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EntityImportMetadata"
+                  },
+                  "type": "array",
+                  "title": "Response List Importable Entities Api V1 Imports Entities Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/entities/{entity_type}": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Get Entity Metadata",
+        "description": "Retrieves import specification metadata for a specific entity type.",
+        "operationId": "get_entity_metadata_api_v1_imports_entities__entity_type__get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityImportMetadata"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/templates/{entity_type}": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Download Template",
+        "description": "Downloads import template file with column definitions, descriptions, and sample values.",
+        "operationId": "download_template_api_v1_imports_templates__entity_type__get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Template format: csv or json",
+              "default": "csv",
+              "title": "Format"
+            },
+            "description": "Template format: csv or json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/export/{entity_type}": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Export Entity Data",
+        "description": "Exports current entity records with export symmetry (round-trip edit-and-reimport).",
+        "operationId": "export_entity_data_api_v1_imports_export__entity_type__get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Export format: csv or json",
+              "default": "csv",
+              "title": "Format"
+            },
+            "description": "Export format: csv or json"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/profiles": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Create Mapping Profile",
+        "description": "Creates a saved mapping profile for repeated imports (Prompt 53).",
+        "operationId": "create_mapping_profile_api_v1_imports_profiles_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMappingProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "List Mapping Profiles",
+        "description": "Lists saved mapping profiles for the authenticated tenant.",
+        "operationId": "list_mapping_profiles_api_v1_imports_profiles_get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional entity type filter",
+              "title": "Entity Type"
+            },
+            "description": "Optional entity type filter"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MappingProfile"
+                  },
+                  "title": "Response List Mapping Profiles Api V1 Imports Profiles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/dry-run": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Execute Dry Run Json",
+        "description": "Executes mandatory complete dry-run validation reporting created, updated, skipped, rejected rows.",
+        "operationId": "execute_dry_run_json_api_v1_imports_dry_run_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DryRunJsonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/upload/dry-run": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Execute Dry Run Upload",
+        "description": "Executes mandatory complete dry-run validation from uploaded file payload.",
+        "operationId": "execute_dry_run_upload_api_v1_imports_upload_dry_run_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDryRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/dry-run/{dry_run_id}/result": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Download Dry Run Result",
+        "description": "Downloads per-row dry-run validation result file before anything is written (Prompt 53).",
+        "operationId": "download_dry_run_result_api_v1_imports_dry_run__dry_run_id__result_get",
+        "parameters": [
+          {
+            "name": "dry_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dry Run Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Result report format: csv or json",
+              "default": "csv",
+              "title": "Format"
+            },
+            "description": "Result report format: csv or json"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{dry_run_id}/apply": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Apply Import",
+        "description": "Applies a previously validated dry run. Enforces: Do not apply an import without a dry run.",
+        "operationId": "apply_import_api_v1_imports__dry_run_id__apply_post",
+        "parameters": [
+          {
+            "name": "dry_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dry Run Id"
+            }
+          },
+          {
+            "name": "actor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Executing actor identity",
+              "default": "api_user",
+              "title": "Actor Id"
+            },
+            "description": "Executing actor identity"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{import_run_id}/rollback": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Rollback Import",
+        "description": "Reverses an applied import run within configured window with dependent change guard (Prompt 53).",
+        "operationId": "rollback_import_api_v1_imports__import_run_id__rollback_post",
+        "parameters": [
+          {
+            "name": "import_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Import Run Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/history": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "List Import History",
+        "description": "Retrieves import history runs with outcomes, duration, and status (Prompt 53).",
+        "operationId": "list_import_history_api_v1_imports_history_get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional entity type filter",
+              "title": "Entity Type"
+            },
+            "description": "Optional entity type filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportRunRecord"
+                  },
+                  "title": "Response List Import History Api V1 Imports History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/history/{import_run_id}": {
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Get Import Run Detail",
+        "description": "Retrieves full execution details and audit report for an import run.",
+        "operationId": "get_import_run_detail_api_v1_imports_history__import_run_id__get",
+        "parameters": [
+          {
+            "name": "import_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Import Run Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/scheduled": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Create Scheduled Import Job",
+        "description": "Registers a scheduled unattended import feed (Prompt 53).",
+        "operationId": "create_scheduled_import_job_api_v1_imports_scheduled_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduledJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledImportJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "List Scheduled Jobs",
+        "description": "Lists scheduled import jobs for the authenticated tenant.",
+        "operationId": "list_scheduled_jobs_api_v1_imports_scheduled_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduledImportJob"
+                  },
+                  "title": "Response List Scheduled Jobs Api V1 Imports Scheduled Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/scheduled/{job_id}/run": {
+      "post": {
+        "tags": [
+          "Bulk Import & Onboarding"
+        ],
+        "summary": "Run Scheduled Job Now",
+        "description": "Manually triggers an unattended scheduled feed execution.",
+        "operationId": "run_scheduled_job_now_api_v1_imports_scheduled__job_id__run_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRunRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -34151,6 +35380,15 @@
         "title": "AssignTaskPayload",
         "description": "Payload to assign or reassign a remediation task."
       },
+      "AtomicityPolicy": {
+        "type": "string",
+        "enum": [
+          "ALL_OR_NOTHING",
+          "PARTIAL_SUCCESS"
+        ],
+        "title": "AtomicityPolicy",
+        "description": "Transaction atomicity policy configured per entity type as master data (Prompt 53)."
+      },
       "AuditEventResponse": {
         "properties": {
           "id": {
@@ -37188,6 +38426,63 @@
         ],
         "title": "CollectionGranularity",
         "description": "Allowable usage collection granularities.\n\nSub-hourly collection (< 3600s) is strictly out of scope and forbidden."
+      },
+      "ColumnDefinition": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Field name in canonical entity"
+          },
+          "data_type": {
+            "type": "string",
+            "title": "Data Type",
+            "description": "Expected type: string, number, boolean, date, json",
+            "default": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "description": "Whether field is strictly mandatory",
+            "default": false
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Field purpose and help text for business users",
+            "default": ""
+          },
+          "master_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Reference",
+            "description": "Registered master type code validating allowed values (e.g. BUSINESS_UNIT)"
+          },
+          "allowed_values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Values",
+            "description": "Explicit static allowed values if not referencing master"
+          },
+          "sample_value": {
+            "title": "Sample Value",
+            "description": "Example value used for template generation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ColumnDefinition",
+        "description": "Definition of an individual column for template download and schema validation."
       },
       "CommitmentInfo": {
         "properties": {
@@ -40396,6 +41691,39 @@
         "title": "CostValue",
         "description": "Base abstract cost value ensuring strict type bounds and currency validation."
       },
+      "CreateMappingProfileRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "User-friendly name of mapping profile"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Target importable entity type"
+          },
+          "column_mappings": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Column Mappings",
+            "description": "Source column name -> Target canonical field name"
+          },
+          "default_values": {
+            "type": "object",
+            "title": "Default Values",
+            "description": "Default fallback values for unmapped required fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "entity_type"
+        ],
+        "title": "CreateMappingProfileRequest"
+      },
       "CreateRecordRequest": {
         "properties": {
           "code": {
@@ -40549,6 +41877,53 @@
           "annualised_cost"
         ],
         "title": "CreateSavedEstimateRequest"
+      },
+      "CreateScheduledJobRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "cron_expression": {
+            "type": "string",
+            "title": "Cron Expression",
+            "default": "0 2 * * *"
+          },
+          "mapping_profile_id": {
+            "type": "string",
+            "title": "Mapping Profile Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ImportMode"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "default": "CMDB_CONNECTOR"
+          },
+          "source_uri": {
+            "type": "string",
+            "title": "Source Uri"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "entity_type",
+          "mapping_profile_id",
+          "mode",
+          "source_uri"
+        ],
+        "title": "CreateScheduledJobRequest"
       },
       "CredentialCreateRequest": {
         "properties": {
@@ -41491,10 +42866,14 @@
           "Governance Clean-Up",
           "Onboarding a New Provider",
           "Reconciliation Variance",
-          "Free-Tier Exhaustion"
+          "Free-Tier Exhaustion",
+          "Provisioning Gate Decision",
+          "Quota Exhaustion Approaching",
+          "Showback Dispute",
+          "Remediation Clean-Up Sprint"
         ],
         "title": "DemoScenario",
-        "description": "Seven named demonstration scenarios loadable in a single click (Prompt 47 Item 32)."
+        "description": "Eleven named demonstration scenarios loadable in a single click (Prompt 47 & 47B)."
       },
       "DemoScenarioInfo": {
         "properties": {
@@ -42258,6 +43637,235 @@
         "title": "DisputeStatus",
         "description": "Lifecycle status of a queried/disputed statement line."
       },
+      "DryRunJsonRequest": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ImportMode"
+          },
+          "atomicity_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AtomicityPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mapping_profile_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Profile Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "default": "import_payload.csv"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Raw text content in CSV, TSV, or JSON format"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "mode",
+          "content"
+        ],
+        "title": "DryRunJsonRequest"
+      },
+      "DryRunRowResult": {
+        "properties": {
+          "row_number": {
+            "type": "integer",
+            "title": "Row Number",
+            "description": "1-based row number in source file"
+          },
+          "outcome": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RowOutcome"
+              }
+            ],
+            "description": "Simulated outcome: CREATED, UPDATED, SKIPPED, REJECTED, DEACTIVATED"
+          },
+          "natural_key": {
+            "type": "string",
+            "title": "Natural Key",
+            "description": "Natural key value identifying target record"
+          },
+          "entity_data": {
+            "type": "object",
+            "title": "Entity Data",
+            "description": "Mapped incoming record values"
+          },
+          "changes_diff": {
+            "type": "object",
+            "title": "Changes Diff",
+            "description": "Prior values vs new values for UPDATED or DEACTIVATED rows"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "Validation error messages explaining rejection"
+          },
+          "failed_master": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failed Master",
+            "description": "Registered master code that caused validation failure"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Informational reasons explaining skip, create, or update"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_number",
+          "outcome",
+          "natural_key"
+        ],
+        "title": "DryRunRowResult",
+        "description": "Detailed evaluation result for a single row during dry-run validation."
+      },
+      "DryRunSummary": {
+        "properties": {
+          "dry_run_id": {
+            "type": "string",
+            "title": "Dry Run Id",
+            "description": "Unique dry-run token required to commit import"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant identifier"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Target entity type"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportMode"
+              }
+            ],
+            "description": "Selected import mode"
+          },
+          "atomicity_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AtomicityPolicy"
+              }
+            ],
+            "description": "Applied atomicity policy"
+          },
+          "source_filename": {
+            "type": "string",
+            "title": "Source Filename",
+            "description": "Original filename"
+          },
+          "source_file_hash": {
+            "type": "string",
+            "title": "Source File Hash",
+            "description": "SHA-256 hash of file content"
+          },
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows",
+            "description": "Total rows in source file"
+          },
+          "created_count": {
+            "type": "integer",
+            "title": "Created Count",
+            "description": "Rows that would be created"
+          },
+          "updated_count": {
+            "type": "integer",
+            "title": "Updated Count",
+            "description": "Rows that would be updated"
+          },
+          "skipped_count": {
+            "type": "integer",
+            "title": "Skipped Count",
+            "description": "Rows that would be skipped"
+          },
+          "rejected_count": {
+            "type": "integer",
+            "title": "Rejected Count",
+            "description": "Rows that would be rejected"
+          },
+          "deactivated_count": {
+            "type": "integer",
+            "title": "Deactivated Count",
+            "description": "Existing records that would be deactivated"
+          },
+          "is_valid": {
+            "type": "boolean",
+            "title": "Is Valid",
+            "description": "True if import can proceed under its atomicity policy"
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Executed At"
+          },
+          "row_results": {
+            "items": {
+              "$ref": "#/components/schemas/DryRunRowResult"
+            },
+            "type": "array",
+            "title": "Row Results",
+            "description": "Per-row evaluation results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dry_run_id",
+          "tenant_id",
+          "entity_type",
+          "mode",
+          "atomicity_policy",
+          "source_filename",
+          "source_file_hash",
+          "total_rows",
+          "created_count",
+          "updated_count",
+          "skipped_count",
+          "rejected_count",
+          "deactivated_count",
+          "is_valid"
+        ],
+        "title": "DryRunSummary",
+        "description": "Genuinely complete dry-run validation result (Prompt 53)."
+      },
       "DryRunValidationResult": {
         "properties": {
           "master_type": {
@@ -42801,6 +44409,73 @@
         "type": "object",
         "title": "EnableDemoModeRequest",
         "description": "Payload to enable Demo Mode."
+      },
+      "EntityImportMetadata": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Unique entity type identifier (e.g. APPLICATION, RESOURCE_CURATION)"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name",
+            "description": "Human-readable title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Functional description of entity dataset"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnDefinition"
+            },
+            "type": "array",
+            "title": "Columns",
+            "description": "Complete column definitions"
+          },
+          "natural_key_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Natural Key Columns",
+            "description": "List of columns uniquely identifying a record for matching and diffing"
+          },
+          "default_atomicity_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AtomicityPolicy"
+              }
+            ],
+            "description": "Master-data configured default atomicity policy",
+            "default": "PARTIAL_SUCCESS"
+          },
+          "allowed_modes": {
+            "items": {
+              "$ref": "#/components/schemas/ImportMode"
+            },
+            "type": "array",
+            "title": "Allowed Modes",
+            "description": "Supported import modes for this entity type"
+          },
+          "rollback_window_hours": {
+            "type": "integer",
+            "title": "Rollback Window Hours",
+            "description": "Configured time window in hours within which reversal is permitted",
+            "default": 24
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "display_name",
+          "description",
+          "natural_key_columns"
+        ],
+        "title": "EntityImportMetadata",
+        "description": "Master-data driven specification for an importable entity type (Prompt 53)."
       },
       "EntityReferenceType": {
         "type": "string",
@@ -46254,6 +47929,17 @@
         "title": "ImpactSet",
         "description": "Complete downstream impact set and blast radius for a given entity (Prompt 32)."
       },
+      "ImportMode": {
+        "type": "string",
+        "enum": [
+          "INSERT_ONLY",
+          "UPDATE_ONLY",
+          "UPSERT",
+          "DEACTIVATE_MISSING"
+        ],
+        "title": "ImportMode",
+        "description": "Execution mode for record mutation during bulk import (Prompt 53)."
+      },
       "ImportPayload": {
         "properties": {
           "format": {
@@ -46271,6 +47957,192 @@
           "content"
         ],
         "title": "ImportPayload"
+      },
+      "ImportRunRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique import run ID (e.g. imp-8fa12c)"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant identifier"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Target entity type"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportMode"
+              }
+            ],
+            "description": "Explicitly chosen import mode"
+          },
+          "atomicity_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AtomicityPolicy"
+              }
+            ],
+            "description": "Applied atomicity policy"
+          },
+          "source_filename": {
+            "type": "string",
+            "title": "Source Filename",
+            "description": "Original source file name"
+          },
+          "source_file_hash": {
+            "type": "string",
+            "title": "Source File Hash",
+            "description": "SHA-256 cryptographic hash of source file"
+          },
+          "actor_id": {
+            "type": "string",
+            "title": "Actor Id",
+            "description": "Importing actor or scheduled job identity"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportStatus"
+              }
+            ],
+            "description": "Current status: APPLIED, REVERSED, FAILED"
+          },
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows",
+            "description": "Total rows processed"
+          },
+          "created_count": {
+            "type": "integer",
+            "title": "Created Count",
+            "description": "Successfully created records"
+          },
+          "updated_count": {
+            "type": "integer",
+            "title": "Updated Count",
+            "description": "Successfully updated records"
+          },
+          "skipped_count": {
+            "type": "integer",
+            "title": "Skipped Count",
+            "description": "Skipped records"
+          },
+          "rejected_count": {
+            "type": "integer",
+            "title": "Rejected Count",
+            "description": "Rejected records"
+          },
+          "deactivated_count": {
+            "type": "integer",
+            "title": "Deactivated Count",
+            "description": "Deactivated records"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "title": "Duration Seconds",
+            "default": 0.0
+          },
+          "dry_run_id": {
+            "type": "string",
+            "title": "Dry Run Id",
+            "description": "Associated dry-run token"
+          },
+          "rollback_window_hours": {
+            "type": "integer",
+            "title": "Rollback Window Hours",
+            "default": 24
+          },
+          "can_rollback": {
+            "type": "boolean",
+            "title": "Can Rollback",
+            "description": "True if reversal is currently permissible within window",
+            "default": true
+          },
+          "reversal_record": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reversal Record",
+            "description": "Audit record of rollback if reversed"
+          },
+          "row_results": {
+            "items": {
+              "$ref": "#/components/schemas/DryRunRowResult"
+            },
+            "type": "array",
+            "title": "Row Results",
+            "description": "Full per-row execution outcomes"
+          },
+          "snapshot_before": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Snapshot Before",
+            "description": "Point-in-time snapshot of affected records prior to mutation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "entity_type",
+          "mode",
+          "atomicity_policy",
+          "source_filename",
+          "source_file_hash",
+          "actor_id",
+          "status",
+          "total_rows",
+          "created_count",
+          "updated_count",
+          "skipped_count",
+          "rejected_count",
+          "deactivated_count",
+          "dry_run_id"
+        ],
+        "title": "ImportRunRecord",
+        "description": "Audit and lineage record of an executed import run with rollback capability (Prompt 53)."
+      },
+      "ImportStatus": {
+        "type": "string",
+        "enum": [
+          "DRY_RUN_COMPLETED",
+          "APPLIED",
+          "REVERSED",
+          "FAILED"
+        ],
+        "title": "ImportStatus",
+        "description": "Lifecycle states of an import run."
       },
       "IngestPricingResponse": {
         "properties": {
@@ -46920,6 +48792,68 @@
         ],
         "title": "ManualEdgeCreateRequest",
         "description": "Payload to create a manual or curated dependency edge (Prompt 32)."
+      },
+      "MappingProfile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique mapping profile ID"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Owning tenant identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "User-friendly name of mapping profile (e.g. ServiceNow CMDB Feed)"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Target importable entity type"
+          },
+          "column_mappings": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Column Mappings",
+            "description": "Source column name -> Target canonical field name"
+          },
+          "default_values": {
+            "type": "object",
+            "title": "Default Values",
+            "description": "Default fallback values for unmapped required fields"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By",
+            "description": "Actor who created profile",
+            "default": "SYSTEM"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "name",
+          "entity_type"
+        ],
+        "title": "MappingProfile",
+        "description": "Saved column mapping configuration for repeated imports (Prompt 53)."
       },
       "MasterDataAuditEntry": {
         "properties": {
@@ -56751,6 +58685,24 @@
         "title": "RoleListResponse",
         "description": "Paginated response model for available roles and permission definitions (API-009)."
       },
+      "RollbackRequest": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Reason for reversing import",
+            "default": "Manual user rollback"
+          },
+          "actor_id": {
+            "type": "string",
+            "title": "Actor Id",
+            "description": "Identity of requesting actor",
+            "default": "api_user"
+          }
+        },
+        "type": "object",
+        "title": "RollbackRequest"
+      },
       "RotationState": {
         "type": "string",
         "enum": [
@@ -56789,6 +58741,18 @@
         ],
         "title": "RoutineOperationCheckRequest",
         "description": "Payload to track routine superuser operation and verify delegation limits."
+      },
+      "RowOutcome": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "UPDATED",
+          "SKIPPED",
+          "REJECTED",
+          "DEACTIVATED"
+        ],
+        "title": "RowOutcome",
+        "description": "Individual row-level evaluation outcome."
       },
       "RunReconciliationRequest": {
         "properties": {
@@ -57690,6 +59654,117 @@
         ],
         "title": "ScheduleUpdateResponse"
       },
+      "ScheduledImportJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique scheduled job identifier"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Descriptive job title"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Target importable entity type"
+          },
+          "cron_expression": {
+            "type": "string",
+            "title": "Cron Expression",
+            "description": "Standard 5-part cron expression (e.g. '0 2 * * *')"
+          },
+          "mapping_profile_id": {
+            "type": "string",
+            "title": "Mapping Profile Id",
+            "description": "Saved mapping profile ID to apply"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportMode"
+              }
+            ],
+            "description": "Explicitly chosen import mode"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "description": "Feed provider type",
+            "default": "CMDB_CONNECTOR"
+          },
+          "source_uri": {
+            "type": "string",
+            "title": "Source Uri",
+            "description": "Location URI or feed identifier"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether schedule is active",
+            "default": true
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "last_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Status"
+          },
+          "last_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "name",
+          "entity_type",
+          "cron_expression",
+          "mapping_profile_id",
+          "mode",
+          "source_uri"
+        ],
+        "title": "ScheduledImportJob",
+        "description": "Scheduled unattended import configuration for CMDB, HR, or Finance feeds (Prompt 53)."
+      },
       "SchedulesAndExemptionsResponse": {
         "properties": {
           "schedules": {
@@ -58208,6 +60283,103 @@
         ],
         "title": "ScopeRole",
         "description": "Canonical roles for multi-cloud scope hierarchy (Prompt 05 Item 31)."
+      },
+      "ScreenVerificationItem": {
+        "properties": {
+          "screen_code": {
+            "type": "string",
+            "title": "Screen Code",
+            "description": "Screen code (e.g. S-01, S-15, S-27)"
+          },
+          "screen_name": {
+            "type": "string",
+            "title": "Screen Name",
+            "description": "Screen title"
+          },
+          "domain_module": {
+            "type": "string",
+            "title": "Domain Module",
+            "description": "Governing domain module"
+          },
+          "has_meaningful_data": {
+            "type": "boolean",
+            "title": "Has Meaningful Data",
+            "description": "True if demonstrable data is present"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count",
+            "description": "Number of demonstrable records found"
+          },
+          "highlight_metric": {
+            "type": "string",
+            "title": "Highlight Metric",
+            "description": "Key demonstration metric/state"
+          },
+          "sample_identifier": {
+            "type": "string",
+            "title": "Sample Identifier",
+            "description": "Primary sample record ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "screen_code",
+          "screen_name",
+          "domain_module",
+          "has_meaningful_data",
+          "record_count",
+          "highlight_metric",
+          "sample_identifier"
+        ],
+        "title": "ScreenVerificationItem",
+        "description": "Verification outcome for an individual screen S-01 to S-27."
+      },
+      "ScreenVerificationReport": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "verified_at": {
+            "type": "string",
+            "title": "Verified At"
+          },
+          "total_screens": {
+            "type": "integer",
+            "title": "Total Screens",
+            "default": 27
+          },
+          "passed_screens": {
+            "type": "integer",
+            "title": "Passed Screens"
+          },
+          "failed_screens": {
+            "type": "integer",
+            "title": "Failed Screens"
+          },
+          "is_m3_compliant": {
+            "type": "boolean",
+            "title": "Is M3 Compliant"
+          },
+          "screens": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenVerificationItem"
+            },
+            "type": "array",
+            "title": "Screens"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "verified_at",
+          "passed_screens",
+          "failed_screens",
+          "is_m3_compliant"
+        ],
+        "title": "ScreenVerificationReport",
+        "description": "End-to-end Mandate M3 verification report covering all 27 screens."
       },
       "SemanticDataDictionaryField": {
         "properties": {
@@ -63861,6 +66033,67 @@
         ],
         "title": "UpdateScheduleRequest",
         "description": "Payload to configure a connector schedule."
+      },
+      "UploadDryRunRequest": {
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ImportMode"
+          },
+          "atomicity_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AtomicityPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mapping_profile_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping Profile Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "default": "uploaded_file.csv"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Uploaded raw file content in CSV, TSV, or JSON format"
+          },
+          "content_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Base64",
+            "description": "Optional Base64-encoded file content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "mode",
+          "content"
+        ],
+        "title": "UploadDryRunRequest"
       },
       "UsageExpectation-Input": {
         "properties": {
