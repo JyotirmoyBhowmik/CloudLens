@@ -35,6 +35,7 @@ from api.cloudlens_api.routes import (
     diagnostics_router,
     forecasting_router,
     health_router,
+    hierarchy_router,
     inventory_router,
     masterdata_router,
     overrides_router,
@@ -970,6 +971,7 @@ app.include_router(statements_router)
 app.include_router(provisioning_router)
 app.include_router(bulk_import_router)
 app.include_router(dashboards_router)
+app.include_router(hierarchy_router)
 
 
 class HealthResponse(BaseModel):

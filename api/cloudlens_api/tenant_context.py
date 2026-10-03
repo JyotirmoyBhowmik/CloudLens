@@ -130,11 +130,18 @@ def get_authenticated_tenant_context(
         effective_tenant = (
             x_tenant_id if (is_global_admin and x_tenant_id) else authenticated_tenant_id
         )
+        scope_grants_header = request.headers.get("X-Scope-Grants")
+        scope_grants = (
+            [s.strip() for s in scope_grants_header.split(",") if s.strip()]
+            if scope_grants_header
+            else getattr(auth_context, "scope_grants", ["*"]) or ["*"]
+        )
         tc = TenantContext(
             tenant_id=effective_tenant,
             user_id=auth_context.user_id,
             email=auth_context.email,
             roles=[r.value for r in auth_context.roles],
+            scope_grants=scope_grants,
             correlation_id=correlation_id,
             is_superuser=is_global_admin,
         )

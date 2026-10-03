@@ -4,6 +4,8 @@ import { DesignSystemShowcase } from './pages/DesignSystemShowcase';
 import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
 import { ProviderDashboard } from './pages/ProviderDashboard';
 import { ServiceDashboard } from './pages/ServiceDashboard';
+import { HierarchyExplorer } from './pages/HierarchyExplorer';
+import { ServiceInventory } from './pages/ServiceInventory';
 
 interface HealthStatus {
   status: string;
@@ -18,7 +20,7 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
-    'overview' | 'executive' | 'provider' | 'service' | 'masterdata' | 'design-system'
+    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'masterdata' | 'design-system'
   >('executive');
 
   useEffect(() => {
@@ -146,6 +148,36 @@ export const App: React.FC = () => {
             Services
           </button>
           <button
+            onClick={() => setCurrentView('hierarchy')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'hierarchy' ? '#0284c7' : 'transparent',
+              color: currentView === 'hierarchy' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Hierarchy
+          </button>
+          <button
+            onClick={() => setCurrentView('inventory')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'inventory' ? '#0284c7' : 'transparent',
+              color: currentView === 'inventory' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Inventory
+          </button>
+          <button
             onClick={() => setCurrentView('overview')}
             style={{
               padding: '0.4rem 0.8rem',
@@ -227,6 +259,10 @@ export const App: React.FC = () => {
           <ProviderDashboard />
         ) : currentView === 'service' ? (
           <ServiceDashboard />
+        ) : currentView === 'hierarchy' ? (
+          <HierarchyExplorer />
+        ) : currentView === 'inventory' ? (
+          <ServiceInventory />
         ) : currentView === 'design-system' ? (
           <DesignSystemShowcase />
         ) : currentView === 'masterdata' ? (

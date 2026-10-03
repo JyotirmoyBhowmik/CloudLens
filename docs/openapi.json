@@ -32673,6 +32673,848 @@
         }
       }
     },
+    "/api/v1/hierarchy/tree": {
+      "get": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Get Hierarchy Tree",
+        "description": "Retrieves full hierarchical tree with rolled-up spend and worst-child threshold states.",
+        "operationId": "get_hierarchy_tree_api_v1_hierarchy_tree_get",
+        "parameters": [
+          {
+            "name": "lens_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LateralLensType"
+                }
+              ],
+              "description": "Hierarchy entry lens (PROVIDER_HIERARCHY, APPLICATION, COST_CENTRE, etc.)",
+              "default": "PROVIDER_HIERARCHY",
+              "title": "Lens Type"
+            },
+            "description": "Hierarchy entry lens (PROVIDER_HIERARCHY, APPLICATION, COST_CENTRE, etc.)"
+          },
+          {
+            "name": "root_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional root node identifier",
+              "title": "Root Id"
+            },
+            "description": "Optional root node identifier"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HierarchyNode"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/nodes/{node_id}": {
+      "get": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Get Hierarchy Node Detail",
+        "description": "Retrieves detail pane for selected hierarchy node with direct resources and contributing services.",
+        "operationId": "get_hierarchy_node_detail_api_v1_hierarchy_nodes__node_id__get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "lens_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LateralLensType"
+                }
+              ],
+              "description": "Hierarchy entry lens",
+              "default": "PROVIDER_HIERARCHY",
+              "title": "Lens Type"
+            },
+            "description": "Hierarchy entry lens"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HierarchyDetailPane"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/search": {
+      "get": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Search Global",
+        "description": "Performs scope-safe global search across 9 entity types with exact-identifier match priority.",
+        "operationId": "search_global_api_v1_hierarchy_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query string",
+              "title": "Q"
+            },
+            "description": "Search query string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Max result count",
+              "default": 25,
+              "title": "Limit"
+            },
+            "description": "Max result count"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/count-preview": {
+      "post": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Preview Filter Counts",
+        "description": "Reactive count preview before full result pagination loads (FR-584).",
+        "operationId": "preview_filter_counts_api_v1_hierarchy_inventory_count_preview_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryFilterQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterCountPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/query": {
+      "post": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Query Inventory",
+        "description": "Filterable table query over all 35 canonical inventory fields (FR-107, FR-581).",
+        "operationId": "query_inventory_api_v1_hierarchy_inventory_query_post",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryFilterQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryQueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/bulk-assign": {
+      "post": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Bulk Assign Curated Fields",
+        "description": "Bulk assignment of ownership, application, environment, and cost centre (FR-108).",
+        "operationId": "bulk_assign_curated_fields_api_v1_hierarchy_inventory_bulk_assign_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkAssignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/views": {
+      "get": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "List Saved Views",
+        "description": "Lists saved custom views (FR-583).",
+        "operationId": "list_saved_views_api_v1_hierarchy_inventory_views_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SavedInventoryView"
+                  },
+                  "title": "Response List Saved Views Api V1 Hierarchy Inventory Views Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Save View",
+        "description": "Saves custom named view (FR-583).",
+        "operationId": "save_view_api_v1_hierarchy_inventory_views_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedInventoryView"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedInventoryView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/views/{view_id}": {
+      "delete": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Delete Saved View",
+        "description": "Deletes a saved view.",
+        "operationId": "delete_saved_view_api_v1_hierarchy_inventory_views__view_id__delete",
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "View Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Delete Saved View Api V1 Hierarchy Inventory Views  View Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy/inventory/export": {
+      "post": {
+        "tags": [
+          "Hierarchy & Inventory"
+        ],
+        "summary": "Export Inventory",
+        "description": "Exports 35-field inventory matching filter into CSV or JSON respecting scope grants.",
+        "operationId": "export_inventory_api_v1_hierarchy_inventory_export_post",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(csv|json)$",
+              "default": "csv",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryFilterQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -38153,6 +38995,113 @@
         ],
         "title": "BulkAssignRequest",
         "description": "Payload to bulk-assign multiple remediation tasks."
+      },
+      "BulkAssignmentRequest": {
+        "properties": {
+          "resource_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Resource Ids",
+            "description": "List of target resource IDs"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name",
+            "description": "New owner name or 'Unowned'"
+          },
+          "owner_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Email",
+            "description": "New owner email"
+          },
+          "application_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Name",
+            "description": "Target application name"
+          },
+          "environment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Name",
+            "description": "Target environment name"
+          },
+          "cost_center": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Center",
+            "description": "Target cost centre code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_ids"
+        ],
+        "title": "BulkAssignmentRequest",
+        "description": "Bulk update of curated metadata (FR-108, Prompt 38)."
+      },
+      "BulkAssignmentResponse": {
+        "properties": {
+          "updated_count": {
+            "type": "integer",
+            "title": "Updated Count"
+          },
+          "modified_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Modified Fields"
+          },
+          "applied_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Applied At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updated_count",
+          "modified_fields",
+          "applied_at"
+        ],
+        "title": "BulkAssignmentResponse",
+        "description": "Result of bulk curated assignment."
       },
       "BulkCostIngestRequest": {
         "properties": {
@@ -46629,6 +47578,44 @@
         "title": "FeatureToggleRequest",
         "description": "Payload to mutate a feature flag state."
       },
+      "FilterCountPreview": {
+        "properties": {
+          "matching_count": {
+            "type": "integer",
+            "title": "Matching Count"
+          },
+          "total_spend": {
+            "type": "string",
+            "title": "Total Spend"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "counts_by_provider": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts By Provider"
+          },
+          "counts_by_environment": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Counts By Environment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matching_count",
+          "total_spend"
+        ],
+        "title": "FilterCountPreview",
+        "description": "Reactive count preview before full result pagination loads (FR-584)."
+      },
       "FilterDemoRequest": {
         "properties": {
           "permission_code": {
@@ -48401,6 +49388,99 @@
         "title": "GeographyComplianceResult",
         "description": "Regional deployment and data residency compliance evaluation."
       },
+      "GlobalSearchItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "subtitle": {
+            "type": "string",
+            "title": "Subtitle"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "rank_score": {
+            "type": "number",
+            "title": "Rank Score",
+            "description": "1.0 for exact identifier match, lower for fuzzy/prefix",
+            "default": 0.5
+          },
+          "deep_link": {
+            "type": "string",
+            "title": "Deep Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_type",
+          "identifier",
+          "title",
+          "subtitle",
+          "scope_id",
+          "deep_link"
+        ],
+        "title": "GlobalSearchItem",
+        "description": "Indexed search result across 9 entity types."
+      },
+      "GlobalSearchResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/GlobalSearchItem"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "is_scope_restricted": {
+            "type": "boolean",
+            "title": "Is Scope Restricted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "total_matches",
+          "results",
+          "is_scope_restricted"
+        ],
+        "title": "GlobalSearchResponse",
+        "description": "Scope-safe global search result envelope."
+      },
       "GovernanceExceptionsWidget": {
         "properties": {
           "metadata": {
@@ -48690,6 +49770,237 @@
           "correlation_id"
         ],
         "title": "HealthResponse"
+      },
+      "HierarchyDetailPane": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lens_type": {
+            "$ref": "#/components/schemas/LateralLensType"
+          },
+          "level": {
+            "$ref": "#/components/schemas/HierarchyLevel"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "native_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Type"
+          },
+          "aggregate_cost": {
+            "type": "string",
+            "title": "Aggregate Cost"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount"
+          },
+          "budget_utilisation_pct": {
+            "type": "string",
+            "title": "Budget Utilisation Pct"
+          },
+          "threshold_state": {
+            "type": "string",
+            "title": "Threshold State"
+          },
+          "direct_resources": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryResource35"
+            },
+            "type": "array",
+            "title": "Direct Resources"
+          },
+          "top_contributing_services": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Top Contributing Services"
+          },
+          "breadcrumbs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Breadcrumbs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "name",
+          "lens_type",
+          "level",
+          "aggregate_cost",
+          "budget_amount",
+          "budget_utilisation_pct",
+          "threshold_state"
+        ],
+        "title": "HierarchyDetailPane",
+        "description": "Detailed view for selected hierarchy node."
+      },
+      "HierarchyLevel": {
+        "type": "string",
+        "enum": [
+          "PROVIDER",
+          "ORGANISATION",
+          "GROUP",
+          "BILLING_BOUNDARY",
+          "SUB_GROUP",
+          "SERVICE",
+          "RESOURCE"
+        ],
+        "title": "HierarchyLevel",
+        "description": "Canonical levels in cloud hierarchy navigation model (BBP Section 16.3)."
+      },
+      "HierarchyNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique node ID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display title of node"
+          },
+          "level": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HierarchyLevel"
+              }
+            ],
+            "description": "Structural level"
+          },
+          "lens_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LateralLensType"
+              }
+            ],
+            "default": "PROVIDER_HIERARCHY"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "Cloud provider if applicable"
+          },
+          "native_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Type",
+            "description": "Native term (e.g. ManagementGroup, OU, Folder, Compartment)"
+          },
+          "scope_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Id",
+            "description": "Bound scope ID for RBAC evaluation"
+          },
+          "aggregate_cost": {
+            "type": "string",
+            "title": "Aggregate Cost",
+            "description": "Total rolled-up spend across all descendants",
+            "default": "0.00"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount",
+            "description": "Allocated budget at this node",
+            "default": "0.00"
+          },
+          "budget_utilisation_pct": {
+            "type": "string",
+            "title": "Budget Utilisation Pct",
+            "description": "Utilisation ratio",
+            "default": "0.00"
+          },
+          "worst_child_threshold_state": {
+            "type": "string",
+            "title": "Worst Child Threshold State",
+            "description": "NORMAL, WARNING, or CRITICAL",
+            "default": "NORMAL"
+          },
+          "direct_resource_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Direct Resource Count",
+            "default": 0
+          },
+          "total_descendant_resource_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Descendant Resource Count",
+            "default": 0
+          },
+          "child_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Child Count",
+            "default": 0
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/HierarchyNode"
+            },
+            "type": "array",
+            "title": "Children"
+          },
+          "metadata": {
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "level"
+        ],
+        "title": "HierarchyNode",
+        "description": "Recursive node in hierarchy tree with roll-up aggregates and worst-child state."
       },
       "HistoricalDataPoint": {
         "properties": {
@@ -49434,6 +50745,624 @@
         "title": "InventoryDriftReport",
         "description": "Inventory changes and deltas between snapshots (API-022 / FR-108)."
       },
+      "InventoryFilterQuery": {
+        "properties": {
+          "providers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Providers"
+          },
+          "billing_boundaries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Boundaries"
+          },
+          "scope_subtrees": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Subtrees"
+          },
+          "services": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Services"
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories"
+          },
+          "resource_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Types"
+          },
+          "regions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regions"
+          },
+          "zones": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zones"
+          },
+          "applications": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applications"
+          },
+          "projects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projects"
+          },
+          "environments": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environments"
+          },
+          "owners": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owners"
+          },
+          "cost_centers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Centers"
+          },
+          "business_units": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Units"
+          },
+          "tag_filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TagFilter"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag Filters"
+          },
+          "min_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Cost"
+          },
+          "max_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Cost"
+          },
+          "budget_states": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget States"
+          },
+          "threshold_states": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold States"
+          },
+          "runtime_states": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime States"
+          },
+          "lifecycle_statuses": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle Statuses"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
+          }
+        },
+        "type": "object",
+        "title": "InventoryFilterQuery",
+        "description": "Structured multi-attribute inventory filter parameters."
+      },
+      "InventoryQueryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryResource35"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "InventoryQueryResponse",
+        "description": "Paginated inventory query response containing 35-field records."
+      },
+      "InventoryResource35": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "native_id": {
+            "type": "string",
+            "title": "Native Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "service_id": {
+            "type": "string",
+            "title": "Service Id"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "service_category": {
+            "type": "string",
+            "title": "Service Category"
+          },
+          "resource_type_id": {
+            "type": "string",
+            "title": "Resource Type Id"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type"
+          },
+          "region_id": {
+            "type": "string",
+            "title": "Region Id"
+          },
+          "region_name": {
+            "type": "string",
+            "title": "Region Name"
+          },
+          "availability_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Zone"
+          },
+          "pricing_status": {
+            "type": "string",
+            "title": "Pricing Status"
+          },
+          "runtime_state": {
+            "type": "string",
+            "title": "Runtime State"
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "title": "Lifecycle Status",
+            "default": "ACTIVE"
+          },
+          "tags": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "application_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Name"
+          },
+          "environment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Id"
+          },
+          "environment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment Name"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "owner_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Email"
+          },
+          "cost_center_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Center Id"
+          },
+          "cost_center_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Center Name"
+          },
+          "business_unit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Unit Id"
+          },
+          "business_unit_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Unit Name"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name"
+          },
+          "monthly_cost": {
+            "type": "string",
+            "title": "Monthly Cost",
+            "default": "0.00"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "last_synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Synced At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "scope_id",
+          "native_id",
+          "name",
+          "provider",
+          "service_id",
+          "service_name",
+          "service_category",
+          "resource_type_id",
+          "resource_type",
+          "region_id",
+          "region_name",
+          "pricing_status",
+          "runtime_state",
+          "last_synced_at",
+          "created_at"
+        ],
+        "title": "InventoryResource35",
+        "description": "Canonical 35-field inventory resource model."
+      },
       "InvestigationPriority": {
         "type": "string",
         "enum": [
@@ -49476,6 +51405,20 @@
         ],
         "title": "LargestIncreasesWidget",
         "description": "Largest cost increases and movements."
+      },
+      "LateralLensType": {
+        "type": "string",
+        "enum": [
+          "PROVIDER_HIERARCHY",
+          "APPLICATION",
+          "COST_CENTRE",
+          "ENVIRONMENT",
+          "OWNER",
+          "REGION",
+          "TAG"
+        ],
+        "title": "LateralLensType",
+        "description": "Six alternative lateral entry points into estate (Prompt 38)."
       },
       "LeastPrivilegeRequirement": {
         "properties": {
@@ -60853,6 +62796,53 @@
         "title": "SavedEstimate",
         "description": "Priced configuration with 4 computed values, full derivation, and validity window."
       },
+      "SavedInventoryView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "filters": {
+            "type": "object",
+            "title": "Filters"
+          },
+          "selected_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Selected Columns"
+          },
+          "is_shared": {
+            "type": "boolean",
+            "title": "Is Shared",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "user_id",
+          "filters",
+          "created_at"
+        ],
+        "title": "SavedInventoryView",
+        "description": "Saved, named custom filter configuration (FR-583)."
+      },
       "ScenarioComparisonView": {
         "properties": {
           "comparison_id": {
@@ -64559,6 +66549,36 @@
         ],
         "title": "TagComplianceReport",
         "description": "Compliance assessment against registered tag policies."
+      },
+      "TagFilter": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "operator": {
+            "type": "string",
+            "title": "Operator",
+            "default": "eq"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "TagFilter",
+        "description": "Tag filter supporting existence check or specific key-value matching."
       },
       "TagKeyConvention": {
         "properties": {
