@@ -16,6 +16,7 @@ from api.cloudlens_api.conventions.middleware import (
     make_problem_details,
 )
 from api.cloudlens_api.routes import (
+    admin_router,
     alerts_router,
     analytics_router,
     attribution_router,
@@ -996,6 +997,7 @@ app.include_router(dashboards_router)
 app.include_router(hierarchy_router)
 app.include_router(resource_detail_router)
 app.include_router(explanation_router)
+app.include_router(admin_router)
 
 
 class HealthResponse(BaseModel):

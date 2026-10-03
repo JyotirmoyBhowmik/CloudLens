@@ -10,6 +10,11 @@ import { ResourceDetailPage } from './pages/ResourceDetailPage';
 import { CostExplorerPage } from './pages/CostExplorerPage';
 import { InvestigationViewPage } from './pages/InvestigationViewPage';
 import { ExplanationLayerView } from './pages/ExplanationLayerView';
+import { DependencyGraphPage } from './pages/DependencyGraphPage';
+import { BudgetManagementPage } from './pages/BudgetManagementPage';
+import { PolicyManagementPage } from './pages/PolicyManagementPage';
+import { ConnectorManagementPage } from './pages/ConnectorManagementPage';
+import { AdminConsolePage } from './pages/AdminConsolePage';
 
 interface HealthStatus {
   status: string;
@@ -24,8 +29,25 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
-    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'resource-detail' | 'cost-explorer' | 'investigation' | 'masterdata' | 'design-system' | 'explanation'
+    | 'overview'
+    | 'executive'
+    | 'provider'
+    | 'service'
+    | 'hierarchy'
+    | 'inventory'
+    | 'resource-detail'
+    | 'cost-explorer'
+    | 'investigation'
+    | 'topology'
+    | 'budgets'
+    | 'policies'
+    | 'connectors'
+    | 'admin'
+    | 'masterdata'
+    | 'design-system'
+    | 'explanation'
   >('executive');
+  const [userRole, setUserRole] = useState<'EXECUTIVE' | 'FINOPS' | 'ENGINEERING' | 'TENANT_ADMIN'>('TENANT_ADMIN');
   const [activeResourceId, setActiveResourceId] = useState<string>('res-aws-vm-01');
   const [explorerDimension, setExplorerDimension] = useState<string>('SERVICE');
   const [explorerGroupId, setExplorerGroupId] = useState<string | undefined>(undefined);
@@ -231,6 +253,83 @@ export const App: React.FC = () => {
             Increases
           </button>
           <button
+            onClick={() => setCurrentView('topology')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'topology' ? '#0284c7' : 'transparent',
+              color: currentView === 'topology' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Topology
+          </button>
+          <button
+            onClick={() => setCurrentView('budgets')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'budgets' ? '#0284c7' : 'transparent',
+              color: currentView === 'budgets' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Budgets
+          </button>
+          <button
+            onClick={() => setCurrentView('policies')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'policies' ? '#0284c7' : 'transparent',
+              color: currentView === 'policies' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Policies
+          </button>
+          <button
+            onClick={() => setCurrentView('connectors')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'connectors' ? '#0284c7' : 'transparent',
+              color: currentView === 'connectors' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Connectors
+          </button>
+          {userRole === 'TENANT_ADMIN' && (
+            <button
+              onClick={() => setCurrentView('admin')}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: currentView === 'admin' ? '#ef4444' : '#450a0a',
+                color: currentView === 'admin' ? '#ffffff' : '#fca5a5',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+              }}
+            >
+              Admin Console
+            </button>
+          )}
+          <button
             onClick={() => setCurrentView('overview')}
             style={{
               padding: '0.4rem 0.8rem',
@@ -292,9 +391,27 @@ export const App: React.FC = () => {
           </button>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Stage 1: Monorepo Foundation
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Role:</span>
+            <select
+              value={userRole}
+              onChange={(e) => setUserRole(e.target.value as any)}
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                padding: '0.2rem 0.5rem',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+              }}
+            >
+              <option value="EXECUTIVE">EXECUTIVE</option>
+              <option value="FINOPS">FINOPS</option>
+              <option value="ENGINEERING">ENGINEERING</option>
+              <option value="TENANT_ADMIN">TENANT_ADMIN</option>
+            </select>
+          </div>
           <div
             style={{
               display: 'inline-flex',
@@ -360,6 +477,19 @@ export const App: React.FC = () => {
               setActiveResourceId(resId);
               setCurrentView('resource-detail');
             }}
+          />
+        ) : currentView === 'topology' ? (
+          <DependencyGraphPage />
+        ) : currentView === 'budgets' ? (
+          <BudgetManagementPage />
+        ) : currentView === 'policies' ? (
+          <PolicyManagementPage />
+        ) : currentView === 'connectors' ? (
+          <ConnectorManagementPage />
+        ) : currentView === 'admin' ? (
+          <AdminConsolePage
+            userRole={userRole}
+            onNavigateHome={() => setCurrentView('executive')}
           />
         ) : currentView === 'design-system' ? (
           <DesignSystemShowcase />
