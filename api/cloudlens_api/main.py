@@ -17,6 +17,7 @@ from api.cloudlens_api.conventions.middleware import (
 )
 from api.cloudlens_api.routes import (
     alerts_router,
+    analytics_router,
     attribution_router,
     audit_router,
     auth_router,
@@ -880,6 +881,7 @@ app.include_router(roles_router)
 app.include_router(scopes_router)
 app.include_router(inventory_router)
 app.include_router(reports_router)
+app.include_router(analytics_router)
 app.include_router(rbac_router)
 app.include_router(health_router)
 app.include_router(masterdata_router)

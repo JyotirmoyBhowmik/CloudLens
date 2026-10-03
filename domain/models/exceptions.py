@@ -2152,3 +2152,82 @@ class FeatureNotEnabledException(ReportingException):
             error_code="FEATURE_NOT_ENABLED",
             status_code=403,
         )
+
+
+# ==============================================================================
+# Analytics Export, BI Feed & Semantic Layer Exceptions (Prompt 56)
+# ==============================================================================
+
+
+class AnalyticsException(DomainModelException):
+    """Base exception for all semantic layer, analytics export, and BI feed operations."""
+
+    def __init__(
+        self, message: str, error_code: str = "ANALYTICS_ERROR", status_code: int = 500
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class AnalyticsExtractNotFoundException(AnalyticsException):
+    """Raised when an analytical extract job or artifact is not found."""
+
+    def __init__(self, extract_id: str) -> None:
+        super().__init__(
+            f"Analytical extract '{extract_id}' was not found.",
+            error_code="ANALYTICS_EXTRACT_NOT_FOUND",
+            status_code=404,
+        )
+        self.extract_id = extract_id
+
+
+class TransactionalPathAccessForbiddenException(AnalyticsException):
+    """Raised when an analytical query violates architectural isolation and touches transactional OLTP path."""
+
+    def __init__(
+        self,
+        message: str = "Analytical queries are strictly forbidden from accessing the transactional database path.",
+    ) -> None:
+        super().__init__(
+            message,
+            error_code="TRANSACTIONAL_PATH_ACCESS_FORBIDDEN",
+            status_code=403,
+        )
+
+
+class EmptyExtractException(AnalyticsException):
+    """Raised when an extract contains zero records for an active billing period."""
+
+    def __init__(self, period: str, tenant_id: str) -> None:
+        super().__init__(
+            f"Analytical extract for tenant '{tenant_id}' period '{period}' produced zero records.",
+            error_code="EMPTY_ANALYTICAL_EXTRACT",
+            status_code=422,
+        )
+        self.period = period
+        self.tenant_id = tenant_id
+
+
+class LateExtractException(AnalyticsException):
+    """Raised when a scheduled extract violates delivery SLA window."""
+
+    def __init__(self, schedule_id: str, delay_minutes: float) -> None:
+        super().__init__(
+            f"Scheduled analytical extract '{schedule_id}' is late by {delay_minutes:.1f} minutes.",
+            error_code="LATE_ANALYTICAL_EXTRACT",
+            status_code=504,
+        )
+        self.schedule_id = schedule_id
+        self.delay_minutes = delay_minutes
+
+
+class AnalyticsRateLimitExceededException(AnalyticsException):
+    """Raised when analytical query rate limit is exceeded."""
+
+    def __init__(self, retry_after_seconds: int = 60) -> None:
+        super().__init__(
+            f"Analytical query rate limit exceeded. Retry after {retry_after_seconds} seconds.",
+            error_code="ANALYTICS_RATE_LIMIT_EXCEEDED",
+            status_code=429,
+        )
+        self.retry_after_seconds = retry_after_seconds

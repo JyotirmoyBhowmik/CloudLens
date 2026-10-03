@@ -4863,6 +4863,545 @@
         }
       }
     },
+    "/api/v1/analytics/extracts": {
+      "post": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Trigger Analytical Extract",
+        "description": "Triggers generation of a partitioned analytical extract with conformed dimensions and manifest.",
+        "operationId": "trigger_analytical_extract_api_v1_analytics_extracts_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriggerExtractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsExtractJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "List Analytical Extracts",
+        "description": "Lists analytical extract execution history for the authenticated tenant.",
+        "operationId": "list_analytical_extracts_api_v1_analytics_extracts_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/extracts/{extract_id}": {
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Get Analytical Extract",
+        "description": "Retrieves metadata for a specific analytical extract execution.",
+        "operationId": "get_analytical_extract_api_v1_analytics_extracts__extract_id__get",
+        "parameters": [
+          {
+            "name": "extract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Extract Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsExtractJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/extracts/{extract_id}/manifest": {
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Get Extract Manifest",
+        "description": "Retrieves the authoritative cryptographic manifest for an analytical extract.",
+        "operationId": "get_extract_manifest_api_v1_analytics_extracts__extract_id__manifest_get",
+        "parameters": [
+          {
+            "name": "extract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Extract Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticalExtractManifest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/query": {
+      "post": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Execute Analytical Query",
+        "description": "Executes a multi-dimensional query against the isolated read-only analytical semantic layer.",
+        "operationId": "execute_analytical_query_api_v1_analytics_query_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticalQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticalQueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/dictionary": {
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Get Data Dictionary",
+        "description": "Returns the published Semantic Layer Data Dictionary.",
+        "operationId": "get_data_dictionary_api_v1_analytics_dictionary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SemanticDataDictionaryField"
+                  },
+                  "type": "array",
+                  "title": "Response Get Data Dictionary Api V1 Analytics Dictionary Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/reference/cost-pack": {
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Get Reference Monthly Cost Pack",
+        "description": "Generates the reference monthly cost pack from the semantic layer without touching OLTP.",
+        "operationId": "get_reference_monthly_cost_pack_api_v1_analytics_reference_cost_pack_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Billing period, e.g. 2026-09",
+              "default": "2026-09",
+              "title": "Period"
+            },
+            "description": "Billing period, e.g. 2026-09"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Reference Monthly Cost Pack Api V1 Analytics Reference Cost Pack Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/reference/focus-mapping": {
+      "get": {
+        "tags": [
+          "Analytics & Semantic Layer"
+        ],
+        "summary": "Get Semantic To Focus Mapping",
+        "description": "Returns the mapping table from CloudLens Semantic Layer to FinOps FOCUS 1.0.",
+        "operationId": "get_semantic_to_focus_mapping_api_v1_analytics_reference_focus_mapping_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get Semantic To Focus Mapping Api V1 Analytics Reference Focus Mapping Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rbac/permissions": {
       "get": {
         "tags": [
@@ -30097,6 +30636,338 @@
         "title": "AllocationSplitType",
         "description": "Methodology for splitting shared costs."
       },
+      "AnalyticalExtractManifest": {
+        "properties": {
+          "extract_id": {
+            "type": "string",
+            "title": "Extract Id",
+            "description": "Unique UUID identifying the extract run"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Corporate tenant identifier"
+          },
+          "service_identity_id": {
+            "type": "string",
+            "title": "Service Identity Id",
+            "description": "Named service principal or actor requesting extract"
+          },
+          "service_identity_name": {
+            "type": "string",
+            "title": "Service Identity Name",
+            "description": "Display title of service identity"
+          },
+          "scope_grants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scope Grants",
+            "description": "Explicit scope grants binding the extract"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Extracted partition period, e.g. 2026-09"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Partition version stamp (incremented on restatements)",
+            "default": 1
+          },
+          "supersedes_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Version",
+            "description": "Prior version completely superseded by this extract"
+          },
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "description": "Semantic layer schema version specification",
+            "default": "1.0.0"
+          },
+          "record_count": {
+            "type": "integer",
+            "title": "Record Count",
+            "description": "Total fact records contained in dataset"
+          },
+          "file_checksums": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "File Checksums",
+            "description": "SHA-256 cryptographic hashes for all generated files"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At",
+            "description": "ISO 8601 UTC timestamp of extract completion"
+          },
+          "watermark_timestamp": {
+            "type": "string",
+            "title": "Watermark Timestamp",
+            "description": "High-watermark timestamp of underlying ingestion stream"
+          },
+          "governance_context": {
+            "type": "object",
+            "title": "Governance Context",
+            "description": "Freshness per provider, FX rates, and cost basis parameters"
+          },
+          "access_filtering_occurred": {
+            "type": "boolean",
+            "title": "Access Filtering Occurred",
+            "description": "Whether records were restricted by service identity scope grants",
+            "default": false
+          },
+          "filtering_disclosure": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filtering Disclosure",
+            "description": "Audit disclosure proving extract obeyed RBAC constraints"
+          },
+          "supersession_policy": {
+            "type": "string",
+            "title": "Supersession Policy",
+            "description": "Authoritative instruction for downstream BI ingestion pipelines",
+            "default": "Higher version number unconditionally supersedes earlier versions for this tenant and period partition."
+          }
+        },
+        "type": "object",
+        "required": [
+          "extract_id",
+          "tenant_id",
+          "service_identity_id",
+          "service_identity_name",
+          "period",
+          "record_count",
+          "generated_at",
+          "watermark_timestamp"
+        ],
+        "title": "AnalyticalExtractManifest",
+        "description": "Authoritative Manifest accompanying every scheduled and ad-hoc extract (Prompt 56)."
+      },
+      "AnalyticalQueryRequest": {
+        "properties": {
+          "dimensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dimensions",
+            "description": "Group-by dimensions from semantic layer (e.g. BusinessUnitName, ServiceCategory, CalendarMonth)"
+          },
+          "measures": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Measures",
+            "description": "Aggregate measures to compute (e.g. BilledCostAmount, EffectiveCostAmount, BudgetVarianceAmount)"
+          },
+          "filters": {
+            "type": "object",
+            "title": "Filters",
+            "description": "Dimension filters, e.g. {'ProviderKey': 'AWS', 'EnvironmentKey': 'PROD'}"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period",
+            "description": "Billing period filter (e.g. 2026-09)"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum rows to return",
+            "default": 100
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "description": "Offset for pagination",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "AnalyticalQueryRequest",
+        "description": "Request payload for the isolated read-only analytical query path."
+      },
+      "AnalyticalQueryResponse": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns",
+            "description": "Ordered list of returned dimension and measure names"
+          },
+          "rows": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "Aggregated result rows"
+          },
+          "total_rows": {
+            "type": "integer",
+            "title": "Total Rows",
+            "description": "Total available matched rows"
+          },
+          "execution_time_ms": {
+            "type": "number",
+            "title": "Execution Time Ms",
+            "description": "Query execution duration in milliseconds"
+          },
+          "isolation_mode": {
+            "type": "string",
+            "title": "Isolation Mode",
+            "description": "Proof of isolation from transactional database OLTP path",
+            "default": "ISOLATED_ANALYTICAL_REPLICA"
+          },
+          "_metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "rows",
+          "total_rows",
+          "execution_time_ms"
+        ],
+        "title": "AnalyticalQueryResponse",
+        "description": "Response payload returned by the isolated analytical query path."
+      },
+      "AnalyticsExtractJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "service_identity_id": {
+            "type": "string",
+            "title": "Service Identity Id"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "PENDING, RUNNING, COMPLETED, FAILED",
+            "default": "PENDING"
+          },
+          "row_count": {
+            "type": "integer",
+            "title": "Row Count",
+            "default": 0
+          },
+          "duration_ms": {
+            "type": "number",
+            "title": "Duration Ms",
+            "default": 0.0
+          },
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "default": "1.0.0"
+          },
+          "watermark": {
+            "type": "string",
+            "title": "Watermark",
+            "default": ""
+          },
+          "storage_destination": {
+            "type": "string",
+            "title": "Storage Destination",
+            "default": ""
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "manifest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticalExtractManifest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "service_identity_id",
+          "period",
+          "version"
+        ],
+        "title": "AnalyticsExtractJob",
+        "description": "Lifecycle record for an analytical extract execution."
+      },
       "AntiFlappingConfig-Input": {
         "properties": {
           "dwell_evaluations": {
@@ -39233,6 +40104,31 @@
         ],
         "title": "ExpiryAlert",
         "description": "Governance alert for approaching or passed credential expiry."
+      },
+      "ExtractListResponse": {
+        "properties": {
+          "extracts": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsExtractJob"
+            },
+            "type": "array",
+            "title": "Extracts"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "_metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "extracts",
+          "total_count"
+        ],
+        "title": "ExtractListResponse",
+        "description": "List of analytical extracts."
       },
       "FeatureToggleRequest": {
         "properties": {
@@ -52377,6 +53273,61 @@
         "title": "ScopeRole",
         "description": "Canonical roles for multi-cloud scope hierarchy (Prompt 05 Item 31)."
       },
+      "SemanticDataDictionaryField": {
+        "properties": {
+          "TableName": {
+            "type": "string",
+            "title": "Tablename"
+          },
+          "ColumnName": {
+            "type": "string",
+            "title": "Columnname"
+          },
+          "BusinessName": {
+            "type": "string",
+            "title": "Businessname"
+          },
+          "DataType": {
+            "type": "string",
+            "title": "Datatype"
+          },
+          "Description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "DerivationFormula": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Derivationformula"
+          },
+          "NullStatePolicy": {
+            "type": "string",
+            "title": "Nullstatepolicy"
+          },
+          "SampleValue": {
+            "type": "string",
+            "title": "Samplevalue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "TableName",
+          "ColumnName",
+          "BusinessName",
+          "DataType",
+          "Description",
+          "NullStatePolicy",
+          "SampleValue"
+        ],
+        "title": "SemanticDataDictionaryField",
+        "description": "Entry in the published Semantic Layer Data Dictionary."
+      },
       "ServiceCategory": {
         "type": "string",
         "enum": [
@@ -56667,6 +57618,47 @@
         ],
         "title": "TrendReport",
         "description": "Report detailing open vs closed trends over time without individual rankings."
+      },
+      "TriggerExtractRequest": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Target billing period partition, e.g. '2026-09'"
+          },
+          "service_identity_id": {
+            "type": "string",
+            "title": "Service Identity Id",
+            "description": "Declared service principal or machine identity",
+            "default": "svc-finance-bi"
+          },
+          "service_identity_name": {
+            "type": "string",
+            "title": "Service Identity Name",
+            "description": "Friendly title of service identity",
+            "default": "Enterprise PowerBI / Databricks Feed"
+          },
+          "scope_grants": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scope Grants",
+            "description": "Authorized scope grants binding this extract run"
+          },
+          "is_restatement": {
+            "type": "boolean",
+            "title": "Is Restatement",
+            "description": "Set to true if this run re-emits a corrected historical period",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "period"
+        ],
+        "title": "TriggerExtractRequest",
+        "description": "Payload to trigger an analytical extract."
       },
       "TriggerSyncRequest": {
         "properties": {

@@ -1,6 +1,7 @@
 """CloudLens API Routes Package."""
 
 from api.cloudlens_api.routes.alerts import router as alerts_router
+from api.cloudlens_api.routes.analytics import router as analytics_router
 from api.cloudlens_api.routes.attribution import router as attribution_router
 from api.cloudlens_api.routes.audit import router as audit_router
 from api.cloudlens_api.routes.auth import router as auth_router
@@ -39,6 +40,7 @@ from api.cloudlens_api.routes.workflows import router as workflows_router
 
 __all__ = [
     "alerts_router",
+    "analytics_router",
     "attribution_router",
     "audit_router",
     "auth_router",
