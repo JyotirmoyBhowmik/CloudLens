@@ -33515,6 +33515,427 @@
         }
       }
     },
+    "/api/v1/resource-detail/runtime-overview": {
+      "get": {
+        "tags": [
+          "Resource Detail & Cost Exploration"
+        ],
+        "summary": "Get Runtime Overview",
+        "description": "Retrieves estate-wide runtime schedule adherence, excess hours, and monetary valuation.",
+        "operationId": "get_runtime_overview_api_v1_resource_detail_runtime_overview_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeEstateOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resource-detail/{resource_id}": {
+      "get": {
+        "tags": [
+          "Resource Detail & Cost Exploration"
+        ],
+        "summary": "Get Resource Detail",
+        "description": "Retrieves full 15-panel resource detail answering all 15 core questions.",
+        "operationId": "get_resource_detail_api_v1_resource_detail__resource_id__get",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceDetailFull"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resource-detail/explorer": {
+      "post": {
+        "tags": [
+          "Resource Detail & Cost Exploration"
+        ],
+        "summary": "Explore Costs",
+        "description": "Executes multi-dimensional cost exploration with grouping, filtering, and time granularity.",
+        "operationId": "explore_costs_api_v1_resource_detail_explorer_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostExplorerQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostExplorerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resource-detail/explorer/charge-lines": {
+      "get": {
+        "tags": [
+          "Resource Detail & Cost Exploration"
+        ],
+        "summary": "Get Contributing Charge Lines",
+        "description": "Retrieves itemized contributing charge lines with financial details.",
+        "operationId": "get_contributing_charge_lines_api_v1_resource_detail_explorer_charge_lines_get",
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Group or resource ID to filter",
+              "title": "Group Id"
+            },
+            "description": "Group or resource ID to filter"
+          },
+          {
+            "name": "dimension",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Grouping dimension",
+              "title": "Dimension"
+            },
+            "description": "Grouping dimension"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Page size limit",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size limit"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeLinesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resource-detail/investigate/{entity_id}": {
+      "get": {
+        "tags": [
+          "Resource Detail & Cost Exploration"
+        ],
+        "summary": "Investigate Cost Increase",
+        "description": "Generates detailed Cost Investigation Report for Largest Increases.",
+        "operationId": "investigate_cost_increase_api_v1_resource_detail_investigate__entity_id__get",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostInvestigationReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -37141,6 +37562,35 @@
         "title": "AuditEventType",
         "description": "Full canonical taxonomy of audit event types (Prompt 13 Item 86)."
       },
+      "AuditLogItem": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "details": {
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "actor",
+          "action"
+        ],
+        "title": "AuditLogItem",
+        "description": "Resource governance and change audit entry."
+      },
       "AuthContext": {
         "properties": {
           "user_id": {
@@ -37480,6 +37930,35 @@
         ],
         "title": "BreachItem",
         "description": "Threshold breach summary."
+      },
+      "BreadcrumbItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "deep_link": {
+            "type": "string",
+            "title": "Deep Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "level",
+          "deep_link"
+        ],
+        "title": "BreadcrumbItem",
+        "description": "Clickable breadcrumb item in resource hierarchy."
       },
       "BreakGlassLoginRequest": {
         "properties": {
@@ -40032,6 +40511,41 @@
         "title": "ChainCostDecomposition",
         "description": "Complete financial decomposition of a business or application dependency chain (Prompt 33)."
       },
+      "ChangedPricingDimension": {
+        "properties": {
+          "dimension_name": {
+            "type": "string",
+            "title": "Dimension Name"
+          },
+          "old_value": {
+            "type": "string",
+            "title": "Old Value"
+          },
+          "new_value": {
+            "type": "string",
+            "title": "New Value"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective Date"
+          },
+          "impact_description": {
+            "type": "string",
+            "title": "Impact Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dimension_name",
+          "old_value",
+          "new_value",
+          "effective_date",
+          "impact_description"
+        ],
+        "title": "ChangedPricingDimension",
+        "description": "Pricing dimension change detected during the cost spike."
+      },
       "ChannelTestInput": {
         "properties": {
           "channel": {
@@ -40124,6 +40638,120 @@
         ],
         "title": "ChargeCategory",
         "description": "FOCUS 1.0 charge categories for CostFacts."
+      },
+      "ChargeLineItem": {
+        "properties": {
+          "charge_id": {
+            "type": "string",
+            "title": "Charge Id"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "usage_date": {
+            "type": "string",
+            "title": "Usage Date"
+          },
+          "charge_category": {
+            "$ref": "#/components/schemas/CostDriverCategory"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          }
+        },
+        "type": "object",
+        "required": [
+          "charge_id",
+          "resource_id",
+          "resource_name",
+          "provider",
+          "service_name",
+          "usage_date",
+          "charge_category",
+          "description",
+          "quantity",
+          "unit",
+          "rate",
+          "amount"
+        ],
+        "title": "ChargeLineItem",
+        "description": "Detailed contributing charge line subject to financial-detail permissions."
+      },
+      "ChargeLinesResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "total_amount": {
+            "type": "string",
+            "title": "Total Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChargeLineItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "limit",
+          "offset",
+          "total_amount"
+        ],
+        "title": "ChargeLinesResponse",
+        "description": "Paginated contributing charge lines response."
       },
       "CircuitBreakerState": {
         "type": "string",
@@ -40755,6 +41383,41 @@
         ],
         "title": "ConflictResolveRequest",
         "description": "Payload to resolve a surfaced edge conflict (Prompt 32)."
+      },
+      "ConnectivityEndpoint": {
+        "properties": {
+          "endpoint_type": {
+            "type": "string",
+            "title": "Endpoint Type"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "protocol": {
+            "type": "string",
+            "title": "Protocol",
+            "default": "TCP"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint_type",
+          "address"
+        ],
+        "title": "ConnectivityEndpoint",
+        "description": "Network and communication endpoint."
       },
       "ConnectorBindRequest": {
         "properties": {
@@ -41589,6 +42252,50 @@
         "title": "ContributingChargeLineItem",
         "description": "Granular underlying charge line item (subject to financial-detail permission)."
       },
+      "ContributingResourceDelta": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "prior_spend": {
+            "type": "string",
+            "title": "Prior Spend"
+          },
+          "current_spend": {
+            "type": "string",
+            "title": "Current Spend"
+          },
+          "delta_spend": {
+            "type": "string",
+            "title": "Delta Spend"
+          },
+          "percentage_contribution": {
+            "type": "string",
+            "title": "Percentage Contribution"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id",
+          "resource_name",
+          "service_name",
+          "prior_spend",
+          "current_spend",
+          "delta_spend",
+          "percentage_contribution"
+        ],
+        "title": "ContributingResourceDelta",
+        "description": "Resource driving the cost change point."
+      },
       "ContributingResourceItem": {
         "properties": {
           "resource_id": {
@@ -42142,6 +42849,21 @@
         "title": "CostDerivation",
         "description": "First-class derivation output explaining every calculated figure (Prompt 23 / Prompt 40)."
       },
+      "CostDriverCategory": {
+        "type": "string",
+        "enum": [
+          "COMPUTE",
+          "STORAGE",
+          "DATABASE",
+          "NETWORK",
+          "BACKUP",
+          "LICENSING",
+          "MANAGEMENT",
+          "OTHER"
+        ],
+        "title": "CostDriverCategory",
+        "description": "Canonical cost driver decomposition categories."
+      },
       "CostDriverComponent": {
         "properties": {
           "category": {
@@ -42195,6 +42917,275 @@
         ],
         "title": "CostDriverComponent",
         "description": "Discrete contributing component in cost-driver decomposition (Prompt 23)."
+      },
+      "CostDriverItem": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/CostDriverCategory"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Driver title (e.g. vCPU Hours, Provisioned IOPS)"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Monetary spend incurred by this driver"
+          },
+          "percentage": {
+            "type": "string",
+            "title": "Percentage",
+            "description": "Percentage of total resource cost (0-100)"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Usage measurement unit (e.g. Core-hours, GB-month)"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity",
+            "description": "Consumed quantity"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate",
+            "description": "Unit rate"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "description": "Business explanation of driver cause"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "name",
+          "amount",
+          "percentage",
+          "unit",
+          "quantity",
+          "rate",
+          "explanation"
+        ],
+        "title": "CostDriverItem",
+        "description": "Decomposed cost driver explaining why a resource costs a stated amount."
+      },
+      "CostExplorerDimension": {
+        "type": "string",
+        "enum": [
+          "PROVIDER",
+          "SERVICE",
+          "ACCOUNT",
+          "REGION",
+          "APPLICATION",
+          "ENVIRONMENT",
+          "COST_CENTRE",
+          "OWNER",
+          "CHARGE_CATEGORY"
+        ],
+        "title": "CostExplorerDimension"
+      },
+      "CostExplorerGranularity": {
+        "type": "string",
+        "enum": [
+          "HOURLY",
+          "DAILY",
+          "MONTHLY"
+        ],
+        "title": "CostExplorerGranularity"
+      },
+      "CostExplorerGroup": {
+        "properties": {
+          "group_id": {
+            "type": "string",
+            "title": "Group Id"
+          },
+          "group_name": {
+            "type": "string",
+            "title": "Group Name"
+          },
+          "total_cost": {
+            "type": "string",
+            "title": "Total Cost"
+          },
+          "percentage": {
+            "type": "string",
+            "title": "Percentage"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/CostExplorerSeriesPoint"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "contributing_resource_count": {
+            "type": "integer",
+            "title": "Contributing Resource Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "group_id",
+          "group_name",
+          "total_cost",
+          "percentage"
+        ],
+        "title": "CostExplorerGroup",
+        "description": "Grouped aggregation in Cost Explorer."
+      },
+      "CostExplorerQuery": {
+        "properties": {
+          "dimension": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CostExplorerDimension"
+              }
+            ],
+            "default": "SERVICE"
+          },
+          "granularity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CostExplorerGranularity"
+              }
+            ],
+            "default": "DAILY"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "comparison_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Period",
+            "description": "POP, YOY, or None"
+          },
+          "filters": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Filters"
+          }
+        },
+        "type": "object",
+        "title": "CostExplorerQuery",
+        "description": "Query parameters for Cost Explorer."
+      },
+      "CostExplorerResponse": {
+        "properties": {
+          "dimension": {
+            "$ref": "#/components/schemas/CostExplorerDimension"
+          },
+          "granularity": {
+            "$ref": "#/components/schemas/CostExplorerGranularity"
+          },
+          "total_spend": {
+            "type": "string",
+            "title": "Total Spend"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/CostExplorerGroup"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "comparison_total_spend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Total Spend"
+          },
+          "variance_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variance Pct"
+          },
+          "cost_drivers": {
+            "items": {
+              "$ref": "#/components/schemas/CostDriverItem"
+            },
+            "type": "array",
+            "title": "Cost Drivers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dimension",
+          "granularity",
+          "total_spend"
+        ],
+        "title": "CostExplorerResponse",
+        "description": "Response payload for multi-dimensional cost exploration."
+      },
+      "CostExplorerSeriesPoint": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "amount"
+        ],
+        "title": "CostExplorerSeriesPoint",
+        "description": "Time-series cost point within a grouped dimension."
       },
       "CostFact-Input": {
         "properties": {
@@ -42868,6 +43859,109 @@
         "title": "CostFact",
         "description": "FOCUS 1.0-compliant billing charge line fact entity."
       },
+      "CostInvestigationReport": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "entity_name": {
+            "type": "string",
+            "title": "Entity Name"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "change_point_date": {
+            "type": "string",
+            "title": "Change Point Date"
+          },
+          "prior_daily_spend": {
+            "type": "string",
+            "title": "Prior Daily Spend"
+          },
+          "post_daily_spend": {
+            "type": "string",
+            "title": "Post Daily Spend"
+          },
+          "increase_amount": {
+            "type": "string",
+            "title": "Increase Amount"
+          },
+          "increase_percentage": {
+            "type": "string",
+            "title": "Increase Percentage"
+          },
+          "is_restatement": {
+            "type": "boolean",
+            "title": "Is Restatement",
+            "default": false
+          },
+          "restatement_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restatement Note"
+          },
+          "daily_series": {
+            "items": {
+              "$ref": "#/components/schemas/DailySpendInvestigationPoint"
+            },
+            "type": "array",
+            "title": "Daily Series"
+          },
+          "contributing_resources": {
+            "items": {
+              "$ref": "#/components/schemas/ContributingResourceDelta"
+            },
+            "type": "array",
+            "title": "Contributing Resources"
+          },
+          "changed_pricing_dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/ChangedPricingDimension"
+            },
+            "type": "array",
+            "title": "Changed Pricing Dimensions"
+          },
+          "inventory_changes": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryChangeWindowItem"
+            },
+            "type": "array",
+            "title": "Inventory Changes"
+          },
+          "root_cause_summary": {
+            "type": "string",
+            "title": "Root Cause Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id",
+          "entity_name",
+          "service_name",
+          "provider",
+          "change_point_date",
+          "prior_daily_spend",
+          "post_daily_spend",
+          "increase_amount",
+          "increase_percentage",
+          "root_cause_summary"
+        ],
+        "title": "CostInvestigationReport",
+        "description": "Investigation view for Largest Increases explaining cost movements."
+      },
       "CostLineItemsResponse": {
         "properties": {
           "items": {
@@ -43032,6 +44126,68 @@
         ],
         "title": "CostMovementItem",
         "description": "Largest cost movement item with business narrative explanation (Prompt 52)."
+      },
+      "CostPanelData": {
+        "properties": {
+          "current_cost": {
+            "type": "string",
+            "title": "Current Cost",
+            "description": "Month-to-date unbilled actual cost"
+          },
+          "actual_cost": {
+            "type": "string",
+            "title": "Actual Cost",
+            "description": "Prior billing period closed actual cost"
+          },
+          "estimated_cost": {
+            "type": "string",
+            "title": "Estimated Cost",
+            "description": "Prompt 23 pre-deployment estimate baseline"
+          },
+          "forecast_cost": {
+            "type": "string",
+            "title": "Forecast Cost",
+            "description": "Projected period-end spend"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount",
+            "description": "Target allocated budget"
+          },
+          "variance": {
+            "type": "string",
+            "title": "Variance",
+            "description": "Monetary variance (forecast - budget)"
+          },
+          "variance_ratio_pct": {
+            "type": "string",
+            "title": "Variance Ratio Pct",
+            "description": "Percentage variance against budget"
+          },
+          "variance_status": {
+            "type": "string",
+            "title": "Variance Status",
+            "description": "FAVOURABLE, UNFAVOURABLE, ON_TARGET"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_cost",
+          "actual_cost",
+          "estimated_cost",
+          "forecast_cost",
+          "budget_amount",
+          "variance",
+          "variance_ratio_pct",
+          "variance_status"
+        ],
+        "title": "CostPanelData",
+        "description": "Six distinct unblended cost values on resource detail."
       },
       "CostPresentationBasis": {
         "type": "string",
@@ -44229,6 +45385,41 @@
         "title": "CustomRoleCreateRequest",
         "description": "Payload to create a custom role composed from the permission catalogue (Item 70)."
       },
+      "DailySpendInvestigationPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "spend": {
+            "type": "string",
+            "title": "Spend"
+          },
+          "is_change_point": {
+            "type": "boolean",
+            "title": "Is Change Point",
+            "default": false
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "spend"
+        ],
+        "title": "DailySpendInvestigationPoint",
+        "description": "Daily cost series point with highlighted change point."
+      },
       "DailySpendPoint": {
         "properties": {
           "date": {
@@ -45228,6 +46419,50 @@
         ],
         "title": "DependencyEdge",
         "description": "Typed, directed relationship edge with provenance, confidence, and history (Prompt 32)."
+      },
+      "DependencyNodeItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "relationship_type": {
+            "type": "string",
+            "title": "Relationship Type"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "service_name",
+          "relationship_type",
+          "direction",
+          "status"
+        ],
+        "title": "DependencyNodeItem",
+        "description": "Connected upstream or downstream resource."
       },
       "DependencyPreCheckResult": {
         "properties": {
@@ -47577,6 +48812,90 @@
         ],
         "title": "FeatureToggleRequest",
         "description": "Payload to mutate a feature flag state."
+      },
+      "FifteenQuestionsSummary": {
+        "properties": {
+          "q1_what_it_is": {
+            "type": "string",
+            "title": "Q1 What It Is"
+          },
+          "q2_where": {
+            "type": "string",
+            "title": "Q2 Where"
+          },
+          "q3_who_owns_it": {
+            "type": "string",
+            "title": "Q3 Who Owns It"
+          },
+          "q4_what_it_does": {
+            "type": "string",
+            "title": "Q4 What It Does"
+          },
+          "q5_how_connected": {
+            "type": "string",
+            "title": "Q5 How Connected"
+          },
+          "q6_how_charged": {
+            "type": "string",
+            "title": "Q6 How Charged"
+          },
+          "q7_whether_free": {
+            "type": "string",
+            "title": "Q7 Whether Free"
+          },
+          "q8_what_allowance": {
+            "type": "string",
+            "title": "Q8 What Allowance"
+          },
+          "q9_what_causes_charges": {
+            "type": "string",
+            "title": "Q9 What Causes Charges"
+          },
+          "q10_how_much_it_cost": {
+            "type": "string",
+            "title": "Q10 How Much It Cost"
+          },
+          "q11_expected_cost": {
+            "type": "string",
+            "title": "Q11 Expected Cost"
+          },
+          "q12_budget": {
+            "type": "string",
+            "title": "Q12 Budget"
+          },
+          "q13_threshold_crossed": {
+            "type": "string",
+            "title": "Q13 Threshold Crossed"
+          },
+          "q14_why_cost_changed": {
+            "type": "string",
+            "title": "Q14 Why Cost Changed"
+          },
+          "q15_provider_info_support": {
+            "type": "string",
+            "title": "Q15 Provider Info Support"
+          }
+        },
+        "type": "object",
+        "required": [
+          "q1_what_it_is",
+          "q2_where",
+          "q3_who_owns_it",
+          "q4_what_it_does",
+          "q5_how_connected",
+          "q6_how_charged",
+          "q7_whether_free",
+          "q8_what_allowance",
+          "q9_what_causes_charges",
+          "q10_how_much_it_cost",
+          "q11_expected_cost",
+          "q12_budget",
+          "q13_threshold_crossed",
+          "q14_why_cost_changed",
+          "q15_provider_info_support"
+        ],
+        "title": "FifteenQuestionsSummary",
+        "description": "Direct answers to all fifteen core questions from Master Brief Section 29."
       },
       "FilterCountPreview": {
         "properties": {
@@ -50671,6 +51990,41 @@
         ],
         "title": "IngestionJobResult",
         "description": "Result payload emitted after executing bulk cost ingestion (Prompt 22 Item 1)."
+      },
+      "InventoryChangeWindowItem": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name"
+          },
+          "change_type": {
+            "type": "string",
+            "title": "Change Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "resource_id",
+          "resource_name",
+          "change_type",
+          "description"
+        ],
+        "title": "InventoryChangeWindowItem",
+        "description": "Inventory configuration change occurring in the same window."
       },
       "InventoryDriftReport": {
         "properties": {
@@ -54227,6 +55581,75 @@
         "title": "OverrideStatus",
         "description": "Lifecycle status of an override record (Prompt 13 Item 87)."
       },
+      "OwnershipAttribution": {
+        "properties": {
+          "business_owner": {
+            "type": "string",
+            "title": "Business Owner"
+          },
+          "technical_owner": {
+            "type": "string",
+            "title": "Technical Owner"
+          },
+          "owner_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Email"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          },
+          "application": {
+            "type": "string",
+            "title": "Application"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "cost_center": {
+            "type": "string",
+            "title": "Cost Center"
+          },
+          "business_unit": {
+            "type": "string",
+            "title": "Business Unit"
+          },
+          "resolution_rules": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Resolution Rules",
+            "description": "Rule explanation that resolved each attribution dimension"
+          }
+        },
+        "type": "object",
+        "required": [
+          "business_owner",
+          "technical_owner",
+          "application",
+          "environment",
+          "cost_center",
+          "business_unit"
+        ],
+        "title": "OwnershipAttribution",
+        "description": "Resource ownership and governance attribution with resolution rules."
+      },
       "OwnershipResolutionResult": {
         "properties": {
           "resource_id": {
@@ -56751,6 +58174,105 @@
         ],
         "title": "PricingInformationPanel",
         "description": "Complete structured payload rendered by the cloud resource information panel (Item 164)."
+      },
+      "PricingPanelData": {
+        "properties": {
+          "pricing_status": {
+            "type": "string",
+            "title": "Pricing Status",
+            "description": "FREE, PAID, or CONDITIONAL"
+          },
+          "pricing_model": {
+            "type": "string",
+            "title": "Pricing Model",
+            "description": "On-Demand, Reserved, Spot, Consumption, Tiered"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Pricing unit, e.g. hour, GB-mo, invocation"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price",
+            "description": "Published price per unit"
+          },
+          "free_tier_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Tier Details",
+            "description": "Free tier allowance description"
+          },
+          "free_tier_allowance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Tier Allowance",
+            "description": "Allowance threshold"
+          },
+          "free_tier_consumed_pct": {
+            "type": "string",
+            "title": "Free Tier Consumed Pct",
+            "description": "Consumed allowance %",
+            "default": "0.00"
+          },
+          "additional_cost_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Additional Cost Conditions",
+            "description": "Additional surcharge criteria"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Pricing region"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "pricing_source": {
+            "type": "string",
+            "title": "Pricing Source",
+            "description": "Rate card source and API version"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective Date",
+            "description": "Date pricing rates took effect"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pricing_status",
+          "pricing_model",
+          "unit",
+          "unit_price",
+          "region",
+          "pricing_source",
+          "effective_date"
+        ],
+        "title": "PricingPanelData",
+        "description": "Pricing panel specification adhering strictly to master brief."
       },
       "PricingRecord-Input": {
         "properties": {
@@ -61342,6 +62864,249 @@
         "title": "Resource",
         "description": "Canonical inventory representation of a provisioned multi-cloud resource."
       },
+      "ResourceAlertItem": {
+        "properties": {
+          "alert_id": {
+            "type": "string",
+            "title": "Alert Id"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "triggered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Triggered At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alert_id",
+          "severity",
+          "title",
+          "triggered_at",
+          "status"
+        ],
+        "title": "ResourceAlertItem",
+        "description": "Active alert on this resource."
+      },
+      "ResourceDetailFull": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "native_id": {
+            "type": "string",
+            "title": "Native Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "service_id": {
+            "type": "string",
+            "title": "Service Id"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name"
+          },
+          "service_category": {
+            "type": "string",
+            "title": "Service Category"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type"
+          },
+          "region_id": {
+            "type": "string",
+            "title": "Region Id"
+          },
+          "region_name": {
+            "type": "string",
+            "title": "Region Name"
+          },
+          "availability_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Zone"
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "title": "Lifecycle Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Synced At"
+          },
+          "tags": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "provider_native": {
+            "type": "object",
+            "title": "Provider Native"
+          },
+          "breadcrumbs": {
+            "items": {
+              "$ref": "#/components/schemas/BreadcrumbItem"
+            },
+            "type": "array",
+            "title": "Breadcrumbs"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/OwnershipAttribution"
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/PricingPanelData"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/CostPanelData"
+          },
+          "cost_drivers": {
+            "items": {
+              "$ref": "#/components/schemas/CostDriverItem"
+            },
+            "type": "array",
+            "title": "Cost Drivers"
+          },
+          "total_driver_amount": {
+            "type": "string",
+            "title": "Total Driver Amount",
+            "default": "0.00"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageDetailPanel"
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/RuntimePanelData"
+          },
+          "threshold_state": {
+            "type": "string",
+            "title": "Threshold State"
+          },
+          "amber_threshold_pct": {
+            "type": "string",
+            "title": "Amber Threshold Pct",
+            "default": "80.00"
+          },
+          "red_threshold_pct": {
+            "type": "string",
+            "title": "Red Threshold Pct",
+            "default": "100.00"
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyNodeItem"
+            },
+            "type": "array",
+            "title": "Dependencies"
+          },
+          "connectivity_endpoints": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectivityEndpoint"
+            },
+            "type": "array",
+            "title": "Connectivity Endpoints"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceAlertItem"
+            },
+            "type": "array",
+            "title": "Alerts"
+          },
+          "historical_spend_trend": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Historical Spend Trend"
+          },
+          "forecast_confidence_interval": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Forecast Confidence Interval"
+          },
+          "audit_trail": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLogItem"
+            },
+            "type": "array",
+            "title": "Audit Trail"
+          },
+          "fifteen_questions": {
+            "$ref": "#/components/schemas/FifteenQuestionsSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "scope_id",
+          "native_id",
+          "name",
+          "provider",
+          "service_id",
+          "service_name",
+          "service_category",
+          "resource_type",
+          "region_id",
+          "region_name",
+          "lifecycle_status",
+          "created_at",
+          "last_synced_at",
+          "ownership",
+          "pricing",
+          "cost",
+          "usage",
+          "runtime",
+          "threshold_state",
+          "fifteen_questions"
+        ],
+        "title": "ResourceDetailFull",
+        "description": "Full canonical resource detail model with all required panels."
+      },
       "ResourceDetailResponse": {
         "properties": {
           "id": {
@@ -62424,6 +64189,62 @@
         "title": "RunReconciliationRequest",
         "description": "Payload to trigger an authoritative reconciliation job."
       },
+      "RuntimeEstateOverview": {
+        "properties": {
+          "total_managed_resources": {
+            "type": "integer",
+            "title": "Total Managed Resources"
+          },
+          "compliant_count": {
+            "type": "integer",
+            "title": "Compliant Count"
+          },
+          "out_of_schedule_count": {
+            "type": "integer",
+            "title": "Out Of Schedule Count"
+          },
+          "exempted_count": {
+            "type": "integer",
+            "title": "Exempted Count"
+          },
+          "compliance_rate_pct": {
+            "type": "string",
+            "title": "Compliance Rate Pct"
+          },
+          "total_excess_hours": {
+            "type": "string",
+            "title": "Total Excess Hours"
+          },
+          "total_excess_cost": {
+            "type": "string",
+            "title": "Total Excess Cost"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "active_exemptions": {
+            "items": {
+              "$ref": "#/components/schemas/RuntimeExemptionSummary"
+            },
+            "type": "array",
+            "title": "Active Exemptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_managed_resources",
+          "compliant_count",
+          "out_of_schedule_count",
+          "exempted_count",
+          "compliance_rate_pct",
+          "total_excess_hours",
+          "total_excess_cost"
+        ],
+        "title": "RuntimeEstateOverview",
+        "description": "Estate-wide runtime schedule adherence summary."
+      },
       "RuntimeExemption": {
         "properties": {
           "id": {
@@ -62556,6 +64377,109 @@
         ],
         "title": "RuntimeExemptionCreateRequest",
         "description": "Request payload to create a temporary runtime exemption."
+      },
+      "RuntimeExemptionSummary": {
+        "properties": {
+          "exemption_id": {
+            "type": "string",
+            "title": "Exemption Id"
+          },
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "approved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Approved At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "exemption_id",
+          "author",
+          "reason",
+          "approved_at",
+          "expires_at"
+        ],
+        "title": "RuntimeExemptionSummary",
+        "description": "Active runtime schedule exemption record."
+      },
+      "RuntimePanelData": {
+        "properties": {
+          "runtime_state": {
+            "type": "string",
+            "title": "Runtime State",
+            "description": "RUNNING, STOPPED, DEALLOCATED, etc."
+          },
+          "schedule_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Name"
+          },
+          "schedule_expression": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Expression"
+          },
+          "adherence_status": {
+            "type": "string",
+            "title": "Adherence Status",
+            "description": "COMPLIANT, OUT_OF_SCHEDULE, EXEMPTED"
+          },
+          "excess_hours": {
+            "type": "string",
+            "title": "Excess Hours",
+            "description": "Out-of-schedule execution hours",
+            "default": "0.00"
+          },
+          "excess_cost": {
+            "type": "string",
+            "title": "Excess Cost",
+            "description": "Monetary valuation of out-of-schedule spend",
+            "default": "0.00"
+          },
+          "active_exemptions": {
+            "items": {
+              "$ref": "#/components/schemas/RuntimeExemptionSummary"
+            },
+            "type": "array",
+            "title": "Active Exemptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runtime_state",
+          "adherence_status"
+        ],
+        "title": "RuntimePanelData",
+        "description": "Runtime view with schedule adherence, excess hours, and excess cost."
       },
       "RuntimeScheduleType": {
         "type": "string",
@@ -70115,6 +72039,123 @@
           "content"
         ],
         "title": "UploadDryRunRequest"
+      },
+      "UsageDataPoint": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Measured quantity, or None for explicit gap"
+          },
+          "expectation_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectation Min"
+          },
+          "expectation_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expectation Max"
+          },
+          "is_gap": {
+            "type": "boolean",
+            "title": "Is Gap",
+            "description": "True if telemetry was missed/uncollected",
+            "default": false
+          },
+          "gap_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gap Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp"
+        ],
+        "title": "UsageDataPoint",
+        "description": "Usage time series observation with expectation band and explicit gap flag."
+      },
+      "UsageDetailPanel": {
+        "properties": {
+          "metric_name": {
+            "type": "string",
+            "title": "Metric Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "monitoring_type_code": {
+            "type": "string",
+            "title": "Monitoring Type Code"
+          },
+          "monitoring_type_name": {
+            "type": "string",
+            "title": "Monitoring Type Name"
+          },
+          "threshold_warning": {
+            "type": "number",
+            "title": "Threshold Warning"
+          },
+          "threshold_critical": {
+            "type": "number",
+            "title": "Threshold Critical"
+          },
+          "time_series": {
+            "items": {
+              "$ref": "#/components/schemas/UsageDataPoint"
+            },
+            "type": "array",
+            "title": "Time Series"
+          },
+          "has_telemetry_gap": {
+            "type": "boolean",
+            "title": "Has Telemetry Gap",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_name",
+          "unit",
+          "monitoring_type_code",
+          "monitoring_type_name",
+          "threshold_warning",
+          "threshold_critical"
+        ],
+        "title": "UsageDetailPanel",
+        "description": "Usage detail view with metric series against expectation band."
       },
       "UsageExpectation-Input": {
         "properties": {

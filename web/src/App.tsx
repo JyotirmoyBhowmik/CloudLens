@@ -6,6 +6,9 @@ import { ProviderDashboard } from './pages/ProviderDashboard';
 import { ServiceDashboard } from './pages/ServiceDashboard';
 import { HierarchyExplorer } from './pages/HierarchyExplorer';
 import { ServiceInventory } from './pages/ServiceInventory';
+import { ResourceDetailPage } from './pages/ResourceDetailPage';
+import { CostExplorerPage } from './pages/CostExplorerPage';
+import { InvestigationViewPage } from './pages/InvestigationViewPage';
 
 interface HealthStatus {
   status: string;
@@ -20,8 +23,12 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
-    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'masterdata' | 'design-system'
+    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'resource-detail' | 'cost-explorer' | 'investigation' | 'masterdata' | 'design-system'
   >('executive');
+  const [activeResourceId, setActiveResourceId] = useState<string>('res-aws-vm-01');
+  const [explorerDimension, setExplorerDimension] = useState<string>('SERVICE');
+  const [explorerGroupId, setExplorerGroupId] = useState<string | undefined>(undefined);
+  const [investigationEntityId, setInvestigationEntityId] = useState<string>('res-aws-rds-01');
 
   useEffect(() => {
     fetch('/api/v1/health')
@@ -178,6 +185,51 @@ export const App: React.FC = () => {
             Inventory
           </button>
           <button
+            onClick={() => setCurrentView('resource-detail')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'resource-detail' ? '#0284c7' : 'transparent',
+              color: currentView === 'resource-detail' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Resource Detail
+          </button>
+          <button
+            onClick={() => setCurrentView('cost-explorer')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'cost-explorer' ? '#0284c7' : 'transparent',
+              color: currentView === 'cost-explorer' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Cost Explorer
+          </button>
+          <button
+            onClick={() => setCurrentView('investigation')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'investigation' ? '#0284c7' : 'transparent',
+              color: currentView === 'investigation' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Increases
+          </button>
+          <button
             onClick={() => setCurrentView('overview')}
             style={{
               padding: '0.4rem 0.8rem',
@@ -263,6 +315,36 @@ export const App: React.FC = () => {
           <HierarchyExplorer />
         ) : currentView === 'inventory' ? (
           <ServiceInventory />
+        ) : currentView === 'resource-detail' ? (
+          <ResourceDetailPage
+            initialResourceId={activeResourceId}
+            onNavigateToCostExplorer={(dim, gId) => {
+              if (dim) setExplorerDimension(dim);
+              setExplorerGroupId(gId);
+              setCurrentView('cost-explorer');
+            }}
+            onNavigateToInvestigation={(entId) => {
+              setInvestigationEntityId(entId);
+              setCurrentView('investigation');
+            }}
+          />
+        ) : currentView === 'cost-explorer' ? (
+          <CostExplorerPage
+            initialDimension={explorerDimension}
+            initialGroupId={explorerGroupId}
+            onNavigateToResourceDetail={(resId) => {
+              setActiveResourceId(resId);
+              setCurrentView('resource-detail');
+            }}
+          />
+        ) : currentView === 'investigation' ? (
+          <InvestigationViewPage
+            initialEntityId={investigationEntityId}
+            onNavigateToResourceDetail={(resId) => {
+              setActiveResourceId(resId);
+              setCurrentView('resource-detail');
+            }}
+          />
         ) : currentView === 'design-system' ? (
           <DesignSystemShowcase />
         ) : currentView === 'masterdata' ? (

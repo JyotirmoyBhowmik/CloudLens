@@ -30,6 +30,7 @@ from api.cloudlens_api.routes.quotas import router as quotas_router
 from api.cloudlens_api.routes.rbac import router as rbac_router
 from api.cloudlens_api.routes.remediation import router as remediation_router
 from api.cloudlens_api.routes.reports import router as reports_router
+from api.cloudlens_api.routes.resource_detail import router as resource_detail_router
 from api.cloudlens_api.routes.roles import router as roles_router
 from api.cloudlens_api.routes.runtime import router as runtime_router
 from api.cloudlens_api.routes.scopes import router as scopes_router
@@ -74,6 +75,7 @@ __all__ = [
     "rbac_router",
     "remediation_router",
     "reports_router",
+    "resource_detail_router",
     "roles_router",
     "runtime_router",
     "scopes_router",

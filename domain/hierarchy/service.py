@@ -2479,6 +2479,14 @@ class HierarchyService:
 
         return output.getvalue(), "text/csv"
 
+    def get_resource_by_id(self, resource_id: str) -> InventoryResource35 | None:
+        """Retrieves a single 35-field inventory resource by ID."""
+        return self._resources.get(resource_id)
+
+    def get_all_resources(self) -> list[InventoryResource35]:
+        """Returns all 35-field inventory resources in the estate."""
+        return list(self._resources.values())
+
 
 # Global singleton instance
 _hierarchy_service: HierarchyService | None = None
