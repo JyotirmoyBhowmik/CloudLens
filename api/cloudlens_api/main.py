@@ -45,6 +45,7 @@ from api.cloudlens_api.routes import (
     roles_router,
     runtime_router,
     scopes_router,
+    statements_router,
     storage_router,
     sync_router,
     thresholds_router,
@@ -910,6 +911,7 @@ app.include_router(workflows_router)
 app.include_router(remediation_router)
 app.include_router(dependency_router)
 app.include_router(topology_router)
+app.include_router(statements_router)
 
 
 class HealthResponse(BaseModel):

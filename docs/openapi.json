@@ -28422,6 +28422,1281 @@
         }
       }
     },
+    "/api/v1/statements/generate": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Generate Statement",
+        "description": "Generates an authoritative showback statement and cost allocation pack.",
+        "operationId": "generate_statement_api_v1_statements_generate_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateStatementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "List Statements",
+        "description": "API-053: Lists showback statements and variance analysis for the tenant.",
+        "operationId": "list_statements_api_v1_statements_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Billing period filter (e.g. 2026-09)",
+              "title": "Period"
+            },
+            "description": "Billing period filter (e.g. 2026-09)"
+          },
+          {
+            "name": "scope_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope code filter (e.g. BU-RETAIL)",
+              "title": "Scope Code"
+            },
+            "description": "Scope code filter (e.g. BU-RETAIL)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StatementLifecycleStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/templates": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "List Statement Templates",
+        "description": "Lists available master-data statement layout templates.",
+        "operationId": "list_statement_templates_api_v1_statements_templates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StatementTemplate"
+                  },
+                  "type": "array",
+                  "title": "Response List Statement Templates Api V1 Statements Templates Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/reports/outstanding-acceptance": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Get Outstanding Acceptance Report",
+        "description": "Generates an executive compliance report of unaccepted/overdue showback statements.",
+        "operationId": "get_outstanding_acceptance_report_api_v1_statements_reports_outstanding_acceptance_get",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Billing period to audit",
+              "default": "2026-09",
+              "title": "Period"
+            },
+            "description": "Billing period to audit"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutstandingAcceptanceReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Get Statement",
+        "description": "Retrieves a specific showback statement pack by identifier.",
+        "operationId": "get_statement_api_v1_statements__statement_id__get",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/circulate": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Circulate Statement",
+        "description": "Circulates a draft statement to recipients and opens the formal review window.",
+        "operationId": "circulate_statement_api_v1_statements__statement_id__circulate_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CirculateStatementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/finalize": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Finalize Statement",
+        "description": "Finalises the showback statement, locking it against any in-place modification.",
+        "operationId": "finalize_statement_api_v1_statements__statement_id__finalize_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/FinalizeStatementRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/accept": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Accept Statement",
+        "description": "Records formal recipient sign-off and acceptance of the statement.",
+        "operationId": "accept_statement_api_v1_statements__statement_id__accept_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcceptStatementRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/adjust": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Adjust Finalised Statement",
+        "description": "Emits a new adjusted statement version following a post-finalisation restatement.\n\nRule: Never alters a finalised statement in-place.",
+        "operationId": "adjust_finalised_statement_api_v1_statements__statement_id__adjust_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestatementAdjustmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowbackStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/disputes": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Raise Statement Dispute",
+        "description": "Queries/disputes a statement line item, creating a tracked dispute routed to the workflow engine.",
+        "operationId": "raise_statement_dispute_api_v1_statements__statement_id__disputes_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseDisputeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementDispute"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "List Statement Disputes",
+        "description": "Lists all active and resolved disputes associated with a statement.",
+        "operationId": "list_statement_disputes_api_v1_statements__statement_id__disputes_get",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatementDispute"
+                  },
+                  "title": "Response List Statement Disputes Api V1 Statements  Statement Id  Disputes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/disputes/{dispute_id}/resolve": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Resolve Statement Dispute",
+        "description": "Resolves a statement dispute: if approved, applies a documented reallocation with an audit trail.",
+        "operationId": "resolve_statement_dispute_api_v1_statements__statement_id__disputes__dispute_id__resolve_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "dispute_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dispute Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDisputeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementDispute"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/lines/{line_id}/transparency": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Get Allocation Transparency",
+        "description": "Provides line-level attribution provenance, rule tracing, and permissioned drill-through.",
+        "operationId": "get_allocation_transparency_api_v1_statements__statement_id__lines__line_id__transparency_get",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Line Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationTransparencyView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/export": {
+      "get": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Export Statement",
+        "description": "Exports the showback statement in the requested format (MARKDOWN, CSV, JSON, HTML).",
+        "operationId": "export_statement_api_v1_statements__statement_id__export_get",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ExportFormat"
+                }
+              ],
+              "description": "Export format",
+              "default": "MARKDOWN",
+              "title": "Format"
+            },
+            "description": "Export format"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{statement_id}/distribute": {
+      "post": {
+        "tags": [
+          "Showback & Cost Allocation Statements"
+        ],
+        "summary": "Distribute Statement",
+        "description": "Dispatches statement to object storage and simulated email delivery channels.",
+        "operationId": "distribute_statement_api_v1_statements__statement_id__distribute_post",
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Statement Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Channels"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Distribute Statement Api V1 Statements  Statement Id  Distribute Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -28473,6 +29748,25 @@
   },
   "components": {
     "schemas": {
+      "AcceptStatementRequest": {
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Recipient sign-off comments"
+          }
+        },
+        "type": "object",
+        "title": "AcceptStatementRequest",
+        "description": "Payload for formal recipient statement acceptance."
+      },
       "AdherenceEvaluateRequest": {
         "properties": {
           "resource_id": {
@@ -30636,6 +31930,90 @@
         "title": "AllocationSplitType",
         "description": "Methodology for splitting shared costs."
       },
+      "AllocationTransparencyView": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "title": "Line Id",
+            "description": "Queried statement line ID"
+          },
+          "line_description": {
+            "type": "string",
+            "title": "Line Description",
+            "description": "Line description"
+          },
+          "allocated_amount": {
+            "type": "string",
+            "title": "Allocated Amount",
+            "description": "Total line cost"
+          },
+          "winning_rule_id": {
+            "type": "string",
+            "title": "Winning Rule Id",
+            "description": "Rule ID that allocated this line"
+          },
+          "winning_rule_name": {
+            "type": "string",
+            "title": "Winning Rule Name",
+            "description": "Rule name"
+          },
+          "winning_rule_type": {
+            "type": "string",
+            "title": "Winning Rule Type",
+            "description": "Rule precedence tier (e.g. SPLIT_RULE, DIRECT_RESOURCE)"
+          },
+          "split_basis": {
+            "type": "string",
+            "title": "Split Basis",
+            "description": "Apportionment or split formula and rationale"
+          },
+          "contributing_resources": {
+            "items": {
+              "$ref": "#/components/schemas/ContributingResourceItem"
+            },
+            "type": "array",
+            "title": "Contributing Resources"
+          },
+          "financial_detail_permitted": {
+            "type": "boolean",
+            "title": "Financial Detail Permitted",
+            "description": "Whether user possesses financial-detail permission"
+          },
+          "charge_lines": {
+            "items": {
+              "$ref": "#/components/schemas/ContributingChargeLineItem"
+            },
+            "type": "array",
+            "title": "Charge Lines",
+            "description": "Granular charge lines (redacted if user lacks financial-detail permission)"
+          },
+          "disclosure_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclosure Message",
+            "description": "Notice if drill-through was redacted or filtered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "line_description",
+          "allocated_amount",
+          "winning_rule_id",
+          "winning_rule_name",
+          "winning_rule_type",
+          "split_basis",
+          "financial_detail_permitted"
+        ],
+        "title": "AllocationTransparencyView",
+        "description": "Transparency view proving which rule, resources, and charge lines produced an allocation."
+      },
       "AnalyticalExtractManifest": {
         "properties": {
           "extract_id": {
@@ -30852,7 +32230,8 @@
             "default": "ISOLATED_ANALYTICAL_REPLICA"
           },
           "_metadata": {
-            "$ref": "#/components/schemas/ResponseMetadata"
+            "type": "object",
+            "title": " Metadata"
           }
         },
         "type": "object",
@@ -31124,6 +32503,39 @@
         ],
         "title": "Application",
         "description": "Business software application or service estate."
+      },
+      "ApplicationBreakdownItem": {
+        "properties": {
+          "application_code": {
+            "type": "string",
+            "title": "Application Code",
+            "description": "Application identifier (e.g. app-checkout)"
+          },
+          "application_name": {
+            "type": "string",
+            "title": "Application Name",
+            "description": "Human-readable application name"
+          },
+          "allocated_amount": {
+            "type": "string",
+            "title": "Allocated Amount",
+            "description": "Total allocated cost for application"
+          },
+          "share_percentage": {
+            "type": "string",
+            "title": "Share Percentage",
+            "description": "Share percentage of total statement cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_code",
+          "application_name",
+          "allocated_amount",
+          "share_percentage"
+        ],
+        "title": "ApplicationBreakdownItem",
+        "description": "Cost breakdown attributed to business application workloads."
       },
       "ApprovalChainMode": {
         "type": "string",
@@ -31605,7 +33017,15 @@
           "REMEDIATION_TASK_DUPLICATED",
           "REMEDIATION_SAVING_REALISED",
           "REMEDIATION_TASK_ESCALATED",
-          "REMEDIATION_TASK_ITSM_MIRRORED"
+          "REMEDIATION_TASK_ITSM_MIRRORED",
+          "STATEMENT_GENERATED",
+          "STATEMENT_CIRCULATED",
+          "STATEMENT_FINALISED",
+          "STATEMENT_ACCEPTED",
+          "STATEMENT_DISPUTED",
+          "STATEMENT_DISPUTE_RESOLVED",
+          "STATEMENT_ADJUSTED_AFTER_RESTATEMENT",
+          "STATEMENT_DISTRIBUTED"
         ],
         "title": "AuditEventType",
         "description": "Full canonical taxonomy of audit event types (Prompt 13 Item 86)."
@@ -33158,6 +34578,17 @@
         "title": "BudgetThreshold",
         "description": "Notification and alerting trigger line for budget utilisation."
       },
+      "BudgetVarianceStatus": {
+        "type": "string",
+        "enum": [
+          "ON_TRACK",
+          "AT_RISK",
+          "EXCEEDED",
+          "UNBUDGETED"
+        ],
+        "title": "BudgetVarianceStatus",
+        "description": "Budget alignment health status."
+      },
       "BulkAssignRequest": {
         "properties": {
           "task_ids": {
@@ -33957,6 +35388,39 @@
         "title": "CardinalityRisk",
         "description": "Projected API call volume risk classification tier."
       },
+      "CategoryBreakdownItem": {
+        "properties": {
+          "service_category": {
+            "type": "string",
+            "title": "Service Category",
+            "description": "Service category (e.g. Compute, Storage, Database, Network)"
+          },
+          "allocated_amount": {
+            "type": "string",
+            "title": "Allocated Amount",
+            "description": "Total allocated cost in category"
+          },
+          "share_percentage": {
+            "type": "string",
+            "title": "Share Percentage",
+            "description": "Share percentage of total statement cost"
+          },
+          "prior_period_amount": {
+            "type": "string",
+            "title": "Prior Period Amount",
+            "description": "Prior period category spend",
+            "default": "0.00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service_category",
+          "allocated_amount",
+          "share_percentage"
+        ],
+        "title": "CategoryBreakdownItem",
+        "description": "Cost breakdown by canonical FOCUS service category."
+      },
       "ChainCostDecomposition": {
         "properties": {
           "root_entity": {
@@ -34131,6 +35595,21 @@
         ],
         "title": "CircuitBreakerState",
         "description": "Circuit breaker state for capability calls (Prompt 14 Item 92)."
+      },
+      "CirculateStatementRequest": {
+        "properties": {
+          "review_window_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Review Window Days",
+            "description": "Review window duration in days",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "title": "CirculateStatementRequest",
+        "description": "Payload to circulate statement for review."
       },
       "CollectionGranularity": {
         "type": "string",
@@ -35388,6 +36867,104 @@
         ],
         "title": "ContextualListResponse"
       },
+      "ContributingChargeLineItem": {
+        "properties": {
+          "charge_line_id": {
+            "type": "string",
+            "title": "Charge Line Id",
+            "description": "Charge line ID"
+          },
+          "charge_type": {
+            "type": "string",
+            "title": "Charge Type",
+            "description": "Usage, Tax, Fee, Credit, etc."
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price",
+            "description": "Unit rate"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity",
+            "description": "Consumed metric quantity"
+          },
+          "period_start": {
+            "type": "string",
+            "title": "Period Start",
+            "description": "Charge period start"
+          },
+          "period_end": {
+            "type": "string",
+            "title": "Period End",
+            "description": "Charge period end"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Raw cost amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "charge_line_id",
+          "charge_type",
+          "unit_price",
+          "quantity",
+          "period_start",
+          "period_end",
+          "amount"
+        ],
+        "title": "ContributingChargeLineItem",
+        "description": "Granular underlying charge line item (subject to financial-detail permission)."
+      },
+      "ContributingResourceItem": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Resource identifier"
+          },
+          "resource_name": {
+            "type": "string",
+            "title": "Resource Name",
+            "description": "Resource name or tag"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service code"
+          },
+          "cost_contribution": {
+            "type": "string",
+            "title": "Cost Contribution",
+            "description": "Amount contributed to line total"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Tags",
+            "description": "Resource tags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_id",
+          "resource_name",
+          "provider",
+          "service",
+          "cost_contribution"
+        ],
+        "title": "ContributingResourceItem",
+        "description": "Contributing resource backing a statement line."
+      },
       "ConvertedCostFigure": {
         "properties": {
           "original_amount": {
@@ -36625,6 +38202,60 @@
         "title": "CostLineItemsResponse",
         "description": "Paginated underlying FOCUS cost charge lines (API-026)."
       },
+      "CostMovementItem": {
+        "properties": {
+          "item_name": {
+            "type": "string",
+            "title": "Item Name",
+            "description": "Resource, service or category exhibiting material change"
+          },
+          "prior_amount": {
+            "type": "string",
+            "title": "Prior Amount",
+            "description": "Previous billing period amount"
+          },
+          "current_amount": {
+            "type": "string",
+            "title": "Current Amount",
+            "description": "Current billing period amount"
+          },
+          "delta_amount": {
+            "type": "string",
+            "title": "Delta Amount",
+            "description": "Net absolute dollar variance"
+          },
+          "delta_pct": {
+            "type": "string",
+            "title": "Delta Pct",
+            "description": "Percentage shift"
+          },
+          "movement_direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MovementDirection"
+              }
+            ],
+            "description": "UP, DOWN, or FLAT"
+          },
+          "narrative_explanation": {
+            "type": "string",
+            "title": "Narrative Explanation",
+            "description": "Business explanation of why this cost shifted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_name",
+          "prior_amount",
+          "current_amount",
+          "delta_amount",
+          "delta_pct",
+          "movement_direction",
+          "narrative_explanation"
+        ],
+        "title": "CostMovementItem",
+        "description": "Largest cost movement item with business narrative explanation (Prompt 52)."
+      },
       "CostPresentationBasis": {
         "type": "string",
         "enum": [
@@ -37538,6 +39169,42 @@
           "from_currency"
         ],
         "title": "CurrencyConvertRequest"
+      },
+      "CurrencyDisclosure": {
+        "properties": {
+          "base_currency": {
+            "type": "string",
+            "title": "Base Currency",
+            "description": "Billing baseline currency",
+            "default": "USD"
+          },
+          "presentation_currency": {
+            "type": "string",
+            "title": "Presentation Currency",
+            "description": "Statement presentation currency",
+            "default": "USD"
+          },
+          "exchange_rate": {
+            "type": "string",
+            "title": "Exchange Rate",
+            "description": "Effective exchange rate applied",
+            "default": "1.0"
+          },
+          "rate_type": {
+            "type": "string",
+            "title": "Rate Type",
+            "description": "FX rate provider/type classification",
+            "default": "CORPORATE_CLOSING"
+          },
+          "rate_effective_date": {
+            "type": "string",
+            "title": "Rate Effective Date",
+            "description": "Date the exchange rate was fixed"
+          }
+        },
+        "type": "object",
+        "title": "CurrencyDisclosure",
+        "description": "Full foreign exchange rate disclosure for multi-currency presentation (Prompt 46 / 52)."
       },
       "CustomRoleCreateRequest": {
         "properties": {
@@ -38584,6 +40251,45 @@
         "title": "DisclosureMetadata",
         "description": "Explicit disclosure structure reporting access-filtering on aggregates (Prompt 11 Item 74).\n\nThe Disclosure Rule: when access control removes data from an aggregate,\nthe response and the UI must say so. Silent filtering is a defect."
       },
+      "DiscountBenefitItem": {
+        "properties": {
+          "list_cost": {
+            "type": "string",
+            "title": "List Cost",
+            "description": "Public list rate cost equivalent"
+          },
+          "contracted_cost": {
+            "type": "string",
+            "title": "Contracted Cost",
+            "description": "Negotiated enterprise rate equivalent"
+          },
+          "effective_cost": {
+            "type": "string",
+            "title": "Effective Cost",
+            "description": "Actual billed/effective cost paid"
+          },
+          "realised_discount_amount": {
+            "type": "string",
+            "title": "Realised Discount Amount",
+            "description": "Total realised discount savings ($)"
+          },
+          "realised_discount_percentage": {
+            "type": "string",
+            "title": "Realised Discount Percentage",
+            "description": "Realised savings percentage against list rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "list_cost",
+          "contracted_cost",
+          "effective_cost",
+          "realised_discount_amount",
+          "realised_discount_percentage"
+        ],
+        "title": "DiscountBenefitItem",
+        "description": "Commitment, Savings Plan, and Enterprise Discount benefit received by this scope."
+      },
       "DiscountInfo": {
         "properties": {
           "discount_type": {
@@ -38701,6 +40407,17 @@
         ],
         "title": "DiscoveryRunResult",
         "description": "Execution summary of an automated discovery run (Prompt 32)."
+      },
+      "DisputeStatus": {
+        "type": "string",
+        "enum": [
+          "SUBMITTED",
+          "IN_REVIEW",
+          "RESOLVED_ACCEPTED",
+          "RESOLVED_REJECTED"
+        ],
+        "title": "DisputeStatus",
+        "description": "Lifecycle status of a queried/disputed statement line."
       },
       "DryRunValidationResult": {
         "properties": {
@@ -39256,6 +40973,33 @@
         ],
         "title": "EntityReferenceType",
         "description": "Supported entity reference types for dependency edges (Prompt 32)."
+      },
+      "EnvironmentBreakdownItem": {
+        "properties": {
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Environment classification (e.g. PROD, STAGING, DEV, DR)"
+          },
+          "allocated_amount": {
+            "type": "string",
+            "title": "Allocated Amount",
+            "description": "Total allocated cost in environment"
+          },
+          "share_percentage": {
+            "type": "string",
+            "title": "Share Percentage",
+            "description": "Share percentage of total statement cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "environment",
+          "allocated_amount",
+          "share_percentage"
+        ],
+        "title": "EnvironmentBreakdownItem",
+        "description": "Cost breakdown by deployment lifecycle environment."
       },
       "EscalationState": {
         "type": "string",
@@ -40105,6 +41849,17 @@
         "title": "ExpiryAlert",
         "description": "Governance alert for approaching or passed credential expiry."
       },
+      "ExportFormat": {
+        "type": "string",
+        "enum": [
+          "JSON",
+          "MARKDOWN",
+          "HTML",
+          "CSV"
+        ],
+        "title": "ExportFormat",
+        "description": "Supported presentation export formats."
+      },
       "ExtractListResponse": {
         "properties": {
           "extracts": {
@@ -40215,6 +41970,25 @@
         ],
         "title": "FilteredAggregateResult",
         "description": "Generic wrapper for aggregate data with mandatory disclosure metadata."
+      },
+      "FinalizeStatementRequest": {
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional period close sign-off notes"
+          }
+        },
+        "type": "object",
+        "title": "FinalizeStatementRequest",
+        "description": "Payload to finalise statement."
       },
       "FinancialSensitivity": {
         "type": "string",
@@ -41530,6 +43304,90 @@
         ],
         "title": "FreshnessIndicator",
         "description": "Computed freshness status for provider-derived values (Item 163)."
+      },
+      "GenerateStatementRequest": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Target billing period partition, e.g. '2026-09'"
+          },
+          "scope_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecipientScopeType"
+              }
+            ],
+            "description": "Scope type (BUSINESS_UNIT, COST_CENTRE, APPLICATION, PROJECT, TEAM)",
+            "default": "BUSINESS_UNIT"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Scope code",
+            "default": "BU-RETAIL"
+          },
+          "scope_name": {
+            "type": "string",
+            "title": "Scope Name",
+            "description": "Scope title",
+            "default": "Retail & E-Commerce Business Unit"
+          },
+          "recipient_owner_id": {
+            "type": "string",
+            "title": "Recipient Owner Id",
+            "description": "Recipient owner user ID",
+            "default": "usr-retail-lead"
+          },
+          "recipient_owner_email": {
+            "type": "string",
+            "title": "Recipient Owner Email",
+            "description": "Recipient email",
+            "default": "retail-lead@company.com"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id",
+            "description": "Layout template ID"
+          },
+          "target_currency": {
+            "type": "string",
+            "title": "Target Currency",
+            "description": "Presentation currency code",
+            "default": "USD"
+          },
+          "custom_budget": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Budget",
+            "description": "Optional custom budget override"
+          },
+          "enable_chargeback_phase2": {
+            "type": "boolean",
+            "title": "Enable Chargeback Phase2",
+            "description": "Phase 2 toggle. Statements state they are showback when False.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "period"
+        ],
+        "title": "GenerateStatementRequest",
+        "description": "Payload to generate a new showback statement."
       },
       "GeneratedReport": {
         "properties": {
@@ -43638,6 +45496,16 @@
         "title": "MonitoringTypeOverrideRequest",
         "description": "Request payload to apply a per-resource monitoring type override with audit."
       },
+      "MovementDirection": {
+        "type": "string",
+        "enum": [
+          "UP",
+          "DOWN",
+          "FLAT"
+        ],
+        "title": "MovementDirection",
+        "description": "Direction of cost delta compared to prior period."
+      },
       "MultiChainAggregationRequest": {
         "properties": {
           "root_entity_ids": {
@@ -44674,6 +46542,129 @@
         "title": "OutageGapReport",
         "description": "Outage time window analysis and gap identification for backfill (Prompt 15 Item 105)."
       },
+      "OutstandingAcceptanceItem": {
+        "properties": {
+          "statement_id": {
+            "type": "string",
+            "title": "Statement Id"
+          },
+          "scope_type": {
+            "$ref": "#/components/schemas/RecipientScopeType"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code"
+          },
+          "scope_name": {
+            "type": "string",
+            "title": "Scope Name"
+          },
+          "recipient_owner": {
+            "type": "string",
+            "title": "Recipient Owner"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email"
+          },
+          "total_allocated_cost": {
+            "type": "string",
+            "title": "Total Allocated Cost"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "review_opened_at": {
+            "type": "string",
+            "title": "Review Opened At"
+          },
+          "days_outstanding": {
+            "type": "integer",
+            "title": "Days Outstanding"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatementLifecycleStatus"
+          },
+          "escalation_status": {
+            "type": "string",
+            "title": "Escalation Status",
+            "description": "NORMAL, REMINDER_SENT, ESCALATED_TO_CFO",
+            "default": "NORMAL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "statement_id",
+          "scope_type",
+          "scope_code",
+          "scope_name",
+          "recipient_owner",
+          "recipient_email",
+          "total_allocated_cost",
+          "period",
+          "review_opened_at",
+          "days_outstanding",
+          "status"
+        ],
+        "title": "OutstandingAcceptanceItem",
+        "description": "Single unaccepted statement item in the outstanding acceptance report."
+      },
+      "OutstandingAcceptanceReport": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "total_statements_issued": {
+            "type": "integer",
+            "title": "Total Statements Issued"
+          },
+          "total_accepted": {
+            "type": "integer",
+            "title": "Total Accepted"
+          },
+          "total_outstanding": {
+            "type": "integer",
+            "title": "Total Outstanding"
+          },
+          "acceptance_rate_percentage": {
+            "type": "string",
+            "title": "Acceptance Rate Percentage"
+          },
+          "overdue_count": {
+            "type": "integer",
+            "title": "Overdue Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OutstandingAcceptanceItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "tenant_id",
+          "total_statements_issued",
+          "total_accepted",
+          "total_outstanding",
+          "acceptance_rate_percentage",
+          "overdue_count"
+        ],
+        "title": "OutstandingAcceptanceReport",
+        "description": "Executive report of unaccepted showback statements (Prompt 52)."
+      },
       "OverrideApproval": {
         "properties": {
           "approver_id": {
@@ -45194,6 +47185,67 @@
         ],
         "title": "PermissionConsequenceReport",
         "description": "Individual permission evaluation report with explicit consequences (Prompt 15 Item 102)."
+      },
+      "Phase2ChargebackFields": {
+        "properties": {
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled",
+            "description": "Phase 2 toggle. Statements state they are showback when False.",
+            "default": false
+          },
+          "journal_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Reference",
+            "description": "GL journal transaction ID"
+          },
+          "posting_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posting Period",
+            "description": "ERP financial posting period"
+          },
+          "gl_account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gl Account",
+            "description": "General Ledger account code"
+          },
+          "chargeback_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chargeback Status",
+            "description": "ERP integration posting status"
+          }
+        },
+        "type": "object",
+        "title": "Phase2ChargebackFields",
+        "description": "Phase 2 Chargeback fields prepared but disabled by default (Prompt 52)."
       },
       "PointInTimePricingQuery": {
         "properties": {
@@ -47926,6 +49978,51 @@
         "title": "ProvenanceRecord",
         "description": "Source and provenance metadata for canonical data records."
       },
+      "ProviderBreakdownItem": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider code (e.g. AWS, AZURE, GCP, OCI)"
+          },
+          "allocated_amount": {
+            "type": "string",
+            "title": "Allocated Amount",
+            "description": "Total allocated cost from this provider"
+          },
+          "share_percentage": {
+            "type": "string",
+            "title": "Share Percentage",
+            "description": "Percentage of total statement allocated cost"
+          },
+          "prior_period_amount": {
+            "type": "string",
+            "title": "Prior Period Amount",
+            "description": "Prior period spend",
+            "default": "0.00"
+          },
+          "movement_amount": {
+            "type": "string",
+            "title": "Movement Amount",
+            "description": "Delta from prior period",
+            "default": "0.00"
+          },
+          "movement_pct": {
+            "type": "string",
+            "title": "Movement Pct",
+            "description": "Percentage movement",
+            "default": "0.00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "allocated_amount",
+          "share_percentage"
+        ],
+        "title": "ProviderBreakdownItem",
+        "description": "Cost breakdown by cloud infrastructure provider."
+      },
       "ProviderCapability": {
         "type": "string",
         "enum": [
@@ -49233,6 +51330,54 @@
         "title": "QuotaSummaryResponse",
         "description": "Aggregated headroom health summary per provider or scope (Prompt 54)."
       },
+      "RaiseDisputeRequest": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "title": "Line Id",
+            "description": "Target line ID (e.g. srv-k8s-platform, AmazonEC2)"
+          },
+          "line_description": {
+            "type": "string",
+            "title": "Line Description",
+            "description": "Line title",
+            "default": "Statement Line Query"
+          },
+          "disputed_amount": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Disputed Amount",
+            "description": "Amount under dispute"
+          },
+          "proposed_amount": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Proposed Amount",
+            "description": "Expected amount",
+            "default": 0.0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Reason",
+            "description": "Dispute explanation and evidence"
+          },
+          "assigned_owner": {
+            "type": "string",
+            "title": "Assigned Owner",
+            "description": "Assigned investigator",
+            "default": "finops-disputes@company.com"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "disputed_amount",
+          "reason"
+        ],
+        "title": "RaiseDisputeRequest",
+        "description": "Payload to query/dispute a statement line."
+      },
       "RateType": {
         "type": "string",
         "enum": [
@@ -49525,6 +51670,18 @@
         "type": "object",
         "title": "RealisedSavingReport",
         "description": "Cumulative realised saving report aggregated across period, team, and category."
+      },
+      "RecipientScopeType": {
+        "type": "string",
+        "enum": [
+          "BUSINESS_UNIT",
+          "COST_CENTRE",
+          "APPLICATION",
+          "PROJECT",
+          "TEAM"
+        ],
+        "title": "RecipientScopeType",
+        "description": "Supported recipient scope types for cost statements (Prompt 52)."
       },
       "RecipientSubscription": {
         "properties": {
@@ -50704,6 +52861,40 @@
         "title": "RequesterViewItem",
         "description": "Requester tracking view item displaying status and escalation trajectory."
       },
+      "ResolveDisputeRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision",
+            "description": "APPROVED or REJECTED"
+          },
+          "resolution_notes": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Resolution Notes",
+            "description": "Resolution rationale"
+          },
+          "target_reallocation_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Reallocation Scope",
+            "description": "Scope code to debit if reallocation approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision",
+          "resolution_notes"
+        ],
+        "title": "ResolveDisputeRequest",
+        "description": "Payload to resolve an existing dispute."
+      },
       "ResolveOwnershipRequest": {
         "properties": {
           "resource": {
@@ -51861,6 +54052,32 @@
         "type": "object",
         "title": "ResponseMetadata",
         "description": "Platform response metadata block present on all responses (Prompt 34)."
+      },
+      "RestatementAdjustmentRequest": {
+        "properties": {
+          "restatement_reason": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Restatement Reason",
+            "description": "Business justification for restatement"
+          },
+          "adjustment_deltas": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Adjustment Deltas",
+            "description": "Line-level deltas to apply"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restatement_reason",
+          "adjustment_deltas"
+        ],
+        "title": "RestatementAdjustmentRequest",
+        "description": "Payload to emit post-finalisation restatement adjustment."
       },
       "RestatementRecomputePayload": {
         "properties": {
@@ -53618,6 +55835,70 @@
         "title": "SettingDriftEntry",
         "description": "Specification of an individual configuration deviation from shipped defaults."
       },
+      "SharedServiceApportionmentItem": {
+        "properties": {
+          "shared_service_id": {
+            "type": "string",
+            "title": "Shared Service Id",
+            "description": "ID or key of the shared platform service/pool"
+          },
+          "shared_service_name": {
+            "type": "string",
+            "title": "Shared Service Name",
+            "description": "Human-readable title (e.g. Shared K8s Cluster)"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Underlying provider",
+            "default": "AWS"
+          },
+          "source_total_cost": {
+            "type": "string",
+            "title": "Source Total Cost",
+            "description": "Total gross shared cost prior to split"
+          },
+          "apportioned_amount": {
+            "type": "string",
+            "title": "Apportioned Amount",
+            "description": "Cost allocated to this recipient scope"
+          },
+          "apportionment_percentage": {
+            "type": "string",
+            "title": "Apportionment Percentage",
+            "description": "Percentage share received (e.g. 25.0)"
+          },
+          "allocation_rule_id": {
+            "type": "string",
+            "title": "Allocation Rule Id",
+            "description": "ID of the allocation rule producing this split"
+          },
+          "allocation_rule_name": {
+            "type": "string",
+            "title": "Allocation Rule Name",
+            "description": "Name of the allocation rule"
+          },
+          "apportionment_basis": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Apportionment Basis",
+            "description": "MANDATORY EXPLICIT BASIS: formula, metric, or ratio explaining the apportionment."
+          }
+        },
+        "type": "object",
+        "required": [
+          "shared_service_id",
+          "shared_service_name",
+          "source_total_cost",
+          "apportioned_amount",
+          "apportionment_percentage",
+          "allocation_rule_id",
+          "allocation_rule_name",
+          "apportionment_basis"
+        ],
+        "title": "SharedServiceApportionmentItem",
+        "description": "Shared-service cost apportionment line with mandatory visible basis (Prompt 52 / BBP 17.5)."
+      },
       "SharedServiceCostBreakdown": {
         "properties": {
           "service_id": {
@@ -53671,6 +55952,364 @@
         ],
         "title": "SharedServiceCostBreakdown",
         "description": "Accounting allocation detail for a shared platform service consumed by chains."
+      },
+      "ShowbackStatement": {
+        "properties": {
+          "statement_id": {
+            "type": "string",
+            "title": "Statement Id",
+            "description": "Unique statement identifier"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant identifier"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "Billing period partition, e.g. '2026-09'"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Statement version (incremented on adjustment)",
+            "default": 1
+          },
+          "supersedes_statement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Statement Id",
+            "description": "ID of previous statement version if adjusted"
+          },
+          "scope_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecipientScopeType"
+              }
+            ],
+            "description": "Recipient scope classification"
+          },
+          "scope_code": {
+            "type": "string",
+            "title": "Scope Code",
+            "description": "Recipient accounting or organizational code (e.g. BU-RETAIL)"
+          },
+          "scope_name": {
+            "type": "string",
+            "title": "Scope Name",
+            "description": "Human-readable recipient title"
+          },
+          "recipient_owner_id": {
+            "type": "string",
+            "title": "Recipient Owner Id",
+            "description": "Accountable owner user ID"
+          },
+          "recipient_owner_email": {
+            "type": "string",
+            "title": "Recipient Owner Email",
+            "description": "Accountable owner email address"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatementLifecycleStatus"
+              }
+            ],
+            "description": "Lifecycle status in period close cycle",
+            "default": "DRAFT"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatementMode"
+              }
+            ],
+            "description": "MVP is strictly SHOWBACK (management information only)",
+            "default": "SHOWBACK"
+          },
+          "showback_banner": {
+            "type": "string",
+            "title": "Showback Banner",
+            "description": "Prominent showback disclaimer banner",
+            "default": "SHOWBACK STATEMENT \u2014 FOR INTERNAL MANAGEMENT INFORMATION ONLY. THIS STATEMENT DOES NOT CONSTITUTE A GENERAL LEDGER JOURNAL CHARGE."
+          },
+          "total_allocated_cost": {
+            "type": "string",
+            "title": "Total Allocated Cost",
+            "description": "Total net allocated spend for recipient scope"
+          },
+          "direct_allocated_cost": {
+            "type": "string",
+            "title": "Direct Allocated Cost",
+            "description": "Spend directly attributable to resources/scopes"
+          },
+          "shared_service_apportioned_cost": {
+            "type": "string",
+            "title": "Shared Service Apportioned Cost",
+            "description": "Spend apportioned from central shared services"
+          },
+          "unallocated_cost": {
+            "type": "string",
+            "title": "Unallocated Cost",
+            "description": "Unallocated spend associated with scope context",
+            "default": "0.00"
+          },
+          "cost_basis": {
+            "type": "string",
+            "title": "Cost Basis",
+            "description": "Cost basis: BILLED or EFFECTIVE",
+            "default": "BILLED"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Statement presentation currency",
+            "default": "USD"
+          },
+          "currency_disclosure": {
+            "$ref": "#/components/schemas/CurrencyDisclosure"
+          },
+          "budget_amount": {
+            "type": "string",
+            "title": "Budget Amount",
+            "description": "Allocated budget ceiling",
+            "default": "0.00"
+          },
+          "budget_variance_amount": {
+            "type": "string",
+            "title": "Budget Variance Amount",
+            "description": "Actual - Budget",
+            "default": "0.00"
+          },
+          "budget_variance_pct": {
+            "type": "string",
+            "title": "Budget Variance Pct",
+            "description": "Variance %",
+            "default": "0.00"
+          },
+          "budget_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BudgetVarianceStatus"
+              }
+            ],
+            "default": "ON_TRACK"
+          },
+          "budget_commentary": {
+            "type": "string",
+            "title": "Budget Commentary",
+            "description": "Narrative commentary on budget status",
+            "default": ""
+          },
+          "prior_period": {
+            "type": "string",
+            "title": "Prior Period",
+            "description": "Preceding billing period (e.g. '2026-08')",
+            "default": ""
+          },
+          "prior_period_cost": {
+            "type": "string",
+            "title": "Prior Period Cost",
+            "description": "Prior period spend",
+            "default": "0.00"
+          },
+          "period_movement_amount": {
+            "type": "string",
+            "title": "Period Movement Amount",
+            "description": "Delta from prior period",
+            "default": "0.00"
+          },
+          "period_movement_pct": {
+            "type": "string",
+            "title": "Period Movement Pct",
+            "description": "Percentage movement",
+            "default": "0.00"
+          },
+          "movement_direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MovementDirection"
+              }
+            ],
+            "default": "FLAT"
+          },
+          "movement_commentary": {
+            "type": "string",
+            "title": "Movement Commentary",
+            "description": "Narrative commentary on cost shifts",
+            "default": ""
+          },
+          "provider_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderBreakdownItem"
+            },
+            "type": "array",
+            "title": "Provider Breakdown"
+          },
+          "category_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdownItem"
+            },
+            "type": "array",
+            "title": "Category Breakdown"
+          },
+          "application_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationBreakdownItem"
+            },
+            "type": "array",
+            "title": "Application Breakdown"
+          },
+          "environment_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/EnvironmentBreakdownItem"
+            },
+            "type": "array",
+            "title": "Environment Breakdown"
+          },
+          "largest_movements": {
+            "items": {
+              "$ref": "#/components/schemas/CostMovementItem"
+            },
+            "type": "array",
+            "title": "Largest Movements"
+          },
+          "shared_service_apportionments": {
+            "items": {
+              "$ref": "#/components/schemas/SharedServiceApportionmentItem"
+            },
+            "type": "array",
+            "title": "Shared Service Apportionments"
+          },
+          "unallocated_cost_details": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UnallocatedCostItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "discount_benefit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiscountBenefitItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider_freshness": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Provider Freshness"
+          },
+          "template_id": {
+            "type": "string",
+            "title": "Template Id",
+            "default": "tpl-standard-showback"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "circulated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Circulated At"
+          },
+          "review_deadline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Deadline"
+          },
+          "finalised_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalised At"
+          },
+          "accepted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "accepted_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted By"
+          },
+          "acceptance_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Notes"
+          },
+          "chargeback_fields": {
+            "$ref": "#/components/schemas/Phase2ChargebackFields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "statement_id",
+          "tenant_id",
+          "period",
+          "scope_type",
+          "scope_code",
+          "scope_name",
+          "recipient_owner_id",
+          "recipient_owner_email",
+          "total_allocated_cost",
+          "direct_allocated_cost",
+          "shared_service_apportioned_cost"
+        ],
+        "title": "ShowbackStatement",
+        "description": "Authoritative monthly showback statement and cost allocation pack (Prompt 52)."
       },
       "SimulationStepResult": {
         "properties": {
@@ -53868,6 +56507,241 @@
         ],
         "title": "StateTransitionRequest",
         "description": "Request to transition connector lifecycle state."
+      },
+      "StatementDispute": {
+        "properties": {
+          "dispute_id": {
+            "type": "string",
+            "title": "Dispute Id",
+            "description": "Unique dispute identifier"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id",
+            "description": "Tenant ID"
+          },
+          "statement_id": {
+            "type": "string",
+            "title": "Statement Id",
+            "description": "Statement ID under query"
+          },
+          "line_id": {
+            "type": "string",
+            "title": "Line Id",
+            "description": "Specific statement line or 'WHOLE_STATEMENT'"
+          },
+          "line_description": {
+            "type": "string",
+            "title": "Line Description",
+            "description": "Friendly title of queried line",
+            "default": ""
+          },
+          "recipient_id": {
+            "type": "string",
+            "title": "Recipient Id",
+            "description": "User ID raising the query"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email",
+            "description": "User contact email"
+          },
+          "disputed_amount": {
+            "type": "string",
+            "title": "Disputed Amount",
+            "description": "Dollar amount queried"
+          },
+          "proposed_amount": {
+            "type": "string",
+            "title": "Proposed Amount",
+            "description": "Recipient's expected correct amount"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Detailed business justification for dispute"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DisputeStatus"
+              }
+            ],
+            "default": "SUBMITTED"
+          },
+          "assigned_owner": {
+            "type": "string",
+            "title": "Assigned Owner",
+            "description": "Assigned investigator",
+            "default": "finops-analyst@company.com"
+          },
+          "sla_deadline": {
+            "type": "string",
+            "title": "Sla Deadline",
+            "description": "SLA deadline timestamp"
+          },
+          "workflow_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Request Id",
+            "description": "Linked WorkflowRequest ID from workflow engine"
+          },
+          "resolution_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Notes",
+            "description": "Resolution rationale"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "resolved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispute_id",
+          "tenant_id",
+          "statement_id",
+          "line_id",
+          "recipient_id",
+          "recipient_email",
+          "disputed_amount",
+          "proposed_amount",
+          "reason",
+          "sla_deadline"
+        ],
+        "title": "StatementDispute",
+        "description": "Tracked line or statement dispute routed through the workflow engine (Prompt 50 / 52)."
+      },
+      "StatementLifecycleStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "IN_REVIEW",
+          "FINALISED",
+          "ADJUSTED",
+          "SUPERSEDED",
+          "DISPUTED",
+          "ACCEPTED"
+        ],
+        "title": "StatementLifecycleStatus",
+        "description": "Lifecycle states of a showback statement through the period close cycle."
+      },
+      "StatementListResponse": {
+        "properties": {
+          "statements": {
+            "items": {
+              "$ref": "#/components/schemas/ShowbackStatement"
+            },
+            "type": "array",
+            "title": "Statements"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "_metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "statements",
+          "total_count"
+        ],
+        "title": "StatementListResponse",
+        "description": "List response envelope for statements."
+      },
+      "StatementMode": {
+        "type": "string",
+        "enum": [
+          "SHOWBACK",
+          "CHARGEBACK"
+        ],
+        "title": "StatementMode",
+        "description": "Statement accounting presentation mode."
+      },
+      "StatementTemplate": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "title": "Template Id",
+            "description": "Unique template identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Template friendly title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Business purpose of template",
+            "default": ""
+          },
+          "sections_enabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sections Enabled"
+          },
+          "section_order": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Section Order"
+          },
+          "narrative_phrasing": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Narrative Phrasing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "name"
+        ],
+        "title": "StatementTemplate",
+        "description": "Master-data-driven statement layout, section configuration, and phrasing (Prompt 52)."
       },
       "StepUpAction": {
         "type": "string",
@@ -57790,6 +60664,35 @@
         ],
         "title": "TypedEntityRef",
         "description": "Typed reference to a node in the dependency graph (Prompt 32)."
+      },
+      "UnallocatedCostItem": {
+        "properties": {
+          "unallocated_amount": {
+            "type": "string",
+            "title": "Unallocated Amount",
+            "description": "Dollar amount that could not be attributed"
+          },
+          "unallocated_percentage": {
+            "type": "string",
+            "title": "Unallocated Percentage",
+            "description": "Percentage of total estate unallocated spend"
+          },
+          "reasons": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Root causes for non-allocation (e.g. missing Owner tag, orphan scope)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unallocated_amount",
+          "unallocated_percentage"
+        ],
+        "title": "UnallocatedCostItem",
+        "description": "Explicit disclosure of unallocated cost associated with recipient context (Prompt 08 / 52)."
       },
       "UnknownSkuRecord": {
         "properties": {

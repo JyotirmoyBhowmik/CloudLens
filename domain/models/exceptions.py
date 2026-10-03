@@ -2231,3 +2231,116 @@ class AnalyticsRateLimitExceededException(AnalyticsException):
             status_code=429,
         )
         self.retry_after_seconds = retry_after_seconds
+
+
+# ==============================================================================
+# Showback, Chargeback & Cost Allocation Statement Exceptions (Prompt 52)
+# ==============================================================================
+
+
+class StatementException(DomainModelException):
+    """Base domain exception for Showback and Cost Allocation Statements (Prompt 52)."""
+
+    def __init__(
+        self, message: str, error_code: str = "STATEMENT_ERROR", status_code: int = 400
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+
+
+class StatementNotFoundException(StatementException):
+    """Raised when a requested statement or statement adjustment does not exist."""
+
+    def __init__(self, statement_id: str) -> None:
+        super().__init__(
+            f"Statement '{statement_id}' was not found.",
+            error_code="STATEMENT_NOT_FOUND",
+            status_code=404,
+        )
+        self.statement_id = statement_id
+
+
+class FinalisedStatementModificationForbiddenException(StatementException):
+    """Raised when an attempt is made to alter a finalised statement in place.
+
+    Strictly enforces Prompt 52 rule: 'Do not alter a finalised statement in place.'
+    Restatements must produce a distinct adjustment version.
+    """
+
+    def __init__(self, statement_id: str) -> None:
+        super().__init__(
+            f"Statement '{statement_id}' is finalised and cannot be altered in place. "
+            "Restatements must produce a distinct adjustment version.",
+            error_code="FINALISED_STATEMENT_MODIFICATION_FORBIDDEN",
+            status_code=409,
+        )
+        self.statement_id = statement_id
+
+
+class StatementAlreadyFinalisedException(StatementException):
+    """Raised when attempting to finalise an already finalised statement."""
+
+    def __init__(self, statement_id: str) -> None:
+        super().__init__(
+            f"Statement '{statement_id}' is already finalised.",
+            error_code="STATEMENT_ALREADY_FINALISED",
+            status_code=409,
+        )
+        self.statement_id = statement_id
+
+
+class MissingApportionmentBasisException(StatementException):
+    """Raised when shared cost apportionment is attempted without disclosing the basis.
+
+    Strictly enforces Prompt 52 rule: 'Do not apportion shared cost without showing the basis.'
+    """
+
+    def __init__(
+        self, shared_service_id: str, reason: str = "Missing explicit apportionment basis"
+    ) -> None:
+        super().__init__(
+            f"Shared cost for service '{shared_service_id}' cannot be apportioned without an explicit basis: {reason}.",
+            error_code="MISSING_APPORTIONMENT_BASIS",
+            status_code=422,
+        )
+        self.shared_service_id = shared_service_id
+
+
+class ChargebackNotEnabledException(StatementException):
+    """Raised when chargeback journal posting operations are attempted while disabled.
+
+    Strictly enforces Prompt 52 rule: 'MVP is showback. Statements state that they are showback, not chargeback. Do not present showback as chargeback.'
+    """
+
+    def __init__(
+        self,
+        message: str = "Chargeback operations are disabled. Showback statements are management information only.",
+    ) -> None:
+        super().__init__(
+            message,
+            error_code="CHARGEBACK_NOT_ENABLED",
+            status_code=400,
+        )
+
+
+class StatementDisputeException(StatementException):
+    """Raised when a statement dispute cannot be processed or validated."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message,
+            error_code="STATEMENT_DISPUTE_ERROR",
+            status_code=400,
+        )
+
+
+class FinancialDetailAccessForbiddenException(StatementException):
+    """Raised when drill-through to underlying charge lines is attempted without required permission."""
+
+    def __init__(self, user_id: str) -> None:
+        super().__init__(
+            f"User '{user_id}' does not possess the required financial-detail permission to drill through to granular charge lines.",
+            error_code="FINANCIAL_DETAIL_ACCESS_FORBIDDEN",
+            status_code=403,
+        )
+        self.user_id = user_id

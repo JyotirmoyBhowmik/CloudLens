@@ -381,6 +381,36 @@ DEFAULT_WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         ),
         auto_reject_on_expiry=True,
     ),
+    # 12. Showback Statement Dispute (Prompt 52)
+    WorkflowRequestType.STATEMENT_DISPUTE.value: WorkflowDefinition(
+        id="wf-def-statement-dispute",
+        request_type=WorkflowRequestType.STATEMENT_DISPUTE.value,
+        entity_type="statement_dispute",
+        name="Showback Statement Dispute Workflow",
+        description="Formal review and dispute resolution workflow for queried cost allocation or showback statement line items.",
+        trigger_condition=WorkflowTriggerCondition(always=True),
+        stages=[
+            WorkflowStageDefinition(
+                stage_id="stage-dispute-finops",
+                name="FinOps Cost Analyst Investigation",
+                sequence_order=1,
+                mode=ApprovalChainMode.SERIAL,
+                quorum=1,
+                approver_spec=WorkflowApproverSpec(
+                    resolution_type=ApproverResolutionType.ROLE,
+                    target_role="FINOPS_ADMIN",
+                    fallback_role="TENANT_ADMIN",
+                ),
+            )
+        ],
+        sla_working_hours=48,
+        working_schedule_id="WW_STANDARD_MON_FRI",
+        escalation_path=WorkflowEscalationPath(
+            escalate_to_role="FINANCE_DIRECTOR",
+            escalate_after_hours=24,
+        ),
+        auto_reject_on_expiry=False,
+    ),
 }
 
 

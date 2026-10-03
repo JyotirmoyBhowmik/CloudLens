@@ -29,6 +29,7 @@ from api.cloudlens_api.routes.reports import router as reports_router
 from api.cloudlens_api.routes.roles import router as roles_router
 from api.cloudlens_api.routes.runtime import router as runtime_router
 from api.cloudlens_api.routes.scopes import router as scopes_router
+from api.cloudlens_api.routes.statements import router as statements_router
 from api.cloudlens_api.routes.storage import router as storage_router
 from api.cloudlens_api.routes.sync import router as sync_router
 from api.cloudlens_api.routes.thresholds import router as thresholds_router
@@ -68,6 +69,7 @@ __all__ = [
     "roles_router",
     "runtime_router",
     "scopes_router",
+    "statements_router",
     "storage_router",
     "sync_router",
     "thresholds_router",
