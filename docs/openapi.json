@@ -538,6 +538,91 @@
         }
       }
     },
+    "/api/v1/alerts/contextual/{contextual_id}/acknowledge": {
+      "post": {
+        "tags": [
+          "Alerting & Notifications"
+        ],
+        "summary": "Acknowledge Contextual Alert",
+        "description": "Acknowledges an active inline contextual alert with audit event.",
+        "operationId": "acknowledge_contextual_alert_api_v1_alerts_contextual__contextual_id__acknowledge_post",
+        "parameters": [
+          {
+            "name": "contextual_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Contextual Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextualAcknowledgeDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextualAlert"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/alerts/subscriptions": {
       "get": {
         "tags": [
@@ -33936,6 +34021,381 @@
         }
       }
     },
+    "/api/v1/explanation/freshness-surface": {
+      "get": {
+        "tags": [
+          "Explanation Layer"
+        ],
+        "summary": "Get Freshness Surface",
+        "description": "Returns the data freshness surface across Pricing, Billing, Usage, and Inventory.",
+        "operationId": "get_freshness_surface_api_v1_explanation_freshness_surface_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreshnessSurfaceOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explanation/panel/{resource_or_sku}/{panel_type}": {
+      "get": {
+        "tags": [
+          "Explanation Layer"
+        ],
+        "summary": "Get Explanation Panel",
+        "description": "Retrieves one of the eleven standard explanation panels for a resource or SKU.",
+        "operationId": "get_explanation_panel_api_v1_explanation_panel__resource_or_sku___panel_type__get",
+        "parameters": [
+          {
+            "name": "resource_or_sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Or Sku"
+            }
+          },
+          {
+            "name": "panel_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StandardExplanationPanelType"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardExplanationPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explanation/suite/{resource_or_sku}": {
+      "get": {
+        "tags": [
+          "Explanation Layer"
+        ],
+        "summary": "Get Explanation Suite",
+        "description": "Retrieves the full explanation suite (all 11 panels + 17-field info model) for a resource.",
+        "operationId": "get_explanation_suite_api_v1_explanation_suite__resource_or_sku__get",
+        "parameters": [
+          {
+            "name": "resource_or_sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Or Sku"
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Cloud provider",
+              "default": "aws",
+              "title": "Provider"
+            },
+            "description": "Cloud provider"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Datacenter region",
+              "default": "us-east-1",
+              "title": "Region"
+            },
+            "description": "Datacenter region"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceExplanationSuite"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explanation/alerts/{alert_id}/acknowledge": {
+      "post": {
+        "tags": [
+          "Explanation Layer"
+        ],
+        "summary": "Acknowledge Alert",
+        "description": "Acknowledges an inline contextual alert with recorded actor and timestamp.",
+        "operationId": "acknowledge_alert_api_v1_explanation_alerts__alert_id__acknowledge_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Alert Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeContextualAlertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextualAlert"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/explanation/validate-attachment": {
+      "post": {
+        "tags": [
+          "Explanation Layer"
+        ],
+        "summary": "Validate Attachment",
+        "description": "Mechanically checks that an explanation payload satisfies Mandate M2 requirements.",
+        "operationId": "validate_attachment_api_v1_explanation_validate_attachment_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateExplanationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateExplanationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -34074,6 +34534,34 @@
         ],
         "title": "AccuracyReport",
         "description": "Executive accuracy report across requesters, services, and approvers."
+      },
+      "AcknowledgeContextualAlertRequest": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Actor",
+            "description": "Actor username acknowledging the alert"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Optional explanation or rationale note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "actor"
+        ],
+        "title": "AcknowledgeContextualAlertRequest",
+        "description": "Payload for acknowledging an inline contextual alert."
       },
       "AdherenceEvaluateRequest": {
         "properties": {
@@ -37513,6 +38001,7 @@
           "GOVERNANCE_EXCEPTION_RAISED",
           "CONTEXTUAL_ALERT_DISPLAYED",
           "CONTEXTUAL_ALERT_DISMISSED",
+          "CONTEXTUAL_ALERT_ACKNOWLEDGED",
           "COMMITMENT_EXPIRING_ALERT_DISPATCHED",
           "PROVISIONING_REQUEST_DECIDED_ALERT_DISPATCHED",
           "ANALYTICAL_EXTRACT_LATE_OR_EMPTY_ALERT_DISPATCHED",
@@ -41921,6 +42410,34 @@
         "title": "ConnectorUpdateRequest",
         "description": "Payload to update connector configuration or credential binding (API-014)."
       },
+      "ContextualAcknowledgeDTO": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Actor",
+            "description": "Actor username acknowledging alert"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Optional acknowledgement note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "actor"
+        ],
+        "title": "ContextualAcknowledgeDTO",
+        "description": "Payload for acknowledging an inline contextual alert."
+      },
       "ContextualAlert": {
         "properties": {
           "id": {
@@ -42041,6 +42558,49 @@
             ],
             "title": "Dismissed At",
             "description": "Dismissal timestamp"
+          },
+          "is_acknowledged": {
+            "type": "boolean",
+            "title": "Is Acknowledged",
+            "description": "Whether acknowledged by a user",
+            "default": false
+          },
+          "acknowledged_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged By",
+            "description": "Actor who acknowledged alert"
+          },
+          "acknowledged_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged At",
+            "description": "Acknowledgement timestamp"
+          },
+          "acknowledgement_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledgement Note",
+            "description": "Optional explanation note for acknowledgement"
           },
           "metadata": {
             "type": "object",
@@ -50315,6 +50875,126 @@
         ],
         "title": "FreshnessIndicator",
         "description": "Computed freshness status for provider-derived values (Item 163)."
+      },
+      "FreshnessSurfaceItem": {
+        "properties": {
+          "data_class": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataClassType"
+              }
+            ],
+            "description": "Data class (PRICING, BILLING_ACTUALS, USAGE_METRICS, INVENTORY)"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Display label (e.g. 'Pricing Catalogue')"
+          },
+          "stated_time_text": {
+            "type": "string",
+            "title": "Stated Time Text",
+            "description": "Natural language stated time (e.g. 'pricing retrieved 2 hours ago')"
+          },
+          "last_retrieved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Retrieved At",
+            "description": "Exact UTC timestamp of the most recent data retrieval"
+          },
+          "age_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Age Hours",
+            "description": "Elapsed hours since retrieval"
+          },
+          "staleness_threshold_hours": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Staleness Threshold Hours",
+            "description": "Configured SLA staleness boundary in hours"
+          },
+          "is_stale": {
+            "type": "boolean",
+            "title": "Is Stale",
+            "description": "True if age_hours exceeds configured staleness_threshold_hours"
+          },
+          "warning_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning Message",
+            "description": "Prominent warning message if data class is stale or delayed"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Provider or subsystem origin",
+            "default": "CloudLens Aggregator"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "'FRESH', 'DELAYED', or 'STALE'",
+            "default": "FRESH"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data_class",
+          "label",
+          "stated_time_text",
+          "last_retrieved_at",
+          "age_hours",
+          "staleness_threshold_hours",
+          "is_stale"
+        ],
+        "title": "FreshnessSurfaceItem",
+        "description": "Individual data class freshness status on the global/page freshness surface."
+      },
+      "FreshnessSurfaceOverview": {
+        "properties": {
+          "evaluated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Evaluated At",
+            "description": "Evaluation timestamp in UTC"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FreshnessSurfaceItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Freshness status items for all 4 required data classes"
+          },
+          "has_staleness_warning": {
+            "type": "boolean",
+            "title": "Has Staleness Warning",
+            "description": "True if any data class exceeds its staleness threshold"
+          },
+          "stale_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Stale Count",
+            "description": "Count of stale data classes",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "has_staleness_warning"
+        ],
+        "title": "FreshnessSurfaceOverview",
+        "description": "Data freshness surface across the product (Prompt 40 Item 163)."
       },
       "GateTriggerAction": {
         "type": "string",
@@ -63380,6 +64060,84 @@
         "title": "ResourceDetailResponse",
         "description": "Detailed 35-field resource record (API-019)."
       },
+      "ResourceExplanationSuite": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id",
+            "description": "Canonical resource ID or service identifier"
+          },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "description": "Display service name"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Cloud provider (aws, azure, gcp, oci)"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Datacenter region"
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/StandardExplanationPanel"
+            },
+            "type": "array",
+            "title": "Panels",
+            "description": "All eleven standard explanation panels"
+          },
+          "information_panel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PricingInformationPanel"
+              }
+            ],
+            "description": "Prompt 21 Item 164 17-field structured information panel"
+          },
+          "freshness": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FreshnessIndicator"
+              }
+            ],
+            "description": "Pricing freshness status"
+          },
+          "source_traceability": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceTraceability"
+              }
+            ],
+            "description": "Source provenance, effective date, and URL"
+          },
+          "contextual_alerts": {
+            "items": {
+              "$ref": "#/components/schemas/ContextualAlert"
+            },
+            "type": "array",
+            "title": "Contextual Alerts",
+            "description": "Inline contextual alerts attached to this resource"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "resource_id",
+          "service_name",
+          "provider",
+          "region",
+          "panels",
+          "information_panel",
+          "freshness",
+          "source_traceability"
+        ],
+        "title": "ResourceExplanationSuite",
+        "description": "Full explanation suite for a service or resource, containing all 11 standard panels."
+      },
       "ResourceListResponse": {
         "properties": {
           "items": {
@@ -67136,6 +67894,104 @@
           "master_type"
         ],
         "title": "StandaloneDryRunRequest"
+      },
+      "StandardExplanationPanel": {
+        "properties": {
+          "panel_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StandardExplanationPanelType"
+              }
+            ],
+            "description": "One of the eleven canonical explanation types"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Panel heading (e.g. 'What is this service')"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline",
+            "description": "High-level takeaway or summary sentence"
+          },
+          "narrative": {
+            "type": "string",
+            "title": "Narrative",
+            "description": "Defensible plain-language explanation strictly derived from catalogue/calculation facts"
+          },
+          "key_facts": {
+            "type": "object",
+            "title": "Key Facts",
+            "description": "Structured key-value metrics and parameters, zero unsupported numbers"
+          },
+          "source_citation": {
+            "type": "string",
+            "title": "Source Citation",
+            "description": "Authoritative source citation (e.g. 'AWS Price List API v2026-09-01')"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "description": "Direct link to official provider documentation or price card"
+          },
+          "last_verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Verified At",
+            "description": "Timestamp when explanation facts were verified"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conditions",
+            "description": "Mandatory qualification conditions (critical for free tier and estimates)"
+          },
+          "rule_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Reference",
+            "description": "Internal rule or policy identifier (e.g. 'POL-03', 'EST-01')"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "panel_type",
+          "title",
+          "headline",
+          "narrative",
+          "source_citation",
+          "source_url"
+        ],
+        "title": "StandardExplanationPanel",
+        "description": "One of the eleven standard explanation panels answering estate questions with defensible facts."
+      },
+      "StandardExplanationPanelType": {
+        "type": "string",
+        "enum": [
+          "WHAT_IS_THIS_SERVICE",
+          "HOW_IS_IT_PRICED",
+          "WHY_IS_IT_FREE",
+          "WHAT_CAUSES_ADDITIONAL_CHARGES",
+          "WHAT_USAGE_IS_INCLUDED_IN_FREE_TIER",
+          "WHAT_IS_INCLUDED_IN_ESTIMATE",
+          "WHAT_IS_EXCLUDED",
+          "WHAT_PROVIDER_SOURCE_WAS_USED",
+          "WHEN_WAS_PRICING_LAST_RETRIEVED",
+          "WHY_DOES_ACTUAL_BILLING_DIFFER",
+          "WHAT_DEPENDENCY_IS_RESPONSIBLE"
+        ],
+        "title": "StandardExplanationPanelType",
+        "description": "The eleven standard explanation panels specified by Master Brief Section 50."
       },
       "StartSessionResponse": {
         "properties": {
@@ -73288,6 +74144,41 @@
         ],
         "title": "ValidateCredentialsResult",
         "description": "Result of credential pre-flight validation (API-017)."
+      },
+      "ValidateExplanationRequest": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "title": "Payload",
+            "description": "Cost explanation dictionary to validate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payload"
+        ],
+        "title": "ValidateExplanationRequest",
+        "description": "Payload for mechanically validating an explanation payload."
+      },
+      "ValidateExplanationResponse": {
+        "properties": {
+          "is_valid": {
+            "type": "boolean",
+            "title": "Is Valid",
+            "description": "Whether the payload satisfies explanation rules"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Status message or error detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_valid",
+          "message"
+        ],
+        "title": "ValidateExplanationResponse"
       },
       "ValidatePermissionsRequest": {
         "properties": {

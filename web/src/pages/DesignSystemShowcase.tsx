@@ -6,6 +6,7 @@ import {
   NullValue,
   DataCell,
   CostValue,
+  createCostExplanation,
   CostSourceBadge,
   FreshnessIndicator,
   ExplainableNumber,
@@ -152,8 +153,14 @@ export const DesignSystemShowcase: React.FC = () => {
       key: 'cost',
       header: 'Monthly Spend',
       isNumeric: true,
-      sortable: true,
-      render: (row) => <CostValue amount={row.cost} source={row.costSource} currency="USD" />,
+      render: (row) => (
+        <CostValue
+          amount={row.cost}
+          source={row.costSource}
+          currency="USD"
+          explanation={createCostExplanation(row.service, { pricingSource: 'aws_price_list_bulk' })}
+        />
+      ),
     },
     {
       key: 'utilization',
@@ -396,7 +403,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ACTUAL (Invoiced / Billed)</span>
               <CostSourceBadge source="ACTUAL" size="sm" />
             </div>
-            <CostValue amount={1420.5} source="ACTUAL" currency="USD" />
+            <CostValue
+              amount={1420.5}
+              source="ACTUAL"
+              currency="USD"
+              explanation={createCostExplanation('Compute Fleet Invoiced Actual', { pricingSource: 'aws_cur_invoiced' })}
+            />
           </div>
 
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -404,7 +416,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ESTIMATED (Rate Card Calculated)</span>
               <CostSourceBadge source="ESTIMATED" size="sm" />
             </div>
-            <CostValue amount={450.0} source="ESTIMATED" currency="USD" />
+            <CostValue
+              amount={450.0}
+              source="ESTIMATED"
+              currency="USD"
+              explanation={createCostExplanation('App Service Estimated Run-Rate', { pricingSource: 'azure_price_sheet' })}
+            />
           </div>
 
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -412,7 +429,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>FORECAST (Projected Run-rate)</span>
               <CostSourceBadge source="FORECAST" size="sm" />
             </div>
-            <CostValue amount={180.25} source="FORECAST" currency="USD" />
+            <CostValue
+              amount={180.25}
+              source="FORECAST"
+              currency="USD"
+              explanation={createCostExplanation('Storage Projected Forecast', { pricingSource: 'gcp_cloud_billing' })}
+            />
           </div>
 
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -420,7 +442,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>MANUAL (Journal Voucher Override)</span>
               <CostSourceBadge source="MANUAL" size="sm" />
             </div>
-            <CostValue amount={600.0} source="MANUAL" currency="USD" />
+            <CostValue
+              amount={600.0}
+              source="MANUAL"
+              currency="USD"
+              explanation={createCostExplanation('Manual Apportionment Override', { costBasis: 'CONTRACTED' })}
+            />
           </div>
 
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -428,7 +455,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>CACHED (Offline Snapshot)</span>
               <CostSourceBadge source="CACHED" size="sm" />
             </div>
-            <CostValue amount={312.8} source="CACHED" currency="USD" />
+            <CostValue
+              amount={312.8}
+              source="CACHED"
+              currency="USD"
+              explanation={createCostExplanation('Cached Snapshot Run-Rate', { isStale: true, stalenessWarning: 'Cached 28 hours ago' })}
+            />
           </div>
 
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -436,7 +468,12 @@ export const DesignSystemShowcase: React.FC = () => {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>UNAVAILABLE (Unresolved Spend)</span>
               <CostSourceBadge source="UNAVAILABLE" size="sm" />
             </div>
-            <CostValue amount={null} source="UNAVAILABLE" currency="USD" />
+            <CostValue
+              amount={null}
+              source="UNAVAILABLE"
+              currency="USD"
+              explanation={createCostExplanation('Unresolved Telemetry', { pricingSource: 'unknown_source' })}
+            />
           </div>
         </div>
       </section>

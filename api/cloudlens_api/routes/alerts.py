@@ -122,6 +122,13 @@ class ContextualDismissDTO(BaseModel):
     actor: str = Field(..., min_length=1, description="Actor username dismissing alert")
 
 
+class ContextualAcknowledgeDTO(BaseModel):
+    """Payload for acknowledging an inline contextual alert."""
+
+    actor: str = Field(..., min_length=1, description="Actor username acknowledging alert")
+    note: str | None = Field(default=None, description="Optional acknowledgement note")
+
+
 class SubscriptionCreateDTO(BaseModel):
     """Payload for registering a notification subscription."""
 
@@ -294,6 +301,22 @@ async def dismiss_contextual_alert(
     return alert_service.dismiss_contextual_alert(
         alert_id=contextual_id,
         actor=payload.actor,
+        tenant_context=tenant_context,
+    )
+
+
+@router.post("/contextual/{contextual_id}/acknowledge", response_model=ContextualAlert)
+async def acknowledge_contextual_alert(
+    contextual_id: str,
+    payload: ContextualAcknowledgeDTO,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    alert_service: AlertService = Depends(get_alert_service),
+) -> ContextualAlert:
+    """Acknowledges an active inline contextual alert with audit event."""
+    return alert_service.acknowledge_contextual_alert(
+        alert_id=contextual_id,
+        actor=payload.actor,
+        note=payload.note,
         tenant_context=tenant_context,
     )
 

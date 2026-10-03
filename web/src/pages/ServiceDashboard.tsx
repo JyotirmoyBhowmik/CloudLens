@@ -3,6 +3,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   CostValue,
+  createCostExplanation,
   FreshnessIndicator,
   AccessibleChart,
 } from '../design-system';
@@ -215,7 +216,14 @@ export const ServiceDashboard: React.FC = () => {
                 4. Actual Spend
               </span>
               <div style={{ marginTop: '0.5rem' }}>
-                <CostValue amount={Number(data.actual_cost.amount)} source="ACTUAL" currency="USD" />
+                <CostValue
+                  amount={Number(data.actual_cost.amount)}
+                  source="ACTUAL"
+                  currency="USD"
+                  explanation={createCostExplanation(`${data.service_name} Actual Spend`, {
+                    pricingSource: `${data.provider.toLowerCase()}_pricing_api`,
+                  })}
+                />
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 Billed FOCUS reconciliation
@@ -231,7 +239,15 @@ export const ServiceDashboard: React.FC = () => {
                 5. Estimated Spend
               </span>
               <div style={{ marginTop: '0.5rem' }}>
-                <CostValue amount={Number(data.estimated_cost.amount)} source="ESTIMATED" currency="USD" />
+                <CostValue
+                  amount={Number(data.estimated_cost.amount)}
+                  source="ESTIMATED"
+                  currency="USD"
+                  explanation={createCostExplanation(`${data.service_name} Estimated Run-Rate`, {
+                    pricingSource: `${data.provider.toLowerCase()}_pricing_api`,
+                    formula: 'unit_price * estimated_hours',
+                  })}
+                />
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 Unbilled / Pre-deployment
@@ -244,7 +260,14 @@ export const ServiceDashboard: React.FC = () => {
                 6. Month-End Forecast
               </span>
               <div style={{ marginTop: '0.5rem' }}>
-                <CostValue amount={Number(data.forecast_cost.amount)} source="FORECAST" currency="USD" />
+                <CostValue
+                  amount={Number(data.forecast_cost.amount)}
+                  source="FORECAST"
+                  currency="USD"
+                  explanation={createCostExplanation(`${data.service_name} Forecasted Trajectory`, {
+                    pricingSource: 'cloudlens_forecasting_engine',
+                  })}
+                />
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 Trajectory at 95% confidence

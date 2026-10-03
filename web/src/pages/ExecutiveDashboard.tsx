@@ -3,6 +3,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   CostValue,
+  createCostExplanation,
   ExplainableNumber,
   ThresholdBadge,
   AccessibleChart,
@@ -261,6 +262,7 @@ export const ExecutiveDashboard: React.FC = () => {
           amount={Number(row.cost)}
           source="ACTUAL"
           currency="USD"
+          explanation={createCostExplanation(row.label, { pricingSource: 'aws_cur_invoiced' })}
         />
       ),
     },
@@ -350,7 +352,12 @@ export const ExecutiveDashboard: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-            <CostValue amount={Number(data.total_cloud_cost.amount)} source="ACTUAL" currency="USD" />
+            <CostValue
+              amount={Number(data.total_cloud_cost.amount)}
+              source="ACTUAL"
+              currency="USD"
+              explanation={createCostExplanation('Total Cloud Spend', { pricingSource: 'focus_billing_aggregator', formula: 'SUM(billed_cost) across active provider feeds' })}
+            />
             <ExplainableNumber
               value={Number(data.total_cloud_cost.amount)}
               detail={{
@@ -374,7 +381,12 @@ export const ExecutiveDashboard: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem' }}>
           <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Month to Date (MTD)</span>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.5rem' }}>
-            <CostValue amount={Number(data.current_month_cost.amount)} source="ACTUAL" currency="USD" />
+            <CostValue
+              amount={Number(data.current_month_cost.amount)}
+              source="ACTUAL"
+              currency="USD"
+              explanation={createCostExplanation('Month to Date Spend', { pricingSource: 'focus_billing_aggregator' })}
+            />
           </div>
           <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
             Run-rate trajectory normal
@@ -385,7 +397,12 @@ export const ExecutiveDashboard: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1.25rem' }}>
           <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Forecast Projected</span>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.5rem' }}>
-            <CostValue amount={Number(data.forecast_cost.amount)} source="FORECAST" currency="USD" />
+            <CostValue
+              amount={Number(data.forecast_cost.amount)}
+              source="FORECAST"
+              currency="USD"
+              explanation={createCostExplanation('Forecast Projected Spend', { pricingSource: 'cloudlens_forecasting_engine', formula: 'OLS linear run-rate trend extrapolation' })}
+            />
           </div>
           <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#fb923c' }}>
             +6.5% vs period target

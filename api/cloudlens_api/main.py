@@ -33,6 +33,7 @@ from api.cloudlens_api.routes import (
     demo_router,
     dependency_router,
     diagnostics_router,
+    explanation_router,
     forecasting_router,
     health_router,
     hierarchy_router,
@@ -60,6 +61,7 @@ from api.cloudlens_api.routes import (
     wizard_router,
     workflows_router,
 )
+from domain.explanation.exceptions import ExplanationNotFoundException
 from domain.models.exceptions import (
     AlertException,
     AlertNotFoundException,
@@ -931,6 +933,25 @@ async def bulk_import_exception_handler(request: Request, exc: BulkImportExcepti
     )
 
 
+@app.exception_handler(ExplanationNotFoundException)
+async def explanation_not_found_exception_handler(
+    request: Request, exc: ExplanationNotFoundException
+):
+    """Exception handler for missing explanation suites and panels (Rule 2.4 / Prompt 40)."""
+    correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={
+            "timestamp": datetime.now(UTC).isoformat(),
+            "status_code": status.HTTP_404_NOT_FOUND,
+            "error_code": exc.error_code,
+            "correlation_id": correlation_id,
+            "message": exc.message,
+        },
+        headers={"X-Correlation-ID": correlation_id},
+    )
+
+
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -974,6 +995,7 @@ app.include_router(bulk_import_router)
 app.include_router(dashboards_router)
 app.include_router(hierarchy_router)
 app.include_router(resource_detail_router)
+app.include_router(explanation_router)
 
 
 class HealthResponse(BaseModel):

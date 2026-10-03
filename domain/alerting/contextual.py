@@ -159,3 +159,40 @@ class ContextualAlertManager:
         except Exception:
             pass
         return alert
+
+    def acknowledge_alert(
+        self,
+        alert_id: str,
+        actor: str,
+        note: str | None = None,
+        *,
+        tenant_context: TenantContext,
+    ) -> ContextualAlert:
+        """Acknowledges an active contextual alert with audit provenance."""
+        alert = self.get_alert(alert_id, tenant_context=tenant_context)
+        alert.acknowledge(actor=actor, note=note)
+
+        try:
+            self._audit_service.append_event(
+                tenant_context=tenant_context,
+                event_in=AuditEventCreate(
+                    event_type=AuditEventType.CONTEXTUAL_ALERT_ACKNOWLEDGED,
+                    actor_id=actor,
+                    actor_roles=tenant_context.roles or ["OPERATOR"],
+                    action=AuditEventType.CONTEXTUAL_ALERT_ACKNOWLEDGED.value,
+                    resource_type="ContextualAlert",
+                    resource_id=alert.id,
+                    details={
+                        "alert_type": alert.alert_type.value,
+                        "acknowledged_by": actor,
+                        "acknowledged_at": alert.acknowledged_at.isoformat()
+                        if alert.acknowledged_at
+                        else None,
+                        "acknowledgement_note": note,
+                    },
+                    correlation_id=tenant_context.correlation_id,
+                ),
+            )
+        except Exception:
+            pass
+        return alert

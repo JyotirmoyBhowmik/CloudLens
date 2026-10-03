@@ -353,3 +353,143 @@ export const TABLE_DENSITIES: Record<TableDensity, TableDensityConfig> = {
     lineHeight: '1.5',
   },
 };
+
+/**
+ * =============================================================================
+ * Explanation Layer Tokens & Content Models (Prompt 40 / Master Brief Sec 4, 5, 50-53)
+ * =============================================================================
+ */
+
+export type StandardExplanationPanelType =
+  | 'WHAT_IS_THIS_SERVICE'
+  | 'HOW_IS_IT_PRICED'
+  | 'WHY_IS_IT_FREE'
+  | 'WHAT_CAUSES_ADDITIONAL_CHARGES'
+  | 'WHAT_USAGE_IS_INCLUDED_IN_FREE_TIER'
+  | 'WHAT_IS_INCLUDED_IN_ESTIMATE'
+  | 'WHAT_IS_EXCLUDED'
+  | 'WHAT_PROVIDER_SOURCE_WAS_USED'
+  | 'WHEN_WAS_PRICING_LAST_RETRIEVED'
+  | 'WHY_DOES_ACTUAL_BILLING_DIFFER'
+  | 'WHAT_DEPENDENCY_IS_RESPONSIBLE';
+
+export interface StandardExplanationPanelData {
+  panel_type: StandardExplanationPanelType;
+  title: string;
+  headline: string;
+  narrative: string;
+  key_facts: Record<string, any>;
+  source_citation: string;
+  source_url: string;
+  last_verified_at: string;
+  conditions?: string[];
+  rule_reference?: string;
+}
+
+export interface PricingInformationPanelData {
+  resource_id?: string | null;
+  service: string;
+  service_sku?: string | null;
+  pricing_model: string;
+  region: string;
+  configuration: Record<string, any>;
+  unit_rate: number;
+  monthly_estimate?: number | null;
+  pricing_status: string;
+  pricing_status_conditions?: string[];
+  pricing_statement: string;
+  free_tier_status: string;
+  free_tier_allowance?: {
+    quantity: number;
+    unit: string;
+    reset_period?: string;
+    post_allowance_rate?: number | null;
+  } | null;
+  additional_usage_rate?: number | null;
+  currency: string;
+  billing_unit: string;
+  data_transfer_note?: string | null;
+  storage_note?: string | null;
+  discount_applicability?: string | null;
+  commitment_applicability?: string | null;
+  tax_treatment?: string | null;
+  source_traceability: {
+    pricing_source: string;
+    source_url: string;
+    retrieval_timestamp: string;
+    region: string;
+    currency: string;
+    effective_date: string;
+    is_verified?: boolean;
+  };
+  freshness: {
+    last_known_retrieval_date: string;
+    staleness_threshold_hours: number;
+    is_stale: boolean;
+    age_hours: number;
+  };
+  caveats?: string[];
+  related_metrics?: string[];
+}
+
+export type ContextualAlertType =
+  | 'COST_INFORMATION'
+  | 'FREE_TIER'
+  | 'BUDGET'
+  | 'FORECAST'
+  | 'PRICING_CHANGE'
+  | 'PRICING_UNAVAILABLE';
+
+export interface ContextualAlertData {
+  id: string;
+  alert_type: ContextualAlertType;
+  title: string;
+  message: string;
+  severity: string;
+  visibility: string;
+  is_acknowledged?: boolean;
+  acknowledged_by?: string | null;
+  acknowledged_at?: string | null;
+  acknowledgement_note?: string | null;
+  is_dismissed?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface CostExplanation {
+  metricName: string;
+  pricingSource: string;
+  retrievalTimestamp: string;
+  effectiveDate: string;
+  region: string;
+  currency: string;
+  rate?: number;
+  unit?: string;
+  formula?: string;
+  costBasis?: string;
+  freeCondition?: string;
+  isStale?: boolean;
+  stalenessWarning?: string;
+  sourceUrl?: string;
+  panelData?: Partial<PricingInformationPanelData>;
+}
+
+export interface FreshnessSurfaceItemData {
+  data_class: 'PRICING' | 'BILLING_ACTUALS' | 'USAGE_METRICS' | 'INVENTORY';
+  label: string;
+  stated_time_text: string;
+  last_retrieved_at: string;
+  age_hours: number;
+  staleness_threshold_hours: number;
+  is_stale: boolean;
+  warning_message?: string | null;
+  provider: string;
+  status: 'FRESH' | 'DELAYED' | 'STALE';
+}
+
+export interface FreshnessSurfaceData {
+  evaluated_at: string;
+  items: FreshnessSurfaceItemData[];
+  has_staleness_warning: boolean;
+  stale_count: number;
+}
+

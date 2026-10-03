@@ -20,3 +20,9 @@ export * from './SkeletonLoader';
 export * from './UserTimestamp';
 export * from './ProgressiveDisclosure';
 export * from './RoleShapedNav';
+export * from './InformationIcon';
+export * from './StandardExplanationPanels';
+export * from './ContextualAlertBanner';
+export * from './FreshnessSurface';
+export * from './SourceTraceabilityBadge';
+

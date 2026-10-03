@@ -17,6 +17,7 @@ from api.cloudlens_api.routes.demo import router as demo_router
 from api.cloudlens_api.routes.demo_mode import router as demo_mode_router
 from api.cloudlens_api.routes.dependency import router as dependency_router
 from api.cloudlens_api.routes.diagnostics import router as diagnostics_router
+from api.cloudlens_api.routes.explanation import router as explanation_router
 from api.cloudlens_api.routes.forecasting import router as forecasting_router
 from api.cloudlens_api.routes.health import router as health_router
 from api.cloudlens_api.routes.hierarchy import router as hierarchy_router
@@ -62,6 +63,7 @@ __all__ = [
     "demo_router",
     "dependency_router",
     "diagnostics_router",
+    "explanation_router",
     "forecasting_router",
     "health_router",
     "hierarchy_router",

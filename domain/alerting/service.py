@@ -238,6 +238,22 @@ class AlertService:
             tenant_context=tenant_context,
         )
 
+    def acknowledge_contextual_alert(
+        self,
+        alert_id: str,
+        actor: str,
+        note: str | None = None,
+        *,
+        tenant_context: TenantContext,
+    ) -> ContextualAlert:
+        """Acknowledges an inline contextual alert with audit event."""
+        return self.contextual_manager.acknowledge_alert(
+            alert_id=alert_id,
+            actor=actor,
+            note=note,
+            tenant_context=tenant_context,
+        )
+
     # ==========================================================================
     # Subscription Operations
     # ==========================================================================

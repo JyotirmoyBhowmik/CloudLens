@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { DenseTable, ColumnDefinition } from '../design-system/DenseTable';
 import { NullValue } from '../design-system/NullValue';
-import { CostValue } from '../design-system/CostValue';
+import { CostValue, createCostExplanation } from '../design-system/CostValue';
 import { SkeletonLoader } from '../design-system/SkeletonLoader';
 
 export interface InventoryItem35 {
@@ -391,7 +391,15 @@ export const ServiceInventory: React.FC = () => {
       sortable: true,
       render: (row) => (
         <span style={{ fontWeight: 600 }}>
-          <CostValue amount={Number(row.monthly_cost)} source="ACTUAL" currency="USD" />
+          <CostValue
+            amount={Number(row.monthly_cost)}
+            source="ACTUAL"
+            currency="USD"
+            explanation={createCostExplanation(`${row.service_name} Monthly Spend`, {
+              pricingSource: `${row.provider}_cost_management`,
+              region: row.region_id,
+            })}
+          />
         </span>
       ),
     },

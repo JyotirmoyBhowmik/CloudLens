@@ -6,9 +6,11 @@ import {
   Edit3,
   Database,
   Slash,
+  AlertTriangle,
 } from 'lucide-react';
-import { CostSource, COST_SOURCES } from './tokens';
+import { CostSource, COST_SOURCES, CostExplanation } from './tokens';
 import { NullValue } from './NullValue';
+import { InformationIcon } from './InformationIcon';
 
 export interface CostSourceBadgeProps {
   source: CostSource;
@@ -82,24 +84,44 @@ export interface CostValueProps {
    * "An estimated cost cannot be styled as an actual cost without deliberately overriding the component."
    */
   source: CostSource;
+  /**
+   * Mandatory explanation payload (Prompt 40 Mechanical Enforcement):
+   * "A component rendering a cost without an explanation payload fails the build."
+   */
+  explanation: CostExplanation;
   currency?: string;
   precision?: number;
   showBadge?: boolean;
+  showInfoIcon?: boolean;
+  onOpenFullPanels?: () => void;
   className?: string;
 }
 
 /**
- * Universal Cost Value Display Component
- * Enforces mandatory source tagging and distinct visual styling per cost source.
+ * Universal Cost Value Display Component (Prompt 36 & Prompt 40)
+ * Enforces mandatory source tagging, distinct visual styling per cost source,
+ * and reachable explanation within one interaction.
  */
 export const CostValue: React.FC<CostValueProps> = ({
   amount,
   source,
+  explanation,
   currency = 'USD',
   precision = 2,
   showBadge = true,
+  showInfoIcon = true,
+  onOpenFullPanels,
   className = '',
 }) => {
+  // If explanation is null/undefined at runtime, enforce mechanical guard
+  if (!explanation) {
+    throw new Error(
+      `Mechanical violation: CostValue component rendered without mandatory explanation payload.`
+    );
+  }
+
+  const isStale = explanation.isStale || false;
+
   if (amount === null || amount === undefined) {
     return (
       <span
@@ -112,6 +134,13 @@ export const CostValue: React.FC<CostValueProps> = ({
       >
         <NullValue state={source === 'UNAVAILABLE' ? 'NOT_SUPPORTED' : 'NO_DATA'} />
         {showBadge && <CostSourceBadge source={source} size="sm" />}
+        {showInfoIcon && (
+          <InformationIcon
+            explanation={explanation}
+            size="sm"
+            onOpenFullPanels={onOpenFullPanels}
+          />
+        )}
       </span>
     );
   }
@@ -156,7 +185,44 @@ export const CostValue: React.FC<CostValueProps> = ({
         {currency} {isZero ? `0.${'0'.repeat(precision)}` : formatted}
       </span>
 
+      {/* Staleness Warning Indicator */}
+      {isStale && (
+        <span
+          title={`Stale pricing: Retrieved ${new Date(explanation.retrievalTimestamp).toLocaleDateString()}. ${explanation.stalenessWarning || 'Exceeds SLA threshold.'}`}
+          style={{ color: '#f87171', display: 'inline-flex', alignItems: 'center' }}
+        >
+          <AlertTriangle size={12} aria-hidden="true" />
+        </span>
+      )}
+
       {showBadge && <CostSourceBadge source={source} size="sm" />}
+
+      {/* Reachable Explanation Icon (Accessible within one interaction) */}
+      {showInfoIcon && (
+        <InformationIcon
+          explanation={explanation}
+          size="sm"
+          onOpenFullPanels={onOpenFullPanels}
+        />
+      )}
     </span>
   );
 };
+
+/**
+ * Convenience helper to create defensible CostExplanation payloads with defaults.
+ */
+export function createCostExplanation(
+  metricName: string,
+  overrides?: Partial<CostExplanation>
+): CostExplanation {
+  return {
+    metricName,
+    pricingSource: overrides?.pricingSource || 'aws_price_list_bulk',
+    retrievalTimestamp: overrides?.retrievalTimestamp || '2026-10-02T12:00:00Z',
+    effectiveDate: overrides?.effectiveDate || '2026-09-01T00:00:00Z',
+    region: overrides?.region || 'us-east-1',
+    currency: overrides?.currency || 'USD',
+    ...overrides,
+  };
+}

@@ -296,6 +296,14 @@ class ContextualAlert(CanonicalEntity):
     is_dismissed: bool = Field(default=False, description="Whether dismissed by a user")
     dismissed_by: str | None = Field(default=None, description="Actor who dismissed alert")
     dismissed_at: dt.datetime | None = Field(default=None, description="Dismissal timestamp")
+    is_acknowledged: bool = Field(default=False, description="Whether acknowledged by a user")
+    acknowledged_by: str | None = Field(default=None, description="Actor who acknowledged alert")
+    acknowledged_at: dt.datetime | None = Field(
+        default=None, description="Acknowledgement timestamp"
+    )
+    acknowledgement_note: str | None = Field(
+        default=None, description="Optional explanation note for acknowledgement"
+    )
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Custom presentation metadata"
     )
@@ -307,6 +315,13 @@ class ContextualAlert(CanonicalEntity):
         self.is_dismissed = True
         self.dismissed_by = actor
         self.dismissed_at = dt.datetime.now(dt.UTC)
+
+    def acknowledge(self, actor: str, note: str | None = None) -> None:
+        """Acknowledges the contextual alert with recorded provenance."""
+        self.is_acknowledged = True
+        self.acknowledged_by = actor
+        self.acknowledged_at = dt.datetime.now(dt.UTC)
+        self.acknowledgement_note = note
 
 
 class QuietHoursConfig(BaseModel):

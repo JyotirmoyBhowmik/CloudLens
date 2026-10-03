@@ -17,7 +17,7 @@ import {
 import { Breadcrumb } from '../design-system/Breadcrumb';
 import { ThresholdBadge } from '../design-system/ThresholdBadge';
 import { ThresholdState } from '../design-system/tokens';
-import { CostValue } from '../design-system/CostValue';
+import { CostValue, createCostExplanation } from '../design-system/CostValue';
 import { SkeletonLoader } from '../design-system/SkeletonLoader';
 
 export type LateralLensType =
@@ -537,7 +537,12 @@ export const HierarchyExplorer: React.FC = () => {
                     <DollarSign size={14} /> AGGREGATE SPEND
                   </div>
                   <div style={{ fontSize: '1.35rem', fontWeight: 700, marginTop: '0.3rem', color: '#0f172a' }}>
-                    <CostValue amount={Number(detailPane.aggregate_cost)} source="ACTUAL" currency="USD" />
+                    <CostValue
+                      amount={Number(detailPane.aggregate_cost)}
+                      source="ACTUAL"
+                      currency="USD"
+                      explanation={createCostExplanation(`${detailPane.name} Aggregate Spend`, { pricingSource: 'focus_billing_aggregator', formula: 'SUM(descendant_nodes.billed_cost)' })}
+                    />
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.2rem' }}>All descendants rolled up</div>
                 </div>
@@ -547,7 +552,12 @@ export const HierarchyExplorer: React.FC = () => {
                     <Shield size={14} /> BUDGET ALLOCATION
                   </div>
                   <div style={{ fontSize: '1.35rem', fontWeight: 700, marginTop: '0.3rem', color: '#0f172a' }}>
-                    <CostValue amount={Number(detailPane.budget_amount)} source="ACTUAL" currency="USD" />
+                    <CostValue
+                      amount={Number(detailPane.budget_amount)}
+                      source="ACTUAL"
+                      currency="USD"
+                      explanation={createCostExplanation(`${detailPane.name} Target Budget`, { pricingSource: 'cloudlens_budget_service' })}
+                    />
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.2rem' }}>Target threshold boundary</div>
                 </div>

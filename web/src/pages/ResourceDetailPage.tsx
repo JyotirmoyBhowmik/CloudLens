@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Breadcrumb } from '../design-system/Breadcrumb';
 import { ThresholdBadge } from '../design-system/ThresholdBadge';
-import { CostValue } from '../design-system/CostValue';
+import { CostValue, createCostExplanation } from '../design-system/CostValue';
 import { NullValue } from '../design-system/NullValue';
 import { SkeletonLoader } from '../design-system/SkeletonLoader';
 import { ErrorState } from '../design-system/ErrorState';
@@ -587,19 +587,48 @@ export const ResourceDetailPage: React.FC<ResourceDetailPageProps> = ({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
               <div style={{ backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>1. Current (MTD Unbilled)</span>
-                <CostValue amount={resource.cost.current_cost} source="ACTUAL" />
+                <CostValue
+                  amount={resource.cost.current_cost}
+                  source="ACTUAL"
+                  explanation={createCostExplanation(`${resource.name} MTD Spend`, {
+                    pricingSource: resource.pricing.pricing_source,
+                    region: resource.pricing.region,
+                  })}
+                />
               </div>
               <div style={{ backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>2. Prior Closed Actual</span>
-                <CostValue amount={resource.cost.actual_cost} source="ACTUAL" />
+                <CostValue
+                  amount={resource.cost.actual_cost}
+                  source="ACTUAL"
+                  explanation={createCostExplanation(`${resource.name} Prior Actual`, {
+                    pricingSource: resource.pricing.pricing_source,
+                    region: resource.pricing.region,
+                  })}
+                />
               </div>
               <div style={{ backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>3. Pre-Deploy Estimate</span>
-                <CostValue amount={resource.cost.estimated_cost} source="ESTIMATED" />
+                <CostValue
+                  amount={resource.cost.estimated_cost}
+                  source="ESTIMATED"
+                  explanation={createCostExplanation(`${resource.name} Baseline Estimate`, {
+                    pricingSource: resource.pricing.pricing_source,
+                    region: resource.pricing.region,
+                    formula: 'unit_price * 730 hours',
+                  })}
+                />
               </div>
               <div style={{ backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>4. Projected Forecast</span>
-                <CostValue amount={resource.cost.forecast_cost} source="FORECAST" />
+                <CostValue
+                  amount={resource.cost.forecast_cost}
+                  source="FORECAST"
+                  explanation={createCostExplanation(`${resource.name} End of Month Forecast`, {
+                    pricingSource: 'cloudlens_forecasting_engine',
+                    region: resource.pricing.region,
+                  })}
+                />
               </div>
               <div style={{ backgroundColor: 'var(--bg-primary)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>5. Target Budget</span>

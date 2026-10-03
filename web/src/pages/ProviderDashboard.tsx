@@ -3,6 +3,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   CostValue,
+  createCostExplanation,
   ThresholdBadge,
   FreshnessIndicator,
 } from '../design-system';
@@ -137,7 +138,12 @@ export const ProviderDashboard: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8125rem' }}>
             <span style={{ color: 'var(--text-secondary)' }}>{node.resource_count} resources</span>
-            <CostValue amount={Number(node.cost)} source="ACTUAL" currency="USD" />
+            <CostValue
+              amount={Number(node.cost)}
+              source="ACTUAL"
+              currency="USD"
+              explanation={createCostExplanation(`${node.native_name} Spend`, { pricingSource: `${selectedProvider}_cost_management` })}
+            />
           </div>
         </div>
 
@@ -256,7 +262,12 @@ export const ProviderDashboard: React.FC = () => {
                 <ThresholdBadge state={data.threshold_state as any} />
               </div>
               <div style={{ marginTop: '0.4rem' }}>
-                <CostValue amount={Number(data.actual_cost.amount)} source="ACTUAL" currency="USD" />
+                <CostValue
+                  amount={Number(data.actual_cost.amount)}
+                  source="ACTUAL"
+                  currency="USD"
+                  explanation={createCostExplanation(`${data.provider.toUpperCase()} Actual Spend`, { pricingSource: `${selectedProvider}_cost_management` })}
+                />
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 {Number(data.budget_utilisation_pct).toFixed(1)}% of ${(Number(data.budget_amount) / 1000).toFixed(0)}k budget

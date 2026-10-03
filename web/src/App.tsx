@@ -9,6 +9,7 @@ import { ServiceInventory } from './pages/ServiceInventory';
 import { ResourceDetailPage } from './pages/ResourceDetailPage';
 import { CostExplorerPage } from './pages/CostExplorerPage';
 import { InvestigationViewPage } from './pages/InvestigationViewPage';
+import { ExplanationLayerView } from './pages/ExplanationLayerView';
 
 interface HealthStatus {
   status: string;
@@ -23,7 +24,7 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
-    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'resource-detail' | 'cost-explorer' | 'investigation' | 'masterdata' | 'design-system'
+    'overview' | 'executive' | 'provider' | 'service' | 'hierarchy' | 'inventory' | 'resource-detail' | 'cost-explorer' | 'investigation' | 'masterdata' | 'design-system' | 'explanation'
   >('executive');
   const [activeResourceId, setActiveResourceId] = useState<string>('res-aws-vm-01');
   const [explorerDimension, setExplorerDimension] = useState<string>('SERVICE');
@@ -260,6 +261,21 @@ export const App: React.FC = () => {
             Design System
           </button>
           <button
+            onClick={() => setCurrentView('explanation')}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: currentView === 'explanation' ? '#0284c7' : 'transparent',
+              color: currentView === 'explanation' ? '#ffffff' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Explanation Layer
+          </button>
+          <button
             onClick={() => setCurrentView('masterdata')}
             style={{
               padding: '0.4rem 0.8rem',
@@ -347,6 +363,8 @@ export const App: React.FC = () => {
           />
         ) : currentView === 'design-system' ? (
           <DesignSystemShowcase />
+        ) : currentView === 'explanation' ? (
+          <ExplanationLayerView />
         ) : currentView === 'masterdata' ? (
           <MasterDataConsole />
         ) : (
