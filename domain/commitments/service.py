@@ -14,13 +14,12 @@ Fulfills:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
 import logging
+from decimal import ROUND_HALF_EVEN, Decimal
 from typing import Any
 
 from domain.commitments.exceptions import (
     CommitmentNotFoundException,
-    MissingSupportingEvidenceException,
 )
 from domain.commitments.models import (
     CommitmentAssessment,
@@ -28,6 +27,7 @@ from domain.commitments.models import (
     CommitmentDecisionRecord,
     CommitmentEntity,
     CommitmentType,
+    ExpiryAlertRecord,
     HistoricalTrend,
     PortfolioSummary,
     PostExpiryImpact,
@@ -36,8 +36,26 @@ from domain.commitments.models import (
     RenewalRecommendation,
     WhatIfOption,
 )
-from domain.models.enums import ProviderType
+from domain.models.enums import (
+    ProviderType,
+    TaskCategory,
+    TaskPriority,
+    TaskSource,
+    WorkflowRequestType,
+)
+from domain.remediation.models import (
+    SubjectEntity as RemediationSubjectEntity,
+)
+from domain.remediation.models import (
+    TaskCreateRequest,
+)
 from domain.tenant.context import TenantContext
+from domain.workflows.models import (
+    SubjectEntity as WorkflowSubjectEntity,
+)
+from domain.workflows.models import (
+    WorkflowSubmitRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +67,7 @@ class CommitmentService:
         self._commitments: dict[str, CommitmentEntity] = {}
         self._analyses: dict[str, CommitmentCoverageAnalysis] = {}
         self._decisions: dict[str, CommitmentDecisionRecord] = {}
+        self._alerts: dict[str, ExpiryAlertRecord] = {}
 
     def register_commitment(
         self,
@@ -165,7 +184,7 @@ class CommitmentService:
         lead_time_days: int = 60,
         as_of: dt.datetime | None = None,
     ) -> list[RenewalPipelineItem]:
-        now = as_of or dt.datetime.now(dt.timezone.utc)
+        now = as_of or dt.datetime.now(dt.UTC)
         items: list[RenewalPipelineItem] = []
 
         for comm in self.list_commitments(tenant_id):
@@ -289,10 +308,46 @@ class CommitmentService:
             delta_vs_do_nothing=downsize_saving,
         )
 
-        options = [opt_do_nothing, opt_same, opt_higher, opt_lower]
+        # Option 5: Change Term
+        term_cost = (annual_base * Decimal("0.85")).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        term_saving = (do_nothing_cost - term_cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        opt_term = WhatIfOption(
+            action=RenewalAction.CHANGE_TERM,
+            description="Extend to 3-year term for deeper multi-year rate reduction",
+            projected_annual_cost=term_cost,
+            projected_annual_saving=term_saving,
+            delta_vs_do_nothing=term_saving,
+        )
+
+        # Option 6: Change Scope
+        scope_cost = annual_base
+        scope_saving = same_saving
+        opt_scope = WhatIfOption(
+            action=RenewalAction.CHANGE_SCOPE,
+            description="Broaden scope to tenant-wide billing pool to eliminate single-account underutilisation",
+            projected_annual_cost=scope_cost,
+            projected_annual_saving=scope_saving,
+            delta_vs_do_nothing=scope_saving,
+        )
+
+        # Option 7: Allow to Lapse
+        opt_lapse = WhatIfOption(
+            action=RenewalAction.ALLOW_TO_LAPSE,
+            description="Deliberately allow commitment to lapse to accommodate planned workload decommissioning",
+            projected_annual_cost=do_nothing_cost,
+            projected_annual_saving=Decimal("0.00"),
+            delta_vs_do_nothing=Decimal("0.00"),
+        )
+
+        options = [opt_do_nothing, opt_same, opt_higher, opt_lower, opt_term, opt_scope, opt_lapse]
 
         # Determine recommendation
-        if analysis.assessment == CommitmentAssessment.OVER_COMMITMENT or planned_decommission_pct > Decimal("0.15"):
+        if planned_decommission_pct >= Decimal("0.80"):
+            recommended_action = RenewalAction.ALLOW_TO_LAPSE
+            rec_amount = Decimal("0.00")
+            rec_saving = Decimal("0.00")
+            reasoning.append("Recommendation: ALLOW_TO_LAPSE due to complete or near-total workload decommissioning (Prompt 59).")
+        elif analysis.assessment == CommitmentAssessment.OVER_COMMITMENT or planned_decommission_pct > Decimal("0.15"):
             recommended_action = RenewalAction.RENEW_LOWER
             rec_amount = downsize_cost
             rec_saving = downsize_saving
@@ -318,7 +373,7 @@ class CommitmentService:
         )
 
     # -------------------------------------------------------------------------
-    # Decision Recording & Post-Expiry Verification
+    # Decision Recording, Expiry Alerting & Workflow Routing
     # -------------------------------------------------------------------------
     def record_renewal_decision(
         self,
@@ -327,25 +382,172 @@ class CommitmentService:
         approver_id: str,
         justification: str,
         tenant_context: TenantContext,
+        workflow_service: Any | None = None,
+        authority_threshold: Decimal = Decimal("50000.00"),
     ) -> CommitmentDecisionRecord:
+        """Records a deliberate renewal or lapse decision, routing to Prompt 50 workflow if above threshold."""
         comm = self.get_commitment(commitment_id)
+        requires_approval = comm.annual_committed_cost >= authority_threshold
+        wf_req_id = None
+        approval_status = "APPROVED"
+
+        if requires_approval and workflow_service is not None:
+            approval_status = "PENDING_WORKFLOW"
+            provider_str = comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            submit_req = WorkflowSubmitRequest(
+                request_type=WorkflowRequestType.BUDGET_APPROVAL.value,
+                title=f"Commitment Renewal Decision: {comm.commitment_id} ({chosen_action.value})",
+                subject_entity=WorkflowSubjectEntity(
+                    entity_type="commitment",
+                    entity_id=comm.commitment_id,
+                    scope_type="scope",
+                    scope_id=comm.scope_id,
+                    metadata={
+                        "provider": provider_str,
+                        "action": chosen_action.value,
+                    },
+                ),
+                justification=justification,
+                payload={
+                    "commitment_id": comm.commitment_id,
+                    "chosen_action": chosen_action.value,
+                    "annual_committed_cost": str(comm.annual_committed_cost),
+                    "scope_id": comm.scope_id,
+                },
+                financial_impact=float(comm.annual_committed_cost),
+            )
+            wf_res = workflow_service.submit_request(submit_req, tenant_context=tenant_context)
+            wf_req_id = wf_res.id
+
         record = CommitmentDecisionRecord(
             commitment_id=commitment_id,
             tenant_id=tenant_context.tenant_id,
             chosen_action=chosen_action,
             approver_id=approver_id,
             justification=justification,
+            requires_approval=requires_approval,
+            approval_status=approval_status,
+            workflow_request_id=wf_req_id,
         )
         self._decisions[commitment_id] = record
         return record
+
+    def route_decision_to_workflow(
+        self,
+        commitment_id: str,
+        chosen_action: RenewalAction,
+        approver_id: str,
+        justification: str,
+        tenant_context: TenantContext,
+        workflow_service: Any,
+    ) -> CommitmentDecisionRecord:
+        """Explicitly routes a renewal decision through Prompt 50 governance workflow engine under AM-12 rules."""
+        return self.record_renewal_decision(
+            commitment_id=commitment_id,
+            chosen_action=chosen_action,
+            approver_id=approver_id,
+            justification=justification,
+            tenant_context=tenant_context,
+            workflow_service=workflow_service,
+            authority_threshold=Decimal("0.00"),
+        )
+
+    def trigger_expiry_alerts_and_tasks(
+        self,
+        commitment_id: str,
+        lead_time_days: int = 60,
+        as_of: dt.datetime | None = None,
+        tenant_context: TenantContext | None = None,
+        remediation_service: Any | None = None,
+    ) -> ExpiryAlertRecord:
+        """Emits expiry alert and creates assigned remediation task with due date at decision deadline."""
+        now = as_of or dt.datetime.now(dt.UTC)
+        comm = self.get_commitment(commitment_id)
+        days_left = (comm.expiry_date.date() - now.date()).days
+        if days_left > lead_time_days:
+            logger.info(
+                "Commitment %s not within renewal lead time window (%d > %d days)",
+                commitment_id,
+                days_left,
+                lead_time_days,
+            )
+
+        analysis = self._analyses.get(commitment_id)
+        if not analysis:
+            analysis = self.analyze_coverage_and_utilization(
+                commitment_id=comm.commitment_id,
+                eligible_usage_cost=comm.annual_committed_cost * Decimal("1.30"),
+                covered_usage_cost=comm.annual_committed_cost,
+                commitment_cost=comm.annual_committed_cost,
+                actual_consumed_cost=comm.annual_committed_cost * Decimal("0.90"),
+                list_price_cost=comm.annual_committed_cost * Decimal("1.40"),
+            )
+
+        var = (analysis.list_price_cost - analysis.commitment_cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        if var < Decimal("0.00"):
+            var = analysis.commitment_cost
+
+        # Decision deadline: 14 days before expiry (or immediate if within 14 days)
+        decision_days = max(1, days_left - 14)
+        decision_deadline = now + dt.timedelta(days=decision_days)
+
+        task_id = None
+        if remediation_service is not None and tenant_context is not None:
+            provider_str = comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            task_req = TaskCreateRequest(
+                source=TaskSource.ALERT,
+                subject_entity=RemediationSubjectEntity(
+                    entity_type="commitment",
+                    entity_id=comm.commitment_id,
+                    entity_name=f"{provider_str} {comm.commitment_type} ({comm.commitment_id})",
+                    scope_type="scope",
+                    scope_id=comm.scope_id,
+                    provider=provider_str,
+                ),
+                title=f"Commitment Expiry Decision Required: {comm.commitment_id}",
+                description=(
+                    f"Commitment {comm.commitment_id} expires in {days_left} days. "
+                    f"Value at risk is ${var:,.2f}. Decision must be recorded before {decision_deadline.strftime('%Y-%m-%d')}."
+                ),
+                category=TaskCategory.BUDGET_BREACH,
+                priority=TaskPriority.HIGH if var > Decimal("50000.00") else TaskPriority.MEDIUM,
+                assignee_id=comm.owner_id,
+                assignee_type="USER",
+                estimated_saving=float(var),
+                sla_working_hours=48.0,
+            )
+            task = remediation_service.create_task(
+                req=task_req,
+                actor="SYSTEM_ALERT_ENGINE",
+                tenant_context=tenant_context,
+            )
+            task_id = task.id
+
+        alert = ExpiryAlertRecord(
+            commitment_id=comm.commitment_id,
+            tenant_id=comm.tenant_id,
+            owner_id=comm.owner_id,
+            days_until_expiry=days_left,
+            decision_deadline=decision_deadline,
+            value_at_risk=var,
+            remediation_task_id=task_id,
+        )
+        self._alerts[comm.commitment_id] = alert
+        return alert
+
+    def get_alert(self, commitment_id: str) -> ExpiryAlertRecord | None:
+        return self._alerts.get(commitment_id)
 
     def evaluate_post_expiry_impact(
         self,
         commitment_id: str,
         on_demand_actual_cost: Decimal | float | str,
         evaluation_period: str = "2027-01",
+        replacement_commitment_id: str | None = None,
     ) -> PostExpiryImpact:
-        """Verifies post-lapse actuals against past committed rates to quantify financial surge."""
+        """Verifies post-lapse actuals against past committed rates to quantify financial surge and verify implementation."""
         comm = self.get_commitment(commitment_id)
         ondemand_dec = Decimal(str(on_demand_actual_cost)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_EVEN
@@ -355,6 +557,39 @@ class CommitmentService:
         )
         increase = (ondemand_dec - prev_monthly).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
+        decision = self._decisions.get(commitment_id)
+        if not decision:
+            has_deliberate_decision = False
+            incident_raised = True
+            incident_details = (
+                f"INCIDENT: Commitment {commitment_id} lapsed without a deliberate renewal or lapse decision recorded. "
+                f"Uncommitted cost spiked by ${increase:,.2f}."
+            )
+        else:
+            has_deliberate_decision = True
+            if decision.chosen_action in {
+                RenewalAction.RENEW_SAME,
+                RenewalAction.RENEW_HIGHER,
+                RenewalAction.RENEW_LOWER,
+            }:
+                if not replacement_commitment_id or replacement_commitment_id not in self._commitments:
+                    incident_raised = True
+                    incident_details = (
+                        f"INCIDENT: Commitment {commitment_id} decision was {decision.chosen_action.value}, "
+                        f"but no replacement commitment was found in inventory. On-demand cost spiked by ${increase:,.2f}."
+                    )
+                else:
+                    incident_raised = False
+                    incident_details = (
+                        f"Renewal verified. Replacement commitment {replacement_commitment_id} active in inventory."
+                    )
+            else:
+                incident_raised = False
+                incident_details = (
+                    f"Deliberate lapse decision recorded by {decision.approver_id}. "
+                    f"Expected on-demand delta: ${increase:,.2f}."
+                )
+
         return PostExpiryImpact(
             commitment_id=commitment_id,
             lapsed_at=comm.expiry_date,
@@ -362,6 +597,9 @@ class CommitmentService:
             on_demand_rate_cost=ondemand_dec,
             previous_committed_cost=prev_monthly,
             on_demand_increase=increase,
+            has_deliberate_decision=has_deliberate_decision,
+            incident_raised=incident_raised,
+            incident_details=incident_details,
         )
 
     def get_portfolio_view(self, tenant_id: str) -> PortfolioSummary:

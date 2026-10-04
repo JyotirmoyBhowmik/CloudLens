@@ -12,17 +12,17 @@ Enforces:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
-from enum import Enum
-from typing import Any
 import uuid
+from decimal import ROUND_HALF_EVEN, Decimal
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
 from domain.models.enums import ProviderType
 
 
-class CommitmentType(str, Enum):
+class CommitmentType(StrEnum):
     """Types of cloud commitment instruments."""
     SAVINGS_PLAN = "SAVINGS_PLAN"
     RESERVED_INSTANCE = "RESERVED_INSTANCE"
@@ -30,14 +30,14 @@ class CommitmentType(str, Enum):
     RESERVED_CAPACITY = "RESERVED_CAPACITY"          # OCI / Azure
 
 
-class CommitmentAssessment(str, Enum):
+class CommitmentAssessment(StrEnum):
     """Diagnostic assessment of commitment performance."""
     OVER_COMMITMENT = "OVER_COMMITMENT"    # High coverage, poor utilization -> waste
     UNDER_COMMITMENT = "UNDER_COMMITMENT"  # Low coverage, high utilization -> missed savings
     OPTIMAL = "OPTIMAL"                    # Balanced utilization and coverage
 
 
-class RenewalAction(str, Enum):
+class RenewalAction(StrEnum):
     """Formal renewal recommendation actions."""
     RENEW_SAME = "RENEW_SAME"
     RENEW_HIGHER = "RENEW_HIGHER"
@@ -178,7 +178,7 @@ class RenewalRecommendation(BaseModel):
     projected_annual_saving: Decimal
     reasoning: list[str]
     what_if_options: list[WhatIfOption] = Field(default_factory=list)
-    generated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    generated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
     @field_validator("recommended_commitment_amount", "projected_annual_saving", mode="before")
     @classmethod
@@ -196,7 +196,9 @@ class CommitmentDecisionRecord(BaseModel):
     chosen_action: RenewalAction
     approver_id: str
     justification: str
-    decided_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    decided_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
+    requires_approval: bool = False
+    approval_status: str = "APPROVED"
     workflow_request_id: str | None = None
 
 
@@ -208,6 +210,9 @@ class PostExpiryImpact(BaseModel):
     on_demand_rate_cost: Decimal
     previous_committed_cost: Decimal
     on_demand_increase: Decimal
+    has_deliberate_decision: bool = True
+    incident_raised: bool = False
+    incident_details: str | None = None
 
     @field_validator("on_demand_rate_cost", "previous_committed_cost", "on_demand_increase", mode="before")
     @classmethod
@@ -226,3 +231,24 @@ class PortfolioSummary(BaseModel):
     total_realized_savings: Decimal
     total_value_at_risk: Decimal
     provider_breakdowns: dict[str, Any] = Field(default_factory=dict)
+
+
+class ExpiryAlertRecord(BaseModel):
+    """Alert and remediation task record emitted when entering decision window."""
+    alert_id: str = Field(default_factory=lambda: f"alt-exp-{uuid.uuid4().hex[:8]}")
+    commitment_id: str
+    tenant_id: str
+    owner_id: str
+    days_until_expiry: int
+    decision_deadline: dt.datetime
+    value_at_risk: Decimal
+    remediation_task_id: str | None = None
+    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
+
+    @field_validator("value_at_risk", mode="before")
+    @classmethod
+    def _coerce_alert_var(cls, v: Any) -> Decimal:
+        if isinstance(v, Decimal):
+            return v
+        return Decimal(str(v)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+

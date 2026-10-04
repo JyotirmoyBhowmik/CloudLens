@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
+
 import pytest
 
 from domain.commitments.models import (
@@ -22,8 +23,10 @@ from domain.commitments.models import (
     RenewalAction,
 )
 from domain.commitments.service import CommitmentService
-from domain.models.enums import ProviderType
+from domain.models.enums import ProviderType, TaskPriority, WorkflowState
+from domain.remediation.service import RemediationService
 from domain.tenant.context import TenantContext
+from domain.workflows.service import WorkflowService
 
 
 class TestCommitmentRenewalSuite:
@@ -41,11 +44,19 @@ class TestCommitmentRenewalSuite:
     def service(self) -> CommitmentService:
         return CommitmentService()
 
+    @pytest.fixture
+    def remediation_service(self) -> RemediationService:
+        return RemediationService()
+
+    @pytest.fixture
+    def workflow_service(self) -> WorkflowService:
+        return WorkflowService()
+
     def test_coverage_and_utilization_over_under_commitment_diagnosis(
         self, service: CommitmentService, tenant_context: TenantContext
     ) -> None:
         """Over-commitment and under-commitment are distinguished, not merged into a single coverage number."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
 
         # Commitment 1: Over-committed (High coverage 90%, but low utilization 60%) -> Waste
         comm_over = service.register_commitment(
@@ -105,7 +116,7 @@ class TestCommitmentRenewalSuite:
         self, service: CommitmentService, tenant_context: TenantContext
     ) -> None:
         """Commitments entering decision window appear ranked strictly by value at risk."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
 
         # High value at risk ($150,000 exposure), expiring in 25 days
         c1 = service.register_commitment(
@@ -174,7 +185,7 @@ class TestCommitmentRenewalSuite:
         self, service: CommitmentService, tenant_context: TenantContext
     ) -> None:
         """Recommendation includes inspectable reasons, what-if comparison, and the do-nothing option."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         comm = service.register_commitment(
             tenant_context=tenant_context,
             commitment_id="comm-rec-test",
@@ -225,7 +236,7 @@ class TestCommitmentRenewalSuite:
         self, service: CommitmentService, tenant_context: TenantContext
     ) -> None:
         """A lapsed commitment triggers a post-expiry check quantifying the on-demand increase."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         comm = service.register_commitment(
             tenant_context=tenant_context,
             commitment_id="comm-lapsed-check",
@@ -266,7 +277,7 @@ class TestCommitmentRenewalSuite:
         self, service: CommitmentService, tenant_context: TenantContext
     ) -> None:
         """Cross-provider commitment portfolio aggregates AWS, Azure, GCP with metrics."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         service.register_commitment(
             tenant_context=tenant_context,
             commitment_id="c-aws",
@@ -301,3 +312,202 @@ class TestCommitmentRenewalSuite:
         assert portfolio.total_annual_committed_value == Decimal("219000.00")
         assert "AWS" in portfolio.provider_breakdowns
         assert "AZURE" in portfolio.provider_breakdowns
+
+    def test_expiry_alerting_and_remediation_task_assignment(
+        self,
+        service: CommitmentService,
+        tenant_context: TenantContext,
+        remediation_service: RemediationService,
+    ) -> None:
+        """Approaching expiry emits an alert and creates an assigned remediation task with due date at decision deadline."""
+        now = dt.datetime.now(dt.UTC)
+        comm = service.register_commitment(
+            tenant_context=tenant_context,
+            commitment_id="comm-alert-test",
+            provider=ProviderType.AWS,
+            account_id="111222333444",
+            commitment_type=CommitmentType.SAVINGS_PLAN,
+            service_category="COMPUTE",
+            start_date=now - dt.timedelta(days=340),
+            expiry_date=now + dt.timedelta(days=25),  # 25 days left
+            hourly_committed_rate=Decimal("30.00"),
+            annual_committed_cost=Decimal("262800.00"),
+            owner_id="procurement-lead@acme.corp",
+            scope_id="BU_RETAIL",
+        )
+        service.analyze_coverage_and_utilization(
+            commitment_id=comm.commitment_id,
+            eligible_usage_cost=Decimal("400000.00"),
+            covered_usage_cost=Decimal("262800.00"),
+            commitment_cost=Decimal("262800.00"),
+            actual_consumed_cost=Decimal("250000.00"),
+            list_price_cost=Decimal("350000.00"),
+        )
+
+        alert = service.trigger_expiry_alerts_and_tasks(
+            commitment_id=comm.commitment_id,
+            lead_time_days=60,
+            as_of=now,
+            tenant_context=tenant_context,
+            remediation_service=remediation_service,
+        )
+
+        assert alert.commitment_id == comm.commitment_id
+        assert alert.days_until_expiry == 25
+        assert alert.value_at_risk == Decimal("87200.00")  # 350,000 - 262,800
+        assert alert.remediation_task_id is not None
+
+        # Verify linked remediation task in RemediationService
+        task = remediation_service.repository.get(
+            alert.remediation_task_id, tenant_context=tenant_context
+        )
+        assert task is not None
+        assert task.assignee_id == "procurement-lead@acme.corp"
+        assert task.priority == TaskPriority.HIGH
+        assert task.estimated_saving == 87200.0
+        assert "Commitment Expiry Decision Required" in task.title
+
+    def test_decision_routed_to_workflow_under_authority_rules(
+        self,
+        service: CommitmentService,
+        tenant_context: TenantContext,
+        workflow_service: WorkflowService,
+    ) -> None:
+        """Renewal decision requiring approval under AM-12 authority rules is routed through Prompt 50 workflow engine."""
+        now = dt.datetime.now(dt.UTC)
+        comm = service.register_commitment(
+            tenant_context=tenant_context,
+            commitment_id="comm-high-value-renewal",
+            provider=ProviderType.AWS,
+            account_id="111222333444",
+            commitment_type=CommitmentType.SAVINGS_PLAN,
+            service_category="COMPUTE",
+            start_date=now - dt.timedelta(days=340),
+            expiry_date=now + dt.timedelta(days=20),
+            hourly_committed_rate=Decimal("50.00"),
+            annual_committed_cost=Decimal("438000.00"),  # > $50,000 threshold
+            owner_id="procurement-lead@acme.corp",
+            scope_id="BU_RETAIL",
+        )
+
+        # Record decision with workflow routing
+        decision = service.record_renewal_decision(
+            commitment_id=comm.commitment_id,
+            chosen_action=RenewalAction.RENEW_HIGHER,
+            approver_id="procurement-director@acme.corp",
+            justification="Workload growth warrants 20% commitment upsize",
+            tenant_context=tenant_context,
+            workflow_service=workflow_service,
+            authority_threshold=Decimal("50000.00"),
+        )
+
+        assert decision.requires_approval is True
+        assert decision.approval_status == "PENDING_WORKFLOW"
+        assert decision.workflow_request_id is not None
+
+        # Verify WorkflowRequest created in Prompt 50 engine
+        wf_req = workflow_service.repository.get(
+            decision.workflow_request_id, tenant_context=tenant_context
+        )
+        assert wf_req is not None
+        assert wf_req.state == WorkflowState.IN_REVIEW
+        assert wf_req.financial_impact == 438000.0
+        assert "Commitment Renewal Decision" in wf_req.title
+
+    def test_post_expiry_incident_raised_when_lapsed_without_decision(
+        self, service: CommitmentService, tenant_context: TenantContext
+    ) -> None:
+        """Commitment expiring without a deliberate decision raises an operational incident upon post-expiry evaluation."""
+        now = dt.datetime.now(dt.UTC)
+        comm = service.register_commitment(
+            tenant_context=tenant_context,
+            commitment_id="comm-unintended-lapse",
+            provider=ProviderType.AWS,
+            account_id="111222333444",
+            commitment_type=CommitmentType.SAVINGS_PLAN,
+            service_category="COMPUTE",
+            start_date=now - dt.timedelta(days=390),
+            expiry_date=now - dt.timedelta(days=10),  # Lapsed 10 days ago
+            hourly_committed_rate=Decimal("20.00"),
+            annual_committed_cost=Decimal("175200.00"),  # Monthly = $14,600
+            owner_id="procurement-lead@acme.corp",
+            scope_id="BU_RETAIL",
+        )
+
+        # Do NOT record any renewal decision
+        impact = service.evaluate_post_expiry_impact(
+            commitment_id=comm.commitment_id,
+            on_demand_actual_cost=Decimal("21000.00"),
+            evaluation_period="2027-02",
+        )
+
+        assert impact.has_deliberate_decision is False
+        assert impact.incident_raised is True
+        assert "lapsed without a deliberate renewal or lapse decision recorded" in impact.incident_details
+        assert impact.on_demand_increase == Decimal("6400.00")
+
+    def test_post_expiry_incident_raised_when_renewal_missing_in_inventory(
+        self, service: CommitmentService, tenant_context: TenantContext
+    ) -> None:
+        """When renewal decision was RENEW_SAME but replacement commitment is missing in inventory, raise incident."""
+        now = dt.datetime.now(dt.UTC)
+        comm = service.register_commitment(
+            tenant_context=tenant_context,
+            commitment_id="comm-missing-renewal",
+            provider=ProviderType.GCP,
+            account_id="gcp-prod-proj",
+            commitment_type=CommitmentType.COMMITTED_USE_DISCOUNT,
+            service_category="COMPUTE",
+            start_date=now - dt.timedelta(days=380),
+            expiry_date=now - dt.timedelta(days=5),
+            hourly_committed_rate=Decimal("15.00"),
+            annual_committed_cost=Decimal("131400.00"),  # Monthly = $10,950
+            owner_id="procurement-lead@acme.corp",
+            scope_id="BU_WEALTH",
+        )
+
+        # Record decision to renew
+        service.record_renewal_decision(
+            commitment_id=comm.commitment_id,
+            chosen_action=RenewalAction.RENEW_SAME,
+            approver_id="procurement-lead@acme.corp",
+            justification="Baseline capacity required",
+            tenant_context=tenant_context,
+        )
+
+        # Check post-expiry when replacement was NOT provisioned in cloud provider
+        impact_missing = service.evaluate_post_expiry_impact(
+            commitment_id=comm.commitment_id,
+            on_demand_actual_cost=Decimal("16000.00"),
+            evaluation_period="2027-02",
+            replacement_commitment_id=None,
+        )
+        assert impact_missing.has_deliberate_decision is True
+        assert impact_missing.incident_raised is True
+        assert "no replacement commitment was found in inventory" in impact_missing.incident_details
+
+        # Now register replacement commitment in inventory
+        service.register_commitment(
+            tenant_context=tenant_context,
+            commitment_id="comm-gcp-replacement-1",
+            provider=ProviderType.GCP,
+            account_id="gcp-prod-proj",
+            commitment_type=CommitmentType.COMMITTED_USE_DISCOUNT,
+            service_category="COMPUTE",
+            start_date=comm.expiry_date,
+            expiry_date=comm.expiry_date + dt.timedelta(days=365),
+            hourly_committed_rate=Decimal("15.00"),
+            annual_committed_cost=Decimal("131400.00"),
+            owner_id="procurement-lead@acme.corp",
+            scope_id="BU_WEALTH",
+        )
+
+        # Re-evaluate with replacement commitment present
+        impact_verified = service.evaluate_post_expiry_impact(
+            commitment_id=comm.commitment_id,
+            on_demand_actual_cost=Decimal("11000.00"),
+            evaluation_period="2027-02",
+            replacement_commitment_id="comm-gcp-replacement-1",
+        )
+        assert impact_verified.incident_raised is False
+        assert "Renewal verified" in impact_verified.incident_details
