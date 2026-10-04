@@ -441,6 +441,49 @@ DEFAULT_WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         ),
         auto_reject_on_expiry=False,
     ),
+    # 14. Resource Decommissioning Request (Prompt 59)
+    WorkflowRequestType.DECOMMISSIONING_REQUEST.value: WorkflowDefinition(
+        id="wf-def-decommissioning-request",
+        request_type=WorkflowRequestType.DECOMMISSIONING_REQUEST.value,
+        entity_type="decommissioning_request",
+        name="Resource Decommissioning & Retirement Workflow",
+        description="Formal approval chain required for retiring and deleting cloud resources with cross-team dependency impact check.",
+        trigger_condition=WorkflowTriggerCondition(always=True),
+        stages=[
+            WorkflowStageDefinition(
+                stage_id="stage-decom-finops",
+                name="FinOps & SRE Operational Review",
+                sequence_order=1,
+                mode=ApprovalChainMode.SERIAL,
+                quorum=1,
+                approver_spec=WorkflowApproverSpec(
+                    resolution_type=ApproverResolutionType.ROLE,
+                    target_role="FINOPS_ADMIN",
+                    fallback_role="TENANT_ADMIN",
+                ),
+            ),
+            WorkflowStageDefinition(
+                stage_id="stage-decom-scope-authority",
+                name="Scope Owner Decommissioning Approval",
+                sequence_order=2,
+                mode=ApprovalChainMode.SERIAL,
+                quorum=1,
+                approver_spec=WorkflowApproverSpec(
+                    resolution_type=ApproverResolutionType.SCOPE_OWNERSHIP,
+                    fallback_role="TENANT_ADMIN",
+                ),
+            ),
+        ],
+        approval_mode=ApprovalChainMode.SERIAL,
+        quorum=1,
+        sla_working_hours=48,
+        working_schedule_id="WW_STANDARD_MON_FRI",
+        escalation_path=WorkflowEscalationPath(
+            escalate_to_role="GLOBAL_ADMIN",
+            escalate_after_hours=24,
+        ),
+        auto_reject_on_expiry=False,
+    ),
 }
 
 

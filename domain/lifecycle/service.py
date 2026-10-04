@@ -18,8 +18,9 @@ Fulfills:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
 import logging
+import uuid
+from decimal import ROUND_HALF_EVEN, Decimal
 from typing import Any
 
 from domain.lifecycle.exceptions import (
@@ -43,7 +44,28 @@ from domain.lifecycle.models import (
     RetentionObligation,
     StoppedResourceSurfaced,
 )
+from domain.models.enums import (
+    RealisedSavingMethod,
+    TaskCategory,
+    TaskPriority,
+    TaskSource,
+    TaskState,
+    WorkflowRequestType,
+)
+from domain.remediation.models import (
+    RemediationTask,
+    TaskCreateRequest,
+)
+from domain.remediation.models import (
+    SubjectEntity as RemediationSubjectEntity,
+)
 from domain.tenant.context import TenantContext
+from domain.workflows.models import (
+    SubjectEntity as WorkflowSubjectEntity,
+)
+from domain.workflows.models import (
+    WorkflowSubmitRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +105,30 @@ PERMITTED_TRANSITIONS: dict[LifecycleState, set[LifecycleState]] = {
 class LifecycleService:
     """Enterprise FinOps Resource Lifecycle & Decommissioning Engine."""
 
-    def __init__(self) -> None:
+    def __init__(self, transition_matrix: dict[LifecycleState, set[LifecycleState]] | None = None) -> None:
         self._resources: dict[str, LifecycleResource] = {}
         self._requests: dict[str, DecommissioningRequest] = {}
         self._programmes: dict[str, DecommissioningProgramme] = {}
         self._residue_items: dict[str, OrphanResidueItem] = {}
+        self._transitions = transition_matrix or PERMITTED_TRANSITIONS
+
+    def get_lifecycle_state_model(self) -> dict[str, Any]:
+        """Returns the master-data-driven lifecycle state model, permitted transitions, and evidence requirements."""
+        return {
+            "states": [s.value for s in LifecycleState],
+            "transitions": {k.value: [t.value for t in v] for k, v in self._transitions.items()},
+            "evidence_requirements": {
+                LifecycleState.PROVISIONED.value: "Approval ticket & technical provisioning manifest verified",
+                LifecycleState.ACTIVE.value: "Health check passed, telemetry heartbeat verified",
+                LifecycleState.IDLE_CANDIDATE.value: "Automated utilization scan (CPU < 5%, network < 1MB for 14d)",
+                LifecycleState.DECOMMISSION_PROPOSED.value: "Decommissioning request with justification and saving estimate",
+                LifecycleState.DECOMMISSION_APPROVED.value: "Prompt 50 workflow approval and cross-team dependency acknowledgements",
+                LifecycleState.STOPPED.value: "Controlled instance shutdown verified",
+                LifecycleState.PENDING_DELETION.value: "Soak window completed without incident & retention obligations verified",
+                LifecycleState.DELETED.value: "Cloud deletion execution timestamp recorded",
+                LifecycleState.RETIRED.value: "Cost-stop verification confirmed ($0.00 billing in post-deletion period)",
+            },
+        }
 
     # -------------------------------------------------------------------------
     # Resource Registration & Inbound Dependency Management
@@ -133,6 +174,7 @@ class LifecycleService:
         dependency_type: str,
         dependent_owner_team: str,
         confidence: Decimal | float | str = Decimal("1.00"),
+        provenance: str = "PROMPT_32_GRAPH",
     ) -> DependencyAcknowledgement:
         res = self.get_resource(resource_id)
         is_cross = dependent_owner_team.strip().lower() != res.owner_team.strip().lower()
@@ -144,6 +186,7 @@ class LifecycleService:
             dependency_type=dependency_type,
             dependent_owner_team=dependent_owner_team,
             proposer_owner_team=res.owner_team,
+            provenance=provenance,
             confidence=Decimal(str(confidence)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN),
             is_cross_team=is_cross,
             is_acknowledged=False,
@@ -162,7 +205,7 @@ class LifecycleService:
             if dep.dependency_id == dependency_id:
                 dep.is_acknowledged = True
                 dep.acknowledged_by = acknowledged_by
-                dep.acknowledged_at = dt.datetime.now(dt.timezone.utc)
+                dep.acknowledged_at = dt.datetime.now(dt.UTC)
                 return dep
         raise LifecycleException(f"Dependency '{dependency_id}' not found on resource '{resource_id}'.")
 
@@ -179,12 +222,21 @@ class LifecycleService:
         res = self.get_resource(resource_id)
         current = res.current_state
 
+        logger.info(
+            "Lifecycle transition for %s: %s -> %s by actor %s (evidence: %s)",
+            resource_id,
+            current.value,
+            target_state.value,
+            actor_id,
+            evidence or {},
+        )
+
         # Validate transition is permitted
-        if target_state not in PERMITTED_TRANSITIONS.get(current, set()):
+        if target_state not in self._transitions.get(current, set()):
             raise InvalidLifecycleTransitionException(
                 from_state=current.value,
                 to_state=target_state.value,
-                reason=f"Transition not permitted in state machine.",
+                reason="Transition not permitted in state machine.",
             )
 
         # Gate 1: To DECOMMISSION_APPROVED requires cross-team dependency acknowledgement
@@ -205,7 +257,7 @@ class LifecycleService:
                     retention_basis=res.retention_obligation.retention_basis,
                 )
 
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         if target_state == LifecycleState.STOPPED:
             res.stopped_at = now
         elif target_state == LifecycleState.DELETED:
@@ -228,7 +280,7 @@ class LifecycleService:
 
         res.retention_obligation.is_satisfied = True
         res.retention_obligation.satisfied_by = compliance_officer_id
-        res.retention_obligation.satisfied_at = dt.datetime.now(dt.timezone.utc)
+        res.retention_obligation.satisfied_at = dt.datetime.now(dt.UTC)
         res.retention_obligation.signoff_notes = notes
         return res.retention_obligation
 
@@ -243,6 +295,8 @@ class LifecycleService:
         justification: str,
         intended_date: dt.datetime,
         programme_id: str | None = None,
+        workflow_service: Any | None = None,
+        tenant_context: TenantContext | None = None,
     ) -> DecommissioningRequest:
         if len(justification.strip()) < 5:
             raise LifecycleException("Justification must contain at least 5 characters.")
@@ -257,7 +311,39 @@ class LifecycleService:
             )
             total_est_saving += res.monthly_run_rate
 
+        req_id = f"dcom-{uuid.uuid4().hex[:8]}"
+        wf_req_id = None
+
+        if workflow_service is not None and tenant_context is not None:
+            submit_req = WorkflowSubmitRequest(
+                request_type=WorkflowRequestType.DECOMMISSIONING_REQUEST.value,
+                title=f"Decommissioning Request: {len(resource_ids)} resources ({proposer_team})",
+                subject_entity=WorkflowSubjectEntity(
+                    entity_type="decommissioning_request",
+                    entity_id=req_id,
+                    scope_type="team",
+                    scope_id=proposer_team,
+                    metadata={
+                        "resource_ids": resource_ids,
+                        "proposing_actor": proposing_actor,
+                        "intended_date": intended_date.isoformat(),
+                    },
+                ),
+                justification=justification,
+                payload={
+                    "request_id": req_id,
+                    "resource_ids": resource_ids,
+                    "proposer_team": proposer_team,
+                    "intended_date": intended_date.isoformat(),
+                    "estimated_monthly_saving": str(total_est_saving),
+                },
+                financial_impact=float(total_est_saving),
+            )
+            wf_res = workflow_service.submit_request(submit_req, tenant_context=tenant_context)
+            wf_req_id = wf_res.id
+
         req = DecommissioningRequest(
+            request_id=req_id,
             programme_id=programme_id,
             resource_ids=resource_ids,
             proposing_actor=proposing_actor,
@@ -265,6 +351,7 @@ class LifecycleService:
             justification=justification,
             intended_date=intended_date,
             estimated_monthly_saving=total_est_saving,
+            workflow_request_id=wf_req_id,
         )
         self._requests[req.request_id] = req
         return req
@@ -288,7 +375,7 @@ class LifecycleService:
 
         req.is_approved = True
         req.approved_by = approver_id
-        req.approved_at = dt.datetime.now(dt.timezone.utc)
+        req.approved_at = dt.datetime.now(dt.UTC)
         return req
 
     # -------------------------------------------------------------------------
@@ -301,7 +388,7 @@ class LifecycleService:
         as_of: dt.datetime | None = None,
     ) -> list[StoppedResourceSurfaced]:
         """Surfaces resources lingering in STOPPED state incurring storage costs without deletion."""
-        now = as_of or dt.datetime.now(dt.timezone.utc)
+        now = as_of or dt.datetime.now(dt.UTC)
         surfaced: list[StoppedResourceSurfaced] = []
 
         for res in self._resources.values():
@@ -328,14 +415,44 @@ class LifecycleService:
         self,
         resource_id: str,
         post_deletion_billing_amount: Decimal | float | str,
+        remediation_service: Any | None = None,
+        tenant_context: TenantContext | None = None,
     ) -> None:
-        """Verifies billing has ceased post deletion; raises exception & alerts if charges persist."""
+        """Verifies billing has ceased post deletion; creates Prompt 51 task & raises exception if charges persist."""
         res = self.get_resource(resource_id)
         cost_dec = Decimal(str(post_deletion_billing_amount)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_EVEN
         )
 
         if cost_dec > Decimal("0.00"):
+            if remediation_service is not None and tenant_context is not None:
+                task_req = TaskCreateRequest(
+                    source=TaskSource.ALERT,
+                    subject_entity=RemediationSubjectEntity(
+                        entity_type="RESOURCE",
+                        entity_id=resource_id,
+                        entity_name=f"Decommissioned Resource {resource_id}",
+                        cost_centre_id=res.owner_team,
+                    ),
+                    title=f"Cost-Stop Verification Failure: {resource_id}",
+                    description=(
+                        f"Resource {resource_id} is marked DELETED but continues to accrue billing cost "
+                        f"of ${cost_dec:,.2f}/month. Decommissioning was incomplete in provider."
+                    ),
+                    category=TaskCategory.RECONCILIATION_VARIANCE,
+                    priority=TaskPriority.CRITICAL if cost_dec > Decimal("500.00") else TaskPriority.HIGH,
+                    assignee_id=res.owner_team,
+                    assignee_type="TEAM",
+                    estimated_saving=float(cost_dec),
+                    sla_working_hours=24.0,
+                )
+                task = remediation_service.create_task(
+                    req=task_req,
+                    actor="COST_STOP_VERIFIER",
+                    tenant_context=tenant_context,
+                )
+                res.cost_stop_task_id = task.id
+
             raise CostStopVerificationFailureException(
                 resource_id=resource_id,
                 ongoing_cost=str(cost_dec),
@@ -344,7 +461,7 @@ class LifecycleService:
         # Transition to RETIRED when cost is proven to be zero
         if res.current_state == LifecycleState.DELETED:
             res.current_state = LifecycleState.RETIRED
-            res.retired_at = dt.datetime.now(dt.timezone.utc)
+            res.retired_at = dt.datetime.now(dt.UTC)
 
     # -------------------------------------------------------------------------
     # Orphan and Residue Detection
@@ -353,18 +470,52 @@ class LifecycleService:
         self,
         tenant_id: str,
         residue_candidates: list[dict[str, Any]],
+        remediation_service: Any | None = None,
+        tenant_context: TenantContext | None = None,
     ) -> list[OrphanResidueItem]:
-        """Detects orphaned volumes, unused elastic IPs, unattached snapshots, and empty scopes."""
+        """Detects orphaned volumes, unused elastic IPs, unattached snapshots, and empty scopes; creates tasks."""
         detected: list[OrphanResidueItem] = []
         for cand in residue_candidates:
             cost_dec = Decimal(str(cand.get("monthly_waste_cost", "0.00"))).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_EVEN
             )
+            res_type = OrphanResourceType(cand["residue_type"])
+            task_id = None
+
+            if remediation_service is not None and tenant_context is not None:
+                task_req = TaskCreateRequest(
+                    source=TaskSource.ALERT,
+                    subject_entity=RemediationSubjectEntity(
+                        entity_type="RESOURCE",
+                        entity_id=cand["resource_id"],
+                        entity_name=f"Orphan residue {res_type.value}",
+                        scope_id=cand.get("associated_scope", tenant_id),
+                    ),
+                    title=f"Orphan Residue Detected: {res_type.value} ({cand['resource_id']})",
+                    description=(
+                        f"Unattached or orphaned residue {res_type.value} left behind after decommissioning. "
+                        f"Accruing ${cost_dec:,.2f}/month in wasteful spend."
+                    ),
+                    category=TaskCategory.IDLE_RESOURCE,
+                    priority=TaskPriority.HIGH if cost_dec > Decimal("100.00") else TaskPriority.MEDIUM,
+                    assignee_id=cand.get("owner_id", "finops-lead@acme.corp"),
+                    assignee_type="USER",
+                    estimated_saving=float(cost_dec),
+                    sla_working_hours=48.0,
+                )
+                created_task = remediation_service.create_task(
+                    req=task_req,
+                    actor="ORPHAN_RESIDUE_SCANNER",
+                    tenant_context=tenant_context,
+                )
+                task_id = created_task.id
+
             item = OrphanResidueItem(
                 resource_id=cand["resource_id"],
-                residue_type=OrphanResourceType(cand["residue_type"]),
+                residue_type=res_type,
                 associated_scope=cand.get("associated_scope", tenant_id),
                 monthly_waste_cost=cost_dec,
+                task_created_id=task_id,
             )
             self._residue_items[item.residue_id] = item
             detected.append(item)
@@ -379,13 +530,44 @@ class LifecycleService:
         actual_billing_before: Decimal | float | str,
         actual_billing_after: Decimal | float | str,
         tenant_context: TenantContext,
+        remediation_service: Any | None = None,
     ) -> Decimal:
-        """Credits verified monthly savings computed from empirical billing records."""
-        self.get_resource(resource_id)
+        """Credits verified monthly savings computed from empirical billing records into Prompt 51 ledger."""
+        res = self.get_resource(resource_id)
         before_dec = Decimal(str(actual_billing_before)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
         after_dec = Decimal(str(actual_billing_after)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
         realised = (before_dec - after_dec).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+
+        if remediation_service is not None and hasattr(remediation_service, "ledger"):
+            task = RemediationTask(
+                id=f"rem-decom-{res.resource_id[:12]}-{uuid.uuid4().hex[:6]}",
+                tenant_id=tenant_context.tenant_id,
+                source=TaskSource.MANUAL,
+                subject_entity=RemediationSubjectEntity(
+                    entity_type="RESOURCE",
+                    entity_id=res.resource_id,
+                    entity_name=f"{res.service_type} ({res.resource_id})",
+                    business_unit_id=res.owner_team,
+                ),
+                title=f"Verified Decommissioning Saving: {res.resource_id}",
+                description=f"Empirical billing run rate elimination for decommissioned resource {res.resource_id}.",
+                assignee_id=res.owner_team,
+                assignee_type="TEAM",
+                due_date=dt.datetime.now(dt.UTC),
+                estimated_saving=float(res.monthly_run_rate),
+                realised_saving=float(realised),
+                realised_saving_method=RealisedSavingMethod.RUN_RATE_ELIMINATION,
+                state=TaskState.CLOSED,
+                category=TaskCategory.IDLE_RESOURCE,
+            )
+            remediation_service.ledger.record_saving(
+                task=task,
+                amount=float(realised),
+                method=RealisedSavingMethod.RUN_RATE_ELIMINATION,
+                tenant_context=tenant_context,
+            )
+
         return realised
 
     # -------------------------------------------------------------------------

@@ -21,7 +21,7 @@ from domain.lifecycle.models import (
     RetentionObligation,
     StoppedResourceSurfaced,
 )
-from domain.lifecycle.service import LifecycleService, PERMITTED_TRANSITIONS
+from domain.lifecycle.service import PERMITTED_TRANSITIONS, LifecycleService
 
 __all__ = [
     "CostStopVerificationFailureException",

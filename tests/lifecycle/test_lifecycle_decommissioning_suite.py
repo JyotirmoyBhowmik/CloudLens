@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
+
 import pytest
 
 from domain.lifecycle.exceptions import (
@@ -29,7 +30,15 @@ from domain.lifecycle.models import (
     RetentionObligation,
 )
 from domain.lifecycle.service import LifecycleService
+from domain.models.enums import (
+    TaskCategory,
+    TaskPriority,
+    WorkflowRequestType,
+    WorkflowState,
+)
+from domain.remediation.service import RemediationService
 from domain.tenant.context import TenantContext
+from domain.workflows.service import WorkflowService
 
 
 class TestLifecycleDecommissioningSuite:
@@ -46,6 +55,14 @@ class TestLifecycleDecommissioningSuite:
     @pytest.fixture
     def service(self) -> LifecycleService:
         return LifecycleService()
+
+    @pytest.fixture
+    def remediation_service(self) -> RemediationService:
+        return RemediationService()
+
+    @pytest.fixture
+    def workflow_service(self) -> WorkflowService:
+        return WorkflowService()
 
     def test_ten_state_lifecycle_transitions_and_illegal_rejections(
         self, service: LifecycleService, tenant_context: TenantContext
@@ -105,7 +122,7 @@ class TestLifecycleDecommissioningSuite:
             proposing_actor="db-lead@acme.corp",
             proposer_team="TEAM_DATABASE",
             justification="Database migration to serverless completed",
-            intended_date=dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=14),
+            intended_date=dt.datetime.now(dt.UTC) + dt.timedelta(days=14),
         )
         assert res.current_state == LifecycleState.DECOMMISSION_PROPOSED
 
@@ -131,7 +148,7 @@ class TestLifecycleDecommissioningSuite:
         self, service: LifecycleService, tenant_context: TenantContext
     ) -> None:
         """A resource stopped and never deleted is surfaced with its ongoing cost."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         res = service.register_resource(
             resource_id="res-cluster-abandoned",
             tenant_id=tenant_context.tenant_id,
@@ -190,7 +207,7 @@ class TestLifecycleDecommissioningSuite:
         self, service: LifecycleService, tenant_context: TenantContext
     ) -> None:
         """A resource with an unsatisfied retention obligation cannot proceed to deletion."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         obligation = RetentionObligation(
             retention_basis="SEC-Rule-17a-4 / Financial Records",
             mandatory_until=now + dt.timedelta(days=365),
@@ -277,7 +294,7 @@ class TestLifecycleDecommissioningSuite:
         self, service: LifecycleService, tenant_context: TenantContext
     ) -> None:
         """Decommissioning programme view aggregates multiple resources."""
-        r1 = service.register_resource(
+        service.register_resource(
             resource_id="r1",
             tenant_id=tenant_context.tenant_id,
             owner_team="TEAM_A",
@@ -285,7 +302,7 @@ class TestLifecycleDecommissioningSuite:
             monthly_run_rate=Decimal("2000.00"),
             initial_state=LifecycleState.DELETED,
         )
-        r2 = service.register_resource(
+        service.register_resource(
             resource_id="r2",
             tenant_id=tenant_context.tenant_id,
             owner_team="TEAM_A",
@@ -298,7 +315,7 @@ class TestLifecycleDecommissioningSuite:
             tenant_context=tenant_context,
             name="DC Exit 2027",
             description="Complete retirement of on-prem mirrored resources",
-            target_completion_date=dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=90),
+            target_completion_date=dt.datetime.now(dt.UTC) + dt.timedelta(days=90),
             resource_ids=["r1", "r2"],
         )
 
@@ -308,3 +325,213 @@ class TestLifecycleDecommissioningSuite:
         assert view.realised_monthly_savings == Decimal("2000.00")
         assert view.state_breakdown["DELETED"] == 1
         assert view.state_breakdown["ACTIVE"] == 1
+
+    def test_decommissioning_request_routed_through_workflow_engine(
+        self,
+        service: LifecycleService,
+        tenant_context: TenantContext,
+        workflow_service: WorkflowService,
+    ) -> None:
+        """Decommissioning request is routed through Prompt 50 workflow engine with resources and savings."""
+        r1 = service.register_resource(
+            resource_id="res-wf-app-01",
+            tenant_id=tenant_context.tenant_id,
+            owner_team="TEAM_FINANCE",
+            service_type="VIRTUAL_MACHINE",
+            monthly_run_rate=Decimal("1500.00"),
+            initial_state=LifecycleState.ACTIVE,
+        )
+        r2 = service.register_resource(
+            resource_id="res-wf-db-02",
+            tenant_id=tenant_context.tenant_id,
+            owner_team="TEAM_FINANCE",
+            service_type="RELATIONAL_DATABASE",
+            monthly_run_rate=Decimal("3500.00"),
+            initial_state=LifecycleState.ACTIVE,
+        )
+
+        req = service.submit_decommissioning_request(
+            resource_ids=["res-wf-app-01", "res-wf-db-02"],
+            proposing_actor="finance-dev@acme.corp",
+            proposer_team="TEAM_FINANCE",
+            justification="Quarterly cleanup of superseded ledger reporting cluster",
+            intended_date=dt.datetime.now(dt.UTC) + dt.timedelta(days=14),
+            workflow_service=workflow_service,
+            tenant_context=tenant_context,
+        )
+
+        assert req.workflow_request_id is not None
+        assert req.estimated_monthly_saving == Decimal("5000.00")
+        assert r1.current_state == LifecycleState.DECOMMISSION_PROPOSED
+        assert r2.current_state == LifecycleState.DECOMMISSION_PROPOSED
+
+        # Verify WorkflowRequest in Prompt 50 engine
+        wf_req = workflow_service.repository.get(
+            req.workflow_request_id, tenant_context=tenant_context
+        )
+        assert wf_req is not None
+        assert wf_req.state == WorkflowState.IN_REVIEW
+        assert wf_req.financial_impact == 5000.0
+        assert wf_req.request_type == WorkflowRequestType.DECOMMISSIONING_REQUEST.value
+        assert "Decommissioning Request" in wf_req.title
+
+    def test_cost_stop_verification_failure_creates_remediation_task_and_raises_exception(
+        self,
+        service: LifecycleService,
+        tenant_context: TenantContext,
+        remediation_service: RemediationService,
+    ) -> None:
+        """When cost continues post deletion, cost-stop verification creates an assigned task and raises exception."""
+        res = service.register_resource(
+            resource_id="res-lingering-storage",
+            tenant_id=tenant_context.tenant_id,
+            owner_team="TEAM_INFRA",
+            service_type="OBJECT_STORAGE",
+            monthly_run_rate=Decimal("600.00"),
+            initial_state=LifecycleState.DELETED,
+        )
+
+        with pytest.raises(CostStopVerificationFailureException) as exc_info:
+            service.verify_cost_stop(
+                resource_id="res-lingering-storage",
+                post_deletion_billing_amount=Decimal("320.00"),
+                remediation_service=remediation_service,
+                tenant_context=tenant_context,
+            )
+        assert "$320.00" in str(exc_info.value)
+        assert res.cost_stop_task_id is not None
+
+        # Verify assigned task in RemediationService
+        task = remediation_service.repository.get(
+            res.cost_stop_task_id, tenant_context=tenant_context
+        )
+        assert task is not None
+        assert task.assignee_id == "TEAM_INFRA"
+        assert task.estimated_saving == 320.0
+        assert task.category == TaskCategory.RECONCILIATION_VARIANCE
+        assert "Cost-Stop Verification Failure" in task.title
+
+    def test_orphan_residue_detection_creates_costed_remediation_tasks(
+        self,
+        service: LifecycleService,
+        tenant_context: TenantContext,
+        remediation_service: RemediationService,
+    ) -> None:
+        """Detected orphaned residue items generate costed tasks in Prompt 51 engine."""
+        candidates = [
+            {
+                "resource_id": "vol-orphan-ebs",
+                "residue_type": "UNATTACHED_DISK",
+                "associated_scope": "BU_RETAIL",
+                "monthly_waste_cost": Decimal("240.00"),
+                "owner_id": "storage-lead@acme.corp",
+            },
+            {
+                "resource_id": "snap-sourceless-001",
+                "residue_type": "ORPHAN_SNAPSHOT",
+                "associated_scope": "BU_WEALTH",
+                "monthly_waste_cost": Decimal("75.00"),
+                "owner_id": "backup-admin@acme.corp",
+            },
+        ]
+
+        items = service.detect_orphan_residue(
+            tenant_id=tenant_context.tenant_id,
+            residue_candidates=candidates,
+            remediation_service=remediation_service,
+            tenant_context=tenant_context,
+        )
+
+        assert len(items) == 2
+        assert items[0].task_created_id is not None
+        assert items[1].task_created_id is not None
+
+        # Verify task 1 in remediation repository
+        task1 = remediation_service.repository.get(
+            items[0].task_created_id, tenant_context=tenant_context
+        )
+        assert task1 is not None
+        assert task1.estimated_saving == 240.0
+        assert task1.priority == TaskPriority.HIGH
+        assert task1.category == TaskCategory.IDLE_RESOURCE
+
+        # Verify task 2 in remediation repository
+        task2 = remediation_service.repository.get(
+            items[1].task_created_id, tenant_context=tenant_context
+        )
+        assert task2 is not None
+        assert task2.estimated_saving == 75.0
+
+    def test_realised_saving_credited_into_prompt_51_ledger(
+        self,
+        service: LifecycleService,
+        tenant_context: TenantContext,
+        remediation_service: RemediationService,
+    ) -> None:
+        """Decommissioning records verified saving into Prompt 51 realised-saving ledger from actuals."""
+        service.register_resource(
+            resource_id="res-bigdata-spark",
+            tenant_id=tenant_context.tenant_id,
+            owner_team="TEAM_DATA_PLATFORM",
+            service_type="BIG_DATA_CLUSTER",
+            monthly_run_rate=Decimal("12000.00"),
+            initial_state=LifecycleState.DELETED,
+        )
+
+        # Before = $11,800.00, After = $0.00
+        realised = service.credit_realised_saving(
+            resource_id="res-bigdata-spark",
+            actual_billing_before=Decimal("11800.00"),
+            actual_billing_after=Decimal("0.00"),
+            tenant_context=tenant_context,
+            remediation_service=remediation_service,
+        )
+        assert realised == Decimal("11800.00")
+
+        # Verify entry in RealisedSavingLedger
+        report = remediation_service.ledger.get_savings_report(tenant_context=tenant_context)
+        assert report.total_realised_saving == 11800.0
+        assert "TEAM_DATA_PLATFORM" in report.savings_by_team
+        assert report.savings_by_team["TEAM_DATA_PLATFORM"] == 11800.0
+
+    def test_master_data_lifecycle_state_model_introspection(
+        self, service: LifecycleService
+    ) -> None:
+        """Full 10-state lifecycle model exposes permitted transitions and configured evidence gates."""
+        model = service.get_lifecycle_state_model()
+        assert len(model["states"]) == 10
+        assert "REQUESTED" in model["states"]
+        assert "ACTIVE" in model["states"]
+        assert "DECOMMISSION_PROPOSED" in model["states"]
+        assert "DECOMMISSION_APPROVED" in model["states"]
+        assert "STOPPED" in model["states"]
+        assert "PENDING_DELETION" in model["states"]
+        assert "DELETED" in model["states"]
+        assert "RETIRED" in model["states"]
+
+        assert "DECOMMISSION_APPROVED" in model["evidence_requirements"]
+        assert "cross-team dependency" in model["evidence_requirements"]["DECOMMISSION_APPROVED"].lower()
+
+    def test_dependency_provenance_and_confidence(
+        self, service: LifecycleService, tenant_context: TenantContext
+    ) -> None:
+        """Inbound dependencies retain provenance source and confidence metrics."""
+        service.register_resource(
+            resource_id="res-app-svc",
+            tenant_id=tenant_context.tenant_id,
+            owner_team="TEAM_APP",
+            service_type="CONTAINER_SERVICE",
+            monthly_run_rate=Decimal("800.00"),
+        )
+        dep = service.add_inbound_dependency(
+            resource_id="res-app-svc",
+            dependency_id="dep-api-gateway",
+            dependent_resource_id="res-gw-ingress",
+            dependency_type="NETWORK_FLOW",
+            dependent_owner_team="TEAM_NETWORKING",
+            confidence=Decimal("0.95"),
+            provenance="PROMPT_32_FLOW_LOGS",
+        )
+        assert dep.provenance == "PROMPT_32_FLOW_LOGS"
+        assert dep.confidence == Decimal("0.95")
+        assert dep.is_cross_team is True

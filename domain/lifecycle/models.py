@@ -15,15 +15,15 @@ Enforces:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
-from enum import Enum
-from typing import Any
 import uuid
+from decimal import ROUND_HALF_EVEN, Decimal
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class LifecycleState(str, Enum):
+class LifecycleState(StrEnum):
     """The 10 canonical lifecycle states governing cloud resources."""
     REQUESTED = "REQUESTED"
     PROVISIONED = "PROVISIONED"
@@ -37,7 +37,7 @@ class LifecycleState(str, Enum):
     RETIRED = "RETIRED"
 
 
-class OrphanResourceType(str, Enum):
+class OrphanResourceType(StrEnum):
     """Classification of orphaned cloud residue left behind after incomplete decommissioning."""
     UNATTACHED_DISK = "UNATTACHED_DISK"
     UNUSED_IP_ADDRESS = "UNUSED_IP_ADDRESS"
@@ -54,6 +54,7 @@ class DependencyAcknowledgement(BaseModel):
     dependency_type: str = Field(..., description="Type of dependency, e.g. NETWORK, SERVICE_CALL, DATABASE")
     dependent_owner_team: str
     proposer_owner_team: str
+    provenance: str = Field(default="PROMPT_32_GRAPH", description="Source or discovery provenance of dependency edge")
     confidence: Decimal = Field(default=Decimal("1.00"))
     is_cross_team: bool = False
     is_acknowledged: bool = False
@@ -91,6 +92,7 @@ class LifecycleResource(BaseModel):
     stopped_at: dt.datetime | None = None
     deleted_at: dt.datetime | None = None
     retired_at: dt.datetime | None = None
+    cost_stop_task_id: str | None = None
     retention_obligation: RetentionObligation | None = None
     inbound_dependencies: list[DependencyAcknowledgement] = Field(default_factory=list)
 
@@ -116,7 +118,7 @@ class DecommissioningRequest(BaseModel):
     is_approved: bool = False
     approved_by: str | None = None
     approved_at: dt.datetime | None = None
-    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
     @field_validator("estimated_monthly_saving", mode="before")
     @classmethod
@@ -151,7 +153,7 @@ class OrphanResidueItem(BaseModel):
     associated_scope: str
     monthly_waste_cost: Decimal
     task_created_id: str | None = None
-    detected_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    detected_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
     @field_validator("monthly_waste_cost", mode="before")
     @classmethod
