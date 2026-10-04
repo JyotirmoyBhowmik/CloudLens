@@ -4,12 +4,12 @@
   "specVersion": "1.5",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-25T17:00:00Z",
+    "timestamp": "2026-10-04T14:23:18.649988+00:00",
     "component": {
       "type": "application",
       "name": "CloudLens",
-      "version": "0.1.0",
-      "description": "Multi-Cloud Governance, Service Inventory, Pricing and FinOps Platform",
+      "version": "1.1.0",
+      "description": "Enterprise Multi-Cloud FinOps Governance and Observability Platform",
       "licenses": [
         {
           "license": {
@@ -22,83 +22,497 @@
   "components": [
     {
       "type": "library",
-      "name": "fastapi",
-      "version": "0.115.0",
-      "description": "FastAPI framework, high performance, easy to learn, fast to code, ready for production",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:pypi/fastapi@0.115.0",
-      "ecosystem": "python"
-    },
-    {
-      "type": "library",
-      "name": "uvicorn",
-      "version": "0.30.6",
-      "description": "The lightning-fast ASGI server",
-      "licenses": [{"license": {"id": "BSD-3-Clause"}}],
-      "purl": "pkg:pypi/uvicorn@0.30.6",
-      "ecosystem": "python"
-    },
-    {
-      "type": "library",
-      "name": "pydantic",
-      "version": "2.8.2",
-      "description": "Data validation using Python type hints",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:pypi/pydantic@2.8.2",
-      "ecosystem": "python"
-    },
-    {
-      "type": "library",
-      "name": "sqlalchemy",
-      "version": "2.0.35",
-      "description": "Database Abstraction Library for Python",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:pypi/sqlalchemy@2.0.35",
-      "ecosystem": "python"
-    },
-    {
-      "type": "library",
       "name": "alembic",
       "version": "1.13.2",
-      "description": "A database migration tool for SQLAlchemy",
-      "licenses": [{"license": {"id": "MIT"}}],
+      "description": "A database migration tool for SQLAlchemy.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
       "purl": "pkg:pypi/alembic@1.13.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "amqp",
+      "version": "5.4.0",
+      "description": "Low-level AMQP client for Python (fork of amqplib).",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/amqp@5.4.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "description": "Reusable constraint types to use with typing.Annotated",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/annotated-types@0.8.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "anyio",
+      "version": "4.15.1",
+      "description": "High-level concurrency and networking framework on top of asyncio or Trio",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/anyio@4.15.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "billiard",
+      "version": "4.3.0",
+      "description": "Python multiprocessing fork with improvements and bugfixes",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/billiard@4.3.0",
       "ecosystem": "python"
     },
     {
       "type": "library",
       "name": "celery",
       "version": "5.4.0",
-      "description": "Distributed Task Queue",
-      "licenses": [{"license": {"id": "BSD-3-Clause"}}],
+      "description": "Distributed Task Queue.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
       "purl": "pkg:pypi/celery@5.4.0",
       "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "redis",
-      "version": "5.0.8",
-      "description": "Python client for Redis key-value store",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:pypi/redis@5.0.8",
+      "name": "certifi",
+      "version": "2026.7.22",
+      "description": "Python package for providing Mozilla's CA Bundle.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/certifi@2026.7.22",
       "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "psycopg2-binary",
-      "version": "2.9.9",
-      "description": "PostgreSQL database adapter for Python",
-      "licenses": [{"license": {"id": "LGPL-3.0-or-later"}}],
-      "purl": "pkg:pypi/psycopg2-binary@2.9.9",
+      "name": "cfgv",
+      "version": "3.5.0",
+      "description": "Validate configuration and produce human readable error messages.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/cfgv@3.5.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "click",
+      "version": "8.5.0",
+      "description": "Composable command line interface toolkit",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/click@8.5.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "click-didyoumean",
+      "version": "0.3.1",
+      "description": "Enables git-like *did-you-mean* feature in click",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/click-didyoumean@0.3.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "click-plugins",
+      "version": "1.1.1.2",
+      "description": "An extension module for click to enable registering CLI commands via setuptools entry-points.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/click-plugins@1.1.1.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "click-repl",
+      "version": "0.4.0",
+      "description": "REPL plugin for Click",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/click-repl@0.4.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "colorama",
+      "version": "0.4.6",
+      "description": "Cross-platform colored terminal text.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/colorama@0.4.6",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "coverage",
+      "version": "7.16.1",
+      "description": "Code coverage measurement for Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/coverage@7.16.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "Deprecated",
+      "version": "1.3.1",
+      "description": "Python @deprecated decorator to deprecate old python classes, functions or methods.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/deprecated@1.3.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "distlib",
+      "version": "0.4.3",
+      "description": "Distribution utilities",
+      "licenses": [
+        {
+          "license": {
+            "id": "PSF-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/distlib@0.4.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "fastapi",
+      "version": "0.115.0",
+      "description": "FastAPI framework, high performance, easy to learn, fast to code, ready for production",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/fastapi@0.115.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "filelock",
+      "version": "4.0.3",
+      "description": "A platform independent file lock.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/filelock@4.0.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "greenlet",
+      "version": "3.5.6",
+      "description": "Lightweight in-process concurrent programming",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/greenlet@3.5.6",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "h11",
+      "version": "0.16.0",
+      "description": "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/h11@0.16.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "httpcore",
+      "version": "1.0.9",
+      "description": "A minimal low-level HTTP client.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/httpcore@1.0.9",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "httptools",
+      "version": "0.8.0",
+      "description": "A collection of framework independent HTTP protocol utils.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/httptools@0.8.0",
       "ecosystem": "python"
     },
     {
       "type": "library",
       "name": "httpx",
       "version": "0.27.2",
-      "description": "A next-generation HTTP client for Python",
-      "licenses": [{"license": {"id": "BSD-3-Clause"}}],
+      "description": "The next generation HTTP client.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
       "purl": "pkg:pypi/httpx@0.27.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "identify",
+      "version": "2.6.19",
+      "description": "File identification library for Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/identify@2.6.19",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "idna",
+      "version": "3.20",
+      "description": "Internationalized Domain Names in Applications (IDNA)",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/idna@3.20",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "importlib_metadata",
+      "version": "8.4.0",
+      "description": "Read metadata from Python packages",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/importlib_metadata@8.4.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "iniconfig",
+      "version": "2.3.0",
+      "description": "brain-dead simple config-ini parsing",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.3.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "kombu",
+      "version": "5.6.2",
+      "description": "Messaging library for Python.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/kombu@5.6.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "Mako",
+      "version": "1.4.3",
+      "description": "A super-fast templating language that borrows the best ideas from the existing templating languages.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/mako@1.4.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "MarkupSafe",
+      "version": "3.0.3",
+      "description": "Safely add untrusted strings to HTML/XML markup.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/markupsafe@3.0.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "mypy",
+      "version": "1.11.2",
+      "description": "Optional static typing for Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/mypy@1.11.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "mypy_extensions",
+      "version": "1.1.0",
+      "description": "Type system extensions for programs checked with the mypy type checker.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/mypy_extensions@1.1.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "nodeenv",
+      "version": "1.10.0",
+      "description": "Node.js virtual environment builder",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/nodeenv@1.10.0",
       "ecosystem": "python"
     },
     {
@@ -106,7 +520,13 @@
       "name": "opentelemetry-api",
       "version": "1.27.0",
       "description": "OpenTelemetry Python API",
-      "licenses": [{"license": {"id": "Apache-2.0"}}],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "purl": "pkg:pypi/opentelemetry-api@1.27.0",
       "ecosystem": "python"
     },
@@ -115,63 +535,570 @@
       "name": "opentelemetry-sdk",
       "version": "1.27.0",
       "description": "OpenTelemetry Python SDK",
-      "licenses": [{"license": {"id": "Apache-2.0"}}],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "purl": "pkg:pypi/opentelemetry-sdk@1.27.0",
       "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "prometheus-client",
-      "version": "0.20.0",
-      "description": "Python client for the Prometheus monitoring system",
-      "licenses": [{"license": {"id": "Apache-2.0"}}],
-      "purl": "pkg:pypi/prometheus-client@0.20.0",
+      "name": "opentelemetry-semantic-conventions",
+      "version": "0.48b0",
+      "description": "OpenTelemetry Semantic Conventions",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/opentelemetry-semantic-conventions@0.48b0",
       "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "react",
-      "version": "18.3.1",
-      "description": "JavaScript library for user interfaces",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:npm/react@18.3.1",
-      "ecosystem": "javascript"
+      "name": "packaging",
+      "version": "26.3",
+      "description": "Core utilities for Python packages",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/packaging@26.3",
+      "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "react-dom",
-      "version": "18.3.1",
-      "description": "React package for working with the DOM",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:npm/react-dom@18.3.1",
-      "ecosystem": "javascript"
+      "name": "pip",
+      "version": "24.0",
+      "description": "The PyPA recommended tool for installing Python packages.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pip@24.0",
+      "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "lucide-react",
-      "version": "0.441.0",
-      "description": "Beautiful & consistent icons made by the community",
-      "licenses": [{"license": {"id": "ISC"}}],
-      "purl": "pkg:npm/lucide-react@0.441.0",
-      "ecosystem": "javascript"
+      "name": "platformdirs",
+      "version": "4.11.14",
+      "description": "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/platformdirs@4.11.14",
+      "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "vite",
-      "version": "5.4.2",
-      "description": "Native-ESM powered web dev build tool",
-      "licenses": [{"license": {"id": "MIT"}}],
-      "purl": "pkg:npm/vite@5.4.2",
-      "ecosystem": "javascript"
+      "name": "pluggy",
+      "version": "1.6.0",
+      "description": "plugin and hook calling mechanisms for python",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "ecosystem": "python"
     },
     {
       "type": "library",
-      "name": "typescript",
-      "version": "5.5.3",
-      "description": "TypeScript language compiler and type checker",
-      "licenses": [{"license": {"id": "Apache-2.0"}}],
-      "purl": "pkg:npm/typescript@5.5.3",
-      "ecosystem": "javascript"
+      "name": "pre-commit",
+      "version": "3.8.0",
+      "description": "A framework for managing and maintaining multi-language pre-commit hooks.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pre-commit@3.8.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "prometheus_client",
+      "version": "0.20.0",
+      "description": "Python client for the Prometheus monitoring system.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/prometheus_client@0.20.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "prompt_toolkit",
+      "version": "3.0.53",
+      "description": "Library for building powerful interactive command lines in Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/prompt_toolkit@3.0.53",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "psycopg2-binary",
+      "version": "2.9.9",
+      "description": "psycopg2 - Python-PostgreSQL Database Adapter",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL with exceptions"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/psycopg2-binary@2.9.9",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pyarrow",
+      "version": "25.0.1",
+      "description": "Python library for Apache Arrow",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pyarrow@25.0.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pydantic",
+      "version": "2.8.2",
+      "description": "Data validation using Python type hints",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pydantic@2.8.2",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pydantic-settings",
+      "version": "2.4.0",
+      "description": "Settings management using Pydantic",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pydantic-settings@2.4.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pydantic_core",
+      "version": "2.20.1",
+      "description": "Core functionality for Pydantic validation and serialization",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pydantic_core@2.20.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pytest",
+      "version": "8.3.3",
+      "description": "pytest: simple powerful testing with Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pytest@8.3.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pytest-asyncio",
+      "version": "0.24.0",
+      "description": "Pytest support for asyncio",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pytest-asyncio@0.24.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "pytest-cov",
+      "version": "5.0.0",
+      "description": "Pytest plugin for measuring coverage.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pytest-cov@5.0.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "description": "Extensions to the standard Python datetime module",
+      "licenses": [
+        {
+          "license": {
+            "id": "Dual License"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/python-dateutil@2.9.0.post0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "python-discovery",
+      "version": "1.6.1",
+      "description": "Python interpreter discovery",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/python-discovery@1.6.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "python-dotenv",
+      "version": "1.2.3",
+      "description": "Read key-value pairs from a .env file and set them as environment variables",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/python-dotenv@1.2.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "description": "YAML parser and emitter for Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/pyyaml@6.0.3",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "redis",
+      "version": "5.0.8",
+      "description": "Python client for Redis database and key-value store",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/redis@5.0.8",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "ruff",
+      "version": "0.16.9",
+      "description": "An extremely fast Python linter and code formatter, written in Rust.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/ruff@0.16.9",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "setuptools",
+      "version": "65.5.0",
+      "description": "Easily download, build, install, upgrade, and uninstall Python packages",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@65.5.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "six",
+      "version": "1.17.0",
+      "description": "Python 2 and 3 compatibility utilities",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/six@1.17.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "sniffio",
+      "version": "1.3.1",
+      "description": "Sniff out which async library your code is running under",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/sniffio@1.3.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "SQLAlchemy",
+      "version": "2.0.35",
+      "description": "Database Abstraction Library",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/sqlalchemy@2.0.35",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "starlette",
+      "version": "0.38.6",
+      "description": "The little ASGI library that shines.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/starlette@0.38.6",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "description": "Backported and Experimental Type Hints for Python 3.9+",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/typing_extensions@4.16.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "tzdata",
+      "version": "2026.4",
+      "description": "Provider of IANA time zone data",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/tzdata@2026.4",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "uvicorn",
+      "version": "0.30.6",
+      "description": "The lightning-fast ASGI server.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/uvicorn@0.30.6",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "vine",
+      "version": "5.1.0",
+      "description": "Python promises.",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/vine@5.1.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "virtualenv",
+      "version": "21.12.1",
+      "description": "Virtual Python Environment builder",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/virtualenv@21.12.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "watchfiles",
+      "version": "1.3.0",
+      "description": "Simple, modern and high performance file watching and code reload in python.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/watchfiles@1.3.0",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "wcwidth",
+      "version": "0.9.1",
+      "description": "Measures the displayed width of unicode strings in a terminal",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/wcwidth@0.9.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "websockets",
+      "version": "17.1",
+      "description": "An implementation of the WebSocket Protocol (RFC 6455 & 7692)",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/websockets@17.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "wrapt",
+      "version": "2.4.1",
+      "description": "Module for decorators, wrappers and monkey patching.",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/wrapt@2.4.1",
+      "ecosystem": "python"
+    },
+    {
+      "type": "library",
+      "name": "zipp",
+      "version": "4.1.0",
+      "description": "Backport of pathlib-compatible object wrapper for zip files",
+      "licenses": [
+        {
+          "license": {
+            "id": "Unknown"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/zipp@4.1.0",
+      "ecosystem": "python"
     }
   ]
 }

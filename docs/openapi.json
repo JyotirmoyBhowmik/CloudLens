@@ -34396,6 +34396,762 @@
         }
       }
     },
+    "/api/v1/admin/step-up": {
+      "post": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Verify Step Up Authentication",
+        "description": "Validates step-up authentication challenge for sensitive administrative operations.",
+        "operationId": "verify_step_up_authentication_api_v1_admin_step_up_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpAuthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/functions": {
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "List Administrative Functions",
+        "description": "Returns the comprehensive catalogue of all twenty-four administrative functions.",
+        "operationId": "list_administrative_functions_api_v1_admin_functions_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "title": "Response List Administrative Functions Api V1 Admin Functions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/rbac/matrix": {
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Get Permission Matrix",
+        "description": "Returns the complete Permission Matrix cross-referencing roles against all platform permissions.",
+        "operationId": "get_permission_matrix_api_v1_admin_rbac_matrix_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Permission Matrix Api V1 Admin Rbac Matrix Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/rbac/access-review/export": {
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Export Access Review",
+        "description": "Exports the formal enterprise Access Review audit report in CSV or JSON format.",
+        "operationId": "export_access_review_api_v1_admin_rbac_access_review_export_get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(csv|json)$",
+              "default": "csv",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/overrides": {
+      "post": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Create Administrative Override",
+        "description": "Creates a governed override enforcing all eight mandatory attributes (refuses without reason or expiry).",
+        "operationId": "create_administrative_override_api_v1_admin_overrides_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminOverrideCreateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverrideResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "List Administrative Overrides",
+        "description": "Lists overrides for authenticated tenant.",
+        "operationId": "list_administrative_overrides_api_v1_admin_overrides_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OverrideResponse"
+                  },
+                  "title": "Response List Administrative Overrides Api V1 Admin Overrides Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Get System Settings",
+        "description": "Returns global system settings.",
+        "operationId": "get_system_settings_api_v1_admin_settings_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Update System Settings",
+        "description": "Updates system settings with step-up provenance.",
+        "operationId": "update_system_settings_api_v1_admin_settings_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/feature-flags": {
+      "get": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "List Feature Flags",
+        "description": "Returns all feature flags and canary rollout states.",
+        "operationId": "list_feature_flags_api_v1_admin_feature_flags_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "title": "Response List Feature Flags Api V1 Admin Feature Flags Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/feature-flags/{flag_id}": {
+      "patch": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Toggle Feature Flag",
+        "description": "Toggles a feature flag state with step-up verification.",
+        "operationId": "toggle_feature_flag_api_v1_admin_feature_flags__flag_id__patch",
+        "parameters": [
+          {
+            "name": "flag_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flag Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Toggle Feature Flag Api V1 Admin Feature Flags  Flag Id  Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -34699,6 +35455,74 @@
         ],
         "title": "AdjustCostFactRequest",
         "description": "Payload attempting to adjust cost data (strictly forbidden by Prompt 24)."
+      },
+      "AdminOverrideCreateDTO": {
+        "properties": {
+          "override_class": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverrideClass"
+              }
+            ],
+            "description": "Classification category"
+          },
+          "who": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Who",
+            "description": "Accountable identity"
+          },
+          "what": {
+            "type": "string",
+            "minLength": 1,
+            "title": "What",
+            "description": "Target entity or configuration key"
+          },
+          "why": {
+            "type": "string",
+            "minLength": 20,
+            "title": "Why",
+            "description": "Mandatory detailed justification (>= 20 chars)"
+          },
+          "previous_value": {
+            "title": "Previous Value",
+            "description": "Value prior to override"
+          },
+          "new_value": {
+            "title": "New Value",
+            "description": "Overriding value applied"
+          },
+          "expiry": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expiry",
+            "description": "Mandatory expiration timestamp in UTC"
+          },
+          "approval_ticket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Ticket",
+            "description": "ITSM change ticket reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "override_class",
+          "who",
+          "what",
+          "why",
+          "previous_value",
+          "new_value",
+          "expiry"
+        ],
+        "title": "AdminOverrideCreateDTO",
+        "description": "Payload enforcing all eight mandatory override attributes."
       },
       "AgeingBucket": {
         "properties": {
@@ -50979,6 +51803,12 @@
             "title": "Has Staleness Warning",
             "description": "True if any data class exceeds its staleness threshold"
           },
+          "overall_sla_breached": {
+            "type": "boolean",
+            "title": "Overall Sla Breached",
+            "description": "True if any data class exceeds its staleness threshold",
+            "default": false
+          },
           "stale_count": {
             "type": "integer",
             "minimum": 0.0,
@@ -64114,6 +64944,12 @@
             ],
             "description": "Source provenance, effective date, and URL"
           },
+          "is_pricing_stale": {
+            "type": "boolean",
+            "title": "Is Pricing Stale",
+            "description": "Whether pricing data exceeds staleness threshold",
+            "default": false
+          },
           "contextual_alerts": {
             "items": {
               "$ref": "#/components/schemas/ContextualAlert"
@@ -68279,6 +69115,58 @@
         "title": "StepUpAction",
         "description": "Protected operations mandating step-up authentication (Prompt 10 Item 68)."
       },
+      "StepUpAuthRequest": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Password",
+            "description": "Administrative credential or MFA confirmation code"
+          },
+          "action_context": {
+            "type": "string",
+            "title": "Action Context",
+            "description": "Target administrative function",
+            "default": "admin_console"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "StepUpAuthRequest",
+        "description": "Payload to complete step-up authentication challenge for administrative operations."
+      },
+      "StepUpAuthResponse": {
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+            "title": "Authenticated"
+          },
+          "session_token": {
+            "type": "string",
+            "title": "Session Token"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "authenticated",
+          "session_token",
+          "expires_at",
+          "actor"
+        ],
+        "title": "StepUpAuthResponse",
+        "description": "Response confirming step-up validation."
+      },
       "StepUpInitiateRequest": {
         "properties": {
           "tenant_id": {
@@ -69230,6 +70118,48 @@
         ],
         "title": "SystemRole",
         "description": "Nine built-in canonical roles for enterprise FinOps RBAC (Prompt 49A Item 9)."
+      },
+      "SystemSettingsDTO": {
+        "properties": {
+          "default_timezone": {
+            "type": "string",
+            "title": "Default Timezone",
+            "description": "Display timezone",
+            "default": "UTC"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Default reporting currency",
+            "default": "USD"
+          },
+          "telemetry_cadence_minutes": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 5.0,
+            "title": "Telemetry Cadence Minutes",
+            "default": 60
+          },
+          "audit_retention_days": {
+            "type": "integer",
+            "minimum": 30.0,
+            "title": "Audit Retention Days",
+            "default": 1095
+          },
+          "enforce_two_factor": {
+            "type": "boolean",
+            "title": "Enforce Two Factor",
+            "default": true
+          },
+          "maintenance_mode": {
+            "type": "boolean",
+            "title": "Maintenance Mode",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SystemSettingsDTO",
+        "description": "Global system configuration settings."
       },
       "Tag": {
         "properties": {

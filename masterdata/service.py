@@ -103,6 +103,8 @@ class MasterDataService:
             raise MasterNotRegisteredException(mt)
 
         target_time = as_of or datetime.utcnow()
+        if target_time.tzinfo is not None:
+            target_time = target_time.replace(tzinfo=None)
         records = self._records.get(mt, [])
 
         # Filter by code and time interval
@@ -141,6 +143,8 @@ class MasterDataService:
             raise MasterNotRegisteredException(mt)
 
         target_time = as_of or datetime.utcnow()
+        if target_time.tzinfo is not None:
+            target_time = target_time.replace(tzinfo=None)
         records = self._records.get(mt, [])
 
         # Distinct by code, resolving latest effective version per code
