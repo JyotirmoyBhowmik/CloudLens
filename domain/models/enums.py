@@ -1419,3 +1419,82 @@ class GraphExportFormat(StrEnum):
     PNG = "PNG"
     GRAPHML = "GRAPHML"
     DOT = "DOT"
+
+
+# ==============================================================================
+# Integration Hub & Outbound Event Models (Prompt 60 / BBP Section 13.5 & 35)
+# ==============================================================================
+
+
+class IntegrationType(StrEnum):
+    """Categorisation of external enterprise integration adapters."""
+
+    ITSM = "ITSM"
+    CMDB = "CMDB"
+    FINANCE_ERP = "FINANCE_ERP"
+    CHAT = "CHAT"
+    IDENTITY_DIRECTORY = "IDENTITY_DIRECTORY"
+    WEBHOOK = "WEBHOOK"
+
+
+class IntegrationCapability(StrEnum):
+    """Canonical declared capabilities for integration adapters (Prompt 60)."""
+
+    AUTHENTICATE = "authenticate"
+    HEALTH_CHECK = "health_check"
+    DISPATCH_EVENT = "dispatch_event"
+    SYNC_STATUS = "sync_status"
+    CREATE_TICKET = "create_ticket"
+    IMPORT_ENTITIES = "import_entities"
+    EXPORT_DATA = "export_data"
+    SURFACE_CONFLICTS = "surface_conflicts"
+    RESOLVE_IDENTITY = "resolve_identity"
+    DETECT_LEAVERS = "detect_leavers"
+    ACKNOWLEDGE_ALERT = "acknowledge_alert"
+
+
+class IntegrationHealth(StrEnum):
+    """Health classification for external integration adapters."""
+
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    UNHEALTHY = "UNHEALTHY"
+    PAUSED = "PAUSED"
+
+
+class OutboundEventType(StrEnum):
+    """Versioned domain events available for external consumption (Prompt 60)."""
+
+    ALERT_RAISED = "alert_raised"
+    ALERT_RESOLVED = "alert_resolved"
+    TASK_CREATED = "task_created"
+    TASK_CLOSED = "task_closed"
+    BUDGET_BREACHED = "budget_breached"
+    FORECAST_BREACH_PREDICTED = "forecast_breach_predicted"
+    RECONCILIATION_FAILED = "reconciliation_failed"
+    GOVERNANCE_EXCEPTION_RAISED = "governance_exception_raised"
+    PROVISIONING_REQUEST_SUBMITTED = "provisioning_request_submitted"
+    PROVISIONING_REQUEST_DECIDED = "provisioning_request_decided"
+    COMMITMENT_EXPIRING = "commitment_expiring"
+    QUOTA_HEADROOM_LOW = "quota_headroom_low"
+
+
+class IntegrationDeliveryOutcome(StrEnum):
+    """Outbound integration delivery attempt outcome."""
+
+    DELIVERED = "DELIVERED"
+    QUEUED = "QUEUED"
+    RETRYING = "RETRYING"
+    FAILED = "FAILED"
+    DEAD_LETTER = "DEAD_LETTER"
+
+
+class FieldAuthority(StrEnum):
+    """Declared authority for bidirectional or synced entity fields."""
+
+    CMDB = "CMDB"
+    FINANCE = "FINANCE"
+    DIRECTORY = "DIRECTORY"
+    CLOUD_LENS = "CLOUD_LENS"
+    SHARED = "SHARED"
+
