@@ -1498,3 +1498,55 @@ class FieldAuthority(StrEnum):
     CLOUD_LENS = "CLOUD_LENS"
     SHARED = "SHARED"
 
+
+# ==============================================================================
+# Adoption Analytics & Platform Value Enums (Prompt 61 / BBP Section 43)
+# ==============================================================================
+
+
+class TelemetryActionType(StrEnum):
+    """Actions captured in privacy-respecting aggregate telemetry."""
+
+    SCREEN_VIEW = "SCREEN_VIEW"
+    REPORT_GENERATED = "REPORT_GENERATED"
+    DASHBOARD_VIEWED = "DASHBOARD_VIEWED"
+    EXPORT_DOWNLOADED = "EXPORT_DOWNLOADED"
+    WORKFLOW_ACTION = "WORKFLOW_ACTION"
+
+
+class ValueSourceType(StrEnum):
+    """Categorisation of value returned by the platform."""
+
+    REMEDIATION_TASK = "REMEDIATION_TASK"
+    DECOMMISSIONING = "DECOMMISSIONING"
+    SCHEDULE_ADHERENCE = "SCHEDULE_ADHERENCE"
+    COMMITMENT_OPTIMISATION = "COMMITMENT_OPTIMISATION"
+
+
+class FunnelStage(StrEnum):
+    """Canonical stages in the onboarding maturity funnel."""
+
+    CONNECTOR_ADDED = "CONNECTOR_ADDED"
+    FIRST_DATA_INGESTED = "FIRST_DATA_INGESTED"
+    FIRST_BUDGET_SET = "FIRST_BUDGET_SET"
+    FIRST_ALERT_ACKNOWLEDGED = "FIRST_ALERT_ACKNOWLEDGED"
+    FIRST_TASK_CLOSED = "FIRST_TASK_CLOSED"
+
+
+class FeatureAdoptionStatus(StrEnum):
+    """Maturity and usage status of an enabled platform capability."""
+
+    CONFIGURED_AND_USED = "CONFIGURED_AND_USED"
+    ENABLED_DORMANT = "ENABLED_DORMANT"
+    DISABLED = "DISABLED"
+
+
+class DataQualityRating(StrEnum):
+    """Headline classification for overall data quality scoring."""
+
+    EXCELLENT = "EXCELLENT"
+    GOOD = "GOOD"
+    NEEDS_ATTENTION = "NEEDS_ATTENTION"
+    CRITICAL = "CRITICAL"
+
+
