@@ -190,22 +190,22 @@ class ScopeGrantEvaluator:
                 can_view_rates=can_view_rates,
             )
 
-        # STEP 3: Role-Level Scope Authority for Global & Tenant Admins
-        if SystemRole.GLOBAL_ADMIN.value in role_codes:
+        # STEP 3: Role-Level Scope Authority for Super & Platform Admins
+        if SystemRole.SUPER_ADMIN.value in role_codes or "GLOBAL_ADMIN" in role_codes:
             return AuthorizationDecision(
                 allowed=True,
                 effect=GrantEffect.ALLOW,
-                reason="Access granted via Super Admin (GLOBAL_ADMIN) platform authority.",
+                reason="Access granted via Super Admin (SUPER_ADMIN) platform authority.",
                 matched_grant_id=None,
                 effective_financial_sensitivity=FinancialSensitivity.FULL_FINANCIAL_DETAIL,
                 can_view_rates=True,
             )
 
-        if SystemRole.TENANT_ADMIN.value in role_codes:
+        if SystemRole.PLATFORM_ADMIN.value in role_codes or "TENANT_ADMIN" in role_codes:
             return AuthorizationDecision(
                 allowed=True,
                 effect=GrantEffect.ALLOW,
-                reason="Access granted via Platform Admin (TENANT_ADMIN) tenant authority.",
+                reason="Access granted via Platform Admin (PLATFORM_ADMIN) tenant authority.",
                 matched_grant_id=None,
                 effective_financial_sensitivity=FinancialSensitivity.FULL_FINANCIAL_DETAIL,
                 can_view_rates=True,

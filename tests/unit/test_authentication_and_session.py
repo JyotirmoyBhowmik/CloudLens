@@ -29,7 +29,6 @@ from domain.models.enums import (
 )
 from domain.models.exceptions import (
     BreakGlassAuthFailedException,
-    BreakGlassLimitExceededException,
     IdentityException,
     MachineClientAuthFailedException,
     NoMappedRoleException,
@@ -181,76 +180,54 @@ def _obtain_step_up_token(auth_service: IdentityService, action: StepUpAction) -
     return st.step_up_token
 
 
-def test_break_glass_provisioning_and_limit_enforcement(auth_service: IdentityService):
-    """Break-glass accounts are strictly capped per tenant (default 2)."""
-    step_up = _obtain_step_up_token(auth_service, StepUpAction.CREDENTIAL_CREATION)
+def test_break_glass_consolidation_and_enumeration(auth_service: IdentityService):
+    """Prompt R-SEC / Prompt 49B AM-05: Exactly one break-glass path exists; secondary provisioning deleted."""
+    # 1. Break-glass enumeration returns exactly 1 identity (superuser)
+    paths = auth_service.enumerate_break_glass_paths()
+    assert len(paths) == 1
+    assert "@" in paths[0]
 
-    # 1. Provision first break-glass account
-    bg1, secret1 = auth_service.provision_break_glass_account(
-        tenant_id="tenant-corp",
-        account_name="emergency-admin-1",
-        password="SuperStrongEmergencyPassword123!",
-        step_up_token=step_up,
-    )
-    assert bg1.account_name == "emergency-admin-1"
-    assert secret1 is not None
-
-    # 2. Provision second break-glass account
-    bg2, secret2 = auth_service.provision_break_glass_account(
-        tenant_id="tenant-corp",
-        account_name="emergency-admin-2",
-        password="AnotherStrongEmergencyPassword456!",
-        step_up_token=step_up,
-    )
-    assert bg2.account_name == "emergency-admin-2"
-
-    # 3. Third attempt exceeds limit and must fail
-    with pytest.raises(BreakGlassLimitExceededException):
-        auth_service.provision_break_glass_account(
-            tenant_id="tenant-corp",
-            account_name="emergency-admin-3",
-            password="ThirdEmergencyPassword789!",
-            step_up_token=step_up,
-        )
+    # 2. Secondary break-glass provisioning method does not exist
+    assert not hasattr(auth_service, "provision_break_glass_account")
 
 
 def test_break_glass_login_produces_critical_alert_and_audit(auth_service: IdentityService):
-    """Prompt 10 Item 65: A break-glass sign-in produces an alert and a distinct audit record."""
-    step_up = _obtain_step_up_token(auth_service, StepUpAction.CREDENTIAL_CREATION)
-    bg, mfa_secret = auth_service.provision_break_glass_account(
-        tenant_id="tenant-corp",
-        account_name="breakglass-sec",
-        password="MasterSecretPassword!",
-        step_up_token=step_up,
-    )
+    """Prompt 10 Item 65 & Prompt R-SEC: Break-glass login requires superuser IdP + MFA, rejects local passwords."""
+    superuser_id = auth_service.enumerate_break_glass_paths()[0]
+    auth_service.set_superuser_mfa_secret("JBSWY3DPEHPK3PXP")
+    valid_totp = generate_totp_code("JBSWY3DPEHPK3PXP")
 
-    # Generate valid TOTP MFA code
-    valid_totp = generate_totp_code(mfa_secret)
-
-    # 1. Authenticate with wrong password -> fails
+    # 1. Attempting with local password -> strictly fails
     with pytest.raises(BreakGlassAuthFailedException):
         auth_service.authenticate_break_glass(
             tenant_id="tenant-corp",
-            account_name="breakglass-sec",
-            password="WrongPassword!",
+            account_name=superuser_id,
+            password="MasterSecretPassword!",
             mfa_code=valid_totp,
         )
 
-    # 2. Authenticate with wrong TOTP -> fails
+    # 2. Attempting with non-superuser account -> fails
     with pytest.raises(BreakGlassAuthFailedException):
         auth_service.authenticate_break_glass(
             tenant_id="tenant-corp",
-            account_name="breakglass-sec",
-            password="MasterSecretPassword!",
+            account_name="unauthorized-account@domain.com",
+            mfa_code=valid_totp,
+        )
+
+    # 3. Authenticate with wrong TOTP -> fails
+    with pytest.raises(BreakGlassAuthFailedException):
+        auth_service.authenticate_break_glass(
+            tenant_id="tenant-corp",
+            account_name=superuser_id,
             mfa_code="000000",
         )
 
-    # 3. Authenticate with valid credentials & valid MFA -> succeeds
+    # 4. Authenticate with valid superuser identity & valid MFA (no local password) -> succeeds
     tokens = auth_service.authenticate_break_glass(
         tenant_id="tenant-corp",
-        account_name="breakglass-sec",
-        password="MasterSecretPassword!",
+        account_name=superuser_id,
         mfa_code=valid_totp,
+        idp_assertion={"email": superuser_id},
     )
     assert tokens.access_token is not None
     assert SystemRole.GLOBAL_ADMIN.value in tokens.roles
@@ -259,12 +236,12 @@ def test_break_glass_login_produces_critical_alert_and_audit(auth_service: Ident
     alerts = auth_service.alerts
     bg_alert = next(a for a in alerts if a.alert_type == "BREAK_GLASS_AUTHENTICATION_ALERT")
     assert bg_alert.severity == AlertSeverity.CRITICAL
-    assert "breakglass-sec" in bg_alert.message
+    assert superuser_id in bg_alert.message
 
     # Verify Distinct Audit Record written
     audits = auth_service.audit_events
     bg_audit = next(e for e in audits if e.action == "BREAK_GLASS_AUTHENTICATION")
-    assert bg_audit.actor_id == "break-glass:breakglass-sec"
+    assert bg_audit.actor_id == f"break-glass:{superuser_id}"
     assert bg_audit.tenant_id == "tenant-corp"
 
 

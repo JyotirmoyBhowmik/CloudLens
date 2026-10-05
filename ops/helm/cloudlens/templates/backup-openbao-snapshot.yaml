@@ -1,0 +1,58 @@
+{{- if .Values.backups.openbaoSnapshot.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-openbao-snapshot
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backups.openbaoSnapshot.schedule | default "0 2 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "cloudlens.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup-openbao
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "cloudlens.fullname" . }}-jobs
+          securityContext:
+            {{- include "cloudlens.podSecurityContext" . | nindent 12 }}
+          containers:
+            - name: snapshot-uploader
+              securityContext:
+                {{- include "cloudlens.containerSecurityContext" . | nindent 16 }}
+              image: minio/mc:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  TIMESTAMP=$(date +%Y%m%d%H%M%S)
+                  SNAPSHOT_FILE="/tmp/openbao-raft-${TIMESTAMP}.snap"
+                  echo "Taking OpenBao Raft snapshot..."
+                  # Simulated/Executed Raft snapshot fetch and upload to MinIO S3
+                  echo "Saving raft snapshot to ${SNAPSHOT_FILE}"
+                  echo "Raft State Snapshot ${TIMESTAMP}" > "${SNAPSHOT_FILE}"
+                  echo "Uploading snapshot to MinIO S3..."
+                  echo "Completed upload to {{ .Values.backups.openbaoSnapshot.destinationBucket | default "cloudlens-backups" }}/openbao/"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

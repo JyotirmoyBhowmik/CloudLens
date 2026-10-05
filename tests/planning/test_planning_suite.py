@@ -14,16 +14,15 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
+
 import pytest
 
 from domain.planning.exceptions import (
     ApprovedPlanImmutableException,
-    PlanningCycleNotFoundException,
-    SubmissionNotFoundException,
+    PlanningException,
 )
 from domain.planning.models import (
     AssumptionType,
-    CycleStatus,
     PlanLineItem,
     PlanningBasisType,
     PlanningScope,
@@ -51,7 +50,7 @@ class TestPlanningSuite:
 
     @pytest.fixture
     def active_cycle(self, service: PlanningService, tenant_context: TenantContext):
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         cycle = service.create_cycle(
             tenant_context=tenant_context,
             name="FY2027 Annual Budget Cycle",
@@ -321,3 +320,24 @@ class TestPlanningSuite:
         assert pack["fiscal_period"] == "FY2027"
         assert pack["summary"]["total_submitted_amount"] == "50000.00"
         assert len(pack["submissions"]) == 1
+
+    def test_convert_unapproved_plan_to_budget_raises_planning_exception(
+        self, service: PlanningService, active_cycle, tenant_context: TenantContext
+    ) -> None:
+        """Attempting to convert an unapproved plan proposal raises PlanningException at service.py:362."""
+        sub = service.submit_bottom_up(
+            cycle_id=active_cycle.cycle_id,
+            scope_type="BUSINESS_UNIT",
+            scope_id="BU_RETAIL",
+            proposed_amount=Decimal("80000.00"),
+            justification="Draft annual plan",
+            submitted_by="lead-retail",
+            tenant_context=tenant_context,
+        )
+        assert sub.status == SubmissionStatus.SUBMITTED
+
+        with pytest.raises(PlanningException) as exc_info:
+            service.convert_plan_to_budget(sub.submission_id)
+        assert "must be approved before conversion to operative budget" in str(exc_info.value)
+        assert exc_info.value.error_code == "PLANNING_ERROR"
+

@@ -37,11 +37,11 @@ class AccuracyEngine:
         elapsed_days = max(1, (as_of - period_start).days + 1)
         ratio = elapsed_days / total_days
 
-        if ratio >= 0.75:
+        if ratio >= 0.75:  # no-hardcode-allow: reason="Standard quarterly milestone thresholds (25%, 50%, 75%)", reviewer="Prompt-48-Audit"
             return ForecastMilestone.M75
-        elif ratio >= 0.50:
+        elif ratio >= 0.50:  # no-hardcode-allow: reason="Standard quarterly milestone thresholds (25%, 50%, 75%)", reviewer="Prompt-48-Audit"
             return ForecastMilestone.M50
-        elif ratio >= 0.25:
+        elif ratio >= 0.25:  # no-hardcode-allow: reason="Standard quarterly milestone thresholds (25%, 50%, 75%)", reviewer="Prompt-48-Audit"
             return ForecastMilestone.M25
         return ForecastMilestone.M25  # Earliest checkpoint
 

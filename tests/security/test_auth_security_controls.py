@@ -15,7 +15,7 @@ from api.cloudlens_api.main import app
 from domain.config.tenant_settings import TenantSettings, tenant_settings_store
 from domain.identity.password_hasher import generate_totp_code
 from domain.identity.service import get_identity_service
-from domain.models.enums import AlertSeverity, StepUpAction, SystemRole
+from domain.models.enums import AlertSeverity, SystemRole
 
 
 @pytest.fixture
@@ -87,48 +87,50 @@ def test_api_oidc_login_and_unmapped_role_rejection(client: TestClient):
 
 
 def test_api_break_glass_flow_and_alerts(client: TestClient):
-    """API endpoints for break glass provisioning, login, MFA, and critical alerting."""
+    """API endpoints for break glass login, MFA, password rejection, and critical alerting."""
     svc = get_identity_service()
+    superuser_id = svc.enumerate_break_glass_paths()[0]
+    svc.set_superuser_mfa_secret("JBSWY3DPEHPK3PXP")
+    valid_code = generate_totp_code("JBSWY3DPEHPK3PXP")
 
-    # 1. Obtain step-up token for credential creation
-    ch = svc.initiate_step_up_challenge("sec-tenant", "admin-sec", StepUpAction.CREDENTIAL_CREATION)
-    st = svc.verify_step_up_challenge(ch.id, ch.challenge_code)
-
-    # 2. Provision break glass account via API
+    # 1. Provisioning endpoint is completely deleted -> 404
     res_prov = client.post(
         "/api/v1/auth/break-glass/provision",
+        json={"tenant_id": "sec-tenant", "account_name": "breakglass-alpha"},
+    )
+    assert res_prov.status_code == 404
+
+    # 2. Local passwords are strictly rejected -> 401
+    res_pwd = client.post(
+        "/api/v1/auth/break-glass/login",
         json={
             "tenant_id": "sec-tenant",
-            "account_name": "breakglass-alpha",
+            "account_name": superuser_id,
             "password": "EmergencySecretPassword2026!",
-            "step_up_token": st.step_up_token,
+            "mfa_code": valid_code,
         },
     )
-    assert res_prov.status_code == 200
-    prov_data = res_prov.json()
-    totp_secret = prov_data["totp_secret"]
+    assert res_pwd.status_code == 401
 
     # 3. Login with invalid MFA -> 401
     res_bad_mfa = client.post(
         "/api/v1/auth/break-glass/login",
         json={
             "tenant_id": "sec-tenant",
-            "account_name": "breakglass-alpha",
-            "password": "EmergencySecretPassword2026!",
+            "account_name": superuser_id,
             "mfa_code": "000000",
         },
     )
     assert res_bad_mfa.status_code == 401
 
-    # 4. Login with valid MFA -> 200 + CRITICAL alert + Audit event
-    valid_code = generate_totp_code(totp_secret)
+    # 4. Login with valid superuser identity and valid MFA -> 200 + CRITICAL alert + Audit event
     res_login = client.post(
         "/api/v1/auth/break-glass/login",
         json={
             "tenant_id": "sec-tenant",
-            "account_name": "breakglass-alpha",
-            "password": "EmergencySecretPassword2026!",
+            "account_name": superuser_id,
             "mfa_code": valid_code,
+            "idp_assertion": {"email": superuser_id},
         },
     )
     assert res_login.status_code == 200
@@ -143,7 +145,7 @@ def test_api_break_glass_flow_and_alerts(client: TestClient):
     # Verify Audit Event exists
     bg_audits = [e for e in svc.audit_events if e.action == "BREAK_GLASS_AUTHENTICATION"]
     assert len(bg_audits) >= 1
-    assert bg_audits[-1].actor_id == "break-glass:breakglass-alpha"
+    assert bg_audits[-1].actor_id == f"break-glass:{superuser_id}"
 
 
 def test_api_user_disablement_immediate_token_kill(client: TestClient):

@@ -299,6 +299,10 @@ class TestIngestionFixtures:
 class TestDemoTenantRestApi:
     """Validates FastAPI REST endpoints for demonstration tenant management."""
 
+    @pytest.fixture(autouse=True)
+    def ensure_seeded(self, client: TestClient):
+        client.post("/api/v1/system/demo/seed?sample_size=20&force_reseed=true")
+
     def test_seed_demo_tenant_endpoint(self, client: TestClient):
         """POST /api/v1/system/demo/seed populates estate and returns seed report."""
         resp = client.post("/api/v1/system/demo/seed?sample_size=20&force_reseed=true")

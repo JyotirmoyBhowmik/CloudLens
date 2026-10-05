@@ -23,7 +23,7 @@ from domain.tenant.context import TenantContext
 class WebhookChannelAdapter(ChannelAdapter):
     """Adapter for HTTPS webhook notifications with signed payloads."""
 
-    def __init__(self, default_signing_secret: str = "cloudlens-webhook-secret-key") -> None:
+    def __init__(self, default_signing_secret: str = "") -> None:
         self.default_signing_secret = default_signing_secret
 
     @property

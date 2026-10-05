@@ -55,7 +55,7 @@ class OCICredentials(BaseModel):
         description="Public API signing key MD5 fingerprint",
     )
     private_key_pem: str | None = Field(
-        default="-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0...[REDACTED]...==\n-----END RSA PRIVATE KEY-----",
+        default=None,
         description="RSA private key in PEM format",
     )
     region: str = Field(default="us-ashburn-1", description="OCI home or target region")

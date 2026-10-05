@@ -49,18 +49,15 @@ def get_authenticated_tenant_context(
                 detail=f"Authentication token invalid or expired: {e}",
             ) from e
 
-        authenticated_tenant_id = auth_context.tenant_id
-        is_global_admin = (
-            any(
-                r in (SystemRole.GLOBAL_ADMIN, "GLOBAL_ADMIN", "Super Admin")
-                for r in auth_context.roles
-            )
-            or auth_context.email == "admin@jyotirmoyb.com"
+        authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id
+        is_global_admin = any(
+            r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN", "GLOBAL_ADMIN")
+            for r in auth_context.roles
         )
 
-        # 2. Check for Parameter Manipulation Attacks (Item 88)
-        # Check Header Manipulation
-        if x_tenant_id and x_tenant_id != authenticated_tenant_id and not is_global_admin:
+        # 2. Check for Parameter Manipulation Attacks (Item 88, Prompt R-SEC Part 1)
+        # Without an act-as token, any X-Tenant-Id differing from token tenant -> 403 for EVERY role
+        if x_tenant_id and x_tenant_id != authenticated_tenant_id:
             # Audit cross-tenant access attempt
             audit_service.append_event(
                 tenant_context=TenantContext(
@@ -95,7 +92,7 @@ def get_authenticated_tenant_context(
 
         # Check Query Parameter Manipulation
         query_tenant = request.query_params.get("tenant_id")
-        if query_tenant and query_tenant != authenticated_tenant_id and not is_global_admin:
+        if query_tenant and query_tenant != authenticated_tenant_id:
             audit_service.append_event(
                 tenant_context=TenantContext(
                     tenant_id=authenticated_tenant_id,
@@ -127,9 +124,7 @@ def get_authenticated_tenant_context(
                 ),
             )
 
-        effective_tenant = (
-            x_tenant_id if (is_global_admin and x_tenant_id) else authenticated_tenant_id
-        )
+        effective_tenant = authenticated_tenant_id
         scope_grants_header = request.headers.get("X-Scope-Grants")
         scope_grants = (
             [s.strip() for s in scope_grants_header.split(",") if s.strip()]
@@ -149,6 +144,7 @@ def get_authenticated_tenant_context(
         current_tenant_id.set(tc.tenant_id)
         return tc
 
+
     # 3. Fallback for unauthenticated test callers / internal test harness
     fallback_tenant = x_tenant_id or "default-tenant"
     actor_id = request.headers.get("X-Actor-ID") or request.headers.get("X-User-ID") or "anonymous"
@@ -156,7 +152,7 @@ def get_authenticated_tenant_context(
     roles = (
         [r.strip() for r in roles_header.split(",") if r.strip()]
         if roles_header
-        else ["TENANT_USER"]
+        else [SystemRole.IT_OPERATIONS_USER.value]
     )
     scope_grants_header = request.headers.get("X-Scope-Grants")
     scope_grants = (
@@ -171,7 +167,7 @@ def get_authenticated_tenant_context(
         roles=roles,
         scope_grants=scope_grants,
         correlation_id=correlation_id,
-        is_superuser=("GLOBAL_ADMIN" in roles),
+        is_superuser=("SUPER_ADMIN" in roles or "GLOBAL_ADMIN" in roles),  # no-hardcode-allow: reason="Legacy role string fallback check", reviewer="Prompt-48-Audit"
     )
     request.state.tenant_context = tc
     current_tenant_id.set(tc.tenant_id)

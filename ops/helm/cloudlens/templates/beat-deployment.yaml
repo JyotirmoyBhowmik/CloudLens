@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-beat
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: beat
+spec:
+  replicas: 1 # Strictly 1 replica guaranteed + database-backed Redis leader lock
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "cloudlens.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: beat
+  template:
+    metadata:
+      labels:
+        {{- include "cloudlens.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: beat
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "cloudlens.fullname" . }}-beat
+      securityContext:
+        {{- include "cloudlens.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: beat
+          securityContext:
+            {{- include "cloudlens.containerSecurityContext" . | nindent 12 }}
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}{{ if .Values.worker.image.digest }}@{{ .Values.worker.image.digest }}{{ end }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - celery
+            - -A
+            - workers.cloudlens_workers.celery_app
+            - beat
+            - --loglevel=info
+            - -s
+            - /app/scratch/celerybeat-schedule
+          envFrom:
+            - configMapRef:
+                name: {{ include "cloudlens.fullname" . }}-config
+          resources:
+            {{- toYaml .Values.beat.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: scratch
+              mountPath: /app/scratch
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: scratch
+          emptyDir: {}

@@ -164,3 +164,9 @@ class AuthContext(BaseModel):
         default_factory=list, description="Active elevated step-up action claims"
     )
     is_machine: bool = Field(default=False, description="True for machine clients")
+    act_as_tenant: str | None = Field(
+        default=None, description="Target tenant ID if issued via act-as-tenant"
+    )
+    original_subject: str | None = Field(
+        default=None, description="Original subject who assumed the act-as identity"
+    )

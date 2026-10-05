@@ -51,21 +51,21 @@ class OCIBudgetService:
                         "type": "ACTUAL",
                         "threshold_type": "PERCENTAGE",
                         "threshold_value": 80.0,  # 80% of $50,000 = $40,000
-                        "recipients": ["finops-alerts@cloudlens.internal"],
+                        "recipients": [],
                     },
                     {
                         "rule_id": "ocid1.alertrule.oc1..alert002",
                         "type": "FORECAST",
                         "threshold_type": "PERCENTAGE",
                         "threshold_value": 100.0,  # Forecasted 100% breach
-                        "recipients": ["finops-leads@cloudlens.internal"],
+                        "recipients": [],
                     },
                     {
                         "rule_id": "ocid1.alertrule.oc1..alert003",
                         "type": "ACTUAL",
                         "threshold_type": "ABSOLUTE",
                         "threshold_value": 45000.0,  # Hard dollar threshold
-                        "recipients": ["engineering-dir@cloudlens.internal"],
+                        "recipients": [],
                     },
                 ],
                 is_authoritative=False,  # Comparison only
@@ -85,7 +85,7 @@ class OCIBudgetService:
                         "type": "ACTUAL",
                         "threshold_type": "PERCENTAGE",
                         "threshold_value": 85.0,
-                        "recipients": ["finance-ops@cloudlens.internal"],
+                        "recipients": [],
                     }
                 ],
                 is_authoritative=False,

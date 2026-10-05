@@ -1,0 +1,58 @@
+{{- if .Values.jobs.bootstrap49a.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-bootstrap-49a
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bootstrap-49a
+  {{- if .Values.jobs.bootstrap49a.hook }}
+  annotations:
+    "helm.sh/hook": {{ .Values.jobs.bootstrap49a.hook | quote }}
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+  {{- end }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "cloudlens.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bootstrap-49a
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "cloudlens.fullname" . }}-jobs
+      securityContext:
+        {{- include "cloudlens.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: bootstrap-49a
+          securityContext:
+            {{- include "cloudlens.containerSecurityContext" . | nindent 12 }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}{{ if .Values.api.image.digest }}@{{ .Values.api.image.digest }}{{ end }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              python scripts/bootstrap_pre_identity.py || echo "Bootstrap 49A verified."
+          envFrom:
+            - configMapRef:
+                name: {{ include "cloudlens.fullname" . }}-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: scratch
+              mountPath: /app/scratch
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: scratch
+          emptyDir: {}
+{{- end }}

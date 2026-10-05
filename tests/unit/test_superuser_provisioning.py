@@ -23,7 +23,6 @@ from domain.identity.password_hasher import generate_totp_code
 from domain.identity.service import get_identity_service
 from domain.models.enums import AlertSeverity, SystemRole
 from domain.models.exceptions import (
-    BreakGlassLimitExceededException,
     SuperuserActivationException,
     SuperuserImmutableException,
 )
@@ -281,27 +280,9 @@ def test_break_glass_consolidation_onto_single_superuser():
     assert len(break_glass_paths) == 1
     assert break_glass_paths[0] == expected_email
 
-    # Attempting to provision a secondary break-glass account is blocked per AM-05
-    from domain.models.enums import StepUpAction
-
-    step_up = identity_svc.initiate_step_up_challenge(
-        tenant_id="tenant-corp",
-        user_id="user-corp",
-        action=StepUpAction.CREDENTIAL_CREATION,
-    )
-    token = identity_svc.verify_step_up_challenge(
-        challenge_id=step_up.id,
-        challenge_code=step_up.challenge_code,
-    )
-
-    with pytest.raises(BreakGlassLimitExceededException) as exc_info:
-        identity_svc.provision_break_glass_account(
-            tenant_id="tenant-corp",
-            account_name="emergency-secondary",
-            password="EmergencyPassword123!",
-            step_up_token=token.step_up_token,
-        )
-    assert "consolidated to the single platform superuser identity per AM-05" in str(exc_info.value)
+    # Prompt R-SEC: Secondary break-glass provisioning is deleted and prohibited
+    assert not hasattr(identity_svc, "provision_break_glass_account")
+    assert identity_svc.enumerate_break_glass_paths() == [expected_email]
 
 
 # ==============================================================================

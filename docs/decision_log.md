@@ -45,6 +45,8 @@ This document consolidates every Report Back block across the 62 build prompts o
 | **ADR-023** | Open Format Long-Term Cost Archival (Parquet/JSON-L) | Prompt 44, 46 | ACCEPTED | Data Retention |
 | **ADR-024** | Zero-Downtime Rolling Blue-Green Deployment & Migration | Prompt 44, 45 | ACCEPTED | High Availability |
 | **ADR-025** | Software Bill of Materials (SBOM) CycloneDX Standard | Prompt 43, 44 | ACCEPTED | Supply Chain Security |
+| **ADR-026** | BBP Nine Roles, Platform Observer Capability & RBAC Matrix | Prompt R-ROLES | ACCEPTED | Security & RBAC |
+| **ADR-027** | Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager | Prompt R-OBS | ACCEPTED | Observability & SRE |
 
 ---
 
@@ -102,6 +104,26 @@ This document consolidates every Report Back block across the 62 build prompts o
 - **Context**: Cloud decommissioning frequently causes outages if downstream dependencies are unknown, or leaves zombie billing costs if deletion is unverified.
 - **Decision**: Implement `LifecycleService` with a 10-state machine (`REQUESTED` through `RETIRED`). Enforce mandatory cross-team dependency acknowledgements before decommissioning approval is granted. Require a soak window in `STOPPED` state, surface stopped-but-not-deleted resources with storage waste, block deletion if statutory data retention obligations are unsatisfied, and perform cost-stop verification from actual billing records post deletion.
 - **Consequences**: Safe human-governed decommissioning with zero surprise outages and empirical realized-saving ledger attribution.
+
+### ADR-026: BBP Nine Roles, Platform Observer Capability & RBAC Matrix (Prompt R-ROLES)
+- **Context**: Access control previously utilized heterogeneous roles with potential privilege escalation paths. Needed authoritative alignment with the BBP Nine system roles, explicit separation of platform observation from operations, and strict non-disclosure controls.
+- **Decision**: Sourced the BBP Nine roles (`SUPER_ADMIN`, `PLATFORM_ADMIN`, `CLOUD_ADMINISTRATOR`, `FINOPS_ADMINISTRATOR`, `FINANCE_USER`, `IT_OPERATIONS_USER`, `APPLICATION_OWNER`, `READ_ONLY_USER`, `AUDITOR`) strictly from master data via `EnumerationBridge`. Introduced three explicit platform capabilities:
+  1. `platform.observe`: Aggregated, cross-tenant Control Tower read-only visibility granted to `SUPER_ADMIN`, `PLATFORM_ADMIN`, and `AUDITOR`.
+  2. `platform.operate`: Control Tower administrative actions requiring step-up MFA, granted to `SUPER_ADMIN` and `PLATFORM_ADMIN` only. `AUDITOR` is strictly denied (403 Forbidden).
+  3. `platform.act_as`: Scoped tenant assumption workflow with mandatory >= 20-char reason, granted to `SUPER_ADMIN` only.
+  Enforced all 8 scoping dimensions with strict deny-over-allow precedence, rate detail redaction, and zero-access security alerts for unmapped IdP groups.
+- **Consequences**: Certified by 4,014-cell OpenAPI matrix tests across all 446 routes and 9 roles with zero mismatches.
+
+### ADR-027: Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager (Prompt R-OBS)
+- **Context**: Comprehensive enterprise observability requires real-time metrics, logs, distributed traces, and automated incident routing without vendor lock-in or credential leakage.
+- **Decision**: 
+  1. Implemented a fully open-source observability suite in `ops/docker-compose.yml`: Prometheus, Alertmanager, Grafana, Loki + Promtail, Tempo, OpenTelemetry Collector, Postgres/Redis/Celery exporters, Mailpit, and Keycloak.
+  2. Registered all 18 exact canonical Prometheus metrics across API, worker, and security domains with scrape endpoint `/metrics`.
+  3. Structured JSON logging to Loki with pre-shipping regex and PII redaction (AWS keys, passwords, bearer tokens, JWTs).
+  4. Distributed tracing using OpenTelemetry auto-instrumentation (FastAPI, SQLAlchemy, Celery, HTTPX) exported via OTLP to Grafana Tempo, joined across tiers by a single correlation ID.
+  5. Provisioned 10 Grafana dashboards (Operations, Security, Pipeline, Capacity, Cost of Collection, etc.) with Keycloak OIDC SSO role mapping (`SUPER_ADMIN`/`PLATFORM_ADMIN` -> Admin/Editor, `AUDITOR` -> Viewer) and zero local passwords in files.
+  6. Configured versioned Alertmanager threshold rules with automated routing to `admin@jyotirmoyb.com` via Mailpit SMTP relay, and a `Watchdog` dead-man's switch heartbeat.
+- **Consequences**: Complete visibility into platform health, security events, and performance with zero plain-text credential leaks and proven alert lifecycle delivery.
 
 ---
 

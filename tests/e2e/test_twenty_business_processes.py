@@ -25,7 +25,6 @@ Covers all twenty core business processes (BP-01 through BP-20) from BBP Section
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
@@ -43,6 +42,8 @@ from domain.budgets.models import (
 )
 from domain.budgets.repository import BudgetRepository
 from domain.budgets.service import BudgetService
+from domain.bulk_import.engine import BulkImportEngine
+from domain.bulk_import.models import ImportMode
 from domain.cost.focus_mapper import FocusMapper
 from domain.cost.reconciliation.engine import CostReconciliationEngine
 from domain.cost.reconciliation.models import RunReconciliationRequest
@@ -51,42 +52,39 @@ from domain.cost.repository import CostFactRepository
 from domain.dependency.models import TypedEntityRef
 from domain.models.enums import (
     AuditEventType,
+    CloudProvider,
     ConditionOperator,
     EvaluationOutcome,
     PolicyCategory,
     PolicyMode,
     PolicySeverity,
+    QuotaScopeType,
     RelationshipType,
     ServiceCategory,
 )
 from domain.policy.evaluator import PolicyEvaluator
 from domain.policy.models import DeclarativeCondition, PolicyDefinition
+from domain.provisioning.models import ADVISORY_GATE_NOTICE, GateTriggerAction
+from domain.provisioning.service import ProvisioningGateService
+from domain.quotas.models import QuotaIncreaseCreateRequest, QuotaManualCreateRequest
+from domain.quotas.service import QuotaService
+from domain.remediation.models import SubjectEntity, TaskCreateRequest, TaskState
+from domain.remediation.service import RemediationService
 from domain.rules.monetary import calculate_amortisation, round_currency
 from domain.rules.thresholds import ThresholdBand, evaluate_budget_threshold
 from domain.runtime.evaluator import AdherenceEvaluator
 from domain.runtime.models import (
-    AdherenceStatus,
     NamedSchedule,
     RuntimeObservation,
     RuntimeState,
-    ScheduleLevel,
 )
+from domain.statements.models import RecipientScopeType, StatementLifecycleStatus
+from domain.statements.service import StatementService
 from domain.tenant.context import TenantContext
 from domain.topology.models import TopologyEdge, TopologyNode
 from domain.usage.collector import UsageCollector
 from domain.usage.models import MonitoringType, UsageIngestRequest
 from domain.usage.repository import UsageRepository
-from domain.provisioning.models import ADVISORY_GATE_NOTICE, GateTriggerAction, SavedEstimate
-from domain.provisioning.service import ProvisioningGateService
-from domain.remediation.models import SubjectEntity, TaskCreateRequest, TaskState
-from domain.remediation.service import RemediationService
-from domain.statements.models import RecipientScopeType, StatementLifecycleStatus
-from domain.statements.service import StatementService
-from domain.bulk_import.engine import BulkImportEngine
-from domain.bulk_import.models import ImportMode
-from domain.quotas.service import QuotaService
-from domain.quotas.models import QuotaIncreaseCreateRequest, QuotaManualCreateRequest
-from domain.models.enums import CloudProvider, QuotaScopeType
 from masterdata.service import MasterDataService
 
 
@@ -484,6 +482,7 @@ class TestTwentyBusinessProcessesSuite:
             relationship_type=RelationshipType.APPLICATION_DEPENDENCY,
         )
         assert node1.attributed_chain_cost == Decimal("275.00")
+        assert node2.direct_cost == Decimal("200.00")
         assert edge.relationship_type == RelationshipType.APPLICATION_DEPENDENCY
 
     # --------------------------------------------------------------------------

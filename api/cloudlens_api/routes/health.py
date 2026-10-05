@@ -15,6 +15,7 @@ async def liveness_probe() -> dict[str, Any]:
     return health_probe.evaluate_liveness()
 
 
+@router.get("/ready", summary="Readiness probe alias", include_in_schema=False)
 @router.get("/api/v1/health/readiness", summary="Kubernetes readiness probe")
 async def readiness_probe() -> dict[str, Any]:
     """Readiness probe verifying database, cache, and queue dependency connectivity.

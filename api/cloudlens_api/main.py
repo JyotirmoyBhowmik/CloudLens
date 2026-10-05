@@ -16,6 +16,7 @@ from api.cloudlens_api.conventions.middleware import (
     make_problem_details,
 )
 from api.cloudlens_api.routes import (
+    about_router,
     admin_router,
     alerts_router,
     analytics_router,
@@ -25,9 +26,12 @@ from api.cloudlens_api.routes import (
     bootstrap_router,
     budgets_router,
     bulk_import_router,
+    calendar_router,
     config_router,
     connectors_router,
+    control_tower_router,
     cost_router,
+
     credentials_router,
     dashboards_router,
     demo_mode_router,
@@ -62,6 +66,7 @@ from api.cloudlens_api.routes import (
     wizard_router,
     workflows_router,
 )
+from domain.credentials.store import verify_secret_store_startup_guard
 from domain.explanation.exceptions import ExplanationNotFoundException
 from domain.models.exceptions import (
     AlertException,
@@ -186,6 +191,9 @@ from domain.observability import (
 setup_tracing(service_name="cloudlens-api", in_memory=True)
 logger = get_logger("cloudlens.api")
 
+# Enforce Prompt R-SEC Part 2.4: Startup guard in staging/production
+verify_secret_store_startup_guard()
+
 app = FastAPI(
     title="CloudLens API",
     description="Multi-cloud governance, inventory, pricing, cost, usage, and budgeting API",
@@ -251,6 +259,7 @@ async def correlation_id_and_timing_middleware(request: Request, call_next):
                 endpoint=request.url.path,
                 status_code="500",
             ).observe(duration_s)
+            metrics.api_requests_total.labels(status="500").inc()
             logger.error(
                 "Request failed with unhandled internal server error",
                 exc_info=True,
@@ -283,6 +292,7 @@ async def correlation_id_and_timing_middleware(request: Request, call_next):
             endpoint=request.url.path,
             status_code=str(status_code),
         ).observe(duration_s)
+        metrics.api_requests_total.labels(status=str(status_code)).inc()
 
         response.headers["X-Correlation-ID"] = correlation_id
         response.headers["X-Response-Time-MS"] = f"{duration_ms:.2f}"
@@ -396,11 +406,12 @@ async def standardized_tenant_context_exception_handler(
 ):
     """Tenant isolation and context exception handler (Prompt 13 Items 83-85)."""
     correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
-    status_code = (
-        status.HTTP_403_FORBIDDEN
-        if isinstance(exc, (CrossTenantAccessForbiddenException, CrossTenantStorageAccessException))
-        else status.HTTP_422_UNPROCESSABLE_ENTITY
-    )
+    if isinstance(exc, (CrossTenantAccessForbiddenException, CrossTenantStorageAccessException)):
+        status_code = status.HTTP_403_FORBIDDEN
+        metrics.cross_tenant_attempts_total.inc()
+        metrics.security_events_total.labels(type="cross_tenant_access").inc()
+    else:
+        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
     return JSONResponse(
         status_code=status_code,
         content={
@@ -953,6 +964,8 @@ async def explanation_not_found_exception_handler(
     )
 
 
+app.include_router(about_router)
+app.include_router(calendar_router)
 app.include_router(alerts_router)
 app.include_router(config_router)
 app.include_router(auth_router)
@@ -998,6 +1011,8 @@ app.include_router(hierarchy_router)
 app.include_router(resource_detail_router)
 app.include_router(explanation_router)
 app.include_router(admin_router)
+app.include_router(control_tower_router)
+
 
 
 class HealthResponse(BaseModel):

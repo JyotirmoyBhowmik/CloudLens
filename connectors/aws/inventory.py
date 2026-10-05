@@ -69,7 +69,7 @@ class AWSInventoryService:
                 tags={
                     "Environment": "Production",
                     "CostCenter": "CC-101-FINOPS",
-                    "Owner": "platform-team@company.internal",
+                    "Owner": "platform-team",
                     "Application": "RetailBankingCore",
                 },
                 is_unclassified=False,
@@ -137,7 +137,7 @@ class AWSInventoryService:
                 tags={
                     "Environment": "Production",
                     "CostCenter": "CC-303-DATA",
-                    "Owner": "data-engineering@company.internal",
+                    "Owner": "data-engineering",
                     "Application": "AnalyticsLake",
                 },
                 is_unclassified=False,

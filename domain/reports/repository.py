@@ -99,3 +99,11 @@ def get_report_repository() -> ReportRepository:
             if _global_report_repository is None:
                 _global_report_repository = ReportRepository()
     return _global_report_repository
+
+
+def reset_report_repository() -> None:
+    """Resets the singleton instance of ReportRepository."""
+    global _global_report_repository
+    with _repo_lock:
+        _global_report_repository = None
+

@@ -12,10 +12,9 @@ from __future__ import annotations
 import copy
 import hashlib
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
-
-import pytest
+from typing import Any
 
 from domain.cost.models import FocusCostFact
 from domain.cost.repository import CostFactRepository

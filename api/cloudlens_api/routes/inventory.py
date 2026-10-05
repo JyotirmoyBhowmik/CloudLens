@@ -39,170 +39,88 @@ _inventory_store: dict[tuple[str, str], dict[str, Any]] = {}
 _inventory_snapshots: dict[str, list[dict[str, Any]]] = {}  # snapshot_id -> list[resource_dict]
 
 
-def _seed_sample_inventory_if_empty(tenant_id: str) -> None:
-    """Lazily seeds a representative realistic resource inventory if store is empty."""
+def _seed_demo_inventory_if_needed(tenant_id: str) -> None:
+    """Lazily seeds resource inventory ONLY when tenant is explicitly in Demo Mode."""
     has_tenant_data = any(t == tenant_id for (t, _) in _inventory_store.keys())
     if has_tenant_data:
         return
 
-    sample_specs = [
-        (
-            "res-vm-001",
-            "i-09f87238a",
-            "prod-payment-worker-1",
-            ProviderType.AWS,
-            "AmazonEC2",
-            "compute/virtual-machine",
-            "us-east-1",
-            "us-east-1a",
-            "Payments Core",
-            "Production",
-            "Alice Engineer",
-            "alice@example.com",
-            "CC-101-FINOPS",
-            "FinOps",
-            "PRJ-PAY",
-            Decimal("142.50"),
-        ),
-        (
-            "res-vm-002",
-            "i-08a71239b",
-            "prod-payment-worker-2",
-            ProviderType.AWS,
-            "AmazonEC2",
-            "compute/virtual-machine",
-            "us-east-1",
-            "us-east-1b",
-            "Payments Core",
-            "Production",
-            "Alice Engineer",
-            "alice@example.com",
-            "CC-101-FINOPS",
-            "FinOps",
-            "PRJ-PAY",
-            Decimal("142.50"),
-        ),
-        (
-            "res-db-001",
-            "rds-db-payments-primary",
-            "prod-payments-db",
-            ProviderType.AWS,
-            "AmazonRDS",
-            "database/relational",
-            "us-east-1",
-            "us-east-1a",
-            "Payments Core",
-            "Production",
-            "Bob DBA",
-            "bob@example.com",
-            "CC-101-FINOPS",
-            "FinOps",
-            "PRJ-PAY",
-            Decimal("450.00"),
-        ),
-        (
-            "res-az-vm-01",
-            "/subscriptions/sub-prod-01/resourceGroups/rg-pay/providers/Microsoft.Compute/virtualMachines/vm-pay-01",
-            "azure-pay-vm-01",
-            ProviderType.AZURE,
-            "Virtual Machines",
-            "compute/virtual-machine",
-            "eastus",
-            "eastus-1",
-            "Billing Portal",
-            "Production",
-            "Carol Azure",
-            "carol@example.com",
-            "CC-202-ENG",
-            "Engineering",
-            "PRJ-AZ",
-            Decimal("210.00"),
-        ),
-        (
-            "res-gcp-gke-01",
-            "projects/prj-finops-01/zones/us-central1-a/clusters/gke-analytics",
-            "gke-analytics-cluster",
-            ProviderType.GCP,
-            "GoogleKubernetesEngine",
-            "containers/kubernetes",
-            "us-central1",
-            "us-central1-a",
-            "Data Analytics",
-            "Production",
-            "Dave Data",
-            "dave@example.com",
-            "CC-303-DATA",
-            "Data",
-            "PRJ-GCP",
-            Decimal("380.00"),
-        ),
-    ]
+    try:
+        from domain.config.tenant_settings import tenant_settings_store
+        from domain.demo.service import get_demo_mode_service
 
-    now = datetime.now(UTC)
-    for (
-        rid,
-        nid,
-        name,
-        prov,
-        s_name,
-        r_type,
-        reg,
-        az,
-        app_name,
-        env_name,
-        o_name,
-        o_email,
-        cc,
-        bu,
-        prj,
-        cost,
-    ) in sample_specs:
-        record: dict[str, Any] = {
-            "id": rid,
-            "tenant_id": tenant_id,
-            "scope_id": f"{tenant_id}-scope-root",
-            "native_id": nid,
-            "name": name,
-            "provider": prov.value,
-            "service_id": f"srv-{s_name.lower().replace(' ', '-')}",
-            "service_name": s_name,
-            "service_category": ServiceCategory.COMPUTE.value
-            if "vm" in rid or "worker" in name
-            else ServiceCategory.DATABASE.value
-            if "db" in rid
-            else ServiceCategory.COMPUTE.value,
-            "resource_type_id": f"rt-{r_type.replace('/', '-')}",
-            "resource_type": r_type,
-            "region_id": f"reg-{reg}",
-            "region_name": reg,
-            "availability_zone": az,
-            "pricing_status": PricingStatus.PAID.value,
-            "runtime_state": "RUNNING",
-            "tags": [
-                {"key": "Environment", "value": env_name, "inherited": False, "source": "native"},
-                {"key": "Owner", "value": o_name, "inherited": False, "source": "native"},
-                {"key": "CostCenter", "value": cc, "inherited": False, "source": "native"},
-            ],
-            "application_id": f"app-{app_name.lower().replace(' ', '-')}",
-            "application_name": app_name,
-            "environment_id": f"env-{env_name.lower()}",
-            "environment_name": env_name,
-            "owner_id": f"own-{o_name.lower().replace(' ', '-')}",
-            "owner_name": o_name,
-            "owner_email": o_email,
-            "cost_center_id": cc,
-            "cost_center_name": cc,
-            "business_unit_id": f"bu-{bu.lower()}",
-            "business_unit_name": bu,
-            "project_id": prj,
-            "project_name": prj,
-            "created_at": now.isoformat(),
-            "updated_at": now.isoformat(),
-            "last_synced_at": now.isoformat(),
-            "monthly_cost": str(cost),
-            "currency": "USD",
-        }
-        _inventory_store[(tenant_id, rid)] = record
+        settings = tenant_settings_store.get(tenant_id)
+        if not settings or not settings.is_demo_mode:
+            return
+
+        demo_service = get_demo_mode_service()
+        estate = demo_service._tenant_estates.get(tenant_id)
+        if not estate:
+            estate = demo_service._generator.generate(tenant_id=tenant_id)
+            demo_service._tenant_estates[tenant_id] = estate
+
+        now = datetime.now(UTC)
+        for res in estate.resources:
+            prov_str = res.provider.value if hasattr(res.provider, "value") else str(res.provider)
+            svc_cat_str = (
+                res.service_category.value
+                if hasattr(res.service_category, "value")
+                else str(res.service_category)
+            )
+            pricing_str = (
+                res.pricing_status.value
+                if hasattr(res.pricing_status, "value")
+                else str(res.pricing_status)
+            )
+            created_str = (
+                res.created_at.isoformat()
+                if hasattr(res.created_at, "isoformat")
+                else str(res.created_at)
+            )
+            tag_list = (
+                [{"key": k, "value": v, "inherited": False, "source": "native"} for k, v in res.tags.items()]
+                if isinstance(res.tags, dict)
+                else (res.tags if isinstance(res.tags, list) else [])
+            )
+            _inventory_store[(tenant_id, res.id)] = {
+                "id": res.id,
+                "tenant_id": tenant_id,
+                "scope_id": res.scope_id,
+                "native_id": res.native_id,
+                "name": res.name,
+                "provider": prov_str,
+                "service_id": f"srv-{res.service_name.lower().replace(' ', '-')}",
+                "service_name": res.service_name,
+                "service_category": svc_cat_str,
+                "resource_type_id": res.resource_type_id,
+                "resource_type": res.resource_type,
+                "region_id": res.region_id,
+                "region_name": res.region_name,
+                "availability_zone": res.availability_zone,
+                "pricing_status": pricing_str,
+                "runtime_state": "RUNNING",
+                "tags": tag_list,
+                "application_id": None,
+                "application_name": None,
+                "environment_id": None,
+                "environment_name": None,
+                "owner_id": None,
+                "owner_name": res.owner,
+                "owner_email": None,
+                "cost_center_id": None,
+                "cost_center_name": None,
+                "business_unit_id": None,
+                "business_unit_name": None,
+                "project_id": None,
+                "project_name": None,
+                "created_at": created_str,
+                "updated_at": now.isoformat(),
+                "last_synced_at": now.isoformat(),
+                "monthly_cost": "150.00",
+                "currency": "USD",
+            }
+    except Exception:
+        pass
 
 
 # ==============================================================================
@@ -340,7 +258,7 @@ async def list_resources(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ResourceListResponse:
     """Queries discovered cloud resources with multi-attribute filtering (API-018)."""
-    _seed_sample_inventory_if_empty(tenant_context.tenant_id)
+    _seed_demo_inventory_if_needed(tenant_context.tenant_id)
     offset = decode_cursor(cursor)
 
     items: list[dict[str, Any]] = []
@@ -392,7 +310,7 @@ async def get_resource(
 
     Enforces scope-masking: returns 404 rather than leaking existence outside scope.
     """
-    _seed_sample_inventory_if_empty(tenant_context.tenant_id)
+    _seed_demo_inventory_if_needed(tenant_context.tenant_id)
     key = (tenant_context.tenant_id, resource_id)
     rec = _inventory_store.get(key)
     if not rec:
@@ -421,7 +339,7 @@ async def patch_resource(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ResourceDetailResponse:
     """Manually updates resource owner or custom tags with curated protection (API-020 / FR-103)."""
-    _seed_sample_inventory_if_empty(tenant_context.tenant_id)
+    _seed_demo_inventory_if_needed(tenant_context.tenant_id)
     key = (tenant_context.tenant_id, resource_id)
     rec = _inventory_store.get(key)
     if not rec:
@@ -476,7 +394,7 @@ async def list_inventory_services(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ServiceListResponse:
     """Aggregated service inventory list with resource counts and monthly totals (API-021)."""
-    _seed_sample_inventory_if_empty(tenant_context.tenant_id)
+    _seed_demo_inventory_if_needed(tenant_context.tenant_id)
     services_map: dict[str, dict[str, Any]] = {}
 
     for (t_id, _), rec in _inventory_store.items():
@@ -521,7 +439,7 @@ async def get_inventory_drift(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> InventoryDriftReport:
     """Calculates and displays inventory changes and deltas between snapshots (API-022 / FR-108)."""
-    _seed_sample_inventory_if_empty(tenant_context.tenant_id)
+    _seed_demo_inventory_if_needed(tenant_context.tenant_id)
     tenant_resources = [
         r for (t_id, _), r in _inventory_store.items() if t_id == tenant_context.tenant_id
     ]

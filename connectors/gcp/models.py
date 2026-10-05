@@ -90,7 +90,7 @@ class GCPCredentials(BaseModel):
         description="Workload Identity Provider name",
     )
     service_account_email: str | None = Field(
-        default="cloudlens-ingestion@proj-cloudlens-core.iam.gserviceaccount.com",
+        default=None,
         description="Target impersonated service account email",
     )
     service_account_key_json: str | None = Field(

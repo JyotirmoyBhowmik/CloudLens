@@ -81,7 +81,7 @@ class GCPTagService:
                 scope_id=vm_id,
                 source_tier="LABEL_SOURCE_RESOURCE",
                 key="owner",
-                value="banking-eng@cloudlens.internal",
+                value="banking-eng",
             ),
             GCPLabelRecord(
                 scope_id=bucket_id,
@@ -99,7 +99,7 @@ class GCPTagService:
                 scope_id=bq_table_id,
                 source_tier="LABEL_SOURCE_RESOURCE",
                 key="project-lead",
-                value="ml-platform@cloudlens.internal",
+                value="ml-platform",
             ),
         ]
 

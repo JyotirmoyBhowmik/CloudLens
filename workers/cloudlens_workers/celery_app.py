@@ -28,6 +28,7 @@ celery_app.conf.update(
     task_track_started=True,
     task_time_limit=3600,
     worker_prefetch_multiplier=1,
+    beat_scheduler="workers.cloudlens_workers.scheduler.DatabaseBeatScheduler",
 )
 
 
@@ -87,3 +88,7 @@ def revert_expired_overrides_task(tenant_context_payload: dict[str, Any]) -> dic
         }
 
     return cast(dict[str, Any], execute_tenant_job(tenant_context_payload, _run))
+
+
+# Register all 21 background tasks
+import workers.cloudlens_workers.tasks  # noqa: E402, F401

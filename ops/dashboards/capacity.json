@@ -1,0 +1,57 @@
+{
+  "title": "CloudLens - Capacity & Resource Saturation",
+  "uid": "cloudlens-capacity",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Celery Background Task Queue Depth",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "queue_depth",
+          "legendFormat": "Queue: {{queue}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Worker Node Concurrency Saturation",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "worker_saturation",
+          "legendFormat": "{{worker_node}} ({{queue_name}})"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "PostgreSQL Database Replication Lag",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "db_replication_lag_seconds",
+          "legendFormat": "{{replica_host}} Lag (s)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Queue Saturation Gauge",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "max(queue_depth)",
+          "legendFormat": "Max Pending Jobs"
+        }
+      ]
+    }
+  ]
+}

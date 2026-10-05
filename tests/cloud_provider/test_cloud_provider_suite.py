@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from connectors.simulator import ProviderSimulatorConnector, SimulatorProfile
-from domain.cost.schema_guard import SchemaVersionGuard, SUPPORTED_PROVIDER_SCHEMAS
+from domain.cost.schema_guard import SUPPORTED_PROVIDER_SCHEMAS, SchemaVersionGuard
 from domain.models.enums import ProviderType
 from domain.models.exceptions import UnknownSchemaVersionException
 

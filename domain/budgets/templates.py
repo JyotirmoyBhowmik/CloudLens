@@ -22,7 +22,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=90.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["cfo@enterprise.internal", "finops-director@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=95.0,
     ),
     BudgetScopeType.PROVIDER: BudgetTemplate(
@@ -36,7 +36,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=95.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["cloud-infra-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.MANAGEMENT_GROUP: BudgetTemplate(
@@ -50,7 +50,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=90.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["azure-arch@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=95.0,
     ),
     BudgetScopeType.SUBSCRIPTION: BudgetTemplate(
@@ -63,7 +63,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["subscription-owner@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.AWS_OU: BudgetTemplate(
@@ -77,7 +77,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=95.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["aws-admin@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.AWS_ACCOUNT: BudgetTemplate(
@@ -90,7 +90,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["aws-account-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.GCP_FOLDER: BudgetTemplate(
@@ -103,7 +103,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["gcp-folder-admin@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.GCP_PROJECT: BudgetTemplate(
@@ -116,7 +116,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["gcp-project-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.OCI_COMPARTMENT: BudgetTemplate(
@@ -129,7 +129,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["oci-admin@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.RESOURCE_GROUP: BudgetTemplate(
@@ -142,7 +142,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=85.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["rg-owner@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.APPLICATION: BudgetTemplate(
@@ -156,10 +156,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=90.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=[
-            "app-lead@enterprise.internal",
-            "eng-manager@enterprise.internal",
-        ],
+        default_alert_recipients=[],
         suggested_forecast_threshold=95.0,
     ),
     BudgetScopeType.ENVIRONMENT: BudgetTemplate(
@@ -172,7 +169,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["env-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.SERVICE: BudgetTemplate(
@@ -185,7 +182,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=80.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["service-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.RESOURCE: BudgetTemplate(
@@ -198,7 +195,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=85.0, band="WARNING"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["resource-owner@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=100.0,
     ),
     BudgetScopeType.COST_CENTRE: BudgetTemplate(
@@ -212,10 +209,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=90.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=[
-            "cost-centre-manager@enterprise.internal",
-            "finance-controller@enterprise.internal",
-        ],
+        default_alert_recipients=[],
         suggested_forecast_threshold=90.0,
     ),
     BudgetScopeType.BUSINESS_UNIT: BudgetTemplate(
@@ -229,7 +223,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=90.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["bu-vp@enterprise.internal", "finops-lead@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=95.0,
     ),
     BudgetScopeType.PROJECT: BudgetTemplate(
@@ -243,7 +237,7 @@ BUDGET_TEMPLATES_BY_SCOPE: dict[BudgetScopeType, BudgetTemplate] = {
             BudgetThreshold(percentage=85.0, band="HIGH"),
             BudgetThreshold(percentage=100.0, band="CRITICAL"),
         ],
-        default_alert_recipients=["project-manager@enterprise.internal"],
+        default_alert_recipients=[],
         suggested_forecast_threshold=90.0,
     ),
 }

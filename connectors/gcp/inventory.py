@@ -61,7 +61,7 @@ class GCPInventoryService:
                 labels={
                     "app": "core-banking-api",
                     "cost_centre": "CC-BANK-100",
-                    "owner": "banking-eng@cloudlens.internal",
+                    "owner": "banking-eng",
                     "env": "production",
                 },
                 properties={
@@ -125,7 +125,7 @@ class GCPInventoryService:
                 runtime_status=RuntimeStatus.RUNNING.value,
                 labels={
                     "data-classification": "confidential",
-                    "project-lead": "ml-platform@cloudlens.internal",
+                    "project-lead": "ml-platform",
                 },
                 properties={
                     "type": "TABLE",

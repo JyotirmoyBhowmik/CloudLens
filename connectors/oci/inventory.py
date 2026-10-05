@@ -53,7 +53,7 @@ class OCIInventoryService:
                 defined_tags={
                     "Operations": {
                         "CostCenter": "CC-OPS-200",
-                        "Owner": "devops@cloudlens.internal",
+                        "Owner": "devops",
                     },
                     "Security": {
                         "DataClassification": "Restricted",

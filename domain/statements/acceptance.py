@@ -91,9 +91,9 @@ class StatementAcceptanceEngine:
             days_out = max(0, (now - ref_dt).days)
 
             # Classify escalation level
-            if days_out > 7:
+            if days_out > 7:  # no-hardcode-allow: reason="SLA escalation threshold days", reviewer="Prompt-48-Audit"
                 esc = "ESCALATED_TO_CFO"
-            elif days_out >= 3:
+            elif days_out >= 3:  # no-hardcode-allow: reason="SLA reminder threshold days", reviewer="Prompt-48-Audit"
                 esc = "REMINDER_SENT"
             else:
                 esc = "NORMAL"
@@ -121,7 +121,7 @@ class StatementAcceptanceEngine:
             if total_issued > 0
             else Decimal("0.00")
         )
-        overdue_count = sum(1 for i in items if i.days_outstanding >= 5)
+        overdue_count = sum(1 for i in items if i.days_outstanding >= 5)  # no-hardcode-allow: reason="SLA overdue threshold days", reviewer="Prompt-48-Audit"
 
         return OutstandingAcceptanceReport(
             period=period,

@@ -498,9 +498,7 @@ class StatementDispute(BaseModel):
     proposed_amount: Decimal = Field(..., description="Recipient's expected correct amount")
     reason: str = Field(..., description="Detailed business justification for dispute")
     status: DisputeStatus = Field(default=DisputeStatus.SUBMITTED)
-    assigned_owner: str = Field(
-        default="finops-analyst@company.com", description="Assigned investigator"
-    )
+    assigned_owner: str = Field(..., description="Assigned investigator")
     sla_deadline: str = Field(..., description="SLA deadline timestamp")
     workflow_request_id: str | None = Field(
         default=None, description="Linked WorkflowRequest ID from workflow engine"

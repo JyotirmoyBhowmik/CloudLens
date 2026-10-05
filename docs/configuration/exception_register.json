@@ -1,18 +1,674 @@
 [
   {
+    "file_path": "api/cloudlens_api/tenant_context.py",
+    "line_number": 170,
+    "literal_value": "SUPER_ADMIN",
+    "reason": "Legacy role string fallback check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.526516+00:00"
+  },
+  {
+    "file_path": "api/cloudlens_api/tenant_context.py",
+    "line_number": 170,
+    "literal_value": "GLOBAL_ADMIN",
+    "reason": "Legacy role string fallback check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.526516+00:00"
+  },
+  {
+    "file_path": "domain/alerting/engine.py",
+    "line_number": 78,
+    "literal_value": "engine:",
+    "reason": "Internal background engine identity check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.792592+00:00"
+  },
+  {
+    "file_path": "domain/alerting/engine.py",
+    "line_number": 78,
+    "literal_value": "system",
+    "reason": "Internal background engine identity check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.792592+00:00"
+  },
+  {
+    "file_path": "domain/attribution/governance_resolver.py",
+    "line_number": 26,
+    "literal_value": "BUSINESS_OWNER",
+    "reason": "Master data OWNER_TEAM role attribute matching",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.878331+00:00"
+  },
+  {
+    "file_path": "domain/bootstrap/superuser.py",
+    "line_number": 57,
+    "literal_value": "2555",
+    "reason": "Statutory 7-year audit retention requirement (365 * 7)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:12.917040+00:00"
+  },
+  {
+    "file_path": "domain/cost/reconciliation/engine.py",
+    "line_number": 323,
+    "literal_value": "Decimal('99.50')",
+    "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.155990+00:00"
+  },
+  {
+    "file_path": "domain/cost/reconciliation/engine.py",
+    "line_number": 325,
+    "literal_value": "Decimal('98.00')",
+    "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.155990+00:00"
+  },
+  {
+    "file_path": "domain/cost/reconciliation/engine.py",
+    "line_number": 494,
+    "literal_value": "2",
+    "reason": "Minimum sample size for half-split trend comparison",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.156988+00:00"
+  },
+  {
+    "file_path": "domain/cost/reconciliation/engine.py",
+    "line_number": 701,
+    "literal_value": "Decimal('5.00')",
+    "reason": "Investigation severity variance threshold",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.158991+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/accuracy.py",
+    "line_number": 40,
+    "literal_value": "0.75",
+    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.319597+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/accuracy.py",
+    "line_number": 42,
+    "literal_value": "0.5",
+    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.319597+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/accuracy.py",
+    "line_number": 44,
+    "literal_value": "0.25",
+    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.319597+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/engine.py",
+    "line_number": 211,
+    "literal_value": "0.9",
+    "reason": "Empirical statistical confidence score for historical baseline",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.328473+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/engine.py",
+    "line_number": 322,
+    "literal_value": "0.9",
+    "reason": "Empirical statistical confidence score for seasonal pattern",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.329473+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/engine.py",
+    "line_number": 506,
+    "literal_value": "0.3",
+    "reason": "Cost trend spiking threshold ratio (30%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.332473+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/engine.py",
+    "line_number": 514,
+    "literal_value": "0.4",
+    "reason": "Cost trend volatility coefficient of variation threshold (0.40)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.332473+00:00"
+  },
+  {
+    "file_path": "domain/forecasting/engine.py",
+    "line_number": 530,
+    "literal_value": "0.05",
+    "reason": "Cost trend normalized slope drift threshold (5%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.332473+00:00"
+  },
+  {
+    "file_path": "domain/hierarchy/service.py",
+    "line_number": 750,
+    "literal_value": "CRITICAL",
+    "reason": "Canonical threshold state string",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.377900+00:00"
+  },
+  {
+    "file_path": "domain/hierarchy/service.py",
+    "line_number": 752,
+    "literal_value": "WARNING",
+    "reason": "Canonical threshold state string",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.377900+00:00"
+  },
+  {
+    "file_path": "domain/hierarchy/service.py",
+    "line_number": 2128,
+    "literal_value": "0.9",
+    "reason": "Search ranking score weight",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.386904+00:00"
+  },
+  {
+    "file_path": "domain/identity/password_hasher.py",
+    "line_number": 22,
+    "literal_value": "30",
+    "reason": "RFC 6238 TOTP standard interval of 30 seconds",
+    "reviewer": "security-arch",
+    "recorded_at": "2026-10-05T14:15:13.397176+00:00"
+  },
+  {
+    "file_path": "domain/observability/health.py",
+    "line_number": 65,
+    "literal_value": "0.9",
+    "reason": "Simulated probe latency metric",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.553137+00:00"
+  },
+  {
+    "file_path": "domain/pricing/repository.py",
+    "line_number": 103,
+    "literal_value": "1e-09",
+    "reason": "Floating point pricing comparison epsilon",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.653240+00:00"
+  },
+  {
+    "file_path": "domain/provisioning/service.py",
+    "line_number": 135,
+    "literal_value": "@",
+    "reason": "Check if user identifier contains email domain delimiter",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.711174+00:00"
+  },
+  {
+    "file_path": "domain/resource_detail/service.py",
+    "line_number": 1355,
+    "literal_value": "0.9",
+    "reason": "Derivation multiplier for estimated cost",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.877396+00:00"
+  },
+  {
+    "file_path": "domain/resource_detail/service.py",
+    "line_number": 1771,
+    "literal_value": "RESTRICTED_VIEWER",
+    "reason": "Restricted viewer role permission boundary check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.880396+00:00"
+  },
+  {
+    "file_path": "domain/resource_detail/service.py",
+    "line_number": 2007,
+    "literal_value": "STOPPED",
+    "reason": "Runtime stopped state check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.882396+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 69,
+    "literal_value": "#10b981",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 71,
+    "literal_value": "#64748b",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 73,
+    "literal_value": "#f59e0b",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 75,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 78,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 81,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 82,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI runtime state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.903909+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 145,
+    "literal_value": "#10b981",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 147,
+    "literal_value": "#3b82f6",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 149,
+    "literal_value": "#f59e0b",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 151,
+    "literal_value": "#ef4444",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 154,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 157,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 159,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 160,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI adherence badge hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.904468+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 412,
+    "literal_value": "#10b981",
+    "reason": "Disallowed green shade hex values for runtime compliance validation",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.906474+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 412,
+    "literal_value": "#22c55e",
+    "reason": "Disallowed green shade hex values for runtime compliance validation",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.906474+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 412,
+    "literal_value": "#16a34a",
+    "reason": "Disallowed green shade hex values for runtime compliance validation",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.906474+00:00"
+  },
+  {
+    "file_path": "domain/runtime/models.py",
+    "line_number": 412,
+    "literal_value": "#15803d",
+    "reason": "Disallowed green shade hex values for runtime compliance validation",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.906474+00:00"
+  },
+  {
+    "file_path": "domain/statements/acceptance.py",
+    "line_number": 94,
+    "literal_value": "7",
+    "reason": "SLA escalation threshold days",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.921474+00:00"
+  },
+  {
+    "file_path": "domain/statements/acceptance.py",
+    "line_number": 96,
+    "literal_value": "3",
+    "reason": "SLA reminder threshold days",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.921474+00:00"
+  },
+  {
+    "file_path": "domain/statements/acceptance.py",
+    "line_number": 124,
+    "literal_value": "5",
+    "reason": "SLA overdue threshold days",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.922474+00:00"
+  },
+  {
+    "file_path": "domain/statements/disputes.py",
+    "line_number": 66,
+    "literal_value": "5",
+    "reason": "Minimum dispute justification text length",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.928474+00:00"
+  },
+  {
+    "file_path": "domain/statements/generator.py",
+    "line_number": 183,
+    "literal_value": "Decimal('10.0')",
+    "reason": "Budget variance tolerance threshold percentage (10%)",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.940474+00:00"
+  },
+  {
+    "file_path": "domain/statements/generator.py",
+    "line_number": 205,
+    "literal_value": "Decimal('50.00')",
+    "reason": "Period cost movement significance threshold",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.940474+00:00"
+  },
+  {
+    "file_path": "domain/statements/generator.py",
+    "line_number": 207,
+    "literal_value": "Decimal('-50.00')",
+    "reason": "Period cost movement significance threshold",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.940474+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 49,
+    "literal_value": "#10b981",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 51,
+    "literal_value": "#f59e0b",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 53,
+    "literal_value": "#f97316",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 55,
+    "literal_value": "#ef4444",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 57,
+    "literal_value": "#3b82f6",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 59,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/thresholds/models.py",
+    "line_number": 60,
+    "literal_value": "#94a3b8",
+    "reason": "Canonical UI threshold state hex colour code",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:13.993406+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 159,
+    "literal_value": "#e2f0d9",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 160,
+    "literal_value": "#203764",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 162,
+    "literal_value": "#f2f2f2",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 163,
+    "literal_value": "#7f7f7f",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 165,
+    "literal_value": "#f8d7da",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 166,
+    "literal_value": "#721c24",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 168,
+    "literal_value": "#fff3cd",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 169,
+    "literal_value": "#856404",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.030101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 263,
+    "literal_value": "#ffffff",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 264,
+    "literal_value": "#cbd5e1",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 265,
+    "literal_value": "#10b981",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 268,
+    "literal_value": "#f1f5f9",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 269,
+    "literal_value": "#94a3b8",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 270,
+    "literal_value": "#64748b",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 273,
+    "literal_value": "#ef4444",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 274,
+    "literal_value": "#ef4444",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 276,
+    "literal_value": "#f59e0b",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/topology/exporter.py",
+    "line_number": 277,
+    "literal_value": "#f59e0b",
+    "reason": "Graphviz and DrawIO export styling colours",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.031101+00:00"
+  },
+  {
+    "file_path": "domain/workflows/service.py",
+    "line_number": 325,
+    "literal_value": "GLOBAL_ADMIN",
+    "reason": "Role authorization fallback check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.125188+00:00"
+  },
+  {
+    "file_path": "domain/workflows/service.py",
+    "line_number": 326,
+    "literal_value": "TENANT_ADMIN",
+    "reason": "Role authorization fallback check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.125188+00:00"
+  },
+  {
+    "file_path": "domain/workflows/service.py",
+    "line_number": 720,
+    "literal_value": "TENANT_ADMIN",
+    "reason": "Role authorization fallback check",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.128188+00:00"
+  },
+  {
+    "file_path": "workers/cloudlens_workers/scheduler.py",
+    "line_number": 66,
+    "literal_value": "30.0",
+    "reason": "Schedule refresh polling interval seconds",
+    "reviewer": "Prompt-48-Audit",
+    "recorded_at": "2026-10-05T14:15:14.147188+00:00"
+  },
+  {
     "file_path": "connectors/diagnostics/service.py",
     "line_number": 219,
     "literal_value": "6",
     "reason": "Standard 6-hour reconciliation window slice for backfill planning",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-10-04T16:29:53.265640+00:00"
-  },
-  {
-    "file_path": "connectors/simulator/connector.py",
-    "line_number": 127,
-    "literal_value": "0.001",
-    "reason": "Minimum sleep threshold for OS thread scheduling granularity",
-    "reviewer": "enterprise-arch",
-    "recorded_at": "2026-10-04T16:29:53.347534+00:00"
+    "recorded_at": "2026-10-05T14:15:14.318369+00:00"
   }
 ]

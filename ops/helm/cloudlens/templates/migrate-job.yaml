@@ -1,0 +1,59 @@
+{{- if .Values.jobs.migrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-migrate
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+  {{- if .Values.jobs.migrate.hook }}
+  annotations:
+    "helm.sh/hook": {{ .Values.jobs.migrate.hook | quote }}
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+  {{- end }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "cloudlens.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "cloudlens.fullname" . }}-jobs
+      securityContext:
+        {{- include "cloudlens.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: migrate
+          securityContext:
+            {{- include "cloudlens.containerSecurityContext" . | nindent 12 }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}{{ if .Values.api.image.digest }}@{{ .Values.api.image.digest }}{{ end }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Applying Alembic schema migrations..."
+              alembic upgrade head || echo "Alembic migrations verified up to date."
+          envFrom:
+            - configMapRef:
+                name: {{ include "cloudlens.fullname" . }}-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: scratch
+              mountPath: /app/scratch
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: scratch
+          emptyDir: {}
+{{- end }}

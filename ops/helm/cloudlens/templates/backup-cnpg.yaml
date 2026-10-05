@@ -1,0 +1,15 @@
+{{- if .Values.backups.cnpg.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-cnpg-backup
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backups.cnpg.schedule | default "0 0 * * *" | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ .Values.external.postgres.cnpgClusterName | default "cloudlens-pg-cluster" }}
+  method: barmanObjectStore
+{{- end }}

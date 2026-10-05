@@ -218,3 +218,37 @@ def test_all_12_canonical_metrics_registered_and_scrapable(client: TestClient):
         assert metric_name in metrics_text, (
             f"Metric {metric_name} was not found in /metrics scrape output!"
         )
+
+
+def test_all_18_robs_metrics_registered_and_scrapable(client: TestClient):
+    """Verify all 18 exact Prometheus metrics required by Prompt R-OBS are exposed via /metrics."""
+    exact_robs_metrics = [
+        "api_request_duration_seconds",
+        "api_requests_total",
+        "sync_job_duration_seconds",
+        "sync_job_outcome_total",
+        "connector_freshness_seconds",
+        "ingestion_rows_total",
+        "reconciliation_variance_ratio",
+        "queue_depth",
+        "worker_saturation",
+        "db_replication_lag_seconds",
+        "secret_store_up",
+        "task_failures_total",
+        "alerts_undelivered_total",
+        "security_events_total",
+        "superuser_signins_total",
+        "cross_tenant_attempts_total",
+        "collection_cost_usd",
+        "build_info",
+    ]
+
+    res = client.get("/metrics")
+    assert res.status_code == 200
+    metrics_text = res.text
+
+    for metric_name in exact_robs_metrics:
+        assert metric_name in metrics_text, (
+            f"Exact R-OBS metric {metric_name} was not found in /metrics scrape output!"
+        )
+

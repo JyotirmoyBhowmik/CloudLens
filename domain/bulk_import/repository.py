@@ -201,3 +201,11 @@ _repository_instance = BulkImportRepository()
 def get_bulk_import_repository() -> BulkImportRepository:
     """Returns the singleton BulkImportRepository."""
     return _repository_instance
+
+
+def reset_bulk_import_repository() -> BulkImportRepository:
+    """Resets the singleton BulkImportRepository in-place."""
+    _repository_instance.clear()
+    return _repository_instance
+
+

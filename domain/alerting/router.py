@@ -13,6 +13,7 @@ Enforces:
 from __future__ import annotations
 
 import datetime as dt
+import os
 from typing import Any
 
 from domain.alerting.catalogue import get_alert_definition_by_type
@@ -59,10 +60,11 @@ class RecipientRouter:
 
     def __init__(
         self,
-        default_scope_admin: str = "governance-admin@cloudlens.internal",
+        default_scope_admin: str | None = None,
         default_admin_channel: NotificationChannel = NotificationChannel.EMAIL,
     ) -> None:
-        self.default_scope_admin = default_scope_admin
+        domain = os.getenv("CLOUDLENS_DOMAIN", "cloudlens.local")
+        self.default_scope_admin = default_scope_admin or os.getenv("CLOUDLENS_GOVERNANCE_ADMIN_EMAIL") or f"governance-admin@{domain}"
         self.default_admin_channel = default_admin_channel
 
     def resolve_recipients(

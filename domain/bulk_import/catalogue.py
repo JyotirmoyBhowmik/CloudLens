@@ -766,7 +766,7 @@ def _build_core_catalogue() -> dict[str, EntityImportMetadata]:
                     data_type="string",
                     required=True,
                     description="Corporate email of user identity",
-                    sample_value="dev-lead@cloudlens.internal",
+                    sample_value=None,
                 ),
                 ColumnDefinition(
                     name="role_code",

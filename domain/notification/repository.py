@@ -101,7 +101,15 @@ def get_notification_log_repository() -> NotificationLogRepository:
     return _notification_log_repository
 
 
+def reset_notification_log_repository() -> NotificationLogRepository:
+    with _notification_log_repository._lock:
+        _notification_log_repository._logs.clear()
+    return _notification_log_repository
+
+
 __all__ = [
     "NotificationLogRepository",
     "get_notification_log_repository",
+    "reset_notification_log_repository",
 ]
+

@@ -1,0 +1,184 @@
+[
+  {
+    "code": "IMP_01_MAINTENANCE_MODE",
+    "display_name": "Maintenance Mode Configuration",
+    "description": "Master parameters for tenant and global maintenance mode and read-only gating.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "default_message": "CloudLens is undergoing scheduled maintenance. All mutating operations are temporarily suspended. Read-only querying remains operational.",
+      "retry_after_seconds": 300,
+      "exempt_path_prefixes": [
+        "/api/v1/health",
+        "/api/v1/control-tower/actions/maintenance-mode",
+        "/api/v1/control-tower/stream",
+        "/api/v1/auth/login",
+        "/api/v1/auth/token"
+      ],
+      "exempt_roles": [
+        "SUPER_ADMIN",
+        "PLATFORM_ADMIN"
+      ],
+      "audit_action": "CONTROL_TOWER_MAINTENANCE_MODE"
+    }
+  },
+  {
+    "code": "IMP_02_SESSION_MANAGEMENT",
+    "display_name": "Session Management & Timeout Governance",
+    "description": "Master data governing active session limits, idle timeouts, and absolute expiry.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "session_idle_timeout_seconds": 1800,
+      "session_absolute_timeout_seconds": 28800,
+      "max_active_sessions_per_user": 10,
+      "cleanup_interval_seconds": 300
+    }
+  },
+  {
+    "code": "IMP_03_AUDIT_SIEM",
+    "display_name": "Audit Export and SIEM Forwarding Specifications",
+    "description": "Master parameters for signed daily MinIO audit export and CEF syslog forwarding.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "minio_bucket": "cloudlens-audit-exports",
+      "siem_format": "CEF",
+      "siem_cef_version": "0",
+      "siem_device_vendor": "CloudLens",
+      "siem_device_product": "Platform",
+      "siem_device_version": "1.0",
+      "signing_algorithm": "HMAC-SHA256"
+    }
+  },
+  {
+    "code": "IMP_04_RESTORE_TEST",
+    "display_name": "Self-Service Backup Restore Test Configuration",
+    "description": "Master parameters for isolated schema restoration and cent-for-cent reconciliation.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "restore_test_schema_prefix": "restore_test_iso_",
+      "max_restore_variance_tolerance": 0.0001,
+      "retention_days": 35,
+      "verification_tables": [
+        "raw_cost_facts",
+        "inventory_resources",
+        "focus_cost_records",
+        "audit_events"
+      ]
+    }
+  },
+  {
+    "code": "IMP_05_SYNTHETIC_MONITOR",
+    "display_name": "Synthetic Journey Monitor Master SLA",
+    "description": "Master parameters for scheduled synthetic user journey testing.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "synthetic_user_email": "synthetic-monitor@cloudlens.internal",
+      "synthetic_tenant_id": "tenant-synthetic",
+      "synthetic_role": "READ_ONLY_USER",
+      "latency_sla_target_ms": 2500,
+      "interval_seconds": 300,
+      "alert_rule_code": "SYNTHETIC_JOURNEY_FAILED"
+    }
+  },
+  {
+    "code": "IMP_06_RELEASE_INFO",
+    "display_name": "In-App Release and Changelog Metadata",
+    "description": "Authoritative release versions, migration head identifiers, and change manifests.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "version": "0.1.0",
+      "build_env": "production",
+      "migration_head": "20261005_fat_reconciled",
+      "release_name": "Enterprise Production Release (R-FEAT Reconciled)",
+      "release_date": "2026-10-05"
+    }
+  },
+  {
+    "code": "IMP_07_RATE_LIMIT_ABUSE",
+    "display_name": "Rate Limiting & Abuse Detection Controls",
+    "description": "Master parameters for consecutive auth failure lockout and 429 quota metrics.",
+    "sort_order": 7,
+    "parent_code": null,
+    "attributes": {
+      "lockout_max_failures": 5,
+      "lockout_duration_seconds": 900,
+      "abuse_detection_window_seconds": 60,
+      "rate_limit_per_token_minute": 1000
+    }
+  },
+  {
+    "code": "IMP_08_FRESHNESS_SLA",
+    "display_name": "Data Freshness SLA Governance",
+    "description": "Master SLA targets per cloud provider and capability for compliance reporting.",
+    "sort_order": 8,
+    "parent_code": null,
+    "attributes": {
+      "freshness_target_percentage": 99.5,
+      "freshness_targets_seconds": {
+        "cost": 21600,
+        "inventory": 21600,
+        "usage": 86400,
+        "pricing": 604800,
+        "quota": 86400
+      },
+      "report_interval_days": 7,
+      "recipient_email": "admin@jyotirmoyb.com"
+    }
+  },
+  {
+    "code": "IMP_09_CONFIG_SNAPSHOT",
+    "display_name": "Configuration Snapshot & Promotion Schema",
+    "description": "Master schema version and hashing standard for DEV/UAT/PROD configuration bundles.",
+    "sort_order": 9,
+    "parent_code": null,
+    "attributes": {
+      "bundle_schema_version": "1.0.0",
+      "bundle_hash_algorithm": "SHA256",
+      "allowed_bundle_formats": ["JSON", "YAML"]
+    }
+  },
+  {
+    "code": "IMP_10_CALENDAR",
+    "display_name": "Licence and Commitment Calendar Horizons",
+    "description": "Master lookahead horizons and urgency thresholds for calendar aggregation.",
+    "sort_order": 10,
+    "parent_code": null,
+    "attributes": {
+      "lookahead_days": 90,
+      "urgency_threshold_days": 30,
+      "critical_threshold_days": 7
+    }
+  },
+  {
+    "code": "IMP_11_COLLAB_ALERTS",
+    "display_name": "Microsoft Teams & Slack Alert Pipelines",
+    "description": "Interactive webhook alerts for collaboration tools with inline remediation actions.",
+    "sort_order": 11,
+    "parent_code": null,
+    "phase": 2,
+    "status": "PENDING_CONFIRMATION",
+    "attributes": {
+      "supported_platforms": ["SLACK", "TEAMS"],
+      "requires_confirmation": true
+    }
+  },
+  {
+    "code": "IMP_12_ANOMALY_DETECTION",
+    "display_name": "Advanced Statistical Cost Anomaly Detection",
+    "description": "Double exponential smoothing (Holt-Winters) with multi-cloud noise rejection.",
+    "sort_order": 12,
+    "parent_code": null,
+    "phase": 2,
+    "status": "PENDING_CONFIRMATION",
+    "attributes": {
+      "algorithm": "HOLT_WINTERS_MULTI_BAND",
+      "requires_confirmation": true
+    }
+  }
+]
+

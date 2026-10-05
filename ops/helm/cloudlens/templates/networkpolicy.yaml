@@ -1,0 +1,146 @@
+{{- if .Values.networkPolicy.enabled }}
+# 1. Default-Deny All Ingress and Egress across CloudLens Namespace (Guide §6)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-default-deny
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# 2. Allow Ingress Traffic to Web and API from Ingress Controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-allow-ingress
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["web", "api"]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressControllerNamespace | default "ingress-nginx" }}
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8000
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: web
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# 3. Allow Prometheus Scrape Ingress to API and Exporters
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-allow-prometheus-scrape
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["api", "worker"]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.prometheusNamespace | default "monitoring" }}
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 9808
+---
+# 4. Allow CoreDNS Egress (UDP/TCP 53) for All Pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-allow-dns-egress
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# 5. Allow Platform Application Egress to Infrastructure Dependencies
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-allow-app-egress
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["api", "worker", "beat", "migrate", "bootstrap-49a", "superuser-49b"]
+  policyTypes:
+    - Egress
+  egress:
+    # PostgreSQL (CloudNativePG)
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.external.postgres.port | default 5432 }}
+    # Redis / Valkey Sentinel
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.external.redis.port | default 6379 }}
+        - protocol: TCP
+          port: 26379
+    # OpenBao / HashiCorp Vault
+    - ports:
+        - protocol: TCP
+          port: 8200
+    # MinIO S3 Object Storage
+    - ports:
+        - protocol: TCP
+          port: 9000
+    # Keycloak / IdP
+    - ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8443
+    # SMTP Relay
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.external.smtp.port | default 587 }}
+        - protocol: TCP
+          port: 25
+        - protocol: TCP
+          port: 1025
+    # Public Cloud APIs (AWS, Azure, GCP, OCI)
+    - ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

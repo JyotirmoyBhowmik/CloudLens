@@ -11,8 +11,6 @@ Validates UI data contracts and schema guarantees:
 
 from __future__ import annotations
 
-import pytest
-
 from domain.models.enums import BudgetScopeType
 
 

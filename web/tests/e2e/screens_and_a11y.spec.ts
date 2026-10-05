@@ -1,0 +1,173 @@
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+// Canonical 28 routes: 27 screens + Control Tower
+const ROUTES = [
+  { id: 'S-01', path: '/login', name: 'Login (OIDC Redirect)' },
+  { id: 'S-02', path: '/', name: 'Landing & FinOps Portal' },
+  { id: 'S-03', path: '/executive', name: 'Executive Dashboard' },
+  { id: 'S-04', path: '/provider', name: 'Provider Breakdown' },
+  { id: 'S-05', path: '/service', name: 'Service Breakdown' },
+  { id: 'S-06', path: '/hierarchy', name: 'Hierarchy Explorer' },
+  { id: 'S-07', path: '/cost-explorer', name: 'Cost Explorer' },
+  { id: 'S-08', path: '/inventory', name: 'Service Inventory' },
+  { id: 'S-09', path: '/usage', name: 'Usage Detail' },
+  { id: 'S-10', path: '/runtime', name: 'Runtime View' },
+  { id: 'S-11', path: '/resource/res-aws-vm-01', name: 'Resource Detail' },
+  { id: 'S-12', path: '/graph', name: 'Dependency Graph' },
+  { id: 'S-13', path: '/investigation', name: 'Investigation View' },
+  { id: 'S-14', path: '/onboarding', name: 'Onboarding Wizard' },
+  { id: 'S-15', path: '/budgets', name: 'Budget Management' },
+  { id: 'S-16', path: '/policies', name: 'Policy Management' },
+  { id: 'S-17', path: '/users', name: 'Users & RBAC' },
+  { id: 'S-18', path: '/audit', name: 'Audit Log' },
+  { id: 'S-19', path: '/reports', name: 'Reports & Exports' },
+  { id: 'S-20', path: '/settings', name: 'Tenant Settings' },
+  { id: 'S-21', path: '/estimator', name: 'Cost Estimator & Scenario Compare' },
+  { id: 'S-22', path: '/quotas', name: 'Quota and Headroom' },
+  { id: 'S-23', path: '/provisioning', name: 'Provisioning Requests & Approvals' },
+  { id: 'S-24', path: '/remediation', name: 'Remediation Task Board' },
+  { id: 'S-25', path: '/statements', name: 'Showback Statements & Disputes' },
+  { id: 'S-26', path: '/planning', name: 'Budget Planning Workspace' },
+  { id: 'S-27', path: '/commitments', name: 'Commitment Portfolio & Renewals' },
+  { id: 'R-CT', path: '/control-tower', name: 'Platform Control Tower' },
+];
+
+test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock /api/v1/health probe to ensure consistent healthy state in tests
+    await page.route('/api/v1/health', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'HEALTHY',
+          service: 'cloudlens-api',
+          version: '0.1.0-alpha',
+          timestamp: '2026-10-05T22:00:00Z',
+          correlation_id: 'e2e-test-correlation-id',
+        }),
+      });
+    });
+
+    // Reset localStorage for deterministic test isolation
+    await page.addInitScript(() => {
+      localStorage.clear();
+      localStorage.setItem('cloudlens_is_demo', 'true');
+      localStorage.setItem('cloudlens_user_role', 'SUPER_ADMIN');
+    });
+  });
+
+  test('All 28 routes are reachable by direct URL in Demo Mode', async ({ page }) => {
+    page.on('pageerror', (err) => console.log(`[PAGE ERROR]: ${err.message}`));
+    for (const r of ROUTES) {
+      console.log(`Checking route ${r.id}: ${r.path}`);
+      await page.goto(r.path);
+      await page.waitForLoadState('domcontentloaded');
+
+      // Login screen doesn't have the global nav layout
+      if (r.path !== '/login') {
+        const banner = page.locator('div[role="status"]', {
+          hasText: /Demo Mode Active/i,
+        });
+        await expect(banner.first()).toBeVisible({ timeout: 5000 });
+      }
+
+      const content = await page.textContent('body');
+      expect(content).toBeTruthy();
+    }
+  });
+
+  test('All 28 routes render properly in Non-Demo Mode (Empty States)', async ({ page }) => {
+    await page.goto('/');
+    // Switch to Live Mode (Empty)
+    const toggleBtn = page.getByRole('button', { name: 'Toggle demo mode' });
+    await toggleBtn.click();
+    await expect(toggleBtn).toHaveText('Live Mode (Empty)');
+
+    // Now test a representative sample of Addendum B screens and core screens for null states
+    const sampleRoutes = [
+      '/quotas',
+      '/remediation',
+      '/statements',
+      '/planning',
+      '/commitments',
+      '/audit',
+      '/users',
+    ];
+
+    for (const path of sampleRoutes) {
+      await page.goto(path);
+      // Ensure null states or empty indicators are visible
+      const bodyText = await page.textContent('body');
+      expect(
+        bodyText?.includes('No ') ||
+        bodyText?.includes('NO_DATA') ||
+        bodyText?.includes('Zero') ||
+        bodyText?.includes('0')
+      ).toBeTruthy();
+    }
+  });
+
+  test('Role-Shaped Navigation & 403 Forbidden Redirection', async ({ page }) => {
+    // Set non-admin role in localStorage
+    await page.addInitScript(() => {
+      localStorage.setItem('cloudlens_user_role', 'DEVELOPER');
+    });
+
+    // Attempt to access Control Tower directly
+    await page.goto('/control-tower');
+
+    // Should be redirected to /403
+    await page.waitForURL('**/403');
+    await expect(page.locator('h1')).toHaveText('403 — Forbidden Access');
+    await expect(page.locator('body')).toContainText('restricted capability');
+  });
+
+  test('404 Not Found Page for Nonexistent Routes', async ({ page }) => {
+    await page.goto('/some-nonexistent-path-123');
+    await expect(page.locator('h1')).toHaveText('404 — Page Not Found');
+    await expect(page.locator('body')).toContainText('Return to Portal');
+  });
+
+  test('DesignSystemShowcase route /dev is absent from production build', async ({ page }) => {
+    await page.goto('/dev');
+    // In production build, /dev should fall through to 404
+    await expect(page.locator('h1')).toHaveText('404 — Page Not Found');
+  });
+
+  test('Axe-core Accessibility Audit: Zero Serious or Critical Violations across screens', async ({ page }) => {
+    test.setTimeout(120000);
+    // Audit a rich set of screens including forms, tables, dashboards, and wizards
+    const auditScreens = [
+      '/',
+      '/login',
+      '/estimator',
+      '/quotas',
+      '/provisioning',
+      '/remediation',
+      '/statements',
+      '/planning',
+      '/commitments',
+      '/audit',
+      '/settings',
+      '/control-tower',
+    ];
+
+    for (const p of auditScreens) {
+      await page.goto(p);
+      const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+
+      const seriousOrCritical = accessibilityScanResults.violations.filter(
+        (v) => v.impact === 'serious' || v.impact === 'critical'
+      );
+
+      expect(
+        seriousOrCritical,
+        `Expected 0 serious/critical a11y violations on ${p}, found: ${JSON.stringify(seriousOrCritical, null, 2)}`
+      ).toEqual([]);
+    }
+  });
+});

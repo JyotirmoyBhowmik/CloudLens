@@ -24,17 +24,17 @@ from domain.rbac.service import get_rbac_service
 client = TestClient(app)
 
 
-# Canonical Built-In Roles under test (Prompt 11 Item 70)
+# Canonical Built-In Roles under test (Prompt 11 Item 70 / BBP Section 33)
 ALL_NINE_ROLES = [
-    SystemRole.GLOBAL_ADMIN,
-    SystemRole.TENANT_ADMIN,
-    SystemRole.CLOUD_ARCHITECT,
-    SystemRole.FINOPS_ADMIN,
-    SystemRole.FINOPS_ANALYST,
-    SystemRole.TENANT_USER,
-    SystemRole.DEVELOPER,
-    SystemRole.FINOPS_VIEWER,
-    SystemRole.SECURITY_AUDITOR,
+    SystemRole.SUPER_ADMIN,
+    SystemRole.PLATFORM_ADMIN,
+    SystemRole.CLOUD_ADMINISTRATOR,
+    SystemRole.FINOPS_ADMINISTRATOR,
+    SystemRole.FINANCE_USER,
+    SystemRole.IT_OPERATIONS_USER,
+    SystemRole.APPLICATION_OWNER,
+    SystemRole.READ_ONLY_USER,
+    SystemRole.AUDITOR,
 ]
 
 # Canonical representative permissions across platform domains
@@ -116,46 +116,52 @@ def test_each_role_reaches_exact_capabilities_and_nothing_more(role: SystemRole)
 
 
 def test_super_admin_has_complete_platform_authority():
-    """Verify Super Admin (GLOBAL_ADMIN) has complete platform capabilities."""
+    """Verify Super Admin (SUPER_ADMIN) has complete platform capabilities."""
     catalogue = get_permission_catalogue()
-    role_def = catalogue.get_role(SystemRole.GLOBAL_ADMIN.value)
+    role_def = catalogue.get_role(SystemRole.SUPER_ADMIN.value)
     all_perm_codes = {p.code for p in catalogue.list_permissions()}
     assert set(role_def.allowed_permissions) == all_perm_codes
+    assert "platform.observe" in role_def.allowed_permissions
+    assert "platform.operate" in role_def.allowed_permissions
+    assert "platform.act_as" in role_def.allowed_permissions
 
 
 def test_platform_admin_boundary():
-    """Verify Platform Admin (TENANT_ADMIN) has tenant write authority but not global config write."""
+    """Verify Platform Admin (PLATFORM_ADMIN) has tenant write authority but not global config write."""
     rbac_svc = get_rbac_service()
 
-    role = SystemRole.TENANT_ADMIN.value
-    # Allowed: tenant settings, billing, inventory, rbac, audit
+    role = SystemRole.PLATFORM_ADMIN.value
+    # Allowed: tenant settings, billing, inventory, rbac, audit, platform observe/operate
     assert rbac_svc.authorize("u1", "t1", [role], "tenants:settings:write").allowed is True
     assert rbac_svc.authorize("u1", "t1", [role], "billing:read").allowed is True
     assert rbac_svc.authorize("u1", "t1", [role], "audit:read").allowed is True
+    assert rbac_svc.authorize("u1", "t1", [role], "platform.observe").allowed is True
+    assert rbac_svc.authorize("u1", "t1", [role], "platform.operate").allowed is True
 
-    # Forbidden: system level config write
+    # Forbidden: system level config write, act-as-tenant
     assert rbac_svc.authorize("u1", "t1", [role], "config:write").allowed is False
+    assert rbac_svc.authorize("u1", "t1", [role], "platform.act_as").allowed is False
 
 
 def test_finops_analyst_vs_it_operations_user_financial_bounds():
-    """Item 73: FinOps Analyst can see rate details; IT Operations User cannot."""
+    """BBP Table 33-2: Finance User can see rate details; IT Operations User cannot."""
     rbac_svc = get_rbac_service()
 
-    # Finance User (FINOPS_ANALYST) has financial:detail:read
+    # Finance User (FINANCE_USER) has financial:detail:read
     fin_dec = rbac_svc.authorize(
         user_id="fin-user",
         tenant_id="t1",
-        role_codes=[SystemRole.FINOPS_ANALYST.value],
+        role_codes=[SystemRole.FINANCE_USER.value],
         permission_code="financial:detail:read",
     )
     assert fin_dec.allowed is True
     assert fin_dec.can_view_rates is True
 
-    # IT Operations User (TENANT_USER) has cost:totals:read, but NOT financial:detail:read
+    # IT Operations User (IT_OPERATIONS_USER) has cost:totals:read, but NOT financial:detail:read
     ops_dec_totals = rbac_svc.authorize(
         user_id="ops-user",
         tenant_id="t1",
-        role_codes=[SystemRole.TENANT_USER.value],
+        role_codes=[SystemRole.IT_OPERATIONS_USER.value],
         permission_code="cost:totals:read",
     )
     assert ops_dec_totals.allowed is True
@@ -163,16 +169,16 @@ def test_finops_analyst_vs_it_operations_user_financial_bounds():
     ops_dec_detail = rbac_svc.authorize(
         user_id="ops-user",
         tenant_id="t1",
-        role_codes=[SystemRole.TENANT_USER.value],
+        role_codes=[SystemRole.IT_OPERATIONS_USER.value],
         permission_code="financial:detail:read",
     )
     assert ops_dec_detail.allowed is False
 
 
 def test_read_only_user_cannot_mutate():
-    """Verify Read Only User (FINOPS_VIEWER) has zero write/mutation permissions."""
+    """Verify Read Only User (READ_ONLY_USER) has zero write/mutation permissions."""
     catalogue = get_permission_catalogue()
-    role_def = catalogue.get_role(SystemRole.FINOPS_VIEWER.value)
+    role_def = catalogue.get_role(SystemRole.READ_ONLY_USER.value)
     for perm in role_def.allowed_permissions:
         assert not perm.endswith(":write")
         assert not perm.endswith(":toggle")
@@ -182,17 +188,83 @@ def test_read_only_user_cannot_mutate():
 
 
 def test_security_auditor_bounds():
-    """Verify Security Auditor cannot alter configurations or mutate financial data."""
+    """Verify Auditor cannot alter configurations or mutate financial data."""
     catalogue = get_permission_catalogue()
-    role_def = catalogue.get_role(SystemRole.SECURITY_AUDITOR.value)
+    role_def = catalogue.get_role(SystemRole.AUDITOR.value)
     allowed = set(role_def.allowed_permissions)
 
     assert "audit:read" in allowed
     assert "governance:read" in allowed
     assert "roles:read" in allowed
+    assert "platform.observe" in allowed
     assert "config:write" not in allowed
     assert "billing:write" not in allowed
     assert "budgets:approve" not in allowed
+    assert "platform.operate" not in allowed
+    assert "platform.act_as" not in allowed
+
+
+def test_auditor_can_observe_but_every_operate_action_returns_403():
+    """Requirement: AUDITOR can observe but every operate action returns 403."""
+    rbac_svc = get_rbac_service()
+    auditor_role = SystemRole.AUDITOR.value
+
+    # 1. Authorize checks: observe is True, operate and act_as are False
+    obs_decision = rbac_svc.authorize(
+        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.observe"
+    )
+    assert obs_decision.allowed is True, "AUDITOR must have platform.observe capability"
+
+    op_decision = rbac_svc.authorize(
+        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.operate"
+    )
+    assert op_decision.allowed is False, "AUDITOR must NOT have platform.operate capability"
+
+    act_decision = rbac_svc.authorize(
+        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.act_as"
+    )
+    assert act_decision.allowed is False, "AUDITOR must NOT have platform.act_as capability"
+
+    # 2. HTTP Endpoint Level checks:
+    # Observe endpoint (audit logs read) -> 200 Allowed
+    auditor_headers = {
+        "X-Tenant-ID": "t1",
+        "X-Roles": auditor_role,
+        "X-User-Roles": auditor_role,
+        "X-User-ID": "aud-1",
+    }
+    obs_res = client.get("/api/v1/rbac/permissions", headers=auditor_headers)
+    assert obs_res.status_code == 200
+
+    # Operate endpoints -> 403 Forbidden
+    op_res_override = client.post(
+        "/api/v1/admin/overrides",
+        json={
+            "override_class": "BUDGET_THRESHOLD",
+            "who": "aud-1",
+            "what": "quota",
+            "why": "Unauthorized operate attempt for 403 verification test",
+            "previous_value": "100",
+            "new_value": "200",
+            "expiry": "2028-01-01T00:00:00Z",
+        },
+        headers=auditor_headers,
+    )
+    assert op_res_override.status_code == 403, f"Expected 403 on override operate, got {op_res_override.status_code}"
+
+    op_res_act_as = client.post(
+        "/api/v1/admin/act-as",
+        json={"tenant_id": "tenant-other", "reason": "Unauthorized act-as attempt for 403 verification"},
+        headers=auditor_headers,
+    )
+    assert op_res_act_as.status_code == 403, f"Expected 403 on act-as operate, got {op_res_act_as.status_code}"
+
+    op_res_step_up = client.post(
+        "/api/v1/admin/step-up",
+        json={"password": "any-password"},
+        headers=auditor_headers,
+    )
+    assert op_res_step_up.status_code == 403, f"Expected 403 on step-up operate, got {op_res_step_up.status_code}"
 
 
 # ==============================================================================
@@ -233,7 +305,7 @@ def test_representative_multidimensional_scope_combination():
     dec1 = rbac_svc.authorize(
         user_id="eng-analyst",
         tenant_id="t-matrix",
-        role_codes=[SystemRole.FINOPS_ANALYST.value],
+        role_codes=[SystemRole.FINANCE_USER.value],
         permission_code="billing:read",
         target=ResourceTarget(
             provider="aws",
@@ -248,7 +320,7 @@ def test_representative_multidimensional_scope_combination():
     dec2 = rbac_svc.authorize(
         user_id="eng-analyst",
         tenant_id="t-matrix",
-        role_codes=[SystemRole.FINOPS_ANALYST.value],
+        role_codes=[SystemRole.FINANCE_USER.value],
         permission_code="billing:read",
         target=ResourceTarget(
             provider="aws",
@@ -265,7 +337,7 @@ def test_representative_multidimensional_scope_combination():
     dec3 = rbac_svc.authorize(
         user_id="eng-analyst",
         tenant_id="t-matrix",
-        role_codes=[SystemRole.FINOPS_ANALYST.value],
+        role_codes=[SystemRole.FINANCE_USER.value],
         permission_code="billing:read",
         target=ResourceTarget(
             provider="gcp",
@@ -312,7 +384,7 @@ def test_http_endpoint_custom_role_lifecycle():
     }
     headers = {
         "X-Tenant-ID": "tenant-api-test",
-        "X-Roles": SystemRole.TENANT_ADMIN.value,
+        "X-Roles": SystemRole.PLATFORM_ADMIN.value,
     }
 
     # Create custom role
@@ -337,7 +409,7 @@ def test_http_endpoint_scope_grant_lifecycle_and_evaluation():
     """Verify grant creation, server-side evaluation, and deletion over HTTP API."""
     headers = {
         "X-Tenant-ID": "tenant-http-eval",
-        "X-Roles": SystemRole.FINOPS_ANALYST.value,
+        "X-Roles": SystemRole.FINANCE_USER.value,
         "X-User-ID": "user-eval-1",
     }
 
@@ -387,7 +459,7 @@ def test_http_endpoint_access_review_export():
     """Verify access review export in JSON and CSV over HTTP API."""
     headers = {
         "X-Tenant-ID": "tenant-review-test",
-        "X-Roles": SystemRole.GLOBAL_ADMIN.value,
+        "X-Roles": SystemRole.SUPER_ADMIN.value,
     }
 
     # JSON export
@@ -412,7 +484,7 @@ def test_http_endpoint_filter_demo_with_disclosure():
             id="grant-demo-scope",
             tenant_id="tenant-demo",
             grantee_type=GranteeType.ROLE,
-            grantee_id=SystemRole.TENANT_USER.value,
+            grantee_id=SystemRole.IT_OPERATIONS_USER.value,
             effect=GrantEffect.ALLOW,
             providers=["aws"],
             financial_sensitivity=FinancialSensitivity.COST_TOTALS_ONLY,
@@ -421,7 +493,7 @@ def test_http_endpoint_filter_demo_with_disclosure():
 
     headers = {
         "X-Tenant-ID": "tenant-demo",
-        "X-Roles": SystemRole.TENANT_USER.value,
+        "X-Roles": SystemRole.IT_OPERATIONS_USER.value,
         "X-User-ID": "user-demo",
     }
 

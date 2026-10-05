@@ -339,23 +339,44 @@ CANONICAL_PERMISSIONS: list[dict[str, Any]] = [
         "domain": "governance",
         "action": "apply_override",
     },
+    {
+        "code": "platform.observe",
+        "display_name": "Platform Observer",
+        "description": "Read-only Control Tower visibility across all tenants in aggregated mode (Prompt R-ROLES).",
+        "domain": "platform",
+        "action": "observe",
+    },
+    {
+        "code": "platform.operate",
+        "display_name": "Platform Operator",
+        "description": "Execute Control Tower operational actions requiring step-up authentication (Prompt R-ROLES).",
+        "domain": "platform",
+        "action": "operate",
+    },
+    {
+        "code": "platform.act_as",
+        "display_name": "Platform Act-As-Tenant",
+        "description": "Issue short-lived scoped act-as-tenant token with step-up MFA and audit logging (Prompt R-ROLES).",
+        "domain": "platform",
+        "action": "act_as",
+    },
 ]
 
-# Canonical Nine Built-in Roles (Prompt 11 Item 70)
+# Canonical Nine Built-in Roles (Prompt 11 Item 70 / Prompt R-ROLES / BBP Section 33)
 # Maps technical SystemRole to canonical title, description, and permission grant
 BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
     # 1. Super Admin
-    SystemRole.GLOBAL_ADMIN.value: {
+    SystemRole.SUPER_ADMIN.value: {
         "display_name": "Super Admin",
-        "description": "Full platform-wide administrative authority across all tenants and subsystems.",
+        "description": "Full platform-wide administrative authority across all tenants and subsystems (BBP Section 33).",
         "max_scope": "PLATFORM",
         "requires_mfa": True,
         "allowed_permissions": [p["code"] for p in CANONICAL_PERMISSIONS],
     },
     # 2. Platform Admin
-    SystemRole.TENANT_ADMIN.value: {
+    SystemRole.PLATFORM_ADMIN.value: {
         "display_name": "Platform Admin",
-        "description": "Administrative authority within the tenant boundary (settings, users, connectors, policies).",
+        "description": "Administrative authority within the tenant boundary (settings, users, connectors, policies) (BBP Section 33).",
         "max_scope": "TENANT",
         "requires_mfa": True,
         "allowed_permissions": [
@@ -395,12 +416,14 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
             "overrides:apply",
             "audit:read",
             "audit:export",
+            "platform.observe",
+            "platform.operate",
         ],
     },
     # 3. Cloud Administrator
-    SystemRole.CLOUD_ARCHITECT.value: {
+    SystemRole.CLOUD_ADMINISTRATOR.value: {
         "display_name": "Cloud Administrator",
-        "description": "Infrastructure topology, resource inventory, connectors, quotas, and architecture gates.",
+        "description": "Infrastructure topology, resource inventory, connectors, quotas, and architecture gates (BBP Section 33).",
         "max_scope": "SCOPE",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -409,19 +432,23 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
             "inventory:export",
             "inventory:write",
             "connectors:read",
+            "connectors:write",
+            "connectors:sync",
+            "connectors:validate",
             "thresholds:read",
             "governance:read",
             "policies:evaluate",
             "quotas:read",
+            "quotas:write",
             "billing:read",
             "cost:totals:read",
             "reports:read",
         ],
     },
     # 4. FinOps Administrator
-    SystemRole.FINOPS_ADMIN.value: {
+    SystemRole.FINOPS_ADMINISTRATOR.value: {
         "display_name": "FinOps Administrator",
-        "description": "Management of FinOps budgets, thresholds, rate cards, commitments, and cost allocations.",
+        "description": "Management of FinOps budgets, thresholds, rate cards, commitments, and cost allocations (BBP Section 33).",
         "max_scope": "TENANT",
         "requires_mfa": True,
         "allowed_permissions": [
@@ -455,9 +482,9 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
         ],
     },
     # 5. Finance User
-    SystemRole.FINOPS_ANALYST.value: {
+    SystemRole.FINANCE_USER.value: {
         "display_name": "Finance User",
-        "description": "FinOps analytics, cost modeling, rate analysis, anomaly investigation, and report generation.",
+        "description": "FinOps analytics, cost modeling, rate analysis, anomaly investigation, and report generation (BBP Section 33).",
         "max_scope": "SCOPE",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -481,9 +508,9 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
         ],
     },
     # 6. IT Operations User
-    SystemRole.TENANT_USER.value: {
+    SystemRole.IT_OPERATIONS_USER.value: {
         "display_name": "IT Operations User",
-        "description": "Scope-bounded visibility into technical infrastructure and cost totals without rates (Item 73).",
+        "description": "Scope-bounded visibility into technical infrastructure and cost totals without rates (BBP Section 33).",
         "max_scope": "SCOPE",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -495,9 +522,9 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
         ],
     },
     # 7. Application Owner
-    SystemRole.DEVELOPER.value: {
+    SystemRole.APPLICATION_OWNER.value: {
         "display_name": "Application Owner",
-        "description": "Scope-bounded visibility into application resources, unit economics, team metrics, and budgets.",
+        "description": "Scope-bounded visibility into application resources, unit economics, team metrics, and budgets (BBP Section 33).",
         "max_scope": "SCOPE",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -510,9 +537,9 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
         ],
     },
     # 8. Read Only User
-    SystemRole.FINOPS_VIEWER.value: {
+    SystemRole.READ_ONLY_USER.value: {
         "display_name": "Read Only User",
-        "description": "Read-only access to billing data, budgets, and executive financial dashboards.",
+        "description": "Read-only access to billing data, budgets, and executive financial dashboards (BBP Section 33).",
         "max_scope": "SCOPE",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -526,9 +553,9 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
         ],
     },
     # 9. Auditor
-    SystemRole.SECURITY_AUDITOR.value: {
+    SystemRole.AUDITOR.value: {
         "display_name": "Auditor",
-        "description": "Audit trail inspection, access reviews, compliance reporting, and policy verification.",
+        "description": "Audit trail inspection, access reviews, compliance reporting, and Control Tower observation (BBP Section 33).",
         "max_scope": "TENANT",
         "requires_mfa": False,
         "allowed_permissions": [
@@ -540,46 +567,64 @@ BUILT_IN_ROLES: dict[str, dict[str, Any]] = {
             "users:read",
             "reports:read",
             "reports:export",
+            "platform.observe",
         ],
     },
 }
 
 # Role Title and Synonym Lookup Map
 ROLE_SYNONYMS: dict[str, str] = {
-    "super admin": SystemRole.GLOBAL_ADMIN.value,
-    "superadmin": SystemRole.GLOBAL_ADMIN.value,
-    "global admin": SystemRole.GLOBAL_ADMIN.value,
-    "global administrator": SystemRole.GLOBAL_ADMIN.value,
-    "global_admin": SystemRole.GLOBAL_ADMIN.value,
-    "platform admin": SystemRole.TENANT_ADMIN.value,
-    "platform administrator": SystemRole.TENANT_ADMIN.value,
-    "tenant admin": SystemRole.TENANT_ADMIN.value,
-    "tenant administrator": SystemRole.TENANT_ADMIN.value,
-    "tenant_admin": SystemRole.TENANT_ADMIN.value,
-    "cloud administrator": SystemRole.CLOUD_ARCHITECT.value,
-    "cloud admin": SystemRole.CLOUD_ARCHITECT.value,
-    "cloud architect": SystemRole.CLOUD_ARCHITECT.value,
-    "cloud_architect": SystemRole.CLOUD_ARCHITECT.value,
-    "finops administrator": SystemRole.FINOPS_ADMIN.value,
-    "finops admin": SystemRole.FINOPS_ADMIN.value,
-    "finops_admin": SystemRole.FINOPS_ADMIN.value,
-    "finance user": SystemRole.FINOPS_ANALYST.value,
-    "finops analyst": SystemRole.FINOPS_ANALYST.value,
-    "finops_analyst": SystemRole.FINOPS_ANALYST.value,
-    "it operations user": SystemRole.TENANT_USER.value,
-    "it operations": SystemRole.TENANT_USER.value,
-    "tenant user": SystemRole.TENANT_USER.value,
-    "tenant_user": SystemRole.TENANT_USER.value,
-    "application owner": SystemRole.DEVELOPER.value,
-    "developer": SystemRole.DEVELOPER.value,
-    "read only user": SystemRole.FINOPS_VIEWER.value,
-    "read only": SystemRole.FINOPS_VIEWER.value,
-    "finops viewer": SystemRole.FINOPS_VIEWER.value,
-    "finops_viewer": SystemRole.FINOPS_VIEWER.value,
-    "auditor": SystemRole.SECURITY_AUDITOR.value,
-    "security auditor": SystemRole.SECURITY_AUDITOR.value,
-    "security & compliance auditor": SystemRole.SECURITY_AUDITOR.value,
-    "security_auditor": SystemRole.SECURITY_AUDITOR.value,
+    # Super Admin
+    "super admin": SystemRole.SUPER_ADMIN.value,
+    "superadmin": SystemRole.SUPER_ADMIN.value,
+    "super_admin": SystemRole.SUPER_ADMIN.value,
+    "global admin": SystemRole.SUPER_ADMIN.value,
+    "global administrator": SystemRole.SUPER_ADMIN.value,
+    "global_admin": SystemRole.SUPER_ADMIN.value,
+    # Platform Admin
+    "platform admin": SystemRole.PLATFORM_ADMIN.value,
+    "platform administrator": SystemRole.PLATFORM_ADMIN.value,
+    "platform_admin": SystemRole.PLATFORM_ADMIN.value,
+    "tenant admin": SystemRole.PLATFORM_ADMIN.value,
+    "tenant administrator": SystemRole.PLATFORM_ADMIN.value,
+    "tenant_admin": SystemRole.PLATFORM_ADMIN.value,
+    # Cloud Administrator
+    "cloud administrator": SystemRole.CLOUD_ADMINISTRATOR.value,
+    "cloud admin": SystemRole.CLOUD_ADMINISTRATOR.value,
+    "cloud_administrator": SystemRole.CLOUD_ADMINISTRATOR.value,
+    "cloud architect": SystemRole.CLOUD_ADMINISTRATOR.value,
+    "cloud_architect": SystemRole.CLOUD_ADMINISTRATOR.value,
+    # FinOps Administrator
+    "finops administrator": SystemRole.FINOPS_ADMINISTRATOR.value,
+    "finops admin": SystemRole.FINOPS_ADMINISTRATOR.value,
+    "finops_admin": SystemRole.FINOPS_ADMINISTRATOR.value,
+    "finops_administrator": SystemRole.FINOPS_ADMINISTRATOR.value,
+    # Finance User
+    "finance user": SystemRole.FINANCE_USER.value,
+    "finance_user": SystemRole.FINANCE_USER.value,
+    "finops analyst": SystemRole.FINANCE_USER.value,
+    "finops_analyst": SystemRole.FINANCE_USER.value,
+    # IT Operations User
+    "it operations user": SystemRole.IT_OPERATIONS_USER.value,
+    "it operations": SystemRole.IT_OPERATIONS_USER.value,
+    "it_operations_user": SystemRole.IT_OPERATIONS_USER.value,
+    "tenant user": SystemRole.IT_OPERATIONS_USER.value,
+    "tenant_user": SystemRole.IT_OPERATIONS_USER.value,
+    # Application Owner
+    "application owner": SystemRole.APPLICATION_OWNER.value,
+    "application_owner": SystemRole.APPLICATION_OWNER.value,
+    "developer": SystemRole.APPLICATION_OWNER.value,
+    # Read Only User
+    "read only user": SystemRole.READ_ONLY_USER.value,
+    "read only": SystemRole.READ_ONLY_USER.value,
+    "read_only_user": SystemRole.READ_ONLY_USER.value,
+    "finops viewer": SystemRole.READ_ONLY_USER.value,
+    "finops_viewer": SystemRole.READ_ONLY_USER.value,
+    # Auditor
+    "auditor": SystemRole.AUDITOR.value,
+    "security auditor": SystemRole.AUDITOR.value,
+    "security & compliance auditor": SystemRole.AUDITOR.value,
+    "security_auditor": SystemRole.AUDITOR.value,
 }
 
 

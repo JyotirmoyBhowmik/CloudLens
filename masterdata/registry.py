@@ -876,7 +876,55 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/topology_view.json",
         expected_review_period_days=180,
     ),
+    "CONNECTOR_SCHEDULE": MasterRegistryEntry(
+        code="CONNECTOR_SCHEDULE",
+        name="Connector and Background Job Schedules",
+        purpose="Defines default schedule intervals, lookback windows, and retry policies for connector capabilities and background platform tasks.",
+        schema_def={
+            "capability_or_task": "string",
+            "interval_minutes": "integer",
+            "lookback_days": "integer",
+            "max_retries": "integer",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["workers", "connectors", "sync", "control_tower"],
+        seed_file="masterdata/seeds/connector_schedule.json",
+        expected_review_period_days=90,
+    ),
+    "CONTROL_TOWER_THRESHOLDS": MasterRegistryEntry(
+        code="CONTROL_TOWER_THRESHOLDS",
+        name="Control Tower Operational Thresholds",
+        purpose="Defines M2 operational status thresholds (green/amber/red/grey) across all 14 Control Tower platform monitoring panels.",
+        schema_def={
+            "panel_id": "string",
+            "thresholds": "object",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["control_tower", "monitoring", "observability", "alerting"],
+        seed_file="masterdata/seeds/control_tower_thresholds.json",
+        expected_review_period_days=90,
+    ),
+    "IMPROVEMENT_FEATURES": MasterRegistryEntry(
+        code="IMPROVEMENT_FEATURES",
+        name="Platform Improvement Features Master Configuration",
+        purpose="Defines master parameters, SLA targets, timeouts, and thresholds for IMP-01 through IMP-10.",
+        schema_def={
+            "feature_code": "string",
+            "attributes": "object",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["control_tower", "maintenance", "identity", "audit", "synthetic", "commitments", "reporting", "config"],
+        seed_file="masterdata/seeds/improvement_features.json",
+        expected_review_period_days=90,
+    ),
 }
+
 
 
 def get_registered_master(master_type: str) -> MasterRegistryEntry | None:

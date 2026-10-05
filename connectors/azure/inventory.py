@@ -58,7 +58,7 @@ class AzureInventoryService:
                 "tags": {
                     "Environment": "Production",
                     "CostCenter": "CC-202-ENG",
-                    "Owner": "payments-team@company.internal",
+                    "Owner": "payments-team",
                     "Application": "PaymentGateway",
                 },
                 "sku": {"name": "Standard_D4s_v5", "tier": "Standard"},
@@ -128,7 +128,7 @@ class AzureInventoryService:
                 "tags": {
                     "Environment": "Production",
                     "CostCenter": "CC-202-ENG",
-                    "Owner": "db-admin@company.internal",
+                    "Owner": "db-admin",
                 },
                 "sku": {"name": "GP_Gen5_4", "tier": "GeneralPurpose"},
                 "properties": {

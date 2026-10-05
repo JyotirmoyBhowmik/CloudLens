@@ -61,7 +61,7 @@ class AWSTagService:
             AWSTagRecord(
                 resource_arn=ec2_arn,
                 key="Owner",
-                value="platform-team@company.internal",
+                value="platform-team",
                 is_cost_allocation_tag=False,
             ),
             AWSTagRecord(

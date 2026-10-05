@@ -1,0 +1,57 @@
+{
+  "title": "CloudLens - Cost of Collection & Provider Overhead",
+  "uid": "cloudlens-cost-of-collection",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Collection Cost (USD)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(collection_cost_usd)",
+          "legendFormat": "Total Collection Overhead ($)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Collection Cost per Provider ($)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "collection_cost_usd",
+          "legendFormat": "{{provider}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Ingested Records Processed",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(ingestion_rows_total[5m])) by (provider)",
+          "legendFormat": "{{provider}} Rows/s"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Estimated Cost per 100k Ingested Rows ($)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "(sum(collection_cost_usd) / (sum(ingestion_rows_total) + 1)) * 100000",
+          "legendFormat": "$ per 100k Records"
+        }
+      ]
+    }
+  ]
+}

@@ -8,7 +8,6 @@ with SHA-256 integrity, licenses, and purl identifiers in compliance with Cyclon
 from __future__ import annotations
 
 import datetime as dt
-import hashlib
 import json
 from importlib import metadata
 from pathlib import Path

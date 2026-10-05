@@ -769,6 +769,8 @@ class ReportGenerationEngine:
     def _build_access_review(
         self, params: ReportParameters, tc: TenantContext, scopes: set[str] | None
     ) -> tuple[list[str], list[dict[str, Any]], dict[str, Any]]:
+        from domain.identity.service import get_identity_service
+
         cols = [
             "user_id",
             "email",
@@ -779,39 +781,49 @@ class ReportGenerationEngine:
             "mfa_enabled",
             "last_login_at",
         ]
-        rows = [
-            {
-                "user_id": "usr-admin-01",
-                "email": "admin@jyotirmoyb.com",
-                "display_name": "Platform Administrator",
-                "roles": "GLOBAL_ADMIN, FINOPS_ADMIN",
-                "scope_grant_ids": "ALL_PLATFORM_SCOPES",
-                "is_break_glass": False,
-                "mfa_enabled": True,
-                "last_login_at": "2026-10-02T22:30:00Z",
-            },
-            {
-                "user_id": "usr-fin-02",
-                "email": "analyst@example.com",
-                "display_name": "Lead FinOps Analyst",
-                "roles": "FINOPS_ANALYST",
-                "scope_grant_ids": "scope-prod, scope-dev",
-                "is_break_glass": False,
-                "mfa_enabled": True,
-                "last_login_at": "2026-10-02T19:15:00Z",
-            },
-            {
-                "user_id": "usr-emg-99",
-                "email": "breakglass-emergency@example.com",
-                "display_name": "Break Glass Emergency",
-                "roles": "GLOBAL_ADMIN",
-                "scope_grant_ids": "EMERGENCY_GLOBAL",
-                "is_break_glass": True,
-                "mfa_enabled": True,
-                "last_login_at": "2026-09-15T12:00:00Z",
-            },
+        identity_service = get_identity_service()
+        users = identity_service.list_users(tc.tenant_id)
+        bg_accounts = [
+            bg
+            for (t_id, _), bg in identity_service._break_glass_accounts.items()
+            if t_id == tc.tenant_id
         ]
-        summary = {"active_users_count": 3, "break_glass_accounts_count": 1}
+        rows: list[dict[str, Any]] = []
+        for u in users:
+            roles_str = ", ".join(r.value if hasattr(r, "value") else str(r) for r in u.roles)
+            rows.append(
+                {
+                    "user_id": u.id,
+                    "email": u.email,
+                    "display_name": u.display_name or u.email.split("@")[0],
+                    "roles": roles_str or "READ_ONLY_USER",
+                    "scope_grant_ids": ", ".join(u.scope_grant_ids)
+                    if getattr(u, "scope_grant_ids", None)
+                    else "ALL_PLATFORM_SCOPES",
+                    "is_break_glass": False,
+                    "mfa_enabled": bool(getattr(u, "mfa_enrolled", False)),
+                    "last_login_at": u.last_login_at.isoformat()
+                    if u.last_login_at
+                    else (u.created_at.isoformat() if u.created_at else None),
+                }
+            )
+        for bg in bg_accounts:
+            rows.append(
+                {
+                    "user_id": getattr(bg, "id", f"bg-{bg.account_name}"),
+                    "email": bg.account_name,
+                    "display_name": f"Break-Glass ({bg.account_name})",
+                    "roles": "SUPER_ADMIN",
+                    "scope_grant_ids": "ALL_PLATFORM_SCOPES",
+                    "is_break_glass": True,
+                    "mfa_enabled": True,
+                    "last_login_at": None,
+                }
+            )
+        summary = {
+            "active_users_count": len(rows),
+            "break_glass_accounts_count": len(bg_accounts),
+        }
         return cols, rows, summary
 
     def _build_audit_extract(
@@ -833,7 +845,7 @@ class ReportGenerationEngine:
                 "event_id": "aud-evt-001",
                 "timestamp": (now - dt.timedelta(minutes=30)).isoformat(),
                 "event_type": "EXPORT_GENERATED",
-                "actor_id": tc.user_id or "admin@jyotirmoyb.com",
+                "actor_id": tc.user_id or "system",
                 "action": "REPORT_EXPORT",
                 "resource_type": "REPORT",
                 "resource_id": "tpl-cost-monthly",
@@ -843,7 +855,7 @@ class ReportGenerationEngine:
                 "event_id": "aud-evt-002",
                 "timestamp": (now - dt.timedelta(hours=2)).isoformat(),
                 "event_type": "ROLE_ASSIGNED",
-                "actor_id": "admin@jyotirmoyb.com",
+                "actor_id": tc.user_id or "system",
                 "action": "GRANT_ROLE",
                 "resource_type": "USER",
                 "resource_id": "usr-fin-02",
@@ -852,6 +864,7 @@ class ReportGenerationEngine:
         ]
         summary = {"events_extracted": 2, "chain_integrity_verified": True}
         return cols, rows, summary
+
 
     # ==========================================================================
     # Builders for 5 Pricing-Specific Reports

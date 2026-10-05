@@ -90,8 +90,8 @@ class StatementService:
         scope_type: RecipientScopeType = RecipientScopeType.BUSINESS_UNIT,
         scope_code: str = "BU-RETAIL",
         scope_name: str = "Retail & E-Commerce Business Unit",
-        recipient_owner_id: str = "usr-retail-lead",
-        recipient_owner_email: str = "retail-lead@company.com",
+        recipient_owner_id: str | None = None,
+        recipient_owner_email: str | None = None,
         tenant_context: TenantContext,
         template_id: str | None = None,
         custom_facts: list[dict[str, Any]] | None = None,
@@ -104,6 +104,13 @@ class StatementService:
     ) -> ShowbackStatement:
         """Generates, saves, and returns a new draft ShowbackStatement."""
         tc = require_tenant_context(tenant_context)
+
+        if not recipient_owner_id or not recipient_owner_email:
+            from domain.attribution.governance_resolver import resolve_statements_recipient
+
+            resolved_id, resolved_email = resolve_statements_recipient(tc.tenant_id)
+            recipient_owner_id = recipient_owner_id or resolved_id
+            recipient_owner_email = recipient_owner_email or resolved_email
 
         # Exchange rate lookup if multi-currency requested
         ex_rate = Decimal("1.0")
@@ -254,9 +261,14 @@ class StatementService:
         proposed_amount: Decimal | float,
         reason: str,
         tenant_context: TenantContext,
-        assigned_owner: str = "finops-disputes@company.com",
+        assigned_owner: str | None = None,
     ) -> StatementDispute:
         """Queries/disputes a statement line, creating tracked item routed to workflow engine."""
+        if not assigned_owner:
+            from domain.attribution.governance_resolver import resolve_dispute_investigator
+
+            assigned_owner = resolve_dispute_investigator(tenant_context.tenant_id)
+
         stmt = self.get_statement(statement_id, tenant_context=tenant_context)
         dispute = self.dispute_manager.raise_dispute(
             stmt,

@@ -14,6 +14,13 @@ class DomainModelException(Exception):
         self.error_code = error_code
 
 
+class GovernanceException(DomainModelException):
+    """Raised when governance resolution (ownership, authority, or recipient) fails."""
+
+    def __init__(self, message: str, error_code: str = "GOVERNANCE_RESOLUTION_FAILED") -> None:
+        super().__init__(message, error_code=error_code)
+
+
 class MeasureNullForbiddenException(DomainModelException):
     """Raised when a bare null (None) is provided for a measure instead of an explicit MeasureNullState."""
 
@@ -2562,3 +2569,14 @@ class DashboardNotFoundException(DashboardException):
             status_code=404,
         )
         self.dashboard_id = dashboard_id
+
+
+class PlanningException(DomainModelException):
+    """Base exception for planning domain errors (Prompt 57)."""
+
+    def __init__(
+        self, message: str, error_code: str = "PLANNING_ERROR", status_code: int = 400
+    ) -> None:
+        super().__init__(message, error_code=error_code)
+        self.status_code = status_code
+

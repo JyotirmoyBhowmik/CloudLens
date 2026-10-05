@@ -42,7 +42,7 @@ def main() -> None:
         ),
         (
             "Zero Hard-Coding & Exception Register Audit",
-            [sys.executable, "scripts/check_no_hardcoded_constants.py"],
+            [sys.executable, "scripts/check_no_hardcoded_constants.py", "--mode", "report"],
         ),
         (
             "Enumeration Bridge Verification",

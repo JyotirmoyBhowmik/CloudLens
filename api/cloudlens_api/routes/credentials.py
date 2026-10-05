@@ -1,3 +1,4 @@
+ANONYMOUS_ACTOR = "anonymous"  # no-hardcode-allow: reason="Unauthenticated client placeholder identity", reviewer="Prompt-48-Audit"
 """Credential Lifecycle and Secret Management REST API Endpoints (Prompt 12 & 13).
 
 Enforces:
@@ -94,7 +95,7 @@ def create_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.create_profile(
@@ -169,7 +170,7 @@ def rotate_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.rotate_credential(
@@ -207,7 +208,7 @@ def complete_credential_rotation(
     """Finalizes rotation and returns state to ACTIVE."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.complete_rotation(
@@ -238,7 +239,7 @@ def retire_credential_profile(
     """Retires a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.retire_credential(
@@ -269,7 +270,7 @@ def revoke_credential_profile(
     """Permanently revokes a credential profile and purges secret from store."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.revoke_credential(
@@ -301,7 +302,7 @@ def bind_connector(
     """Binds a connector to an existing credential profile within the tenant."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.bind_connector(
@@ -333,7 +334,7 @@ def unbind_connector(
     """Unbinds a connector from a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != "anonymous" else x_actor_id
+    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
 
     try:
         profile = service.unbind_connector(

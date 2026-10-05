@@ -363,3 +363,10 @@ def get_rbac_service() -> RBACService:
     if _rbac_service is None:
         _rbac_service = RBACService()
     return _rbac_service
+
+
+def reset_rbac_service() -> None:
+    """Resets the shared RBACService singleton."""
+    global _rbac_service
+    _rbac_service = None
+

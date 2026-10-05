@@ -63,7 +63,7 @@ class AzureTagService:
                 resource_id=vm_id,
                 tag_level=AzureTagLevel.RESOURCE,
                 key="Owner",
-                value="payments-team@company.internal",
+                value="payments-team",
             ),
             AzureTagRecord(
                 resource_id=vm_id,

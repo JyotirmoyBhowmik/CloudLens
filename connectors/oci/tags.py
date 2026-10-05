@@ -64,7 +64,7 @@ class OCITagService:
                 tag_type="DEFINED",
                 namespace="Operations",
                 key="Owner",
-                value="devops@cloudlens.internal",
+                value="devops",
                 canonical_key="Operations.Owner",
                 is_cost_tracking=False,
                 associated_at="2026-09-01T00:00:00Z",

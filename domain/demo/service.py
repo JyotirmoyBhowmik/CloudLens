@@ -254,7 +254,7 @@ class DemoModeService:
         self,
         tenant_id: str,
         scenario: DemoScenario | str = DemoScenario.MONTH_END_REVIEW,
-        actor_id: str = "admin@cloudlens.internal",
+        actor_id: str = "demo-admin",
     ) -> DemoModeStatus:
         """Enables Demo Mode on a tenant, enforcing Safety Interlock 1.
 
@@ -311,7 +311,7 @@ class DemoModeService:
         self,
         tenant_id: str,
         confirm_purge: bool = False,
-        actor_id: str = "admin@cloudlens.internal",
+        actor_id: str = "demo-admin",
     ) -> DemoModeStatus:
         """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3.
 
@@ -501,3 +501,11 @@ _demo_mode_service = DemoModeService()
 def get_demo_mode_service() -> DemoModeService:
     """Returns the shared DemoModeService singleton."""
     return _demo_mode_service
+
+
+def reset_demo_mode_service() -> DemoModeService:
+    """Resets the shared DemoModeService singleton."""
+    global _demo_mode_service
+    _demo_mode_service = DemoModeService()
+    return _demo_mode_service
+

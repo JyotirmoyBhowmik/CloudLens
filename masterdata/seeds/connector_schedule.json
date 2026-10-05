@@ -1,0 +1,286 @@
+[
+  {
+    "code": "SCHED_COST",
+    "display_name": "Cost Ingestion Schedule",
+    "description": "Cost collection every 6h during open period with 5-day restatement look-back.",
+    "sort_order": 1,
+    "attributes": {
+      "capability_or_task": "ingest_cost",
+      "capability": "collect_cost_bulk",
+      "interval_minutes": 360,
+      "lookback_days": 5,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_INVENTORY",
+    "display_name": "Inventory Ingestion Schedule",
+    "description": "Incremental resource discovery every 6 hours.",
+    "sort_order": 2,
+    "attributes": {
+      "capability_or_task": "ingest_inventory",
+      "capability": "discover_resources",
+      "interval_minutes": 360,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_INVENTORY_FULL",
+    "display_name": "Daily Full Inventory Reconciliation",
+    "description": "Daily full resource graph and inventory reconciliation sync.",
+    "sort_order": 3,
+    "attributes": {
+      "capability_or_task": "ingest_inventory_full",
+      "capability": "discover_resources",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_USAGE",
+    "display_name": "Usage Metrics Collection Schedule",
+    "description": "Daily telemetry and usage metrics ingestion.",
+    "sort_order": 4,
+    "attributes": {
+      "capability_or_task": "ingest_usage",
+      "capability": "collect_usage",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_PRICING",
+    "display_name": "Pricing Catalog Refresh Schedule",
+    "description": "Weekly public and negotiated pricing catalog refresh.",
+    "sort_order": 5,
+    "attributes": {
+      "capability_or_task": "refresh_pricing",
+      "capability": "collect_pricing_public",
+      "interval_minutes": 10080,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_RELATIONSHIPS",
+    "display_name": "Relationship Discovery Schedule",
+    "description": "Daily resource dependency and relationship discovery.",
+    "sort_order": 6,
+    "attributes": {
+      "capability_or_task": "discover_relationships",
+      "capability": "discover_relationships",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_PROVIDER_BUDGETS",
+    "display_name": "Provider Budgets Ingestion Schedule",
+    "description": "Daily synchronization of provider-native budgets.",
+    "sort_order": 7,
+    "attributes": {
+      "capability_or_task": "collect_budgets",
+      "capability": "collect_budgets",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_QUOTA",
+    "display_name": "Service Quota Collection Schedule",
+    "description": "Daily cloud provider service quota and limit collection.",
+    "sort_order": 8,
+    "attributes": {
+      "capability_or_task": "collect_quota",
+      "capability": "collect_budgets",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_EVALUATE_THRESHOLDS",
+    "display_name": "Threshold Rule Evaluation Schedule",
+    "description": "Hourly evaluation of FinOps budget bands and cost spike rules.",
+    "sort_order": 9,
+    "attributes": {
+      "capability_or_task": "evaluate_thresholds",
+      "interval_minutes": 60,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_EVALUATE_POLICIES",
+    "display_name": "Policy Evaluation Schedule",
+    "description": "Hourly evaluation of compliance policies and governance rules.",
+    "sort_order": 10,
+    "attributes": {
+      "capability_or_task": "evaluate_policies",
+      "interval_minutes": 60,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_COMPUTE_FORECASTS",
+    "display_name": "Forecasting Projections Schedule",
+    "description": "Daily spend projections and run-rate forecast generation.",
+    "sort_order": 11,
+    "attributes": {
+      "capability_or_task": "compute_forecasts",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_ESCALATE_ALERTS",
+    "display_name": "Alert SLA Escalation Schedule",
+    "description": "Evaluation of unacknowledged high-severity alert escalations every 15 minutes.",
+    "sort_order": 12,
+    "attributes": {
+      "capability_or_task": "escalate_alerts",
+      "interval_minutes": 15,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_AUTO_RESOLVE_ALERTS",
+    "display_name": "Alert Auto-Resolution Schedule",
+    "description": "Hourly auto-resolution of alerts with cleared conditions after dwell time.",
+    "sort_order": 13,
+    "attributes": {
+      "capability_or_task": "auto_resolve_alerts",
+      "interval_minutes": 60,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_VERIFY_REMEDIATION",
+    "display_name": "Remediation Verification Schedule",
+    "description": "Bi-hourly verification of remediation tasks and realised savings.",
+    "sort_order": 14,
+    "attributes": {
+      "capability_or_task": "verify_remediation",
+      "interval_minutes": 120,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_REVERT_OVERRIDES",
+    "display_name": "Override Expiry and Reversion Schedule",
+    "description": "Hourly check reverting expired temporary overrides.",
+    "sort_order": 15,
+    "attributes": {
+      "capability_or_task": "revert_overrides",
+      "interval_minutes": 60,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_CREDENTIAL_EXPIRY",
+    "display_name": "Credential Expiry Check Schedule",
+    "description": "Daily check identifying expiring credentials and security secrets.",
+    "sort_order": 16,
+    "attributes": {
+      "capability_or_task": "credential_expiry_check",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_RECONCILE_CLOSED_PERIOD",
+    "display_name": "Closed Period Reconciliation Schedule",
+    "description": "Daily automated reconciliation of finalised invoice periods.",
+    "sort_order": 17,
+    "attributes": {
+      "capability_or_task": "reconcile_closed_period",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_ANALYTICAL_EXTRACT",
+    "display_name": "Analytical Extract Generation Schedule",
+    "description": "Daily generation and export of FOCUS analytical extracts.",
+    "sort_order": 18,
+    "attributes": {
+      "capability_or_task": "run_analytical_extract",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_MAINTAIN_PARTITIONS",
+    "display_name": "Database Partition Maintenance Schedule",
+    "description": "Daily maintenance and pre-allocation of monthly table partitions.",
+    "sort_order": 19,
+    "attributes": {
+      "capability_or_task": "maintain_partitions",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_RETENTION_DOWNSAMPLING",
+    "display_name": "Data Retention & Downsampling Schedule",
+    "description": "Daily application of retention policies and telemetry downsampling.",
+    "sort_order": 20,
+    "attributes": {
+      "capability_or_task": "apply_retention_and_downsampling",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_RENEWAL_PIPELINE",
+    "display_name": "Commitment Renewal Pipeline Schedule",
+    "description": "Daily evaluation of commitment lifecycle and upcoming expirations.",
+    "sort_order": 21,
+    "attributes": {
+      "capability_or_task": "renewal_pipeline",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_DAILY_SUMMARY",
+    "display_name": "Control Tower Daily Platform Summary Schedule",
+    "description": "Daily platform summary aggregation and dispatch for Control Tower.",
+    "sort_order": 22,
+    "attributes": {
+      "capability_or_task": "send_daily_platform_summary",
+      "interval_minutes": 1440,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  },
+  {
+    "code": "SCHED_HEARTBEAT",
+    "display_name": "Worker Health and Heartbeat Schedule",
+    "description": "Heartbeat probe every 5 minutes validating worker liveness.",
+    "sort_order": 23,
+    "attributes": {
+      "capability_or_task": "heartbeat",
+      "interval_minutes": 5,
+      "lookback_days": 0,
+      "max_retries": 3
+    }
+  }
+]

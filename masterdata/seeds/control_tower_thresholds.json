@@ -1,0 +1,152 @@
+[
+  {
+    "code": "health",
+    "display_name": "System & Dependency Health",
+    "description": "Readiness probes, database, redis, vault, and exporters health thresholds.",
+    "sort_order": 1,
+    "attributes": {
+      "database_max_latency_ms": 100,
+      "redis_max_latency_ms": 50,
+      "vault_required": true,
+      "exporters_min_up_ratio": 1.0
+    }
+  },
+  {
+    "code": "release",
+    "display_name": "Platform Release & Build Info",
+    "description": "Allowed environments, build version, and commit freshness thresholds.",
+    "sort_order": 2,
+    "attributes": {
+      "allowed_environments": ["development", "staging", "production"],
+      "max_commit_age_days": 180
+    }
+  },
+  {
+    "code": "tenants",
+    "display_name": "Tenant Partitioning & Isolation",
+    "description": "Tenant isolation integrity and quarantine limit thresholds.",
+    "sort_order": 3,
+    "attributes": {
+      "max_quarantined_ratio": 0.05,
+      "require_active_tenants": true
+    }
+  },
+  {
+    "code": "connectors",
+    "display_name": "Cloud Connectors & Ingestion Lag",
+    "description": "Provider sync cadence and maximum freshness lag thresholds.",
+    "sort_order": 4,
+    "attributes": {
+      "amber_freshness_seconds": 21600,
+      "red_freshness_seconds": 86400,
+      "max_error_streak": 3
+    }
+  },
+  {
+    "code": "jobs",
+    "display_name": "Background Jobs & Sync Engine",
+    "description": "Background task duration and failure rate thresholds.",
+    "sort_order": 5,
+    "attributes": {
+      "max_failure_rate": 0.05,
+      "amber_duration_seconds": 1800,
+      "red_duration_seconds": 3600
+    }
+  },
+  {
+    "code": "queues",
+    "display_name": "Task Queues & Worker Saturation",
+    "description": "Queue backlog depth and worker saturation ratio thresholds.",
+    "sort_order": 6,
+    "attributes": {
+      "amber_queue_depth": 50,
+      "red_queue_depth": 200,
+      "max_worker_saturation": 0.90
+    }
+  },
+  {
+    "code": "pipeline",
+    "display_name": "Ingestion Pipeline & Processing Throughput",
+    "description": "Normalization pipeline throughput and drop ratio thresholds.",
+    "sort_order": 7,
+    "attributes": {
+      "min_daily_rows": 100,
+      "max_quarantine_rows": 50,
+      "max_pipeline_drop_ratio": 0.01
+    }
+  },
+  {
+    "code": "security",
+    "display_name": "Security Governance & Access Isolation",
+    "description": "Cross-tenant and unmapped IdP breach attempt tolerance thresholds.",
+    "sort_order": 8,
+    "attributes": {
+      "max_cross_tenant_attempts": 0,
+      "max_unmapped_idp_attempts": 0,
+      "secret_store_must_be_up": true
+    }
+  },
+  {
+    "code": "alerts_pipeline",
+    "display_name": "Alertmanager & Notification Pipeline",
+    "description": "Alert delivery failure and Watchdog dead-man's heartbeat thresholds.",
+    "sort_order": 9,
+    "attributes": {
+      "max_undelivered_alerts": 0,
+      "watchdog_heartbeat_required": true
+    }
+  },
+  {
+    "code": "collection_cost",
+    "display_name": "Collection Cost & Telemetry Overhead",
+    "description": "Telemetry collection cost versus estimate thresholds.",
+    "sort_order": 10,
+    "attributes": {
+      "max_cost_over_estimate_ratio": 1.25,
+      "max_daily_collection_cost_usd": 100.0
+    }
+  },
+  {
+    "code": "capacity",
+    "display_name": "Infrastructure Capacity & Resource Headroom",
+    "description": "Disk storage utilization and quota headroom thresholds.",
+    "sort_order": 11,
+    "attributes": {
+      "amber_disk_usage_ratio": 0.70,
+      "red_disk_usage_ratio": 0.85,
+      "min_quota_headroom_ratio": 0.15
+    }
+  },
+  {
+    "code": "backups",
+    "display_name": "Database Backups & RPO Replication",
+    "description": "Maximum database backup age and WAL lag RPO thresholds.",
+    "sort_order": 12,
+    "attributes": {
+      "max_backup_age_hours": 26,
+      "max_wal_lag_seconds": 3600
+    }
+  },
+  {
+    "code": "expiries",
+    "display_name": "Certificates & Credential Expiries",
+    "description": "Certificate and provider credential expiration advance warning thresholds.",
+    "sort_order": 13,
+    "attributes": {
+      "amber_cert_expiry_days": 30,
+      "red_cert_expiry_days": 7,
+      "amber_credential_expiry_days": 14,
+      "red_credential_expiry_days": 3
+    }
+  },
+  {
+    "code": "value",
+    "display_name": "Value Ledger & Realized FinOps Savings",
+    "description": "Realized savings to platform running cost ROI thresholds.",
+    "sort_order": 14,
+    "attributes": {
+      "min_savings_to_platform_cost_ratio": 1.0,
+      "require_positive_net_benefit": true
+    }
+  }
+]

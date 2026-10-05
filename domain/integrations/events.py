@@ -42,7 +42,7 @@ class OutboundEventDispatcher:
 
     def __init__(
         self,
-        default_signing_secret: str = "cloudlens-outbound-signing-secret",
+        default_signing_secret: str = "",
         replay_retention_days: int = 30,
     ) -> None:
         self.default_signing_secret = default_signing_secret

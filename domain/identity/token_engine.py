@@ -311,6 +311,34 @@ class CryptographicTokenEngine:
         }
         return self.sign_token(payload)
 
+    def issue_act_as_token(
+        self,
+        user_id: str,
+        original_email: str,
+        target_tenant_id: str,
+        roles: list[SystemRole],
+        ttl_seconds: int = 900,
+        reason: str = "",
+    ) -> str:
+        """Issues short-lived act-as-tenant scoped token (Prompt R-SEC Item 1.3)."""
+        now = time.time()
+        jti = f"tok-act-{uuid.uuid4().hex[:12]}"
+        payload = {
+            "jti": jti,
+            "typ": TokenType.ACCESS.value,
+            "uid": user_id,
+            "tid": target_tenant_id,
+            "sub": original_email,
+            "orig_sub": original_email,
+            "act_as_tenant": target_tenant_id,
+            "reason": reason,
+            "roles": [r.value for r in roles],
+            "perms": ["*"],
+            "iat": int(now),
+            "exp": int(now + ttl_seconds),
+        }
+        return self.sign_token(payload)
+
     def extract_auth_context(self, token_str: str) -> AuthContext:
         """Extracts verified AuthContext security principal from token."""
         payload = self.verify_token(token_str)
@@ -330,4 +358,6 @@ class CryptographicTokenEngine:
             is_break_glass=payload.get("bg", False),
             step_up_claims=[str(payload["action"])] if payload.get("action") else [],
             is_machine=payload.get("mach", False),
+            act_as_tenant=payload.get("act_as_tenant"),
+            original_subject=payload.get("orig_sub"),
         )

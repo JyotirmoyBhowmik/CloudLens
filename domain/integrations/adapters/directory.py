@@ -117,7 +117,7 @@ class IdentityDirectoryAdapter(BaseIntegrationAdapter):
         *,
         tenant_context: TenantContext,
         remediation_service: RemediationService | None = None,
-        fallback_assignee: str = "cloudops-triage@company.internal",
+        fallback_assignee: str | None = None,
     ) -> list[OwnershipGapFinding]:
         """Scans for departed employees and surfaces immediate ownership gaps.
 

@@ -25,7 +25,6 @@ from connectors.gcp.connector import GCPConnector
 from connectors.oci.connector import OCIConnector
 from connectors.simulator.connector import ProviderSimulatorConnector
 from connectors.simulator.models import SimulatorProfile
-from connectors.stub.connector import StubConnector
 from domain.models.enums import ProviderCapability
 
 

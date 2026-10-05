@@ -12,8 +12,6 @@ from __future__ import annotations
 import time
 from decimal import Decimal
 
-import pytest
-
 from domain.rules.monetary import calculate_amortisation, round_currency
 from domain.synthetic.estate_generator import SyntheticEstateGenerator
 
@@ -50,7 +48,7 @@ class TestPerformanceSuite:
         provider_counts: dict[str, int] = {}
         start = time.perf_counter()
 
-        for record, is_dominant, cost, provider in gen.stream_resources():
+        for _record, _is_dominant, cost, provider in gen.stream_resources():
             streamed_count += 1
             total_sum += cost
             provider_counts[provider] = provider_counts.get(provider, 0) + 1

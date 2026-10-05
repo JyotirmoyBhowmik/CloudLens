@@ -359,3 +359,11 @@ _demo_tenant_service = DemoTenantLoaderService()
 def get_demo_tenant_service() -> DemoTenantLoaderService:
     """Retrieves the global DemoTenantLoaderService singleton."""
     return _demo_tenant_service
+
+
+def reset_demo_tenant_service() -> DemoTenantLoaderService:
+    """Resets the global DemoTenantLoaderService singleton."""
+    global _demo_tenant_service
+    _demo_tenant_service = DemoTenantLoaderService()
+    return _demo_tenant_service
+

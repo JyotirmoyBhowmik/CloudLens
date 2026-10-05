@@ -282,3 +282,13 @@ _GLOBAL_RECONCILIATION_REPO = ReconciliationRepository()
 def get_reconciliation_repository() -> ReconciliationRepository:
     """Dependency injection provider for ReconciliationRepository."""
     return _GLOBAL_RECONCILIATION_REPO
+
+
+def reset_reconciliation_repository() -> ReconciliationRepository:
+    """Resets the ReconciliationRepository singleton in-place."""
+    _GLOBAL_RECONCILIATION_REPO._reports.clear()
+    _GLOBAL_RECONCILIATION_REPO._investigations.clear()
+    _GLOBAL_RECONCILIATION_REPO._estimates.clear()
+    return _GLOBAL_RECONCILIATION_REPO
+
+

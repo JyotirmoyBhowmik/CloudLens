@@ -8,6 +8,7 @@
     "attributes": {
       "email": "admin@jyotirmoyb.com",
       "display_name": "CloudLens Platform Superuser",
+      "role": "SUPER_ADMIN",
       "security_alert_email": "security-alerts@jyotirmoyb.com",
       "max_routine_days": 3,
       "unrestricted_scope": true,

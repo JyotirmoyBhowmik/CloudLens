@@ -1,0 +1,132 @@
+groups:
+  - name: cloudlens_platform_alerts
+    rules:
+      - alert: ComponentDown
+        expr: up == 0
+        for: 60s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Component {{ $labels.instance }} is down"
+          description: "Service instance {{ $labels.instance }} has been unreachable for more than 60 seconds."
+
+      - alert: ApiP95LatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[10m])) by (le)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency exceeds 500ms target"
+          description: "API p95 response time is {{ $value }}s (> 500ms target) for over 10 minutes."
+
+      - alert: ApiErrorRateHigh
+        expr: (sum(rate(api_requests_total{status=~"5.."}[5m])) / sum(rate(api_requests_total[5m]))) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API error rate exceeds 1%"
+          description: "HTTP 5xx server error rate is {{ $value | humanizePercentage }} (> 1% threshold) over 5 minutes."
+
+      - alert: TaskFailureStreak
+        expr: increase(task_failures_total[15m]) >= 3
+        labels:
+          severity: warning
+        annotations:
+          summary: "Background worker task failure streak"
+          description: "At least 3 worker background task failures occurred within a 15-minute window."
+
+      - alert: QueueGrowthHigh
+        expr: deriv(queue_depth[30m]) > 0 and queue_depth > 100
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery task queue growth unbounded"
+          description: "Queue depth has been continuously growing over 30 minutes, exceeding 100 pending jobs."
+
+      - alert: ConnectorLagHigh
+        expr: connector_freshness_seconds > 86400
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Connector data lag exceeds 24h target"
+          description: "Connector {{ $labels.provider }}/{{ $labels.capability }} sync freshness is {{ $value }}s (> 24 hours)."
+
+      - alert: ReconciliationFailed
+        expr: reconciliation_variance_ratio > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cost reconciliation variance exceeds threshold"
+          description: "Billing reconciliation variance ratio is {{ $value }} (> 1% allowed deviation)."
+
+      - alert: SecretStoreDown
+        expr: secret_store_up == 0
+        for: 60s
+        labels:
+          severity: critical
+        annotations:
+          summary: "External Vault Secret Store unreachable"
+          description: "SecretStore connection check failed (secret_store_up == 0) for over 60 seconds."
+
+      - alert: SuperuserSignIn
+        expr: increase(superuser_signins_total[5m]) > 0
+        labels:
+          severity: info
+        annotations:
+          summary: "Superuser sign-in detected"
+          description: "A superuser signed in to the CloudLens platform."
+
+      - alert: CrossTenantAttempt
+        expr: increase(cross_tenant_attempts_total[1m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cross-tenant access violation attempted"
+          description: "An unauthorized cross-tenant data access attempt was intercepted and blocked."
+
+      - alert: BackupMissed
+        expr: (time() - backup_last_success_timestamp_seconds) > 86400
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database backup missed"
+          description: "Last successful database snapshot backup was more than 24 hours ago."
+
+      - alert: WalLagHigh
+        expr: db_replication_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database WAL replication lag exceeds RPO target"
+          description: "PostgreSQL read replica lag is {{ $value }}s, exceeding the 60s Recovery Point Objective (RPO)."
+
+      - alert: CertExpirySoon
+        expr: cert_expiry_days < 30
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate expiring in < 30 days"
+          description: "Platform TLS certificate expires in {{ $value }} days."
+
+      - alert: DiskUsageHigh
+        expr: disk_usage_ratio > 0.80
+        labels:
+          severity: warning
+        annotations:
+          summary: "Filesystem disk space usage > 80%"
+          description: "Storage disk utilization is {{ $value | humanizePercentage }} (> 80%)."
+
+  - name: watchdog_heartbeat
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: none
+        annotations:
+          summary: "Watchdog dead-man's switch heartbeat"
+          description: "This alert is continuously firing to prove the alerting pipeline is alive. If it stops firing, monitoring is down."

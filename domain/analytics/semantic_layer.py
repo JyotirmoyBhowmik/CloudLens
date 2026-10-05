@@ -36,6 +36,7 @@ from domain.analytics.models import (
     FactCostAndUsageRecord,
     SemanticDataQualityNullState,
 )
+from domain.attribution.governance_resolver import resolve_analytics_owner_key
 from domain.tenant.context import TenantContext
 
 
@@ -189,10 +190,11 @@ class SemanticLayerEngine:
         """Builds conformed DimOwner dimension records."""
         records: list[DimOwnerRecord] = []
         for o in owners:
+            owner_email = o.get("email") or resolve_analytics_owner_key()
             records.append(
                 DimOwnerRecord(
-                    OwnerKey=o.get("email", "finops@enterprise.com"),
-                    OwnerEmail=o.get("email", "finops@enterprise.com"),
+                    OwnerKey=owner_email,
+                    OwnerEmail=owner_email,
                     OwnerName=o.get("name", "FinOps Lead"),
                     OwnerType=o.get("type", "FINANCIAL"),
                 )
@@ -425,7 +427,7 @@ class SemanticLayerEngine:
             ResourceKey=raw_row.get("resource_key", "res-default"),
             ApplicationKey=raw_row.get("application_key", "app-core"),
             EnvironmentKey=raw_row.get("environment_key", "PROD").upper(),
-            OwnerKey=raw_row.get("owner_key", "finops@enterprise.com"),
+            OwnerKey=raw_row.get("owner_key") or resolve_analytics_owner_key(),
             CostCentreKey=raw_row.get("cost_centre_key", "CC-1000"),
             BusinessUnitKey=raw_row.get("business_unit_key", "BU-CORP"),
             ProjectKey=raw_row.get("project_key", "PRJ-RUN"),
@@ -515,7 +517,7 @@ class SemanticLayerEngine:
         unique_resources = list({f.ResourceKey for f in facts}) or ["res-001"]
         unique_apps = list({f.ApplicationKey for f in facts}) or ["app-checkout"]
         unique_envs = list({f.EnvironmentKey for f in facts}) or ["PROD"]
-        unique_owners = list({f.OwnerKey for f in facts}) or ["finops@enterprise.com"]
+        unique_owners = list({f.OwnerKey for f in facts}) or [resolve_analytics_owner_key(tenant_context.tenant_id)]
         unique_ccs = list({f.CostCentreKey for f in facts}) or ["CC-1040"]
         unique_bus = list({f.BusinessUnitKey for f in facts}) or ["BU-RETAIL"]
         unique_prjs = list({f.ProjectKey for f in facts}) or ["PRJ-CLOUD"]

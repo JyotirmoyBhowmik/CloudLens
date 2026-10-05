@@ -57,7 +57,7 @@ def get_demo_mode_status_endpoint(
 @router.post("/mode/enable", response_model=DemoModeStatus)
 def enable_demo_mode_endpoint(
     payload: EnableDemoModeRequest,
-    x_actor_id: str = Header(default="admin@cloudlens.internal", alias="X-Actor-ID"),
+    x_actor_id: str = Header(default="demo-admin", alias="X-Actor-ID"),
 ) -> DemoModeStatus:
     """Enables Demo Mode on a tenant, enforcing Safety Interlock 1.
 
@@ -84,7 +84,7 @@ def disable_demo_mode_endpoint(
         default=False,
         description="Explicit confirmation to purge simulated estate data (required by Safety Interlock 3)",
     ),
-    x_actor_id: str = Header(default="admin@cloudlens.internal", alias="X-Actor-ID"),
+    x_actor_id: str = Header(default="demo-admin", alias="X-Actor-ID"),
 ) -> DemoModeStatus:
     """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3."""
     service = get_demo_mode_service()

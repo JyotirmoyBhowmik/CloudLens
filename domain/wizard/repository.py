@@ -100,3 +100,10 @@ _wizard_repository = WizardRepository()
 
 def get_wizard_repository() -> WizardRepository:
     return _wizard_repository
+
+
+def reset_wizard_repository() -> WizardRepository:
+    global _wizard_repository
+    _wizard_repository = WizardRepository()
+    return _wizard_repository
+

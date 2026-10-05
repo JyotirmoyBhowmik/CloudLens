@@ -14,21 +14,20 @@ Fulfills:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
 import logging
+from decimal import ROUND_HALF_EVEN, Decimal
 from typing import Any
 
-from domain.models.base import CanonicalEntity
 from domain.planning.exceptions import (
     ApprovedPlanImmutableException,
     PlanningCycleNotFoundException,
+    PlanningException,
     PlanningWindowClosedException,
     ScenarioNotFoundException,
     SubmissionNotFoundException,
     TargetNotFoundException,
 )
 from domain.planning.models import (
-    AssumptionType,
     BottomUpSubmission,
     CycleStatus,
     PlanAccuracyReport,
@@ -98,13 +97,13 @@ class PlanningService:
     def open_submission_window(self, cycle_id: str) -> PlanningCycle:
         cycle = self.get_cycle(cycle_id)
         cycle.status = CycleStatus.OPEN_SUBMISSION
-        cycle.updated_at = dt.datetime.now(dt.timezone.utc)
+        cycle.updated_at = dt.datetime.now(dt.UTC)
         return cycle
 
     def close_submission_window(self, cycle_id: str) -> PlanningCycle:
         cycle = self.get_cycle(cycle_id)
         cycle.status = CycleStatus.UNDER_REVIEW
-        cycle.updated_at = dt.datetime.now(dt.timezone.utc)
+        cycle.updated_at = dt.datetime.now(dt.UTC)
         return cycle
 
     # -------------------------------------------------------------------------
@@ -178,7 +177,7 @@ class PlanningService:
         existing.submitted_by = revised_by
         existing.line_items = items
         existing.status = SubmissionStatus.REVISED
-        existing.updated_at = dt.datetime.now(dt.timezone.utc)
+        existing.updated_at = dt.datetime.now(dt.UTC)
 
         self._submission_history[submission_id].append(existing.model_copy())
         return existing
@@ -196,7 +195,7 @@ class PlanningService:
     def approve_submission(self, submission_id: str, approver_id: str) -> BottomUpSubmission:
         submission = self.get_submission(submission_id)
         submission.status = SubmissionStatus.APPROVED
-        submission.updated_at = dt.datetime.now(dt.timezone.utc)
+        submission.updated_at = dt.datetime.now(dt.UTC)
         return submission
 
     # -------------------------------------------------------------------------
@@ -422,7 +421,7 @@ class PlanningService:
         return {
             "pack_title": f"Executive Financial Planning Pack: {cycle.name}",
             "fiscal_period": cycle.fiscal_period,
-            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "generated_at": dt.datetime.now(dt.UTC).isoformat(),
             "status": cycle.status.value,
             "summary": {
                 "total_scopes": len(cycle.participating_scopes),

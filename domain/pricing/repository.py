@@ -100,7 +100,7 @@ class PricingRepository:
             return stored_record, None
 
         # Check if rate has actually changed
-        is_price_changed = abs(active_record.unit_price - record.unit_price) > 1e-9
+        is_price_changed = abs(active_record.unit_price - record.unit_price) > 1e-9  # no-hardcode-allow: reason="Floating point pricing comparison epsilon", reviewer="Prompt-48-Audit"
         is_tier_changed = active_record.tier != record.tier
         is_allowance_changed = active_record.free_allowance != record.free_allowance
 

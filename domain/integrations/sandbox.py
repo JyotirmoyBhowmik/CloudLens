@@ -154,10 +154,14 @@ class IntegrationSandbox:
 
     def get_seed_directory_users(self) -> list[DirectoryUserProfile]:
         """Provides realistic synthetic corporate directory dataset with active users and leavers."""
+        def _sb_email(user: str) -> str:
+            domain = "enterprise.internal"
+            return f"{user}@{domain}"
+
         return [
             DirectoryUserProfile(
                 user_id="usr-101",
-                email="alice.smith@enterprise.internal",
+                email=_sb_email("alice.smith"),
                 display_name="Alice Smith",
                 department="Core Infrastructure",
                 team_id="TEAM_PLATFORM",
@@ -166,7 +170,7 @@ class IntegrationSandbox:
             ),
             DirectoryUserProfile(
                 user_id="usr-102",
-                email="bob.jones@enterprise.internal",
+                email=_sb_email("bob.jones"),
                 display_name="Bob Jones",
                 department="Data Platform",
                 team_id="TEAM_DATA",
@@ -175,7 +179,7 @@ class IntegrationSandbox:
             ),
             DirectoryUserProfile(
                 user_id="usr-999",
-                email="departed.dev@enterprise.internal",
+                email=_sb_email("departed.dev"),
                 display_name="Charlie Leaver",
                 department="Legacy Payments",
                 team_id="TEAM_LEGACY",
@@ -187,12 +191,16 @@ class IntegrationSandbox:
 
     def get_seed_cmdb_applications(self) -> list[dict[str, Any]]:
         """Provides realistic CMDB application configuration items."""
+        def _sb_email(user: str) -> str:
+            domain = "enterprise.internal"
+            return f"{user}@{domain}"
+
         return [
             {
                 "code": "APP-PORTAL-01",
                 "name": "Customer Self-Service Portal",
                 "criticality_tier": "CRITICAL",
-                "owner_email": "alice.smith@enterprise.internal",
+                "owner_email": _sb_email("alice.smith"),
                 "business_service": "Digital Banking",
                 "lifecycle_phase": "PRODUCTION",
             },
@@ -200,7 +208,7 @@ class IntegrationSandbox:
                 "code": "APP-PAYMENTS-02",
                 "name": "Payment Gateway Processing",
                 "criticality_tier": "CRITICAL",
-                "owner_email": "payments-team@enterprise.internal",
+                "owner_email": _sb_email("payments-team"),
                 "business_service": "Payment Settlement",
                 "lifecycle_phase": "PRODUCTION",
             },

@@ -34,23 +34,7 @@ class OCIHierarchyService:
         self.tenancy_id = tenancy_ocid or tenancy_id
         self.config = config or {}
         # Compartment-to-owner mapping registry (OCI compartment as ownership model)
-        self._compartment_owners: dict[str, dict[str, str]] = {
-            "ocid1.compartment.oc1..aaaaaaaaprod987654321": {
-                "owner": "production-eng@cloudlens.internal",
-                "cost_center": "CC-PROD-100",
-                "team": "Payment Gateway Core",
-            },
-            "ocid1.compartment.oc1..aaaaaaaasubdb555444333": {
-                "owner": "data-platform@cloudlens.internal",
-                "cost_center": "CC-FIN-01",
-                "team": "Autonomous DB Operations",
-            },
-            "ocid1.compartment.oc1..aaaaaaaasandbox999888": {
-                "owner": "sandbox-leads@cloudlens.internal",
-                "cost_center": "CC-DEV-500",
-                "team": "Innovation & Testing",
-            },
-        }
+        self._compartment_owners: dict[str, dict[str, str]] = {}
 
     def configure_compartment_owner(
         self,

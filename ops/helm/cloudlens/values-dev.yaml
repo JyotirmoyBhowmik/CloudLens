@@ -1,0 +1,164 @@
+# Development values for CloudLens Helm chart (Option B / local k3s cluster)
+# ZERO SECRETS — OpenBao paths and host references only
+
+global:
+  environment: development
+  imageRegistry: cloudlens
+  imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+api:
+  replicaCount: 1
+  image:
+    repository: cloudlens/api
+    tag: dev
+    digest: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+
+web:
+  replicaCount: 1
+  image:
+    repository: cloudlens/web
+    tag: dev
+    digest: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+worker:
+  image:
+    repository: cloudlens/worker
+    tag: dev
+    digest: ""
+    pullPolicy: IfNotPresent
+  pools:
+    ingestion:
+      enabled: true
+      replicaCount: 1
+      queue: ingestion
+      concurrency: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    evaluation:
+      enabled: true
+      replicaCount: 1
+      queue: evaluation
+      concurrency: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    reporting:
+      enabled: true
+      replicaCount: 1
+      queue: reporting
+      concurrency: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 300m
+          memory: 256Mi
+
+beat:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+jobs:
+  migrate:
+    enabled: true
+    hook: ""
+  bootstrap49a:
+    enabled: true
+    hook: ""
+  superuser49b:
+    enabled: true
+    hook: ""
+
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+serviceMonitor:
+  enabled: false
+
+serviceAccounts:
+  openbaoRolePrefix: cloudlens-dev
+
+# External Dependencies by Reference Only (ZERO Secrets - OpenBao Paths Only)
+external:
+  openbao:
+    address: "http://vault:8200"
+    backendType: "memory"
+    authMethod: "kubernetes"
+    mountPath: "secret"
+    databaseSecretPath: "secret/data/cloudlens/database"
+    redisSecretPath: "secret/data/cloudlens/redis"
+    minioSecretPath: "secret/data/cloudlens/minio"
+    idpSecretPath: "secret/data/cloudlens/idp"
+    smtpSecretPath: "secret/data/cloudlens/smtp"
+  postgres:
+    host: "postgres"
+    port: 5432
+    database: "cloudlens"
+    cnpgClusterName: "cloudlens-dev-pg"
+  redis:
+    host: "redis"
+    port: 6379
+  minio:
+    endpoint: "http://minio:9000"
+    bucket: "cloudlens-data"
+  idp:
+    issuerUrl: "http://keycloak:8080/realms/cloudlens"
+    clientId: "cloudlens-dev"
+  smtp:
+    host: "mailpit"
+    port: 1025
+
+backups:
+  cnpg:
+    enabled: false
+  openbaoSnapshot:
+    enabled: false
+  velero:
+    enabled: false

@@ -12,8 +12,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-import pytest
-
 from domain.cost.models import FocusCostFact
 from domain.cost.repository import CostFactRepository
 from domain.models.enums import ChargeCategory, CostSourceType, ServiceCategory

@@ -498,7 +498,7 @@ class LifecycleService:
                     ),
                     category=TaskCategory.IDLE_RESOURCE,
                     priority=TaskPriority.HIGH if cost_dec > Decimal("100.00") else TaskPriority.MEDIUM,
-                    assignee_id=cand.get("owner_id", "finops-lead@acme.corp"),
+                    assignee_id=cand.get("owner_id") or "unassigned-finops",
                     assignee_type="USER",
                     estimated_saving=float(cost_dec),
                     sla_working_hours=48.0,

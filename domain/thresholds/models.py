@@ -46,18 +46,18 @@ class ThresholdState(StrEnum):
     def get_color_hex(self) -> str:
         """Returns the canonical color hex per Prompt 27 specification."""
         if self == ThresholdState.NORMAL:
-            return "#10b981"  # green
+            return "#10b981"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
         if self == ThresholdState.WARNING:
-            return "#f59e0b"  # amber
+            return "#f59e0b"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
         if self == ThresholdState.HIGH:
-            return "#f97316"  # orange
+            return "#f97316"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
         if self == ThresholdState.CRITICAL:
-            return "#ef4444"  # red
+            return "#ef4444"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
         if self == ThresholdState.INFORMATIONAL:
-            return "#3b82f6"  # blue
+            return "#3b82f6"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
         if self == ThresholdState.UNKNOWN:
-            return "#94a3b8"  # grey
-        return "#94a3b8"
+            return "#94a3b8"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
+        return "#94a3b8"  # no-hardcode-allow: reason="Canonical UI threshold state hex colour code", reviewer="Prompt-48-Audit"
 
     def is_breach(self) -> bool:
         """Returns True if the state represents an anomalous or threshold breach."""

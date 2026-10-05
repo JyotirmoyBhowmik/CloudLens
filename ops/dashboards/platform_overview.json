@@ -1,0 +1,105 @@
+{
+  "title": "CloudLens - Platform Overview",
+  "uid": "cloudlens-platform-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Core Services Up/Down Status",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Secret Store Health",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "secret_store_up",
+          "legendFormat": "Vault Secret Store"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Total Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(api_requests_total[1m])) by (status)",
+          "legendFormat": "Status {{status}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Platform API Latency (p95)",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "API p95 Latency (s)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Connector Sync Success Rate",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(sync_job_outcome_total{outcome='success'}[15m])) / sum(rate(sync_job_outcome_total[15m]))",
+          "legendFormat": "Sync Success Ratio"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Active Worker Saturation",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 6 },
+      "targets": [
+        {
+          "expr": "max(worker_saturation)",
+          "legendFormat": "Saturation Ratio"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Ingested Records Volume per Provider",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum(rate(ingestion_rows_total[5m])) by (provider)",
+          "legendFormat": "{{provider}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Cost Reconciliation Variance Ratio",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "reconciliation_variance_ratio",
+          "legendFormat": "Tenant {{tenant_id}} ({{provider}})"
+        }
+      ]
+    }
+  ]
+}

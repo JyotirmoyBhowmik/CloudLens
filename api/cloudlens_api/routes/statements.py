@@ -57,11 +57,11 @@ class GenerateStatementRequest(BaseModel):
     )
     scope_code: str = Field(default="BU-RETAIL", description="Scope code")
     scope_name: str = Field(default="Retail & E-Commerce Business Unit", description="Scope title")
-    recipient_owner_id: str = Field(
-        default="usr-retail-lead", description="Recipient owner user ID"
+    recipient_owner_id: str | None = Field(
+        default=None, description="Recipient owner user ID (resolved from master data if omitted)"
     )
-    recipient_owner_email: str = Field(
-        default="retail-lead@company.com", description="Recipient email"
+    recipient_owner_email: str | None = Field(
+        default=None, description="Recipient email (resolved from master data if omitted)"
     )
     template_id: str | None = Field(default=None, description="Layout template ID")
     target_currency: str = Field(default="USD", description="Presentation currency code")
@@ -104,8 +104,8 @@ class RaiseDisputeRequest(BaseModel):
     disputed_amount: float = Field(..., gt=0, description="Amount under dispute")
     proposed_amount: float = Field(default=0.0, ge=0, description="Expected amount")
     reason: str = Field(..., min_length=5, description="Dispute explanation and evidence")
-    assigned_owner: str = Field(
-        default="finops-disputes@company.com", description="Assigned investigator"
+    assigned_owner: str | None = Field(
+        default=None, description="Assigned investigator (resolved from master data if omitted)"
     )
 
 

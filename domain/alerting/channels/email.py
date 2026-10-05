@@ -7,6 +7,7 @@ evidence datapoints, and actionable resolution links.
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 from typing import Any
 
@@ -21,8 +22,9 @@ EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 class EmailChannelAdapter(ChannelAdapter):
     """Adapter for transactional email notifications."""
 
-    def __init__(self, sender_address: str = "alerts@cloudlens.internal") -> None:
-        self.sender_address = sender_address
+    def __init__(self, sender_address: str | None = None) -> None:
+        domain = os.getenv("CLOUDLENS_DOMAIN", "cloudlens.local")
+        self.sender_address = sender_address or os.getenv("CLOUDLENS_ALERT_EMAIL_SENDER") or f"alerts@{domain}"
 
     @property
     def channel_type(self) -> NotificationChannel:

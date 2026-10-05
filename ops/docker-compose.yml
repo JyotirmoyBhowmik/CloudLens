@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: cloudlens
       POSTGRES_PASSWORD: cloudlens_dev_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     container_name: cloudlens-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redisdata:/data
     healthcheck:
@@ -78,6 +78,7 @@ services:
       S3_SECRET_KEY: cloudlens_minio_password
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: dev-vault-token-cloudlens
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     ports:
       - "8000:8000"
     depends_on:
@@ -97,6 +98,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     depends_on:
       redis:
         condition: service_healthy
@@ -110,11 +112,189 @@ services:
     container_name: cloudlens-web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"
     depends_on:
       - api
+
+  # ==============================================================================
+  # Observability Stack (Prompt R-OBS)
+  # ==============================================================================
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: cloudlens-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheusdata:/prometheus
+    depends_on:
+      - alertmanager
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: cloudlens-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanagerdata:/alertmanager
+    depends_on:
+      - mailpit
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: cloudlens-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-AdminFromVaultSecretStore}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+      GF_AUTH_GENERIC_OAUTH_NAME: "Keycloak"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "grafana"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: ${KEYCLOAK_GRAFANA_SECRET:-grafana-client-secret}
+      GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email roles"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "http://keycloak:8080/realms/cloudlens/protocol/openid-connect/auth"
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "http://keycloak:8080/realms/cloudlens/protocol/openid-connect/token"
+      GF_AUTH_GENERIC_OAUTH_API_URL: "http://keycloak:8080/realms/cloudlens/protocol/openid-connect/userinfo"
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "(contains(realm_access.roles[*], 'SUPER_ADMIN') || contains(roles[*], 'SUPER_ADMIN')) && 'Admin' || (contains(realm_access.roles[*], 'PLATFORM_ADMIN') || contains(roles[*], 'PLATFORM_ADMIN')) && 'Editor' || (contains(realm_access.roles[*], 'AUDITOR') || contains(roles[*], 'AUDITOR')) && 'Viewer' || 'Viewer'"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: cloudlens-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - lokidata:/loki
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: cloudlens-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: cloudlens-tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    command: -config.file=/etc/tempo/tempo.yml
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempodata:/tmp/tempo
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: cloudlens-otel-collector
+    restart: unless-stopped
+    ports:
+      - "8889:8889"
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    depends_on:
+      - tempo
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: cloudlens-postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: postgresql://cloudlens:cloudlens_dev_password@postgres:5432/cloudlens?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    container_name: cloudlens-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  celery-exporter:
+    image: danihodovic/celery-exporter:latest
+    container_name: cloudlens-celery-exporter
+    restart: unless-stopped
+    command: ["--broker-url=redis://redis:6379/0"]
+    ports:
+      - "9808:9808"
+    environment:
+      CELERY_EXPORTER_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cloudlens-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: cloudlens-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-DevKeycloakAdmin123!}
+      KC_HTTP_RELATIVE_PATH: /
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
 
 volumes:
   pgdata:
   redisdata:
   miniodata:
+  prometheusdata:
+  alertmanagerdata:
+  grafanadata:
+  lokidata:
+  tempodata:

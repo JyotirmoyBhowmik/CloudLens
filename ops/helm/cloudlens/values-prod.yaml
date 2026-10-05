@@ -1,0 +1,200 @@
+# Production values for CloudLens Helm chart (Enterprise Datacenter Production)
+# ZERO SECRETS — OpenBao paths and external cluster references only
+
+global:
+  environment: production
+  imageRegistry: ghcr.io/cloudlens
+  imagePullSecrets:
+    - name: regcred
+
+nameOverride: ""
+fullnameOverride: ""
+
+api:
+  replicaCount: 3
+  image:
+    repository: ghcr.io/cloudlens/api
+    tag: 0.1.0
+    digest: "sha256:d8a9e0f1a4e27f6c31a780b62140e94bb512df8b10f8546b3e7bc2a6d4512345"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+
+web:
+  replicaCount: 3
+  image:
+    repository: ghcr.io/cloudlens/web
+    tag: 0.1.0
+    digest: "sha256:f5e1b2c3d4a5890123456789abcdef0123456789abcdef0123456789abcdef01"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+worker:
+  image:
+    repository: ghcr.io/cloudlens/worker
+    tag: 0.1.0
+    digest: "sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0"
+    pullPolicy: IfNotPresent
+  pools:
+    ingestion:
+      enabled: true
+      replicaCount: 3
+      queue: ingestion
+      concurrency: 8
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1024Mi
+        limits:
+          cpu: 2000m
+          memory: 2048Mi
+    evaluation:
+      enabled: true
+      replicaCount: 3
+      queue: evaluation
+      concurrency: 8
+      resources:
+        requests:
+          cpu: 400m
+          memory: 1024Mi
+        limits:
+          cpu: 1500m
+          memory: 2048Mi
+    reporting:
+      enabled: true
+      replicaCount: 2
+      queue: reporting
+      concurrency: 4
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: 1000m
+          memory: 1024Mi
+
+beat:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+
+jobs:
+  migrate:
+    enabled: true
+    hook: "pre-install,pre-upgrade"
+  bootstrap49a:
+    enabled: true
+    hook: "post-install"
+  superuser49b:
+    enabled: true
+    hook: "post-install"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: finops.corp.enterprise.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: cloudlens-tls-cert
+      hosts:
+        - finops.corp.enterprise.com
+
+networkPolicy:
+  enabled: true
+  ingressControllerNamespace: ingress-nginx
+  prometheusNamespace: monitoring
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  scrapeTimeout: 10s
+
+serviceAccounts:
+  openbaoRolePrefix: cloudlens-prod
+
+# External Dependencies by Reference Only (ZERO Secrets - OpenBao Paths Only)
+external:
+  openbao:
+    address: "https://openbao.security.svc.cluster.local:8200"
+    backendType: "vault"
+    authMethod: "kubernetes"
+    mountPath: "secret"
+    databaseSecretPath: "secret/data/cloudlens/prod/database"
+    redisSecretPath: "secret/data/cloudlens/prod/redis"
+    minioSecretPath: "secret/data/cloudlens/prod/minio"
+    idpSecretPath: "secret/data/cloudlens/prod/idp"
+    smtpSecretPath: "secret/data/cloudlens/prod/smtp"
+  postgres:
+    host: "cloudlens-pg-cluster-rw.postgres.svc.cluster.local"
+    port: 5432
+    database: "cloudlens_prod"
+    cnpgClusterName: "cloudlens-prod-pg-cluster"
+  redis:
+    host: "redis-sentinel.cache.svc.cluster.local"
+    port: 26379
+  minio:
+    endpoint: "https://minio.storage.svc.cluster.local:9000"
+    bucket: "cloudlens-enterprise-prod"
+  idp:
+    issuerUrl: "https://auth.corp.enterprise.com/realms/cloudlens"
+    clientId: "cloudlens-prod-client"
+  smtp:
+    host: "smtp-relay.corp.enterprise.com"
+    port: 587
+
+backups:
+  cnpg:
+    enabled: true
+    schedule: "0 0 * * *"
+    retentionPolicy: "35d"
+    destinationPath: "s3://cloudlens-backups-prod/postgres/"
+  openbaoSnapshot:
+    enabled: true
+    schedule: "0 2 * * *"
+    destinationBucket: "cloudlens-backups-prod"
+  velero:
+    enabled: true
+    schedule: "0 3 * * *"
+    ttl: "840h0m0s"

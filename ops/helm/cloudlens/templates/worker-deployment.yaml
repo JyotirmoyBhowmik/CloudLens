@@ -1,0 +1,70 @@
+{{- range $poolName, $poolConfig := .Values.worker.pools }}
+{{- if $poolConfig.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloudlens.fullname" $ }}-worker-{{ $poolName }}
+  labels:
+    {{- include "cloudlens.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: worker
+    cloudlens.internal/worker-pool: {{ $poolName }}
+spec:
+  replicas: {{ $poolConfig.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "cloudlens.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: worker
+      cloudlens.internal/worker-pool: {{ $poolName }}
+  template:
+    metadata:
+      labels:
+        {{- include "cloudlens.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: worker
+        cloudlens.internal/worker-pool: {{ $poolName }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "cloudlens.fullname" $ }}-worker
+      securityContext:
+        {{- include "cloudlens.podSecurityContext" $ | nindent 8 }}
+      containers:
+        - name: worker
+          securityContext:
+            {{- include "cloudlens.containerSecurityContext" $ | nindent 12 }}
+          image: "{{ $.Values.worker.image.repository }}:{{ $.Values.worker.image.tag }}{{ if $.Values.worker.image.digest }}@{{ $.Values.worker.image.digest }}{{ end }}"
+          imagePullPolicy: {{ $.Values.worker.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - celery
+            - -A
+            - workers.cloudlens_workers.celery_app
+            - worker
+            - -Q
+            - {{ $poolConfig.queue | default $poolName }}
+            - -c
+            - {{ $poolConfig.concurrency | default 4 | quote }}
+            - --loglevel=info
+          envFrom:
+            - configMapRef:
+                name: {{ include "cloudlens.fullname" $ }}-config
+          env:
+            - name: CELERY_QUEUE
+              value: {{ $poolConfig.queue | default $poolName | quote }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            {{- toYaml $poolConfig.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: scratch
+              mountPath: /app/scratch
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: scratch
+          emptyDir: {}
+{{- end }}
+{{- end }}

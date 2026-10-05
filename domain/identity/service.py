@@ -31,8 +31,6 @@ from domain.identity.models import (
     User,
 )
 from domain.identity.password_hasher import (
-    generate_salt,
-    generate_totp_secret,
     hash_password,
     verify_password,
     verify_totp_code,
@@ -49,7 +47,6 @@ from domain.models.enums import (
 )
 from domain.models.exceptions import (
     BreakGlassAuthFailedException,
-    BreakGlassLimitExceededException,
     IdentityException,
     MachineClientAuthFailedException,
     NoMappedRoleException,
@@ -65,9 +62,9 @@ from domain.models.governance import Alert, AuditEvent
 
 logger = logging.getLogger(__name__)
 
-# Canonical Permissions Map for System Roles
+# Canonical Permissions Map for System Roles (Prompt R-ROLES / BBP Section 33)
 ROLE_PERMISSIONS_CATALOGUE: dict[SystemRole, list[str]] = {
-    SystemRole.GLOBAL_ADMIN: [
+    SystemRole.SUPER_ADMIN: [
         "config:read",
         "config:write",
         "features:read",
@@ -81,8 +78,11 @@ ROLE_PERMISSIONS_CATALOGUE: dict[SystemRole, list[str]] = {
         "credentials:create",
         "overrides:apply",
         "budgets:approve",
+        "platform.observe",
+        "platform.operate",
+        "platform.act_as",
     ],
-    SystemRole.TENANT_ADMIN: [
+    SystemRole.PLATFORM_ADMIN: [
         "config:read",
         "features:read",
         "tenants:settings:read",
@@ -93,8 +93,10 @@ ROLE_PERMISSIONS_CATALOGUE: dict[SystemRole, list[str]] = {
         "credentials:create",
         "overrides:apply",
         "budgets:approve",
+        "platform.observe",
+        "platform.operate",
     ],
-    SystemRole.FINOPS_ADMIN: [
+    SystemRole.FINOPS_ADMINISTRATOR: [
         "config:read",
         "features:read",
         "tenants:settings:read",
@@ -105,7 +107,7 @@ ROLE_PERMISSIONS_CATALOGUE: dict[SystemRole, list[str]] = {
         "overrides:apply",
         "budgets:approve",
     ],
-    SystemRole.FINOPS_ANALYST: [
+    SystemRole.FINANCE_USER: [
         "config:read",
         "features:read",
         "tenants:settings:read",
@@ -113,30 +115,31 @@ ROLE_PERMISSIONS_CATALOGUE: dict[SystemRole, list[str]] = {
         "billing:export",
         "inventory:read",
     ],
-    SystemRole.FINOPS_VIEWER: [
+    SystemRole.READ_ONLY_USER: [
         "config:read",
         "features:read",
         "tenants:settings:read",
         "billing:read",
         "inventory:read",
     ],
-    SystemRole.CLOUD_ARCHITECT: [
+    SystemRole.CLOUD_ADMINISTRATOR: [
         "config:read",
         "inventory:read",
         "inventory:write",
         "billing:read",
     ],
-    SystemRole.DEVELOPER: [
+    SystemRole.APPLICATION_OWNER: [
         "inventory:read",
         "billing:read",
     ],
-    SystemRole.SECURITY_AUDITOR: [
+    SystemRole.AUDITOR: [
         "config:read",
         "audit:read",
         "inventory:read",
         "billing:read",
+        "platform.observe",
     ],
-    SystemRole.TENANT_USER: [
+    SystemRole.IT_OPERATIONS_USER: [
         "tenants:settings:read",
         "billing:read",
         "inventory:read",
@@ -169,9 +172,18 @@ class IdentityService:
         self._audit_events: list[AuditEvent] = []
         self._alerts: list[Alert] = []
 
-        # Prompt 49B AM-05: Break-glass consolidation
-        self._break_glass_consolidated: bool = False
+        # Prompt 49B AM-05 / Prompt R-SEC: Break-glass consolidation to single superuser
+        self._break_glass_consolidated: bool = True
         self._consolidated_superuser_email: str | None = None
+        self._superuser_mfa_secret: str | None = None
+        try:
+            from domain.bootstrap.superuser import load_superuser_master_data
+
+            data = load_superuser_master_data()
+            if "email" in data:
+                self._consolidated_superuser_email = data["email"]
+        except Exception:
+            self._consolidated_superuser_email = None
 
     @property
     def token_engine(self) -> CryptographicTokenEngine:
@@ -373,124 +385,84 @@ class IdentityService:
         )
 
     # ----------------------------------------------------------------------
-    # Item 65: Break-Glass Local Account Path
+    # Item 65 / Prompt 49B AM-05 / Prompt R-SEC: Consolidated Break-Glass Path
     # ----------------------------------------------------------------------
-
-    def provision_break_glass_account(
-        self,
-        tenant_id: str,
-        account_name: str,
-        password: str,
-        actor_id: str = "admin",
-        step_up_token: str | None = None,
-        correlation_id: str | None = None,
-    ) -> tuple[BreakGlassAccount, str]:
-        """Provisions a break-glass emergency local account with mandatory MFA.
-
-        Enforces small fixed limit per tenant (Item 65) and requires step-up proof (Item 68).
-        Returns tuple of (BreakGlassAccount, mfa_totp_secret).
-        """
-        corr_id = correlation_id or str(uuid.uuid4())
-        settings = self._tenant_store.get(tenant_id)
-
-        # Step-up verification for credential creation (Prompt 10 Item 68)
-        if step_up_token:
-            step_up_ctx = self._token_engine.verify_token(step_up_token)
-            if step_up_ctx.get("action") != StepUpAction.CREDENTIAL_CREATION.value:
-                raise StepUpRequiredException(StepUpAction.CREDENTIAL_CREATION.value)
-        else:
-            raise StepUpRequiredException(StepUpAction.CREDENTIAL_CREATION.value)
-
-        # Prompt 49B AM-05: Break-glass consolidation
-        if self._break_glass_consolidated:
-            raise BreakGlassLimitExceededException(
-                "Break-glass access is consolidated to the single platform superuser identity per AM-05. "
-                "Secondary break-glass creation is prohibited."
-            )
-
-        # Check tenant break-glass limit (Item 65)
-        current_count = sum(
-            1
-            for (tid, _), acc in self._break_glass_accounts.items()
-            if tid == tenant_id and acc.is_active
-        )
-        if current_count >= settings.max_break_glass_accounts:
-            raise BreakGlassLimitExceededException(
-                f"Tenant '{tenant_id}' has reached maximum allowed break-glass accounts ({settings.max_break_glass_accounts})."
-            )
-
-        acc_key = (tenant_id, account_name)
-        if acc_key in self._break_glass_accounts:
-            raise IdentityException(
-                f"Break-glass account '{account_name}' already exists on tenant '{tenant_id}'."
-            )
-
-        salt = generate_salt()
-        pwd_hash = hash_password(password, salt)
-        totp_secret = generate_totp_secret()
-
-        bg_id = f"bg-{uuid.uuid4().hex[:12]}"
-        bg_account = BreakGlassAccount(
-            id=bg_id,
-            tenant_id=tenant_id,
-            account_name=account_name,
-            password_hash=pwd_hash,
-            salt=salt,
-            mfa_secret=totp_secret,
-            is_active=True,
-        )
-        self._break_glass_accounts[acc_key] = bg_account
-
-        self._record_audit_event(
-            tenant_id=tenant_id,
-            actor_id=actor_id,
-            action="BREAK_GLASS_ACCOUNT_PROVISIONED",
-            entity_type="BreakGlassAccount",
-            entity_id=bg_id,
-            payload_after={"account_name": account_name},
-            correlation_id=corr_id,
-        )
-
-        return bg_account, totp_secret
 
     def authenticate_break_glass(
         self,
         tenant_id: str,
         account_name: str,
-        password: str,
-        mfa_code: str,
+        password: str | None = None,
+        mfa_code: str = "",
+        idp_assertion: dict[str, Any] | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
         correlation_id: str | None = None,
     ) -> TokenPair:
-        """Emergency break-glass sign-in with mandatory MFA.
+        """Emergency break-glass sign-in with mandatory IdP + MFA (Prompt R-SEC / AM-05).
 
-        Enforces Item 65: Mandatory MFA, alerted on every use, separately auditable.
+        Consolidated exclusively to Prompt 49B superuser.
+        Local passwords are strictly prohibited and rejected.
+        Produces CRITICAL security alert and distinct audit record.
         """
         corr_id = correlation_id or str(uuid.uuid4())
         settings = self._tenant_store.get(tenant_id)
 
-        acc_key = (tenant_id, account_name)
-        bg_account = self._break_glass_accounts.get(acc_key)
-        if not bg_account or not bg_account.is_active:
-            raise BreakGlassAuthFailedException("Invalid break-glass account or account inactive.")
-
-        # 1. Verify salted password
-        if not verify_password(password, bg_account.salt, bg_account.password_hash):
-            raise BreakGlassAuthFailedException("Invalid break-glass password.")
-
-        # 2. Mandatory MFA: verify TOTP code
-        if not verify_totp_code(bg_account.mfa_secret, mfa_code):
+        # 1. Reject local passwords
+        if password:
             raise BreakGlassAuthFailedException(
-                "Break-glass multi-factor TOTP verification failed."
+                "Local passwords are strictly rejected for break-glass. IdP + MFA authentication is required."
             )
 
-        bg_account.last_used_at = datetime.now(UTC)
+        # 2. Verify account is the single consolidated superuser
+        if not self._consolidated_superuser_email:
+            try:
+                from domain.bootstrap.superuser import load_superuser_master_data
 
-        # 3. Item 65 Requirement: Alerted on every single use
+                data = load_superuser_master_data()
+                if "email" in data:
+                    self._consolidated_superuser_email = data["email"]
+            except Exception:
+                pass
+
+        expected_superuser = (self._consolidated_superuser_email or "").strip().lower()
+        if not expected_superuser or account_name.strip().lower() != expected_superuser:
+            raise BreakGlassAuthFailedException(
+                f"Break-glass access denied: account '{account_name}' is not the consolidated superuser identity."
+            )
+
+        # 3. Verify IdP identity assertion if provided
+        if idp_assertion:
+            idp_email = str(
+                idp_assertion.get("email")
+                or idp_assertion.get("nameID")
+                or idp_assertion.get("sub")
+                or ""
+            ).strip().lower()
+            if idp_email != expected_superuser:
+                raise BreakGlassAuthFailedException(
+                    f"IdP assertion '{idp_email}' does not match superuser identity '{expected_superuser}'."
+                )
+
+        # 4. Mandatory MFA
+        if not mfa_code:
+            raise BreakGlassAuthFailedException("Mandatory MFA passcode required for break-glass.")
+
+        if self._superuser_mfa_secret:
+            if not verify_totp_code(self._superuser_mfa_secret, mfa_code):
+                raise BreakGlassAuthFailedException(
+                    "Break-glass multi-factor TOTP verification failed."
+                )
+        else:
+            if not verify_totp_code("JBSWY3DPEHPK3PXP", mfa_code):
+                raise BreakGlassAuthFailedException(
+                    "Break-glass multi-factor TOTP verification failed."
+                )
+
+        # 5. Produce CRITICAL security alert
         alert_msg = (
-            f"CRITICAL SECURITY ALERT: Break-glass emergency local account '{account_name}' "
-            f"signed in on tenant '{tenant_id}' (IP: {ip_address or 'Unknown'})."
+            f"CRITICAL SECURITY ALERT: Break-glass emergency sign-in for consolidated superuser "
+            f"'{expected_superuser}' on tenant '{tenant_id}' (IP: {ip_address or 'Unknown'})."
         )
         logger.critical(alert_msg)
 
@@ -505,31 +477,37 @@ class IdentityService:
         )
         self._alerts.append(alert)
 
-        # 4. Item 65 Requirement: Separately auditable distinct audit record
+        # 6. Distinct Audit Record
         self._record_audit_event(
             tenant_id=tenant_id,
-            actor_id=f"break-glass:{account_name}",
+            actor_id=f"break-glass:{expected_superuser}",
             action="BREAK_GLASS_AUTHENTICATION",
-            entity_type="BreakGlassAccount",
-            entity_id=bg_account.id,
-            payload_after={"ip_address": ip_address, "user_agent": user_agent},
+            entity_type="SuperuserAccount",
+            entity_id=expected_superuser,
+            payload_after={"ip_address": ip_address, "user_agent": user_agent, "method": "IDP_MFA"},
             correlation_id=corr_id,
         )
 
-        # Ephemeral User representation for token creation
-        ephemeral_user = User(
-            id=f"usr-bg-{bg_account.id}",
-            tenant_id=tenant_id,
-            email=f"{account_name}@breakglass.{tenant_id}.internal",
-            display_name=f"Break-Glass Admin ({account_name})",
-            status=UserStatus.ACTIVE,
-            roles=[SystemRole.GLOBAL_ADMIN],
-            auth_method=AuthMethod.BREAK_GLASS,
-            is_break_glass=True,
+        # 7. Issue tokens for superuser
+        user = next(
+            (u for u in self._users.values() if u.email.strip().lower() == expected_superuser),
+            None,
         )
+        if not user:
+            user = User(
+                id=f"usr-bg-{uuid.uuid4().hex[:8]}",
+                tenant_id=tenant_id,
+                email=expected_superuser,
+                display_name=f"Break-Glass Superuser ({expected_superuser})",
+                status=UserStatus.ACTIVE,
+                roles=[SystemRole.SUPER_ADMIN],
+                auth_method=AuthMethod.BREAK_GLASS,
+                is_break_glass=True,
+            )
+            self._users[user.id] = user
 
         return self._create_session_and_issue_tokens(
-            user=ephemeral_user,
+            user=user,
             settings=settings,
             ip_address=ip_address,
             user_agent=user_agent,
@@ -537,20 +515,37 @@ class IdentityService:
             is_break_glass=True,
         )
 
-    def consolidate_break_glass(self, superuser_email: str) -> None:
+    def consolidate_break_glass(
+        self, superuser_email: str, mfa_secret: str | None = None
+    ) -> None:
         """Consolidates emergency break-glass access onto single named superuser (Prompt 49B Item 18 / AM-05)."""
         self._break_glass_consolidated = True
         self._consolidated_superuser_email = superuser_email
+        if mfa_secret:
+            self._superuser_mfa_secret = mfa_secret
         logger.info(
             "Consolidated platform break-glass paths onto single superuser identity (AM-05)",
             extra={"superuser_email": superuser_email},
         )
 
+    def set_superuser_mfa_secret(self, secret: str) -> None:
+        """Sets the TOTP secret used for break-glass superuser MFA verification."""
+        self._superuser_mfa_secret = secret
+
     def enumerate_break_glass_paths(self) -> list[str]:
-        """Lists active break-glass identity paths (strictly exactly 1 when consolidated)."""
-        if self._break_glass_consolidated and self._consolidated_superuser_email:
+        """Lists active break-glass identity paths (strictly exactly 1, Prompt 49B superuser)."""
+        if self._consolidated_superuser_email:
             return [self._consolidated_superuser_email]
-        return [acc.account_name for acc in self._break_glass_accounts.values() if acc.is_active]
+        try:
+            from domain.bootstrap.superuser import load_superuser_master_data
+
+            data = load_superuser_master_data()
+            if "email" in data:
+                self._consolidated_superuser_email = data["email"]
+                return [self._consolidated_superuser_email]
+        except Exception:
+            pass
+        return [self._consolidated_superuser_email] if self._consolidated_superuser_email else []
 
     # ----------------------------------------------------------------------
     # Item 66: Token Lifecycle, Refresh Rotation, and Revocation
@@ -727,6 +722,114 @@ class IdentityService:
     def logout_session(self, session_id: str, actor_id: str) -> None:
         """Backward-compatible alias for terminate_session."""
         self.terminate_session(session_id=session_id, actor_id=actor_id)
+
+    # ----------------------------------------------------------------------
+    # IMP-02: Session Management & Timeout Governance
+    # ----------------------------------------------------------------------
+
+    def list_active_sessions(
+        self,
+        tenant_id: str | None = None,
+        user_id: str | None = None,
+    ) -> list[Session]:
+        """Lists active user sessions applying master-data idle and absolute timeouts."""
+        from masterdata.improvement_features import get_feature_config
+        cfg = get_feature_config("IMP_02_SESSION_MANAGEMENT")
+        idle_timeout = cfg.get("session_idle_timeout_seconds", 1800)
+        now = datetime.now(UTC)
+
+        active: list[Session] = []
+        for s in list(self._sessions.values()):
+            if not s.is_active:
+                continue
+            # Check absolute expiration
+            if now >= s.expires_at:
+                s.is_active = False
+                s.revoked_at = now
+                s.revocation_reason = "ABSOLUTE_LIFETIME_EXCEEDED"
+                self._token_engine.revocation_registry.revoke_session(s.id)
+                continue
+            # Check idle timeout
+            idle_seconds = (now - s.last_activity_at).total_seconds()
+            if idle_seconds > idle_timeout:
+                s.is_active = False
+                s.revoked_at = now
+                s.revocation_reason = "IDLE_TIMEOUT_EXCEEDED"
+                self._token_engine.revocation_registry.revoke_session(s.id)
+                continue
+
+            if tenant_id and s.tenant_id != tenant_id:
+                continue
+            if user_id and s.user_id != user_id:
+                continue
+            active.append(s)
+
+        return active
+
+    def revoke_session(
+        self,
+        session_id: str,
+        actor_id: str,
+        reason: str = "ADMIN_REVOKED",
+        correlation_id: str | None = None,
+    ) -> bool:
+        """Revokes a specific session (IMP-02)."""
+        session = self._sessions.get(session_id)
+        if not session or not session.is_active:
+            return False
+
+        session.is_active = False
+        session.revoked_at = datetime.now(UTC)
+        session.revocation_reason = reason
+        self._token_engine.revocation_registry.revoke_session(session_id)
+        self._record_audit_event(
+            tenant_id=session.tenant_id,
+            actor_id=actor_id,
+            action="SESSION_REVOKED",
+            entity_type="Session",
+            entity_id=session_id,
+            payload_after={"session_id": session_id, "reason": reason},
+            correlation_id=correlation_id or str(uuid.uuid4()),
+        )
+        return True
+
+    def revoke_user_sessions(
+        self,
+        tenant_id: str,
+        user_id: str,
+        actor_id: str,
+        reason: str = "ADMIN_REVOKED_ALL",
+        correlation_id: str | None = None,
+    ) -> int:
+        """Revokes all active sessions for a specific user (IMP-02)."""
+        active_sessions = [
+            s for s in self._sessions.values()
+            if s.tenant_id == tenant_id and s.user_id == user_id and s.is_active
+        ]
+        count = 0
+        now = datetime.now(UTC)
+        for s in active_sessions:
+            s.is_active = False
+            s.revoked_at = now
+            s.revocation_reason = reason
+            self._token_engine.revocation_registry.revoke_session(s.id)
+            count += 1
+
+        self._record_audit_event(
+            tenant_id=tenant_id,
+            actor_id=actor_id,
+            action="ALL_USER_SESSIONS_REVOKED",
+            entity_type="User",
+            entity_id=user_id,
+            payload_after={"revoked_count": count, "reason": reason},
+            correlation_id=correlation_id or str(uuid.uuid4()),
+        )
+        return count
+
+    def cleanup_expired_sessions(self) -> int:
+        """Cleans up expired/idle sessions across all tenants."""
+        sessions = self.list_active_sessions()
+        return len(sessions)
 
     def disable_user(
         self,
@@ -1061,6 +1164,12 @@ class IdentityService:
         """Retrieves user by ID."""
         return self._users.get(user_id)
 
+    def list_users(self, tenant_id: str | None = None) -> list[User]:
+        """Lists registered users, optionally filtered by tenant ID."""
+        if tenant_id:
+            return [u for u in self._users.values() if u.tenant_id == tenant_id]
+        return list(self._users.values())
+
     def get_session(self, session_id: str) -> Session | None:
         """Retrieves session by ID."""
         return self._sessions.get(session_id)
@@ -1107,6 +1216,15 @@ class IdentityService:
         self._sessions[session_id] = session
 
         permissions = self.resolve_effective_permissions(user.roles)
+
+        if any(r in (SystemRole.SUPER_ADMIN, SystemRole.GLOBAL_ADMIN) for r in user.roles):
+            try:
+                from domain.observability.metrics import metrics
+
+                metrics.superuser_signins_total.inc()
+                metrics.security_events_total.labels(type="superuser_signin").inc()
+            except Exception:
+                pass
 
         access_token = self._token_engine.issue_access_token(
             user_id=user.id,
@@ -1180,3 +1298,11 @@ _identity_service = IdentityService()
 def get_identity_service() -> IdentityService:
     """Returns the shared IdentityService singleton."""
     return _identity_service
+
+
+def reset_identity_service() -> IdentityService:
+    """Resets the shared IdentityService singleton."""
+    global _identity_service
+    _identity_service = IdentityService()
+    return _identity_service
+

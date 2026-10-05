@@ -1,6 +1,7 @@
 """Canonical Domain Enums for CloudLens Enterprise Data Model."""
 
-from enum import StrEnum
+from enum import EnumMeta, StrEnum
+from typing import Any
 
 
 class ProviderType(StrEnum):
@@ -251,6 +252,7 @@ class AlertType(StrEnum):
     # Extended operational alerts & aliases
     QUOTA_HEADROOM_BREACH = "QUOTA_HEADROOM_BREACH"
     CREDENTIAL_EXPIRED = "CREDENTIAL_EXPIRED"
+    SECURITY_ALERT = "SECURITY_ALERT"
 
 
 class ContextualAlertType(StrEnum):
@@ -374,6 +376,7 @@ class QuarantineReason(StrEnum):
     MISSING_REQUIRED_FIELDS = "MISSING_REQUIRED_FIELDS"
     UNPARSEABLE_PAYLOAD = "UNPARSEABLE_PAYLOAD"
     RATE_LIMIT_EXHAUSTED = "RATE_LIMIT_EXHAUSTED"
+    RETRIES_EXHAUSTED = "RETRIES_EXHAUSTED"
 
 
 class QuarantineStatus(StrEnum):
@@ -385,18 +388,57 @@ class QuarantineStatus(StrEnum):
     DISCARDED = "DISCARDED"
 
 
-class SystemRole(StrEnum):
-    """Nine built-in canonical roles for enterprise FinOps RBAC (Prompt 49A Item 9)."""
+class SystemRoleMeta(EnumMeta):
+    """Metaclass allowing backward-compatible access to legacy role names during migration."""
 
-    GLOBAL_ADMIN = "GLOBAL_ADMIN"
-    TENANT_ADMIN = "TENANT_ADMIN"
-    FINOPS_ADMIN = "FINOPS_ADMIN"
-    FINOPS_ANALYST = "FINOPS_ANALYST"
-    FINOPS_VIEWER = "FINOPS_VIEWER"
-    CLOUD_ARCHITECT = "CLOUD_ARCHITECT"
-    DEVELOPER = "DEVELOPER"
-    SECURITY_AUDITOR = "SECURITY_AUDITOR"
-    TENANT_USER = "TENANT_USER"
+    def __getattr__(cls, name: str) -> Any:
+        legacy_map = {
+            "GLOBAL_ADMIN": cls.SUPER_ADMIN,
+            "TENANT_ADMIN": cls.PLATFORM_ADMIN,
+            "CLOUD_ARCHITECT": cls.CLOUD_ADMINISTRATOR,
+            "FINOPS_ADMIN": cls.FINOPS_ADMINISTRATOR,
+            "FINOPS_ANALYST": cls.FINANCE_USER,
+            "FINOPS_VIEWER": cls.READ_ONLY_USER,
+            "SECURITY_AUDITOR": cls.AUDITOR,
+            "DEVELOPER": cls.APPLICATION_OWNER,
+            "TENANT_USER": cls.IT_OPERATIONS_USER,
+        }
+        if name in legacy_map:
+            return legacy_map[name]
+        return super().__getattr__(name)
+
+
+class SystemRole(StrEnum, metaclass=SystemRoleMeta):
+    """The nine canonical BBP roles for enterprise FinOps RBAC (Prompt R-ROLES / BBP Section 33)."""
+
+    SUPER_ADMIN = "SUPER_ADMIN"
+    PLATFORM_ADMIN = "PLATFORM_ADMIN"
+    CLOUD_ADMINISTRATOR = "CLOUD_ADMINISTRATOR"
+    FINOPS_ADMINISTRATOR = "FINOPS_ADMINISTRATOR"
+    FINANCE_USER = "FINANCE_USER"
+    IT_OPERATIONS_USER = "IT_OPERATIONS_USER"
+    APPLICATION_OWNER = "APPLICATION_OWNER"
+    READ_ONLY_USER = "READ_ONLY_USER"
+    AUDITOR = "AUDITOR"
+
+    @classmethod
+    def _missing_(cls, value: object) -> Any:
+        if isinstance(value, str):
+            legacy_map = {
+                "GLOBAL_ADMIN": cls.SUPER_ADMIN,
+                "TENANT_ADMIN": cls.PLATFORM_ADMIN,
+                "CLOUD_ARCHITECT": cls.CLOUD_ADMINISTRATOR,
+                "FINOPS_ADMIN": cls.FINOPS_ADMINISTRATOR,
+                "FINOPS_ANALYST": cls.FINANCE_USER,
+                "FINOPS_VIEWER": cls.READ_ONLY_USER,
+                "SECURITY_AUDITOR": cls.AUDITOR,
+                "DEVELOPER": cls.APPLICATION_OWNER,
+                "TENANT_USER": cls.IT_OPERATIONS_USER,
+            }
+            norm = value.strip().upper()
+            if norm in legacy_map:
+                return legacy_map[norm]
+        return super()._missing_(value)
 
 
 class ProviderCapability(StrEnum):
@@ -622,6 +664,8 @@ class AuditEventType(StrEnum):
     # Tamper & Isolation Violations
     AUDIT_MUTATION_ATTEMPT = "AUDIT_MUTATION_ATTEMPT"
     CROSS_TENANT_ACCESS_ATTEMPT = "CROSS_TENANT_ACCESS_ATTEMPT"
+    ACT_AS_TENANT_START = "ACT_AS_TENANT_START"
+    ACT_AS_TENANT_END = "ACT_AS_TENANT_END"
 
     # Connector Lifecycle & Capabilities (Prompt 14)
     CONNECTOR_REGISTERED = "CONNECTOR_REGISTERED"
@@ -763,6 +807,10 @@ class AuditEventType(StrEnum):
     PROVISIONING_RESOURCE_LINKED = "PROVISIONING_RESOURCE_LINKED"
     UNAPPROVED_DEPLOYMENT_DETECTED = "UNAPPROVED_DEPLOYMENT_DETECTED"
     PROVISIONING_ACCURACY_EVALUATED = "PROVISIONING_ACCURACY_EVALUATED"
+
+    # Platform Control Tower (Prompt R-CT)
+    CT_ACTION = "CT_ACTION"
+
 
 
 class OverrideClass(StrEnum):

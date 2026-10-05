@@ -492,7 +492,7 @@ class TestInventoryOperationsAndViews:
         req = BulkAssignmentRequest(
             resource_ids=["res-aws-s3-01"],
             owner_name="Dave Architect",
-            owner_email="dave@example.com",
+            owner_email="dave.architect@cloudlens.corp",
             application_name="Payments Modern",
             environment_name="Production",
             cost_center="CC-999-OVERRIDE",

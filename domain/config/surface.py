@@ -104,18 +104,41 @@ class ObjectStorageConfig(BaseModel):
 
 
 class SecretStoreConfig(BaseModel):
-    """External secret management (HashiCorp Vault / Cloud KMS) configuration."""
+    """External secret management (HashiCorp Vault / OpenBao / Cloud KMS) configuration."""
 
-    backend_type: str = Field(default="vault", description="Secret store type: 'vault' or 'env'")
+    backend_type: str = Field(
+        default="vault", description="Secret store type: 'vault', 'memory', or 'env'"
+    )
     vault_url: str = Field(
-        default="http://localhost:8200", description="HashiCorp Vault server URL"
+        default="http://localhost:8200", description="HashiCorp Vault / OpenBao server URL"
     )
     vault_token: str = Field(
-        default="dev-vault-token-cloudlens",
-        description="Vault authentication token",
+        default="",
+        description="Vault authentication token (dev only, no default hard-coded token)",
         json_schema_extra={"is_secret": True},
     )
     mount_point: str = Field(default="secret", description="Vault KV v2 mount point")
+    auth_method: str = Field(
+        default="token",
+        description="Vault auth method: 'token', 'approle', or 'kubernetes'",
+    )
+    role_id: str = Field(
+        default="",
+        description="AppRole Role ID for Vault authentication",
+    )
+    secret_id: str = Field(
+        default="",
+        description="AppRole Secret ID for Vault authentication",
+        json_schema_extra={"is_secret": True},
+    )
+    kubernetes_role: str = Field(
+        default="",
+        description="Kubernetes auth role name for Vault authentication",
+    )
+    kubernetes_jwt_path: str = Field(
+        default="/var/run/secrets/kubernetes.io/serviceaccount/token",
+        description="Path to Kubernetes service account JWT token",
+    )
 
 
 class IdentityProviderConfig(BaseModel):

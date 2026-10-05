@@ -14,18 +14,11 @@ Validates the top-level criteria for Prompt 42 completion:
 
 from __future__ import annotations
 
-from decimal import Decimal
-
-import pytest
-
 from domain.models.enums import MeasureNullState
 from domain.models.measures import FinancialMeasure
-from domain.rules.monetary import calculate_amortisation, round_currency
 from domain.tenant.context import TenantContext
-from tests.connectors.test_connector_test_kit import TestFixtureBasedContractMode
 from tests.cost_reconciliation.test_cost_correctness_suite import TestHandCalculatedCostFixtures
 from tests.dr.test_disaster_recovery import TestDisasterRecoverySuite
-from tests.e2e.test_twenty_business_processes import TestTwentyBusinessProcessesSuite
 from tests.failure_injection.test_failure_injection import TestFailureInjectionSuite
 from tests.upgrade.test_rolling_upgrade import TestRollingUpgradeSuite
 

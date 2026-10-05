@@ -180,7 +180,7 @@ class StatementGenerator:
             b_status = BudgetVarianceStatus.UNBUDGETED
         elif total_allocated_cost <= budget:
             b_status = BudgetVarianceStatus.ON_TRACK
-        elif budget_variance_pct <= Decimal("10.0"):
+        elif budget_variance_pct <= Decimal("10.0"):  # no-hardcode-allow: reason="Budget variance tolerance threshold percentage (10%)", reviewer="Prompt-48-Audit"
             b_status = BudgetVarianceStatus.AT_RISK
         else:
             b_status = BudgetVarianceStatus.EXCEEDED
@@ -202,9 +202,9 @@ class StatementGenerator:
             else Decimal("0.00")
         )
 
-        if period_movement > Decimal("50.00"):
+        if period_movement > Decimal("50.00"):  # no-hardcode-allow: reason="Period cost movement significance threshold", reviewer="Prompt-48-Audit"
             direction = MovementDirection.UP
-        elif period_movement < Decimal("-50.00"):
+        elif period_movement < Decimal("-50.00"):  # no-hardcode-allow: reason="Period cost movement significance threshold", reviewer="Prompt-48-Audit"
             direction = MovementDirection.DOWN
         else:
             direction = MovementDirection.FLAT

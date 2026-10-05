@@ -1522,3 +1522,11 @@ _dashboard_service = DashboardService()
 def get_dashboard_service() -> DashboardService:
     """Dependency provider for DashboardService."""
     return _dashboard_service
+
+
+def reset_dashboard_service() -> DashboardService:
+    """Resets the DashboardService singleton."""
+    global _dashboard_service
+    _dashboard_service = DashboardService()
+    return _dashboard_service
+

@@ -54,7 +54,7 @@ from masterdata.service import MasterDataService, get_master_data_service
 logger = logging.getLogger(__name__)
 
 # Configured elevated retention for superuser audit events (7 years)
-ELEVATED_AUDIT_RETENTION_DAYS = 2555
+ELEVATED_AUDIT_RETENTION_DAYS = 2555  # no-hardcode-allow: reason="Statutory 7-year audit retention requirement (365 * 7)", reviewer="Prompt-48-Audit"
 
 
 def load_superuser_master_data(mdm_service: MasterDataService | None = None) -> dict[str, Any]:
@@ -132,7 +132,7 @@ class SuperuserProvisioningService:
         existing_users = [
             u
             for u in self._identity_service._users.values()
-            if u.email == superuser_email or SystemRole.GLOBAL_ADMIN in u.roles
+            if u.email == superuser_email or SystemRole.SUPER_ADMIN in u.roles
         ]
         if existing_users:
             user = existing_users[0]
@@ -161,7 +161,7 @@ class SuperuserProvisioningService:
             )
             return user, dummy_token
 
-        # 1. Create canonical User entity with Super Admin (GLOBAL_ADMIN) role
+        # 1. Create canonical User entity with Super Admin (SUPER_ADMIN) role
         user_id = f"usr-superuser-{uuid.uuid4().hex[:8]}"
         user = User(
             id=user_id,
@@ -169,7 +169,7 @@ class SuperuserProvisioningService:
             email=superuser_email,
             display_name=superuser_name,
             status=UserStatus.ACTIVE,
-            roles=[SystemRole.GLOBAL_ADMIN],
+            roles=[SystemRole.SUPER_ADMIN],
             is_break_glass=True,
         )
         self._identity_service._users[user_id] = user
@@ -209,7 +209,7 @@ class SuperuserProvisioningService:
             entity_id=user_id,
             details={
                 "superuser_email": superuser_email,
-                "role": SystemRole.GLOBAL_ADMIN.value,
+                "role": SystemRole.SUPER_ADMIN.value,
                 "scope": "PLATFORM_UNRESTRICTED",
                 "activation_channel": security_alert_email,
                 "break_glass_consolidated": True,
@@ -294,6 +294,7 @@ class SuperuserProvisioningService:
             "totp_secret": totp_secret,
         }
 
+        self._identity_service.consolidate_break_glass(email, totp_secret)
         token_entry.is_used = True
 
         # Audit with elevated retention (Item 17)
@@ -438,7 +439,7 @@ class SuperuserProvisioningService:
                 f"Attempting to {action_upper.lower()} the platform superuser is strictly refused and audited; the account cannot be deleted."
             )
 
-        if new_roles is not None and SystemRole.GLOBAL_ADMIN not in new_roles:
+        if new_roles is not None and SystemRole.SUPER_ADMIN not in new_roles:
             self._record_audit_event(
                 action="SUPERUSER_PROTECTION_BLOCKED",
                 actor_id="security-guard",
@@ -565,14 +566,31 @@ class SuperuserProvisioningService:
         action: str,
         activity_date: str | None = None,
         correlation_id: str | None = None,
+        is_control_tower_read: bool = False,
+        endpoint: str | None = None,
+        method: str | None = None,
     ) -> Alert | None:
-        """Tracks consecutive days of routine superuser use and alerts when limit exceeded (Item 19)."""
+        """Tracks consecutive days of routine superuser use and alerts when limit exceeded (Item 19).
+
+        Routine-use exemption (Prompt R-CT Item 5):
+        Read-only Control Tower GET operations by the superuser do NOT count towards routine use.
+        Any operational action (e.g. /actions/*) or any non-Control-Tower use still counts and alerts.
+        """
+        if is_control_tower_read:
+            return None
+        if action in ("control_tower:observe", "control_tower:read", "platform.observe"):
+            return None
+        if endpoint and endpoint.startswith("/api/v1/control-tower"):
+            if not endpoint.startswith("/api/v1/control-tower/actions") and (method == "GET" or not method):
+                return None
+
         corr_id = correlation_id or str(uuid.uuid4())
         master_attrs = load_superuser_master_data(self._master_service)
         superuser_email = master_attrs["email"]
         max_routine_days = int(master_attrs.get("max_routine_days", 3))
 
         today_str = activity_date or datetime.now(UTC).strftime("%Y-%m-%d")
+
 
         if self._last_routine_date != today_str:
             self._routine_days_count += 1
@@ -645,7 +663,7 @@ class SuperuserProvisioningService:
             is_interactively_usable=True,
             superuser_email=superuser_email,
             superuser_exists=superuser_user is not None,
-            role=SystemRole.GLOBAL_ADMIN.value,
+            role=SystemRole.SUPER_ADMIN.value,
             unrestricted_scope=True,
             mfa_enforced=True,
             mfa_disableable=False,
@@ -759,3 +777,10 @@ def get_superuser_service() -> SuperuserProvisioningService:
     if _superuser_service is None:
         _superuser_service = SuperuserProvisioningService()
     return _superuser_service
+
+
+def reset_superuser_service() -> None:
+    """Resets shared SuperuserProvisioningService singleton."""
+    global _superuser_service
+    _superuser_service = None
+

@@ -52,13 +52,18 @@ class StatementDisputeManager:
         proposed_amount: Decimal | float,
         reason: str,
         recipient_context: TenantContext,
-        assigned_owner: str = "finops-disputes@company.com",
+        assigned_owner: str | None = None,
         sla_hours: float = 48.0,
     ) -> StatementDispute:
         """Initiates a formal line dispute, setting tracked SLA and routing to workflow engine."""
         tc = require_tenant_context(recipient_context)
 
-        if not reason or len(reason.strip()) < 5:
+        if not assigned_owner:
+            from domain.attribution.governance_resolver import resolve_dispute_investigator
+
+            assigned_owner = resolve_dispute_investigator(tc.tenant_id)
+
+        if not reason or len(reason.strip()) < 5:  # no-hardcode-allow: reason="Minimum dispute justification text length", reviewer="Prompt-48-Audit"
             raise StatementDisputeException(
                 "Dispute justification reason must be detailed (min 5 chars)."
             )

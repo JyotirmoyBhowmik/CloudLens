@@ -2233,89 +2233,13 @@
         }
       }
     },
-    "/api/v1/auth/break-glass/provision": {
-      "post": {
-        "tags": [
-          "Authentication & Identity"
-        ],
-        "summary": "Provision emergency break-glass account",
-        "description": "Provisions a strictly limited break-glass emergency account (Prompt 10 Item 65).\n\nRequires step-up authentication authorized for CREDENTIAL_CREATION.",
-        "operationId": "provision_break_glass_account_api_v1_auth_break_glass_provision_post",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-correlation-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Correlation-Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BreakGlassProvisionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BreakGlassProvisionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/auth/break-glass/login": {
       "post": {
         "tags": [
           "Authentication & Identity"
         ],
-        "summary": "Break-glass emergency login with MFA",
-        "description": "Authenticates via the emergency break-glass local path (Prompt 10 Item 65).\n\nFires an immediate CRITICAL administrator alert and logs a distinct audit event.",
+        "summary": "Break-glass emergency login with IdP + MFA",
+        "description": "Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B).\n\nRequires IdP + MFA. Local passwords are strictly prohibited.\nFires an immediate CRITICAL administrator alert and logs a distinct audit event.",
         "operationId": "break_glass_login_api_v1_auth_break_glass_login_post",
         "parameters": [
           {
@@ -34472,6 +34396,165 @@
         }
       }
     },
+    "/api/v1/admin/act-as": {
+      "post": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "Act As Tenant",
+        "description": "Explicit act-as-tenant flow for Global Admin (Prompt R-SEC Item 1.3).\n\nRequires step-up MFA, issues a short-lived scoped token carrying act_as_tenant + original subject,\nwrites AuditEvent ACT_AS_TENANT_START, and raises a security alert.",
+        "operationId": "act_as_tenant_api_v1_admin_act_as_post",
+        "parameters": [
+          {
+            "name": "X-Step-Up-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Token"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActAsTenantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActAsTenantResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/act-as/end": {
+      "post": {
+        "tags": [
+          "Admin Console"
+        ],
+        "summary": "End Act As Tenant",
+        "description": "Terminates an active act-as session, writing ACT_AS_TENANT_END audit event.",
+        "operationId": "end_act_as_tenant_api_v1_admin_act_as_end_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response End Act As Tenant Api V1 Admin Act As End Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/functions": {
       "get": {
         "tags": [
@@ -35318,6 +35401,97 @@
         ],
         "title": "AcknowledgeContextualAlertRequest",
         "description": "Payload for acknowledging an inline contextual alert."
+      },
+      "ActAsTenantRequest": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Tenant Id",
+            "description": "Target tenant ID to assume"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 20,
+            "title": "Reason",
+            "description": "Mandatory reason (>= 20 characters)"
+          },
+          "mfa_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfa Code",
+            "description": "Step-up MFA TOTP code"
+          },
+          "step_up_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Up Token",
+            "description": "Step-up session token from /step-up"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "reason"
+        ],
+        "title": "ActAsTenantRequest",
+        "description": "Payload to assume scoped tenant identity as Global Admin."
+      },
+      "ActAsTenantResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "Bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "act_as_tenant": {
+            "type": "string",
+            "title": "Act As Tenant"
+          },
+          "original_subject": {
+            "type": "string",
+            "title": "Original Subject"
+          },
+          "audit_event_id": {
+            "type": "string",
+            "title": "Audit Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token",
+          "expires_in",
+          "act_as_tenant",
+          "original_subject",
+          "audit_event_id"
+        ],
+        "title": "ActAsTenantResponse",
+        "description": "Scoped token issued for temporary tenant administration."
       },
       "AdherenceEvaluateRequest": {
         "properties": {
@@ -36823,7 +36997,8 @@
           "ANALYTICAL_EXTRACT_LATE_OR_EMPTY",
           "SCOPE_STORM_GROUPED",
           "QUOTA_HEADROOM_BREACH",
-          "CREDENTIAL_EXPIRED"
+          "CREDENTIAL_EXPIRED",
+          "SECURITY_ALERT"
         ],
         "title": "AlertType",
         "description": "Canonical twenty alert types plus storm grouping (Prompt 31, Prompt 31B, FR-560)."
@@ -38758,6 +38933,8 @@
           "REPORT_DOWNLOADED",
           "AUDIT_MUTATION_ATTEMPT",
           "CROSS_TENANT_ACCESS_ATTEMPT",
+          "ACT_AS_TENANT_START",
+          "ACT_AS_TENANT_END",
           "CONNECTOR_REGISTERED",
           "CONNECTOR_CREDENTIAL_BOUND",
           "CONNECTOR_PROBED",
@@ -38977,6 +39154,30 @@
             "title": "Is Machine",
             "description": "True for machine clients",
             "default": false
+          },
+          "act_as_tenant": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Act As Tenant",
+            "description": "Target tenant ID if issued via act-as-tenant"
+          },
+          "original_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Subject",
+            "description": "Original subject who assumed the act-as identity"
           }
         },
         "type": "object",
@@ -39286,9 +39487,28 @@
             "description": "Break-glass username"
           },
           "password": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Password",
-            "description": "Account secret"
+            "description": "Local password (strictly rejected)"
+          },
+          "idp_assertion": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idp Assertion",
+            "description": "IdP verified identity assertion claims"
           },
           "mfa_code": {
             "type": "string",
@@ -39302,82 +39522,10 @@
         "required": [
           "tenant_id",
           "account_name",
-          "password",
           "mfa_code"
         ],
         "title": "BreakGlassLoginRequest",
-        "description": "Payload for emergency break-glass account authentication."
-      },
-      "BreakGlassProvisionRequest": {
-        "properties": {
-          "tenant_id": {
-            "type": "string",
-            "title": "Tenant Id",
-            "description": "Tenant identifier"
-          },
-          "account_name": {
-            "type": "string",
-            "title": "Account Name",
-            "description": "Break-glass account username identifier"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 12,
-            "title": "Password",
-            "description": "High-entropy master secret"
-          },
-          "step_up_token": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Step Up Token",
-            "description": "Elevated step-up token authorized for CREDENTIAL_CREATION"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tenant_id",
-          "account_name",
-          "password"
-        ],
-        "title": "BreakGlassProvisionRequest",
-        "description": "Payload to provision a strictly limited emergency break-glass account."
-      },
-      "BreakGlassProvisionResponse": {
-        "properties": {
-          "tenant_id": {
-            "type": "string",
-            "title": "Tenant Id"
-          },
-          "account_name": {
-            "type": "string",
-            "title": "Account Name"
-          },
-          "totp_secret": {
-            "type": "string",
-            "title": "Totp Secret",
-            "description": "Base32 TOTP secret for MFA configuration"
-          },
-          "totp_uri": {
-            "type": "string",
-            "title": "Totp Uri",
-            "description": "Standard otpauth:// URI for authenticator app enrollment"
-          }
-        },
-        "type": "object",
-        "required": [
-          "tenant_id",
-          "account_name",
-          "totp_secret",
-          "totp_uri"
-        ],
-        "title": "BreakGlassProvisionResponse",
-        "description": "Response containing provisioned emergency account details and TOTP configuration."
+        "description": "Payload for emergency break-glass account authentication (Prompt 49B superuser only)."
       },
       "BreakdownItem": {
         "properties": {

@@ -320,9 +320,9 @@ class CostReconciliationEngine:
             trust_score = Decimal("100.00")
 
         # Health status determination
-        if trust_score >= Decimal("99.50") and fail_count == 0:
+        if trust_score >= Decimal("99.50") and fail_count == 0:  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
             health_status = ExecutiveTrustStatus.EXCELLENT
-        elif trust_score >= Decimal("98.00"):
+        elif trust_score >= Decimal("98.00"):  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
             health_status = ExecutiveTrustStatus.HEALTHY
         else:
             health_status = ExecutiveTrustStatus.NEEDS_ATTENTION
@@ -491,7 +491,7 @@ class CostReconciliationEngine:
         )
 
         # Determine trend direction (comparing first half vs second half if multiple)
-        if len(reports) >= 2:
+        if len(reports) >= 2:  # no-hardcode-allow: reason="Minimum sample size for half-split trend comparison", reviewer="Prompt-48-Audit"
             mid = len(reports) // 2
             first_half_avg = sum(
                 (r.absolute_variance for r in reports[:mid]), Decimal("0.0")
@@ -698,7 +698,7 @@ class CostReconciliationEngine:
     ) -> ReconciliationInvestigationItem:
         """Constructs an investigation item for a failed reconciliation."""
         # Priority rules
-        if percentage_variance >= Decimal("5.00") or variance_amount >= Decimal("1000.00"):
+        if percentage_variance >= Decimal("5.00") or variance_amount >= Decimal("1000.00"):  # no-hardcode-allow: reason="Investigation severity variance threshold", reviewer="Prompt-48-Audit"
             priority = InvestigationPriority.CRITICAL
         elif percentage_variance >= Decimal("1.00") or variance_amount >= Decimal("100.00"):
             priority = InvestigationPriority.HIGH
@@ -737,3 +737,13 @@ _GLOBAL_RECONCILIATION_ENGINE = CostReconciliationEngine()
 def get_cost_reconciliation_engine() -> CostReconciliationEngine:
     """Dependency injection provider for CostReconciliationEngine."""
     return _GLOBAL_RECONCILIATION_ENGINE
+
+
+def reset_cost_reconciliation_engine() -> CostReconciliationEngine:
+    """Resets the CostReconciliationEngine singleton in-place."""
+    _GLOBAL_RECONCILIATION_ENGINE._tolerances = dict(DEFAULT_PROVIDER_TOLERANCES)
+    _GLOBAL_RECONCILIATION_ENGINE._reconciliation_repo = get_reconciliation_repository()
+    _GLOBAL_RECONCILIATION_ENGINE._cost_repo = get_cost_repository()
+    return _GLOBAL_RECONCILIATION_ENGINE
+
+

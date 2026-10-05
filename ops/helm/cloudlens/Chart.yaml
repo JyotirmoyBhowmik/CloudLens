@@ -1,0 +1,14 @@
+apiVersion: v2
+name: cloudlens
+description: Enterprise Multi-Tenant FinOps Platform CloudLens Helm Chart
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - finops
+  - cloud-cost-management
+  - multi-tenant
+  - enterprise
+maintainers:
+  - name: CloudLens Core Operations Team
+    email: admin@jyotirmoyb.com

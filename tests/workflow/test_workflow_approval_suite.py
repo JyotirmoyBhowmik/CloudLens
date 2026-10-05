@@ -12,7 +12,7 @@ Verifies the unified enterprise workflow engine across all five canonical criter
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal
+
 import pytest
 
 from domain.models.enums import (
@@ -23,10 +23,7 @@ from domain.models.enums import (
     WorkflowState,
 )
 from domain.models.exceptions import (
-    InvalidWorkflowTransitionException,
     NoResolvableApproverException,
-    WorkflowApplicationFailedException,
-    WorkflowMandatoryCommentException,
 )
 from domain.tenant.context import TenantContext
 from domain.workflows.models import (
@@ -40,7 +37,7 @@ from domain.workflows.models import (
     WorkflowSubmitRequest,
 )
 from domain.workflows.resolver import ApproverResolver
-from domain.workflows.service import WorkflowService, get_workflow_service
+from domain.workflows.service import WorkflowService
 from domain.workflows.sla import SLAEngine
 from masterdata.service import MasterDataService
 
@@ -155,7 +152,7 @@ class TestWorkflowApprovalSuite:
         self, wf_service: WorkflowService, tenant_context: TenantContext
     ) -> None:
         """Criterion 3: Delegation and escalation behave as configured."""
-        now = dt.datetime.now(dt.timezone.utc)
+        now = dt.datetime.now(dt.UTC)
         del_req = DelegationCreateRequest(
             delegate_approver_id="delegate-approver",
             start_date=now - dt.timedelta(days=1),
@@ -225,7 +222,7 @@ class TestWorkflowApprovalSuite:
         sla_engine = SLAEngine(master_data_service=md_service)
 
         # Start on a Friday at 16:00 (4 PM) UTC
-        friday_afternoon = dt.datetime(2026, 10, 2, 16, 0, 0, tzinfo=dt.timezone.utc)
+        friday_afternoon = dt.datetime(2026, 10, 2, 16, 0, 0, tzinfo=dt.UTC)
         # Request 8 working hours SLA
         due_date = sla_engine.calculate_due_date(
             start_time=friday_afternoon,

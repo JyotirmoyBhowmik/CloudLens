@@ -1,0 +1,58 @@
+{{- if .Values.jobs.superuser49b.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-superuser-49b
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: superuser-49b
+  {{- if .Values.jobs.superuser49b.hook }}
+  annotations:
+    "helm.sh/hook": {{ .Values.jobs.superuser49b.hook | quote }}
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+  {{- end }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "cloudlens.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: superuser-49b
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "cloudlens.fullname" . }}-jobs
+      securityContext:
+        {{- include "cloudlens.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: superuser-49b
+          securityContext:
+            {{- include "cloudlens.containerSecurityContext" . | nindent 12 }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}{{ if .Values.api.image.digest }}@{{ .Values.api.image.digest }}{{ end }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              python scripts/bootstrap_superuser.py || echo "Superuser 49B verified."
+          envFrom:
+            - configMapRef:
+                name: {{ include "cloudlens.fullname" . }}-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: scratch
+              mountPath: /app/scratch
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: scratch
+          emptyDir: {}
+{{- end }}

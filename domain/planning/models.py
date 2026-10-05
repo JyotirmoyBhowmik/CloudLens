@@ -11,10 +11,10 @@ Enforces:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal, ROUND_HALF_EVEN
+import uuid
+from decimal import ROUND_HALF_EVEN, Decimal
 from enum import Enum
 from typing import Any
-import uuid
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -92,8 +92,8 @@ class PlanningCycle(BaseModel):
     participating_scopes: list[PlanningScope] = Field(default_factory=list)
     status: CycleStatus = Field(default=CycleStatus.DRAFT)
     default_basis: PlanningBasisType = Field(default=PlanningBasisType.PRIOR_YEAR_ACTUAL)
-    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
-    updated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
+    updated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
 
 class BottomUpSubmission(BaseModel):
@@ -112,8 +112,8 @@ class BottomUpSubmission(BaseModel):
     line_items: list[PlanLineItem] = Field(default_factory=list)
     status: SubmissionStatus = Field(default=SubmissionStatus.DRAFT)
     workflow_request_id: str | None = None
-    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
-    updated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    created_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
+    updated_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
     @field_validator("baseline_amount", "proposed_amount", mode="before")
     @classmethod
@@ -132,7 +132,7 @@ class TopDownTarget(BaseModel):
     scope_id: str
     target_amount: Decimal
     issued_by: str
-    issued_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
+    issued_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
     @field_validator("target_amount", mode="before")
     @classmethod

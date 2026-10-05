@@ -1,0 +1,23 @@
+{{- if .Values.backups.velero.enabled }}
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: {{ include "cloudlens.fullname" . }}-cluster-backup
+  labels:
+    {{- include "cloudlens.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backups.velero.schedule | default "0 3 * * *" | quote }}
+  template:
+    includedNamespaces:
+      - {{ .Release.Namespace }}
+    includedResources:
+      - deployments
+      - services
+      - persistentvolumeclaims
+      - configmaps
+      - secrets
+      - serviceaccounts
+    snapshotVolumes: true
+    ttl: {{ .Values.backups.velero.ttl | default "840h0m0s" | quote }} # 35-day retention
+{{- end }}

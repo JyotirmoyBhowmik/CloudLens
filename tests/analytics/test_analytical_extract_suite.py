@@ -12,15 +12,13 @@ Verifies the analytical extract and semantic layer across all seven canonical cr
 
 from __future__ import annotations
 
-import datetime as dt
-from decimal import Decimal
 from pathlib import Path
+
 import pytest
 
 from domain.analytics.extract_engine import AnalyticsExtractEngine
 from domain.analytics.models import (
     AnalyticalQueryRequest,
-    FactCostAndUsageRecord,
     SemanticDataQualityNullState,
 )
 from domain.analytics.observability import ExtractObservabilityEngine

@@ -302,12 +302,19 @@ class AnalyticsExtractEngine:
         return "".join(res)
 
     def _build_facts_for_query(self, period: str, tc: TenantContext) -> list[dict[str, Any]]:
-        """Query fallback synthesizer."""
+        """Query synthesizer: returns facts for demo mode, or empty list for fresh tenant."""
+        from domain.config.tenant_settings import tenant_settings_store
+
+        settings = tenant_settings_store.get(tc.tenant_id)
+        if not settings or not settings.is_demo_mode:
+            return []
         return self._build_synthetic_period_facts(period, tc)
 
     def _build_synthetic_period_facts(self, period: str, tc: TenantContext) -> list[dict[str, Any]]:
         """Constructs canonical multi-cloud facts covering all dimensions and null states."""
-        _ = tc
+        from domain.attribution.governance_resolver import resolve_analytics_owner_key
+
+        owner_key = resolve_analytics_owner_key(tc.tenant_id)
         return [
             {
                 "fact_key": f"fct-{period}-001",
@@ -317,7 +324,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "i-0abc1234ec2",
                 "application_key": "app-checkout",
                 "environment_key": "PROD",
-                "owner_key": "finops-lead@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-1040",
                 "business_unit_key": "BU-RETAIL",
                 "project_key": "PRJ-CLOUD",
@@ -339,7 +346,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "vm-core-ops-01",
                 "application_key": "app-monitoring",
                 "environment_key": "PROD",
-                "owner_key": "sre-ops@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-2020",
                 "business_unit_key": "BU-INFRA",
                 "project_key": "PRJ-OBSERVABILITY",
@@ -361,7 +368,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "bq-analytics-ds",
                 "application_key": "app-data-platform",
                 "environment_key": "PROD",
-                "owner_key": "data-team@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-3030",
                 "business_unit_key": "BU-ANALYTICS",
                 "project_key": "PRJ-DATALAKE",
@@ -383,7 +390,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "eks-shared-cluster",
                 "application_key": "app-platform-shared",
                 "environment_key": "PROD",
-                "owner_key": "platform@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-1000",
                 "business_unit_key": "BU-SHARED",
                 "project_key": "PRJ-K8S",
@@ -407,7 +414,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "s3-freetier-test",
                 "application_key": "app-dev-experiments",
                 "environment_key": "DEV",
-                "owner_key": "dev-lead@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-4040",
                 "business_unit_key": "BU-RETAIL",
                 "project_key": "PRJ-POC",
@@ -433,7 +440,7 @@ class AnalyticsExtractEngine:
                 "resource_key": "oci-instance-01",
                 "application_key": "app-dr",
                 "environment_key": "DR",
-                "owner_key": "sre-ops@company.com",
+                "owner_key": owner_key,
                 "cost_centre_key": "CC-2020",
                 "business_unit_key": "BU-INFRA",
                 "project_key": "PRJ-DR",

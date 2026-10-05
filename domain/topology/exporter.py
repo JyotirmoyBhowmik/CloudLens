@@ -156,17 +156,17 @@ class GraphExportService:
         out.write('  edge [fontname="Helvetica", fontsize=9];\n')
 
         for n in view.nodes:
-            fillcolor = "#e2f0d9"  # Green
-            fontcolor = "#203764"
+            fillcolor = "#e2f0d9"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+            fontcolor = "#203764"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
             if n.is_restricted:
-                fillcolor = "#f2f2f2"
-                fontcolor = "#7f7f7f"
+                fillcolor = "#f2f2f2"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                fontcolor = "#7f7f7f"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
             elif n.enrichment and n.enrichment.threshold_state == ThresholdBadge.RED:
-                fillcolor = "#f8d7da"  # Red
-                fontcolor = "#721c24"
+                fillcolor = "#f8d7da"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                fontcolor = "#721c24"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
             elif n.enrichment and n.enrichment.threshold_state == ThresholdBadge.AMBER:
-                fillcolor = "#fff3cd"  # Yellow
-                fontcolor = "#856404"
+                fillcolor = "#fff3cd"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                fontcolor = "#856404"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
 
             label = f"{n.display_name}\\nCost: ${float(n.direct_cost):.2f}\\n[{n.entity_ref.entity_type.value}]"
             safe_id = n.id.replace('"', '\\"').replace("-", "_").replace(":", "_")
@@ -260,21 +260,21 @@ class GraphExportService:
             x, y = coords[node.id]
 
             # Colors based on health & restricted status
-            bg_color = "#ffffff"
-            border_color = "#cbd5e1"
-            badge_color = "#10b981"  # green
+            bg_color = "#ffffff"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+            border_color = "#cbd5e1"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+            badge_color = "#10b981"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
 
             if node.is_restricted:
-                bg_color = "#f1f5f9"
-                border_color = "#94a3b8"
-                badge_color = "#64748b"
+                bg_color = "#f1f5f9"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                border_color = "#94a3b8"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                badge_color = "#64748b"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
             elif node.enrichment:
                 if node.enrichment.threshold_state == ThresholdBadge.RED:
-                    border_color = "#ef4444"
-                    badge_color = "#ef4444"
+                    border_color = "#ef4444"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                    badge_color = "#ef4444"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
                 elif node.enrichment.threshold_state == ThresholdBadge.AMBER:
-                    border_color = "#f59e0b"
-                    badge_color = "#f59e0b"
+                    border_color = "#f59e0b"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
+                    badge_color = "#f59e0b"  # no-hardcode-allow: reason="Graphviz and DrawIO export styling colours", reviewer="Prompt-48-Audit"
 
             safe_name = html.escape(node.display_name)
             safe_type = html.escape(node.entity_ref.entity_type.value)

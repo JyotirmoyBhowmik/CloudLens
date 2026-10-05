@@ -1,0 +1,27 @@
+global:
+  resolve_timeout: 1m
+  smtp_smarthost: 'mailpit:1025'
+  smtp_from: 'alertmanager@cloudlens.local'
+  smtp_require_tls: false
+
+route:
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 5s
+  group_interval: 15s
+  repeat_interval: 1h
+  receiver: 'platform-owner-email'
+  routes:
+    - match:
+        alertname: Watchdog
+      receiver: 'watchdog-sink'
+
+receivers:
+  - name: 'watchdog-sink'
+    # Dead-man's switch sink: continuously processed by external healthchecks/monitors
+
+  - name: 'platform-owner-email'
+    email_configs:
+      - to: 'admin@jyotirmoyb.com'
+        send_resolved: true
+        headers:
+          subject: '[CLOUDLENS {{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})'

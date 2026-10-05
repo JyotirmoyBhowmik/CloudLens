@@ -376,3 +376,17 @@ def get_quarantine_repository() -> QuarantineRepository:
 
 def get_connector_schedule_repository() -> ConnectorScheduleRepository:
     return _connector_schedule_repository
+
+
+def reset_sync_repositories() -> None:
+    """Resets all synchronization repository singletons in-place."""
+    with _first_sync_progress_repository._lock:
+        _first_sync_progress_repository._reports.clear()
+    with _sync_job_repository._lock:
+        _sync_job_repository._jobs.clear()
+    with _quarantine_repository._lock:
+        _quarantine_repository._records.clear()
+    with _connector_schedule_repository._lock:
+        _connector_schedule_repository._schedules.clear()
+
+

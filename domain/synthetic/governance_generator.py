@@ -1157,7 +1157,7 @@ class DeterministicGovernanceMockGenerator:
                 proposed_amount=Decimal("4200.00"),
                 reason="Storage archival charges are pending vendor audit of partner data retention SLA.",
                 status=DisputeStatus.IN_REVIEW,
-                assigned_owner="finops-analyst@company.com",
+                assigned_owner="finops-analyst@cloudlens.internal",
                 sla_deadline=(now + dt.timedelta(days=7)).isoformat(),
             )
         ]

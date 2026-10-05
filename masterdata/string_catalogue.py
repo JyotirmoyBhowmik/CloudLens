@@ -101,6 +101,12 @@ def get_string_catalogue_service() -> StringCatalogueService:
     return _string_catalogue_service
 
 
+def reset_string_catalogue_service() -> None:
+    global _string_catalogue_service
+    _string_catalogue_service = None
+
+
+
 def t(
     key: str,
     locale: str = "en_US",

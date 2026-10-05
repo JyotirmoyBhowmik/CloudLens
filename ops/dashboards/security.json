@@ -1,0 +1,81 @@
+{
+  "title": "CloudLens - Security & Access Governance",
+  "uid": "cloudlens-security",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cross-Tenant Access Attempts (Blocked)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "cross_tenant_attempts_total",
+          "legendFormat": "Cross-Tenant Attempts"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Emergency / Superuser Sign-Ins",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "superuser_signins_total",
+          "legendFormat": "Superuser Sign-ins"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Secret Store Uptime",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "secret_store_up",
+          "legendFormat": "Vault Status"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Undelivered Security Alerts",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "alerts_undelivered_total",
+          "legendFormat": "Failed Dispatches"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Security Audit Events Timeline",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(security_events_total[5m])) by (type)",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Cross-Tenant Violation Incident Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        {
+          "expr": "rate(cross_tenant_attempts_total[1m])",
+          "legendFormat": "Violation Rate / sec"
+        }
+      ]
+    }
+  ]
+}

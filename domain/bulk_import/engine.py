@@ -833,3 +833,13 @@ _engine_instance = BulkImportEngine()
 def get_bulk_import_engine() -> BulkImportEngine:
     """Returns the singleton BulkImportEngine."""
     return _engine_instance
+
+
+def reset_bulk_import_engine() -> BulkImportEngine:
+    """Resets the singleton BulkImportEngine in-place."""
+    _engine_instance._entity_stores.clear()
+    _engine_instance._record_modified_at.clear()
+    _engine_instance._record_dependents.clear()
+    return _engine_instance
+
+

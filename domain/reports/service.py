@@ -333,3 +333,11 @@ def get_report_service() -> ReportService:
             if _global_report_service is None:
                 _global_report_service = ReportService()
     return _global_report_service
+
+
+def reset_report_service() -> None:
+    """Resets the singleton instance of ReportService."""
+    global _global_report_service
+    with _service_lock:
+        _global_report_service = None
+

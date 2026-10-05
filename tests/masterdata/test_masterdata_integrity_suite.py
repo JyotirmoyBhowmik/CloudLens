@@ -13,18 +13,16 @@ Verifies master-data integrity across all seven canonical criteria:
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal
+
 import pytest
 
 from domain.models.exceptions import (
-    MasterDataException,
     ReferenceIntegrityBlockedException,
 )
 from domain.tenant.context import TenantContext
 from masterdata.enum_bridge import EnumerationBridge
 from masterdata.registry import list_registered_masters
-from masterdata.seeder import MasterDataSeeder
-from masterdata.service import MasterDataService, get_master_data_service
+from masterdata.service import MasterDataService
 
 
 class TestMasterDataIntegritySuite:

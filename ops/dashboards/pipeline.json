@@ -1,0 +1,61 @@
+{
+  "title": "CloudLens - Pipeline & Ingestion Operations",
+  "uid": "cloudlens-pipeline",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Sync Job Duration (p90 Latency)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(sync_job_duration_seconds_bucket[15m])) by (le, provider))",
+          "legendFormat": "{{provider}} p90 Duration (s)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Ingested Records Volume per Dataset",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(ingestion_rows_total[5m])) by (dataset_type)",
+          "legendFormat": "{{dataset_type}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Connector Data Freshness Lag (Staleness in Hours)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "connector_freshness_seconds / 3600",
+          "legendFormat": "{{provider}} {{capability}} (hrs)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Background Task Failures & Quarantines",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(task_failures_total[5m]))",
+          "legendFormat": "Task Failures / min"
+        },
+        {
+          "expr": "sum(rate(sync_job_outcome_total{outcome='failed'}[5m]))",
+          "legendFormat": "Sync Failures / min"
+        }
+      ]
+    }
+  ]
+}

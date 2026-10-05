@@ -37,6 +37,8 @@ from fastapi.responses import Response as FastAPIResponse
 from api.cloudlens_api.conventions.idempotency import idempotency_store
 from api.cloudlens_api.conventions.models import StandardErrorCode
 from api.cloudlens_api.conventions.rate_limit import token_rate_limiter
+from domain.abuse.tracker import get_abuse_tracker
+from domain.maintenance.service import get_maintenance_mode_service
 
 
 def make_problem_details(
@@ -97,10 +99,13 @@ async def conventions_dispatch_middleware(
         request.headers.get("X-Correlation-ID") or str(uuid.uuid4()),
     )
 
-    # 1. Rate Limiting Check
+    # 1. Rate Limiting Check & Abuse Tracking (IMP-07)
+    abuse_tracker = get_abuse_tracker()
     rate_limit_key = request.headers.get("Authorization") or (
         request.client.host if request.client else "anonymous"
     )
+    abuse_tracker.record_call(rate_limit_key)
+
     # Exclude openapi / docs / static assets from strict rate limiting
     is_doc_or_health = path in ("/openapi.json", "/docs", "/redoc") or path == "/api/v1/health"
     if not is_doc_or_health:
@@ -109,6 +114,7 @@ async def conventions_dispatch_middleware(
         allowed, r_limit, r_remaining, r_reset = True, 1000, 999, 60
 
     if not allowed:
+        abuse_tracker.record_429(rate_limit_key, path)
         err_body = make_problem_details(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             error_code=StandardErrorCode.RATE_LIMITED,
@@ -126,6 +132,31 @@ async def conventions_dispatch_middleware(
                 "RateLimit-Remaining": "0",
                 "RateLimit-Reset": str(r_reset),
                 "Retry-After": str(r_reset),
+            },
+        )
+
+    # 1.5. Maintenance Mode Check (IMP-01)
+    maint_svc = get_maintenance_mode_service()
+    tenant_id = getattr(request.state, "tenant_id", request.headers.get("X-Tenant-ID"))
+    user_roles_hdr = request.headers.get("X-Roles") or request.headers.get("X-Role") or ""
+    caller_roles = [r.strip() for r in user_roles_hdr.split(",") if r.strip()]
+
+    if maint_svc.is_maintenance_mode(tenant_id) and not maint_svc.is_request_exempt(path, method, caller_roles):
+        maint_info = maint_svc.get_status(tenant_id)
+        maint_err = make_problem_details(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            error_code="MAINTENANCE_MODE",
+            detail=maint_info.get("message", "Platform is under scheduled maintenance."),
+            instance=path,
+            correlation_id=correlation_id,
+            title="Platform Maintenance Mode",
+        )
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=maint_err,
+            headers={
+                "X-Correlation-ID": correlation_id,
+                "Retry-After": str(maint_info.get("retry_after_seconds", 300)),
             },
         )
 

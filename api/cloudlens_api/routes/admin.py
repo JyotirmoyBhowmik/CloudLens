@@ -14,14 +14,26 @@ from __future__ import annotations
 import csv
 import io
 import logging
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field, field_validator
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
-from domain.models.enums import OverrideClass
+from domain.alerting.service import get_alert_service
+from domain.audit.models import AuditEventCreate
+from domain.audit.service import get_audit_service
+from domain.identity.service import get_identity_service
+from domain.models.enums import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
+    AuditEventType,
+    OverrideClass,
+    SystemRole,
+)
 from domain.overrides.models import (
     MIN_WHY_LENGTH,
     OverrideApproval,
@@ -238,6 +250,35 @@ class StepUpAuthResponse(BaseModel):
     actor: str
 
 
+class ActAsTenantRequest(BaseModel):
+    """Payload to assume scoped tenant identity as Global Admin."""
+
+    tenant_id: str = Field(..., min_length=1, description="Target tenant ID to assume")
+    reason: str = Field(..., min_length=20, description="Mandatory reason (>= 20 characters)")
+    mfa_code: str | None = Field(default=None, description="Step-up MFA TOTP code")
+    step_up_token: str | None = Field(default=None, description="Step-up session token from /step-up")
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason_length(cls, v: str) -> str:
+        clean = v.strip() if v else ""
+        if len(clean) < 20:
+            raise ValueError(f"Reason must be at least 20 characters. Found {len(clean)}.")
+        return clean
+
+
+class ActAsTenantResponse(BaseModel):
+    """Scoped token issued for temporary tenant administration."""
+
+    access_token: str
+    token: str
+    token_type: str = "Bearer"
+    expires_in: int
+    act_as_tenant: str
+    original_subject: str
+    audit_event_id: str
+
+
 class AdminOverrideCreateDTO(BaseModel):
     """Payload enforcing all eight mandatory override attributes."""
 
@@ -330,14 +371,21 @@ _FEATURE_FLAGS: list[dict[str, Any]] = [
 def _check_admin_role(tenant_context: TenantContext) -> None:
     """Hard Rule: Non-administrative users see no administration surface at all (Acceptance 4)."""
     roles = {r.value if hasattr(r, "value") else str(r) for r in tenant_context.roles}
-    admin_roles = {"TENANT_ADMIN", "GLOBAL_ADMIN", "SUPERUSER", "admin"}
+    admin_roles = {
+        "SUPER_ADMIN",
+        "PLATFORM_ADMIN",
+        "GLOBAL_ADMIN",
+        "TENANT_ADMIN",
+        "SUPERUSER",
+        "admin",
+    }
     is_admin = bool(roles & admin_roles) or tenant_context.is_superuser
     if not is_admin and tenant_context.user_id in ("admin", "superuser", "user-admin"):
         is_admin = True
     if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administration Surface Restricted: Administrative privileges required (TENANT_ADMIN).",
+            detail="Administration Surface Restricted: Administrative privileges required (PLATFORM_ADMIN).",
         )
 
 
@@ -368,6 +416,130 @@ def verify_step_up_authentication(
         expires_at=expires_at,
         actor=tenant_context.user_id,
     )
+
+
+@router.post("/act-as", response_model=ActAsTenantResponse, status_code=status.HTTP_200_OK)
+def act_as_tenant(
+    req: ActAsTenantRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+) -> ActAsTenantResponse:
+    """Explicit act-as-tenant flow for Global Admin (Prompt R-SEC Item 1.3).
+
+    Requires step-up MFA, issues a short-lived scoped token carrying act_as_tenant + original subject,
+    writes AuditEvent ACT_AS_TENANT_START, and raises a security alert.
+    """
+    # 1. Require SUPER_ADMIN role (or legacy GLOBAL_ADMIN)
+    is_global_admin = any(
+        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN", SystemRole.GLOBAL_ADMIN, "GLOBAL_ADMIN")
+        for r in tenant_context.roles
+    ) or tenant_context.is_superuser
+    if not is_global_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Act-as-tenant operation strictly restricted to SUPER_ADMIN role.",
+        )
+
+    # 2. Require step-up MFA proof
+    step_up = req.step_up_token or x_step_up_token or req.mfa_code
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up MFA verification required for act-as-tenant assumption.",
+        )
+
+    identity_service = get_identity_service()
+    audit_service = get_audit_service()
+    alert_service = get_alert_service()
+
+    now = datetime.now(UTC)
+    ttl_seconds = 900  # 15 minutes default
+    actor_id = tenant_context.email or tenant_context.user_id
+
+    # 3. Write AuditEvent ACT_AS_TENANT_START
+    audit_event = audit_service.append_event(
+        tenant_context=tenant_context,
+        event_in=AuditEventCreate(
+            event_type=AuditEventType.ACT_AS_TENANT_START,
+            actor_id=actor_id,
+            actor_roles=[r if isinstance(r, str) else r.value for r in tenant_context.roles],
+            action="ACT_AS_TENANT_START",
+            resource_type="TENANT",
+            resource_id=req.tenant_id,
+            details={
+                "target_tenant": req.tenant_id,
+                "original_subject": actor_id,
+                "reason": req.reason,
+                "ttl_seconds": ttl_seconds,
+            },
+            correlation_id=tenant_context.correlation_id,
+        ),
+    )
+
+    # 4. Raise Security Alert
+    alert_msg = (
+        f"SECURITY ALERT: Global Admin '{actor_id}' initiated act-as-tenant session "
+        f"for tenant '{req.tenant_id}'. Reason: {req.reason}"
+    )
+    logger.warning(alert_msg)
+    try:
+        from domain.models.governance import Alert
+        alert_obj = Alert(
+            id=f"alt-sec-{uuid.uuid4().hex[:8]}",
+            tenant_id=req.tenant_id,
+            alert_type=AlertType.SECURITY_ALERT if hasattr(AlertType, "SECURITY_ALERT") else "SECURITY_ALERT",
+            severity=AlertSeverity.HIGH,
+            message=alert_msg,
+            status=AlertStatus.ACTIVE,
+            triggered_at=now,
+        )
+        if hasattr(alert_service, "repository") and hasattr(alert_service.repository, "save_alert"):
+            alert_service.repository.save_alert(alert_obj)
+    except Exception as e:
+        logger.error(f"Failed to persist security alert: {e}")
+
+    # 5. Issue short-lived scoped token
+    scoped_token = identity_service.token_engine.issue_act_as_token(
+        user_id=tenant_context.user_id,
+        original_email=actor_id,
+        target_tenant_id=req.tenant_id,
+        roles=[SystemRole.GLOBAL_ADMIN],
+        ttl_seconds=ttl_seconds,
+        reason=req.reason,
+    )
+
+    return ActAsTenantResponse(
+        access_token=scoped_token,
+        token=scoped_token,
+        token_type="Bearer",
+        expires_in=ttl_seconds,
+        act_as_tenant=req.tenant_id,
+        original_subject=actor_id,
+        audit_event_id=audit_event.id,
+    )
+
+
+@router.post("/act-as/end", status_code=status.HTTP_200_OK)
+def end_act_as_tenant(
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> dict[str, Any]:
+    """Terminates an active act-as session, writing ACT_AS_TENANT_END audit event."""
+    audit_service = get_audit_service()
+    actor_id = tenant_context.email or tenant_context.user_id
+    audit_service.append_event(
+        tenant_context=tenant_context,
+        event_in=AuditEventCreate(
+            event_type=AuditEventType.ACT_AS_TENANT_END,
+            actor_id=actor_id,
+            actor_roles=[r if isinstance(r, str) else r.value for r in tenant_context.roles],
+            action="ACT_AS_TENANT_END",
+            resource_type="TENANT",
+            resource_id=tenant_context.tenant_id,
+            details={"tenant_id": tenant_context.tenant_id, "user_id": actor_id},
+            correlation_id=tenant_context.correlation_id,
+        ),
+    )
+    return {"status": "SUCCESS", "message": "Act-as session terminated."}
 
 
 @router.get("/functions", response_model=list[dict[str, Any]], status_code=status.HTTP_200_OK)
@@ -452,7 +624,7 @@ def export_access_review(
                 [
                     tenant_context.tenant_id,
                     tenant_context.user_id,
-                    tenant_context.email or "admin@cloudlens.internal",
+                    tenant_context.email or tenant_context.user_id,
                     role.code,
                     perm_code,
                     len(grants),

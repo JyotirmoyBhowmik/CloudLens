@@ -7,6 +7,7 @@ Wires OpenTelemetry across:
 All spans are joined by a common correlation identifier (Enterprise Rule 4.2 / Prompt 03 Item 20).
 """
 
+import os
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -15,7 +16,7 @@ from typing import Any
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import Span, SpanKind, Status, StatusCode
 
@@ -31,16 +32,18 @@ _tracer_provider: TracerProvider | None = None
 
 
 def setup_tracing(
-    service_name: str = "cloudlens-platform", in_memory: bool = True
+    service_name: str = "cloudlens-platform",
+    in_memory: bool = True,
+    otlp_endpoint: str | None = None,
 ) -> TracerProvider:
-    """Initialize OpenTelemetry TracerProvider."""
+    """Initialize OpenTelemetry TracerProvider with in-memory or OTLP Tempo exporter."""
     global _in_memory_exporter, _tracer_provider
 
     resource = Resource.create(
         {
             "service.name": service_name,
-            "service.version": "0.1.0",
-            "deployment.environment": "development",
+            "service.version": "1.1.0",
+            "deployment.environment": os.getenv("CLOUDLENS_ENV", "development"),
         }
     )
 
@@ -49,9 +52,72 @@ def setup_tracing(
         _in_memory_exporter = InMemorySpanExporter()
         provider.add_span_processor(SimpleSpanProcessor(_in_memory_exporter))
 
+    # OTLP exporter to Tempo / OpenTelemetry Collector
+    endpoint = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or os.getenv("TEMPO_ENDPOINT")
+    if endpoint:
+        try:
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+            otlp_exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
+            provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+        except Exception:
+            pass
+
     trace.set_tracer_provider(provider)
     _tracer_provider = provider
     return provider
+
+
+def auto_instrument_all(
+    app: Any = None,
+    engine: Any = None,
+    celery_app: Any = None,
+) -> dict[str, bool]:
+    """Auto-instruments FastAPI, SQLAlchemy, Celery, and HTTPX with OpenTelemetry."""
+    results = {
+        "fastapi": False,
+        "sqlalchemy": False,
+        "celery": False,
+        "httpx": False,
+    }
+
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+        if app is not None:
+            FastAPIInstrumentor.instrument_app(app)
+            results["fastapi"] = True
+    except Exception:
+        pass
+
+    try:
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+        if engine is not None:
+            SQLAlchemyInstrumentor().instrument(engine=engine)
+        else:
+            SQLAlchemyInstrumentor().instrument()
+        results["sqlalchemy"] = True
+    except Exception:
+        pass
+
+    try:
+        from opentelemetry.instrumentation.celery import CeleryInstrumentor
+
+        CeleryInstrumentor().instrument()
+        results["celery"] = True
+    except Exception:
+        pass
+
+    try:
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+        HTTPXClientInstrumentor().instrument()
+        results["httpx"] = True
+    except Exception:
+        pass
+
+    return results
 
 
 def get_in_memory_spans() -> list[Any]:

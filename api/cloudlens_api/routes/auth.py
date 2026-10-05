@@ -22,12 +22,10 @@ from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from domain.identity.models import AuthContext, StepUpToken, TokenPair
-from domain.identity.password_hasher import generate_totp_uri
 from domain.identity.service import get_identity_service
 from domain.models.enums import StepUpAction
 from domain.models.exceptions import (
     BreakGlassAuthFailedException,
-    BreakGlassLimitExceededException,
     IdentityException,
     MachineClientAuthFailedException,
     NoMappedRoleException,
@@ -81,34 +79,15 @@ class SAMLLoginRequest(BaseModel):
     )
 
 
-class BreakGlassProvisionRequest(BaseModel):
-    """Payload to provision a strictly limited emergency break-glass account."""
-
-    tenant_id: str = Field(..., description="Tenant identifier")
-    account_name: str = Field(..., description="Break-glass account username identifier")
-    password: str = Field(..., min_length=12, description="High-entropy master secret")
-    step_up_token: str | None = Field(
-        default=None, description="Elevated step-up token authorized for CREDENTIAL_CREATION"
-    )
-
-
-class BreakGlassProvisionResponse(BaseModel):
-    """Response containing provisioned emergency account details and TOTP configuration."""
-
-    tenant_id: str
-    account_name: str
-    totp_secret: str = Field(..., description="Base32 TOTP secret for MFA configuration")
-    totp_uri: str = Field(
-        ..., description="Standard otpauth:// URI for authenticator app enrollment"
-    )
-
-
 class BreakGlassLoginRequest(BaseModel):
-    """Payload for emergency break-glass account authentication."""
+    """Payload for emergency break-glass account authentication (Prompt 49B superuser only)."""
 
     tenant_id: str = Field(..., description="Tenant identifier")
     account_name: str = Field(..., description="Break-glass username")
-    password: str = Field(..., description="Account secret")
+    password: str | None = Field(default=None, description="Local password (strictly rejected)")
+    idp_assertion: dict[str, Any] | None = Field(
+        default=None, description="IdP verified identity assertion claims"
+    )
     mfa_code: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP MFA passcode")
 
 
@@ -313,63 +292,18 @@ def saml_login(
 
 
 @router.post(
-    "/break-glass/provision",
-    response_model=BreakGlassProvisionResponse,
-    summary="Provision emergency break-glass account",
-)
-def provision_break_glass_account(
-    payload: BreakGlassProvisionRequest,
-    authorization: str | None = Header(default=None),
-    x_correlation_id: str | None = Header(default=None),
-) -> BreakGlassProvisionResponse:
-    """Provisions a strictly limited break-glass emergency account (Prompt 10 Item 65).
-
-    Requires step-up authentication authorized for CREDENTIAL_CREATION.
-    """
-    service = get_identity_service()
-    actor_id = "admin"
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            actor_id = service.token_engine.extract_auth_context(
-                authorization[len("Bearer ") :].strip()
-            ).email
-        except Exception:
-            pass
-
-    try:
-        bg_account, secret = service.provision_break_glass_account(
-            tenant_id=payload.tenant_id,
-            account_name=payload.account_name,
-            password=payload.password,
-            actor_id=actor_id,
-            step_up_token=payload.step_up_token,
-            correlation_id=x_correlation_id,
-        )
-        uri = generate_totp_uri(secret, payload.account_name, issuer="CloudLens")
-        return BreakGlassProvisionResponse(
-            tenant_id=bg_account.tenant_id,
-            account_name=bg_account.account_name,
-            totp_secret=secret,
-            totp_uri=uri,
-        )
-    except StepUpRequiredException as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except BreakGlassLimitExceededException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
-
-
-@router.post(
     "/break-glass/login",
     response_model=TokenPair,
-    summary="Break-glass emergency login with MFA",
+    summary="Break-glass emergency login with IdP + MFA",
 )
 def break_glass_login(
     payload: BreakGlassLoginRequest,
     request: Request,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Authenticates via the emergency break-glass local path (Prompt 10 Item 65).
+    """Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B).
 
+    Requires IdP + MFA. Local passwords are strictly prohibited.
     Fires an immediate CRITICAL administrator alert and logs a distinct audit event.
     """
     service = get_identity_service()
@@ -382,6 +316,7 @@ def break_glass_login(
             account_name=payload.account_name,
             password=payload.password,
             mfa_code=payload.mfa_code,
+            idp_assertion=payload.idp_assertion,
             ip_address=client_ip,
             user_agent=user_agent,
             correlation_id=x_correlation_id,
@@ -444,6 +379,75 @@ def logout(
         )
 
     return {"status": "SUCCESS", "message": "Session terminated and tokens revoked."}
+
+
+@router.get("/sessions", summary="List active sessions (IMP-02)")
+def list_sessions(
+    user_id: str | None = None,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Lists active user sessions with idle and absolute expiry metadata (IMP-02)."""
+    ctx = _extract_auth_context(authorization)
+    service = get_identity_service()
+    target_user_id = user_id if "SUPER_ADMIN" in [str(r) for r in ctx.roles] else ctx.user_id
+    sessions = service.list_active_sessions(tenant_id=ctx.tenant_id, user_id=target_user_id)
+    return {
+        "tenant_id": ctx.tenant_id,
+        "returned_count": len(sessions),
+        "sessions": [
+            {
+                "session_id": s.id,
+                "user_id": s.user_id,
+                "token_family_id": s.token_family_id,
+                "created_at": s.created_at.isoformat(),
+                "last_activity_at": s.last_activity_at.isoformat(),
+                "expires_at": s.expires_at.isoformat(),
+                "ip_address": s.ip_address,
+                "user_agent": s.user_agent,
+                "is_active": s.is_active,
+            }
+            for s in sessions
+        ],
+    }
+
+
+@router.delete("/sessions/{session_id}", summary="Revoke single session (IMP-02)")
+def revoke_session(
+    session_id: str,
+    authorization: str | None = Header(default=None),
+    x_correlation_id: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Revokes a specific user session and blacklists its token family (IMP-02)."""
+    ctx = _extract_auth_context(authorization)
+    service = get_identity_service()
+    success = service.revoke_session(
+        session_id=session_id,
+        actor_id=ctx.email,
+        reason="OPERATOR_REVOKED",
+        correlation_id=x_correlation_id,
+    )
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive.")
+    return {"status": "REVOKED", "session_id": session_id}
+
+
+@router.delete("/sessions/user/{user_id}", summary="Revoke all sessions for user (IMP-02)")
+def revoke_all_user_sessions(
+    user_id: str,
+    authorization: str | None = Header(default=None),
+    x_correlation_id: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Revokes all active sessions for a given user (IMP-02)."""
+    ctx = _extract_auth_context(authorization)
+    service = get_identity_service()
+    count = service.revoke_user_sessions(
+        tenant_id=ctx.tenant_id,
+        user_id=user_id,
+        actor_id=ctx.email,
+        reason="OPERATOR_REVOKED_ALL",
+        correlation_id=x_correlation_id,
+    )
+    return {"status": "REVOKED", "user_id": user_id, "revoked_count": count}
 
 
 @router.post("/users/{user_id}/disable", summary="Administratively disable user")

@@ -69,3 +69,12 @@ All Must-priority requirements are 100% implemented. The following non-blocking 
 | **D-12** | Stale screen counts in BBP body (20 vs 27) | Body text not updated after lateral lens and addenda expansion | Prompt 62 reconciled BBP v1.1 Section 31.3 to exactly 27 screens. Verified via `verify_bbp_v1_1_consistency.py`. | **CLOSED** |
 | **D-13** | Stale administrative functions count (24 vs 29) | Five administrative modules added in addenda without count update | Prompt 62 reconciled BBP v1.1 Section 32 to exactly 29 administrative functions. Verified via `verify_bbp_v1_1_consistency.py`. | **CLOSED** |
 | **D-14** | Stale connector, threshold, and monitoring counts | Addenda introduced 18 capabilities, 11 threshold bases, 15 monitoring types | Prompt 62 reconciled BBP v1.1 Sections 19.1, 21.3, and 26.1. Verified via `verify_bbp_v1_1_consistency.py`. | **CLOSED** |
+
+---
+
+## 5. Security & Compliance Open Items
+
+| Item ID | Description | Severity | Owner / Assigned To | Target Milestone | Status |
+|:---|:---|:---:|:---|:---|:---:|
+| **SEC-024** | Independent third-party penetration test and verification close-out | High | CISO / External Penetration Testing Firm | Before first production release (Pre-Go-Live) | **OPEN** |
+
