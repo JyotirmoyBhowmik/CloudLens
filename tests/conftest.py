@@ -148,4 +148,63 @@ def reset_all_singletons():
     yield
 
 
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Enforces authoritative Prompt 42/42B level markers (levels 01-20 & phase2)."""
+    for item in items:
+        path_str = str(item.fspath).replace("\\", "/")
 
+        if "tests/unit/" in path_str:
+            item.add_marker(pytest.mark.level01)
+        elif "tests/integration/" in path_str:
+            item.add_marker(pytest.mark.level02)
+        elif "tests/contracts/" in path_str:
+            item.add_marker(pytest.mark.level03)
+        elif "tests/connectors/" in path_str:
+            item.add_marker(pytest.mark.level04)
+        elif "tests/cloud_provider/" in path_str:
+            item.add_marker(pytest.mark.level05)
+        elif "tests/data_validation/" in path_str:
+            item.add_marker(pytest.mark.level06)
+        elif "tests/cost_reconciliation/" in path_str:
+            item.add_marker(pytest.mark.level07)
+        elif "tests/security/test_rbac" in path_str or "tests/rbac/" in path_str:
+            item.add_marker(pytest.mark.level09)
+        elif "tests/security/" in path_str:
+            item.add_marker(pytest.mark.level08)
+        elif "tests/perf/" in path_str:
+            item.add_marker(pytest.mark.level10)
+        elif "tests/load/" in path_str:
+            item.add_marker(pytest.mark.level11)
+        elif "tests/ui/" in path_str:
+            item.add_marker(pytest.mark.level12)
+        elif "tests/e2e/" in path_str:
+            item.add_marker(pytest.mark.level13)
+        elif "tests/dr/" in path_str:
+            item.add_marker(pytest.mark.level14)
+        elif "tests/upgrade/" in path_str:
+            item.add_marker(pytest.mark.level15)
+        elif "tests/regression/" in path_str:
+            item.add_marker(pytest.mark.level16)
+        elif "tests/acceptance/" in path_str or "tests/mandates/" in path_str:
+            item.add_marker(pytest.mark.level17)
+        elif "tests/masterdata/" in path_str:
+            item.add_marker(pytest.mark.level18)
+        elif "tests/workflow/" in path_str:
+            item.add_marker(pytest.mark.level19)
+        elif "tests/analytics/" in path_str:
+            item.add_marker(pytest.mark.level20)
+
+        # Phase 2 (Prompts 57-61 / Addendum B / New Improvements)
+        if any(
+            p in path_str
+            for p in [
+                "tests/commitments/",
+                "tests/planning/",
+                "tests/lifecycle/",
+                "tests/adoption/",
+                "tests/integrations/",
+                "tests/improvements/",
+                "tests/control_tower/",
+            ]
+        ):
+            item.add_marker(pytest.mark.phase2)

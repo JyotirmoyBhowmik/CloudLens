@@ -1,0 +1,10 @@
+[allowlist]
+description = "CloudLens synthetic test fixtures, RFC test tokens, and canary logs"
+paths = [
+    '''tests/.*''',
+    '''scripts/verify_loki_canary_secret\.py''',
+]
+stopwords = [
+    "correlation_id=",
+    "idempotency_key",
+]

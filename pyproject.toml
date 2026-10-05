@@ -91,4 +91,28 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "level01: Level 1 Unit Tests (deterministic units, mathematical rules, and threshold bands)",
+    "level02: Level 2 Integration Tests (real database repository lifecycle, schema validation)",
+    "level03: Level 3 API Contract Tests (REST API envelopes, response headers, error representations)",
+    "level04: Level 4 Connector Tests (dual-mode connector test kit)",
+    "level05: Level 5 Cloud-Provider Tests (AWS, Azure, GCP, and OCI hierarchy and schema compatibility)",
+    "level06: Level 6 Data Validation Tests (4-state null discipline)",
+    "level07: Level 7 Cost Reconciliation Tests (100% hand-calculated coverage for tiered, commitments, discounts, currency)",
+    "level08: Level 8 Security & Isolation Tests (OIDC login, token kill, break-glass, cross-tenant boundary isolation)",
+    "level09: Level 9 RBAC Matrix Tests (role permissions, financial detail redaction, non-disclosure)",
+    "level10: Level 10 Performance Benchmarks (MVP and design-headroom streaming with zero drift)",
+    "level11: Level 11 Load & Stress Tests (concurrent ingestion and query stress)",
+    "level12: Level 12 UI Contract Tests (inventory, lateral lenses, explanation panels, alerts)",
+    "level13: Level 13 End-to-End Business Processes (BP-01 through BP-26)",
+    "level14: Level 14 Disaster Recovery Exercise (automated restore, failover, RTO, RPO)",
+    "level15: Level 15 Rolling Upgrade Tests (zero-downtime rolling upgrade on active dataset)",
+    "level16: Level 16 Regression & Defect Prevention Tests (bi-temporal restatements, leap year, no float drift)",
+    "level17: Level 17 Acceptance Quality Gates (full suite passing, 100% monetary coverage, zero float math)",
+    "level18: Level 18 Master-Data Integrity Suite (bidirectional enum parity, zero orphan master values)",
+    "level19: Level 19 Workflow & Approval Engine Suite (role/ownership approver resolution, delegation, atomic apply/reversion)",
+    "level20: Level 20 Analytical Extract Suite (full partition restatements, scope manifests with SHA-256)",
+    "phase2: Phase 2 / Addendum B (Prompts 57-61 / S-21 to S-27 improvements and integrations)",
+]
+
 

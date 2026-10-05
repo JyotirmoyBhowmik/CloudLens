@@ -1,0 +1,6 @@
+# Gitleaks ignore file for CloudLens unit test fixtures and synthetic canary values
+2027ff73a188c41a4a5a09c329380919037fbc8a:scripts/verify_loki_canary_secret.py:generic-api-key:9
+5299a283c20ee3e3369f7d67e1a150d2b5e58667:tests/unit/test_oci_connector.py:generic-api-key:130
+440b5447b7d94baa11c8638f8ca6778c6fbd8569:tests/unit/test_sync_orchestration.py:generic-api-key:250
+600b9e4c49aa85e1c45ed5c71a950434a0ad2c44:tests/unit/test_credential_lifecycle.py:private-key:88
+17f6a08aa3225ce3fc0d6a8644aa2cc80ded0a8b:tests/unit/test_observability.py:jwt:94
