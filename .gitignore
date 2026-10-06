@@ -59,6 +59,7 @@ logs/
 !tests/data/
 artifacts/
 audit_output/
+audit_full.json
 test-results/
 playwright-report/
 

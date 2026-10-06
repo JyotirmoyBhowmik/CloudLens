@@ -1,5 +1,5 @@
 {
-  "status": "PROVISIONED",
+  "status": "ACTIVATED",
   "is_interactively_usable": true,
   "superuser_email": "admin@jyotirmoyb.com",
   "superuser_exists": true,
@@ -7,7 +7,7 @@
   "unrestricted_scope": true,
   "mfa_enforced": true,
   "mfa_disableable": false,
-  "has_password": false,
+  "has_password": true,
   "activation_link_issued": true,
   "activation_channel": "security-alerts@jyotirmoyb.com",
   "break_glass_count": 1,
@@ -25,6 +25,6 @@
     "consecutive_routine_days": 0,
     "delegation_completed": false
   },
-  "timestamp": "2026-10-06T04:44:09.183800Z",
-  "correlation_id": "823dc1f1-c206-454b-b172-c486400efc98"
+  "timestamp": "2026-10-06T06:08:05.723617Z",
+  "correlation_id": "5c0bd329-29c4-4be8-ba17-93308d6c9561"
 }
