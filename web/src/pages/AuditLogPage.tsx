@@ -22,7 +22,7 @@ const DEMO_AUDIT: AuditEventItem[] = [
   {
     id: 'aud-98401',
     eventType: 'ACT_AS_TENANT_START',
-    actor: 'admin@jyotirmoyb.com',
+    actor: 'auditor@enterprise.internal',
     targetEntity: 'tenant-demo',
     timestamp: '2026-10-05T21:42:15Z',
     correlationId: 'cid-782a-49bf-91a0',

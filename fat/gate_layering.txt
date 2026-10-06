@@ -1,0 +1,7 @@
+$ python scripts/check_layering.py
+exit=0
+
+STDOUT:
+[PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer.
+
+STDERR:

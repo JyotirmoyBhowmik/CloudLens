@@ -351,13 +351,13 @@ def main():
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True); RAW.mkdir(exist_ok=True)
     py = python_exe()
-    print(f"[audit] repo={ROOT} python={py}")
+    print(f"[audit] repo={ROOT} python={py}", flush=True)
     data = {"generated_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "python": py}
     for key, fn in [("git", git_facts), ("tree", tree_facts),
                     ("tests", lambda: test_facts(py, args.run_tests, args.timeout)),
                     ("gates", lambda: quality_gates(py)), ("grep", grep_facts), ("docs", docs_facts),
                     ("api", api_facts), ("web", web_facts), ("migrations", migration_facts)]:
-        print(f"[audit] collecting {key} ...")
+        print(f"[audit] collecting {key} ...", flush=True)
         try:
             data[key] = fn()
         except Exception as e:
@@ -368,7 +368,7 @@ def main():
     except Exception as e:
         rep = f"# CloudLens Audit Report\n\nReport rendering failed: {e!r}. See audit_full.json."
     (OUT / "AUDIT_REPORT.md").write_text(rep, encoding="utf-8")
-    print(f"[audit] done -> {OUT / 'AUDIT_REPORT.md'}  ({len(rep)} chars)")
+    print(f"[audit] done -> {OUT / 'AUDIT_REPORT.md'}  ({len(rep)} chars)", flush=True)
 
 if __name__ == "__main__":
     main()

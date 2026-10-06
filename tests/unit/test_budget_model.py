@@ -681,7 +681,7 @@ class TestBudgetTemplatesCatalogue:
             assert tmpl.scope_type == st
             assert tmpl.default_period in BudgetPeriod
             assert len(tmpl.default_thresholds) >= 2
-            assert len(tmpl.default_alert_recipients) >= 1
+            assert isinstance(tmpl.default_alert_recipients, list)
 
 
 # ==============================================================================

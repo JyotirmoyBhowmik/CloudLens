@@ -21,7 +21,7 @@ interface UserItem {
 const DEMO_USERS: UserItem[] = [
   {
     id: 'usr-01',
-    email: 'admin@jyotirmoyb.com',
+    email: 'superadmin@enterprise.internal',
     name: 'Super Administrator',
     role: 'SUPER_ADMIN',
     scopeGrant: 'PLATFORM (Global Root)',

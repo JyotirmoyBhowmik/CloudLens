@@ -1,0 +1,1512 @@
+{
+  "generated_utc": "2026-10-04 17:12:22",
+  "python": "C:\\Users\\TEST\\CloudLens\\.venv\\Scripts\\python.exe",
+  "git": {
+    "head": "7831aa582293565bf9208e4758e7e2933d53a43b",
+    "branch": "main",
+    "remote": [
+      "origin\thttps://github.com/JyotirmoyBhowmik/CloudLens.git (fetch)",
+      "origin\thttps://github.com/JyotirmoyBhowmik/CloudLens.git (push)"
+    ],
+    "commit_count": 71,
+    "status_dirty_files": 0,
+    "last_40_commits": [
+      "7831aa5|2026-10-04|chore: add cloudlens_audit.py script",
+      "d01098a|2026-10-04|chore: add audit_output/ to .gitignore",
+      "c4b90ce|2026-10-04|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook",
+      "3303556|2026-10-04|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack",
+      "6cb8436|2026-10-04|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox",
+      "d6c1024|2026-10-04|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks",
+      "9813329|2026-10-04|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)",
+      "25c68bc|2026-10-04|docs: add provider capability register and open items register (Prompt 43)",
+      "23f28b6|2026-10-04|chore: sync exception register after AST scan verification",
+      "634243c|2026-10-04|feat(enterprise): complete Prompts 42B, 43, 44, 62, 57, 58, 59 - hardening, BBP v1.1, planning, commitments, and lifecycle",
+      "2705332|2026-10-03|feat(interfaces): implement dependency graph, budget, policy and admin console screens (Prompt 41)",
+      "d63f747|2026-10-03|feat(explanation): implement information icons, contextual alerts and explanation layer (Prompt 40)",
+      "4ea77a0|2026-10-03|feat(resource-detail): implement resource detail, cost detail, usage and runtime views (Prompt 39)",
+      "b7d7570|2026-10-03|feat(hierarchy): implement hierarchy explorer, inventory and search (Prompt 38)",
+      "7e9f5bd|2026-10-03|feat(dashboards): implement executive, provider and service dashboards (Prompt 37)",
+      "5667989|2026-10-03|feat(ui): implement enterprise design system and global patterns (Prompt 36)",
+      "c69664e|2026-10-03|feat(import): implement bulk import framework and data onboarding (Prompt 53)",
+      "dc5776b|2026-10-03|feat(demo): Prompt 47B governance-layer mock data extension (closes defect D-04)",
+      "9c9e81d|2026-10-03|feat(provisioning): implement cost-aware provisioning gate (Prompt 55)",
+      "a1c02ca|2026-10-03|docs: update verification reports timestamp",
+      "044e822|2026-10-03|feat: implement showback, chargeback statements and cost allocation packs (Prompt 52)",
+      "4b754fd|2026-10-03|feat(analytics): implement scheduled analytical extract, BI feed, and semantic layer (Prompt 56)",
+      "544514d|2026-10-03|feat(reporting): implement reporting and export engine across 21 reports (Prompt 35)",
+      "27f5199|2026-10-02|feat(api): implement public API surface across 48 catalogue endpoints and conventions (Prompt 34)",
+      "e4d3261|2026-10-02|feat(topology): implement cost-aware topology service with 8 canonical views and chain cost aggregation (Prompt 33)",
+      "02974f6|2026-10-02|feat(dependency): implement dependency model, multi-layer discovery, and impact analysis (Prompt 32)",
+      "72d9348|2026-10-02|feat(remediation): implement remediation task assignment and accountability tracking (Prompt 51)",
+      "c50ea34|2026-10-02|feat(workflow): implement unified workflow, approval, and delegation engine (Prompt 50)",
+      "4136b4a|2026-10-02|feat(governance): implement alert and policy catalogue extension AL-17..AL-20 and POL-17..POL-18 (Prompt 31B, closes D-08, D-09)",
+      "6ffc71c|2026-10-02|feat(alerting): implement alerting engine, notifications, and contextual alerts (Prompt 31)",
+      "53bb77d|2026-10-02|feat(policy): implement declarative versioned policy engine, simulate/enforce modes, and default catalogue (Prompt 30)",
+      "6944bfa|2026-10-02|feat(forecasting): implement forecasting engine, methods, outputs, and accuracy tracking (Prompt 29)",
+      "c44f471|2026-10-02|feat(budgets): implement budget model, approval workflows, and overlap detection (Prompt 28)",
+      "ddca473|2026-10-02|feat(quotas): implement service limit, quota headroom tracking, and lead-time forecasting (Prompt 54)",
+      "3bd5cd8|2026-10-02|feat(thresholds): implement 6-state 10-basis threshold engine with anti-flapping (Prompt 27)",
+      "e4bfb85|2026-10-02|feat(runtime): implement 6-state runtime model, schedule adherence, and breach valuation (Prompt 26)",
+      "726b786|2026-10-02|feat(usage): implement 14 monitoring types, cardinality control, and usage expectations (Prompt 25)",
+      "1281e8d|2026-10-01|feat(cost): implement cost reconciliation engine, executive trust indicator, and investigation workflow (Prompt 24)",
+      "3d29bf3|2026-10-01|feat(cost): implement cost calculation engine and pre-deployment estimation (Prompt 23)",
+      "7674586|2026-10-01|feat(cost): implement FOCUS cost ingestion, normalisation, restatement, and currency conversion (Prompt 22)"
+    ],
+    "prompt_ids_in_commit_messages": {
+      "15B": [
+        "40aaff3"
+      ],
+      "16": [
+        "d65dc75"
+      ],
+      "17": [
+        "4b5d157"
+      ],
+      "18": [
+        "f3e4758"
+      ],
+      "19": [
+        "5299a28"
+      ],
+      "20": [
+        "1a0e664"
+      ],
+      "21": [
+        "277ddd9"
+      ],
+      "22": [
+        "7674586"
+      ],
+      "23": [
+        "3d29bf3"
+      ],
+      "24": [
+        "1281e8d"
+      ],
+      "25": [
+        "726b786"
+      ],
+      "26": [
+        "e4bfb85"
+      ],
+      "27": [
+        "3bd5cd8"
+      ],
+      "28": [
+        "c44f471"
+      ],
+      "29": [
+        "6944bfa"
+      ],
+      "30": [
+        "53bb77d"
+      ],
+      "31": [
+        "6ffc71c"
+      ],
+      "31B": [
+        "4136b4a"
+      ],
+      "32": [
+        "02974f6"
+      ],
+      "33": [
+        "e4d3261"
+      ],
+      "34": [
+        "27f5199"
+      ],
+      "35": [
+        "544514d"
+      ],
+      "36": [
+        "5667989"
+      ],
+      "37": [
+        "7e9f5bd"
+      ],
+      "38": [
+        "b7d7570"
+      ],
+      "39": [
+        "4ea77a0"
+      ],
+      "40": [
+        "d63f747"
+      ],
+      "41": [
+        "2705332"
+      ],
+      "43": [
+        "25c68bc"
+      ],
+      "47B": [
+        "dc5776b"
+      ],
+      "50": [
+        "c50ea34"
+      ],
+      "51": [
+        "72d9348"
+      ],
+      "52": [
+        "044e822"
+      ],
+      "53": [
+        "c69664e"
+      ],
+      "54": [
+        "ddca473"
+      ],
+      "55": [
+        "9c9e81d"
+      ],
+      "56": [
+        "4b754fd"
+      ],
+      "58": [
+        "9813329"
+      ],
+      "59": [
+        "d6c1024"
+      ],
+      "60": [
+        "6cb8436"
+      ],
+      "61": [
+        "3303556"
+      ]
+    }
+  },
+  "tree": {
+    "by_top_level": {
+      "domain": {
+        "files": 313,
+        "loc": 83274
+      },
+      "docs": {
+        "files": 43,
+        "loc": 81608
+      },
+      "tests": {
+        "files": 110,
+        "loc": 37828
+      },
+      "web": {
+        "files": 44,
+        "loc": 18502
+      },
+      "connectors": {
+        "files": 83,
+        "loc": 15816
+      },
+      "(root)": {
+        "files": 12,
+        "loc": 14122
+      },
+      "api": {
+        "files": 58,
+        "loc": 13327
+      },
+      "masterdata": {
+        "files": 63,
+        "loc": 7277
+      },
+      "scripts": {
+        "files": 27,
+        "loc": 3007
+      },
+      "db": {
+        "files": 22,
+        "loc": 2789
+      },
+      "normalisation": {
+        "files": 7,
+        "loc": 399
+      },
+      "artifacts": {
+        "files": 3,
+        "loc": 358
+      },
+      "ops": {
+        "files": 6,
+        "loc": 358
+      },
+      ".github": {
+        "files": 1,
+        "loc": 104
+      },
+      "workers": {
+        "files": 3,
+        "loc": 74
+      }
+    },
+    "by_language": {
+      "YAML": {
+        "files": 5,
+        "loc": 1113
+      },
+      "PowerShell": {
+        "files": 1,
+        "loc": 22
+      },
+      "Shell": {
+        "files": 1,
+        "loc": 10
+      },
+      "Python": {
+        "files": 629,
+        "loc": 163816
+      },
+      "Markdown": {
+        "files": 44,
+        "loc": 3272
+      },
+      "JSON": {
+        "files": 72,
+        "loc": 92068
+      },
+      "TOML": {
+        "files": 1,
+        "loc": 84
+      },
+      "TypeScript": {
+        "files": 42,
+        "loc": 18458
+      }
+    },
+    "total": {
+      "files": 795,
+      "loc": 278843
+    },
+    "key_dir_children": {
+      "api": [
+        "cloudlens_api"
+      ],
+      "domain": [
+        "adoption",
+        "alerting",
+        "analytics",
+        "attribution",
+        "audit",
+        "bootstrap",
+        "budgets",
+        "bulk_import",
+        "catalogues",
+        "commitments",
+        "config",
+        "cost",
+        "credentials",
+        "dashboards",
+        "demo",
+        "dependency",
+        "diagnostics",
+        "explanation",
+        "forecasting",
+        "hierarchy",
+        "identity",
+        "integrations",
+        "lifecycle",
+        "models",
+        "notification",
+        "observability",
+        "overrides",
+        "planning",
+        "policy",
+        "pricing",
+        "provisioning",
+        "quotas",
+        "rbac",
+        "remediation",
+        "reports",
+        "resource_detail",
+        "rules",
+        "runtime",
+        "statements",
+        "sync",
+        "synthetic",
+        "tenant",
+        "thresholds",
+        "topology",
+        "usage",
+        "wizard",
+        "workflows"
+      ],
+      "connectors": [
+        "aws",
+        "azure",
+        "conformance",
+        "contract",
+        "diagnostics",
+        "fixtures",
+        "gcp",
+        "oci",
+        "simulator",
+        "stub",
+        "sync",
+        "wizard"
+      ],
+      "normalisation": [
+        "mappings",
+        "tags",
+        "units"
+      ],
+      "masterdata": [
+        "catalogues",
+        "registries",
+        "seeds"
+      ],
+      "db": [
+        "aggregates",
+        "lifecycle",
+        "migrations",
+        "partitioning",
+        "schema",
+        "seeds"
+      ],
+      "web": [
+        "public",
+        "src"
+      ],
+      "tests": [
+        "acceptance",
+        "adoption",
+        "analytics",
+        "cloud_provider",
+        "commitments",
+        "connectors",
+        "contracts",
+        "cost_reconciliation",
+        "data_validation",
+        "dr",
+        "e2e",
+        "failure_injection",
+        "integration",
+        "integrations",
+        "lifecycle",
+        "load",
+        "mandates",
+        "masterdata",
+        "perf",
+        "planning",
+        "rbac",
+        "regression",
+        "security",
+        "ui",
+        "unit",
+        "upgrade",
+        "workflow"
+      ],
+      "ops": [
+        "dashboards",
+        "docker"
+      ],
+      "scripts": [],
+      "docs": [
+        "analytics",
+        "configuration",
+        "connectors",
+        "permissions",
+        "security"
+      ],
+      "workers": [
+        "cloudlens_workers"
+      ]
+    }
+  },
+  "tests": {
+    "collected": 1311,
+    "collect_exit": 0,
+    "collect_errors": 0,
+    "collected_by_directory": {},
+    "run_exit": 1,
+    "run_duration_s": 110.2,
+    "junit_totals": {
+      "tests": 1311,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 4,
+      "passed": 1306
+    },
+    "failed_tests_first_50": [
+      "tests.e2e.test_twenty_business_processes.TestTwentyBusinessProcessesSuite::test_bp25_bulk_import_to_rollback"
+    ],
+    "pytest_summary_line": [
+      "=========================== short test summary info ===========================",
+      "FAILED tests/e2e/test_twenty_business_processes.py::TestTwentyBusinessProcessesSuite::test_bp25_bulk_import_to_rollback",
+      "====== 1 failed, 1306 passed, 4 skipped, 1 warning in 105.18s (0:01:45) ======="
+    ]
+  },
+  "gates": {
+    "layering": {
+      "exit": 0,
+      "tail": [
+        "[PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer."
+      ]
+    },
+    "no_hardcoded_constants": {
+      "exit": 0,
+      "tail": [
+        "[PASS] Zero hard-coding scan passed cleanly! (2 allow-listed exceptions in register)"
+      ]
+    },
+    "ruff": {
+      "exit": 1,
+      "tail": [
+        " 3\tF821  \t[ ] undefined-name",
+        " 2\tE402  \t[ ] module-import-not-at-top-of-file",
+        " 2\tB007  \t[ ] unused-loop-control-variable",
+        " 1\tE401  \t[*] multiple-imports-on-one-line",
+        " 1\tC401  \t[ ] unnecessary-generator-set",
+        " 1\tF841  \t[ ] unused-variable",
+        "Found 125 errors.",
+        "[*] 85 fixable with the `--fix` option (8 hidden fixes can be enabled with the `--unsafe-fixes` option)."
+      ]
+    }
+  },
+  "grep": {
+    "ROLES_ENUM": {
+      "description": "Role enum members (expect 9 BBP roles)",
+      "expectation": "9 distinct BBP roles",
+      "hit_count_capped_examples": 6,
+      "distinct_tokens": [
+        "APPLICATION_OWNER",
+        "APP_OWNER",
+        "BUDGET_OWNER",
+        "DEVELOPER",
+        "FINOPS_ADMIN"
+      ],
+      "examples": [
+        "domain/attribution/ownership.py:179: app_owner = application.owner_id.strip()",
+        "domain/models/enums.py:393: FINOPS_ADMIN = \"FINOPS_ADMIN\"",
+        "domain/models/enums.py:397: DEVELOPER = \"DEVELOPER\"",
+        "domain/models/enums.py:1159: BUDGET_OWNER = \"BUDGET_OWNER\"",
+        "domain/models/enums.py:1265: APPLICATION_OWNER = \"APPLICATION_OWNER\"",
+        "domain/remediation/creator.py:104: app_owner = data.get(\"app_owner_id\") or evidence.get(\"app_owner_id\")"
+      ]
+    },
+    "ALERT_TYPES": {
+      "description": "Alert type identifiers AL-01..AL-20",
+      "expectation": "AL-01 to AL-20 present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20"
+      ],
+      "examples": [
+        "build_requirements_register.py:1213: \"The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.\",",
+        "build_requirements_register.py:1213: \"The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.\",",
+        "requirements-register.json:1623: \"text\": \"The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.\",",
+        "requirements-register.json:1623: \"text\": \"The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.\",",
+        "api/cloudlens_api/routes/alerts.py:175: \"\"\"Response envelope for the default master data alert catalogue (AL-01 to AL-20).\"\"\"",
+        "api/cloudlens_api/routes/alerts.py:175: \"\"\"Response envelope for the default master data alert catalogue (AL-01 to AL-20).\"\"\"",
+        "api/cloudlens_api/routes/alerts.py:188: \"\"\"Returns the authoritative default alert catalogue (AL-01 to AL-20) from master data.\"\"\"",
+        "api/cloudlens_api/routes/alerts.py:188: \"\"\"Returns the authoritative default alert catalogue (AL-01 to AL-20) from master data.\"\"\"",
+        "docs/module-map.md:52: | **10**| Governance | `31` | Alerting & Notification | 20 alert types (AL-01 to AL-20) & channel routing |",
+        "docs/module-map.md:52: | **10**| Governance | `31` | Alerting & Notification | 20 alert types (AL-01 to AL-20) & channel routing |",
+        "docs/module-map.md:53: | **10**| Governance | `31B`| Alert & Policy Extension | Adds AL-17..AL-20 and POL-17..POL-18 |",
+        "docs/module-map.md:53: | **10**| Governance | `31B`| Alert & Policy Extension | Adds AL-17..AL-20 and POL-17..POL-18 |",
+        "docs/openapi.json:15: \"description\": \"Returns the authoritative default alert catalogue (AL-01 to AL-20) from master data.\",",
+        "docs/openapi.json:15: \"description\": \"Returns the authoritative default alert catalogue (AL-01 to AL-20) from master data.\",",
+        "docs/openapi.json:35708: \"description\": \"Stable catalogue identifier (AL-01 to AL-20)\"",
+        "docs/openapi.json:35708: \"description\": \"Stable catalogue identifier (AL-01 to AL-20)\"",
+        "docs/openapi.json:35800: \"description\": \"Response envelope for the default master data alert catalogue (AL-01 to AL-20).\"",
+        "docs/openapi.json:35800: \"description\": \"Response envelope for the default master data alert catalogue (AL-01 to AL-20).\"",
+        "docs/requirements-register.md:114: | **FR-560** | \u2014 | The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue. | Must | MVP | Prompt 31, 31B | Automated Tes",
+        "docs/requirements-register.md:114: | **FR-560** | \u2014 | The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue. | Must | MVP | Prompt 31, 31B | Automated Tes",
+        "domain/alerting/catalogue.py:4: - FR-560: The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.",
+        "domain/alerting/catalogue.py:4: - FR-560: The system must support all twenty alert types (AL-01 to AL-20) defined in the alert catalogue.",
+        "domain/alerting/catalogue.py:5: - Closes defect D-08: Alert catalogue extends with four Addendum B types (AL-17 to AL-20).",
+        "domain/alerting/catalogue.py:5: - Closes defect D-08: Alert catalogue extends with four Addendum B types (AL-17 to AL-20).",
+        "domain/alerting/catalogue.py:20: id: str = Field(..., description=\"Stable catalogue identifier (AL-01 to AL-20)\")"
+      ],
+      "missing_of_01_20": []
+    },
+    "POLICIES": {
+      "description": "Policy identifiers POL-01..POL-18",
+      "expectation": "POL-01 to POL-18 present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18"
+      ],
+      "examples": [
+        "build_requirements_register.py:1203: \"The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health.\",",
+        "build_requirements_register.py:1203: \"The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health.\",",
+        "requirements-register.json:1607: \"text\": \"The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health.\",",
+        "requirements-register.json:1607: \"text\": \"The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health.\",",
+        "api/cloudlens_api/routes/admin.py:112: \"description\": \"Declarative governance rules POL-01 through POL-16, dry-run simulation mode, and automated enforcement.\",",
+        "api/cloudlens_api/routes/admin.py:112: \"description\": \"Declarative governance rules POL-01 through POL-16, dry-run simulation mode, and automated enforcement.\",",
+        "api/cloudlens_api/routes/policies.py:10: - FR-746: Default policies (POL-01 to POL-16), disabled by default except connector health.",
+        "api/cloudlens_api/routes/policies.py:10: - FR-746: Default policies (POL-01 to POL-16), disabled by default except connector health.",
+        "api/cloudlens_api/routes/policies.py:100: \"\"\"Returns the authoritative default policy catalogue (POL-01 to POL-18).\"\"\"",
+        "api/cloudlens_api/routes/policies.py:100: \"\"\"Returns the authoritative default policy catalogue (POL-01 to POL-18).\"\"\"",
+        "docs/module-map.md:51: | **10**| Governance | `30` | Policy Engine | Declarative policies (POL-01 to POL-18) |",
+        "docs/module-map.md:51: | **10**| Governance | `30` | Policy Engine | Declarative policies (POL-01 to POL-18) |",
+        "docs/module-map.md:53: | **10**| Governance | `31B`| Alert & Policy Extension | Adds AL-17..AL-20 and POL-17..POL-18 |",
+        "docs/module-map.md:53: | **10**| Governance | `31B`| Alert & Policy Extension | Adds AL-17..AL-20 and POL-17..POL-18 |",
+        "docs/openapi.json:22873: \"description\": \"Returns the authoritative default policy catalogue (POL-01 to POL-18).\",",
+        "docs/openapi.json:22873: \"description\": \"Returns the authoritative default policy catalogue (POL-01 to POL-18).\",",
+        "docs/openapi.json:57671: \"description\": \"Stable policy identifier (e.g. 'POL-01', 'POL-08')\"",
+        "docs/openapi.json:57671: \"description\": \"Stable policy identifier (e.g. 'POL-01', 'POL-08')\"",
+        "docs/openapi.json:57786: \"description\": \"True for system-seeded default policies (POL-01 to POL-16)\",",
+        "docs/openapi.json:57786: \"description\": \"True for system-seeded default policies (POL-01 to POL-16)\",",
+        "docs/openapi.json:68798: \"description\": \"Internal rule or policy identifier (e.g. 'POL-03', 'EST-01')\"",
+        "docs/requirements-register.md:113: | **FR-746** | \u2014 | The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health. | Must | MVP | Prompt 07",
+        "docs/requirements-register.md:113: | **FR-746** | \u2014 | The system must ship with eighteen default policies (POL-01 to POL-18), disabled by default except connector health. | Must | MVP | Prompt 07",
+        "domain/demo/screen_verifier.py:322: else (default_policies[0].id if default_policies else \"POL-01\")",
+        "domain/demo/screen_verifier.py:331: highlight_metric=f\"{policy_count} declarative policies (POL-01..18), {policy_findings_count} compliance findings\","
+      ],
+      "missing_of_01_18": []
+    },
+    "SUPERUSER_LITERAL_IN_CODE": {
+      "description": "Superuser address as literal in application code",
+      "expectation": "ZERO hits in code; present only in seed/master data",
+      "hit_count_capped_examples": 4,
+      "distinct_tokens": [
+        "ADMIN@JYOTIRMOYB.COM"
+      ],
+      "examples": [
+        "api/cloudlens_api/tenant_context.py:58: or auth_context.email == \"admin@jyotirmoyb.com\"",
+        "domain/reports/generators.py:785: \"email\": \"admin@jyotirmoyb.com\",",
+        "domain/reports/generators.py:836: \"actor_id\": tc.user_id or \"admin@jyotirmoyb.com\",",
+        "domain/reports/generators.py:846: \"actor_id\": \"admin@jyotirmoyb.com\","
+      ]
+    },
+    "SUPERUSER_IN_SEED": {
+      "description": "Superuser address in master data / seed files",
+      "expectation": ">=1 hit in seed/master data",
+      "hit_count_capped_examples": 8,
+      "distinct_tokens": [
+        "ADMIN@JYOTIRMOYB.COM"
+      ],
+      "examples": [
+        "docs/module-map.md:30: | **5** | Security | `49B` | Superuser Provisioning | Single break-glass admin@jyotirmoyb.com provisioning |",
+        "docs/requirements-register.md:394: | **SEC-027** | \u2014 | Superuser bootstrap must provision admin@jyotirmoyb.com with mandatory MFA and zero plaintext passwords. | Must | MVP | Prompt 49B, AC-116 |",
+        "docs/requirements-register.md:534: | **AC-116** | \u2014 | Clean deployment bootstraps to superuser admin@jyotirmoyb.com with mandatory MFA and zero plaintext passwords. | Must | MVP | Prompt 49B | Au",
+        "docs/configuration/identity_verification_report.json:4: \"superuser_email\": \"admin@jyotirmoyb.com\",",
+        "docs/configuration/identity_verification_report.json:15: \"admin@jyotirmoyb.com\"",
+        "docs/configuration/identity_verification_report.md:8: - **Superuser Email:** `admin@jyotirmoyb.com` (Resolved dynamically from `SUPERUSER_IDENTITY` master data)",
+        "docs/configuration/identity_verification_report.md:26: - **Active Break-Glass Identities:** `admin@jyotirmoyb.com`",
+        "masterdata/seeds/superuser_identity.json:9: \"email\": \"admin@jyotirmoyb.com\","
+      ]
+    },
+    "DEMO_MODE": {
+      "description": "Demo Mode implementation (Prompt 47)",
+      "expectation": "present in domain/api/web",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "DEMO MODE",
+        "DEMOMODE",
+        "DEMO_MODE"
+      ],
+      "examples": [
+        "build_requirements_register.py:2527: \"A provider-agnostic stub and simulator connector must be provided for testing, conformance checking, and offline demo mode.\",",
+        "build_requirements_register.py:4245: \"Complete product (every screen S-01 to S-27) is demonstrable in Demo Mode without cloud accounts.\",",
+        "build_requirements_register.py:4255: \"Demo Mode is visibly watermarked on every screen and cannot coexist with live connectors.\",",
+        "requirements-register.json:3607: \"text\": \"A provider-agnostic stub and simulator connector must be provided for testing, conformance checking, and offline demo mode.\",",
+        "requirements-register.json:7415: \"text\": \"Complete product (every screen S-01 to S-27) is demonstrable in Demo Mode without cloud accounts.\",",
+        "requirements-register.json:7447: \"text\": \"Demo Mode is visibly watermarked on every screen and cannot coexist with live connectors.\",",
+        "api/cloudlens_api/main.py:33: demo_mode_router,",
+        "api/cloudlens_api/main.py:971: app.include_router(demo_mode_router)",
+        "api/cloudlens_api/routes/demo_mode.py:1: \"\"\"CloudLens Demo Mode and Scenarios REST API Endpoints (Prompt 47 Items 30-32).",
+        "api/cloudlens_api/routes/demo_mode.py:4: - POST /api/v1/system/demo/mode/enable: Enables Demo Mode with safety interlock checks.",
+        "api/cloudlens_api/routes/demo_mode.py:5: - POST /api/v1/system/demo/mode/disable: Disables Demo Mode and purges simulated data with audit log.",
+        "api/cloudlens_api/routes/demo_mode.py:6: - GET  /api/v1/system/demo/mode/status: Retrieves Demo Mode status, banner text, and safety posture.",
+        "api/cloudlens_api/routes/demo_mode.py:19: DemoModeStatus,",
+        "api/cloudlens_api/routes/demo_mode.py:23: get_demo_mode_service,",
+        "api/cloudlens_api/routes/demo_mode.py:26: from domain.models.exceptions import DemoModeSafetyException",
+        "api/cloudlens_api/routes/demo_mode.py:29: router = APIRouter(prefix=\"/api/v1/system/demo\", tags=[\"Demo Mode & Scenarios\"])",
+        "api/cloudlens_api/routes/demo_mode.py:39: class EnableDemoModeRequest(BaseModel):",
+        "api/cloudlens_api/routes/demo_mode.py:40: \"\"\"Payload to enable Demo Mode.\"\"\"",
+        "api/cloudlens_api/routes/demo_mode.py:48: @router.get(\"/mode/status\", response_model=DemoModeStatus)",
+        "api/cloudlens_api/routes/demo_mode.py:49: def get_demo_mode_status_endpoint(",
+        "api/cloudlens_api/routes/demo_mode.py:51: ) -> DemoModeStatus:",
+        "api/cloudlens_api/routes/demo_mode.py:52: \"\"\"Returns Demo Mode status, persistent banner message, and safety interlocks.\"\"\"",
+        "api/cloudlens_api/routes/demo_mode.py:53: service = get_demo_mode_service()",
+        "api/cloudlens_api/routes/demo_mode.py:57: @router.post(\"/mode/enable\", response_model=DemoModeStatus)",
+        "api/cloudlens_api/routes/demo_mode.py:58: def enable_demo_mode_endpoint("
+      ]
+    },
+    "SIMULATOR": {
+      "description": "Provider simulator (Prompt 47)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "SIMULATOR"
+      ],
+      "examples": [
+        "connectors/contract/models.py:48: description=\"Alias for continuation_token for simulator compatibility\",",
+        "connectors/simulator/connector.py:1: \"\"\"CloudLens Provider Simulator Connector (Prompt 47 Item 23).",
+        "connectors/simulator/connector.py:32: from connectors.simulator.models import (",
+        "connectors/simulator/connector.py:35: SimulatorProfile,",
+        "connectors/simulator/connector.py:51: class ProviderSimulatorConnector(BaseCloudConnector):",
+        "connectors/simulator/connector.py:59: profile: SimulatorProfile | str = SimulatorProfile.AWS,",
+        "connectors/simulator/connector.py:59: profile: SimulatorProfile | str = SimulatorProfile.AWS,",
+        "connectors/simulator/connector.py:65: profile = SimulatorProfile(profile.lower())",
+        "connectors/simulator/connector.py:75: \"\"\"Simulator declares comprehensive capability contract.\"\"\"",
+        "connectors/simulator/connector.py:96: \"\"\"Indistinguishable provider identifier string matching profile or 'simulator'.\"\"\"",
+        "connectors/simulator/connector.py:97: return f\"simulator-{self.profile.value}\"",
+        "connectors/simulator/connector.py:170: \"message\": f\"Simulator credentials validated successfully for profile '{self.profile.value.upper()}'.\",",
+        "connectors/simulator/connector.py:200: \"\"\"Returns provider metadata for simulator profile.\"\"\"",
+        "connectors/simulator/connector.py:219: if self.profile == SimulatorProfile.AWS:",
+        "connectors/simulator/connector.py:258: elif self.profile == SimulatorProfile.AZURE:",
+        "connectors/simulator/connector.py:297: elif self.profile == SimulatorProfile.GCP:",
+        "connectors/simulator/connector.py:381: if self.profile == SimulatorProfile.AWS:",
+        "connectors/simulator/connector.py:399: elif self.profile == SimulatorProfile.AZURE:",
+        "connectors/simulator/connector.py:420: elif self.profile == SimulatorProfile.GCP:",
+        "connectors/simulator/connector.py:484: SimulatorProfile.AWS: FIXTURES_DIR / \"aws_cur_sample.json\",",
+        "connectors/simulator/connector.py:485: SimulatorProfile.AZURE: FIXTURES_DIR / \"azure_cost_export_sample.json\",",
+        "connectors/simulator/connector.py:486: SimulatorProfile.GCP: FIXTURES_DIR / \"gcp_billing_export_sample.json\",",
+        "connectors/simulator/connector.py:487: SimulatorProfile.OCI: FIXTURES_DIR / \"oci_usage_report_sample.json\",",
+        "connectors/simulator/connector.py:518: if self.profile == SimulatorProfile.AWS:",
+        "connectors/simulator/connector.py:536: elif self.profile == SimulatorProfile.AZURE:"
+      ]
+    },
+    "QUOTA": {
+      "description": "Quota / headroom (Prompt 54)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "HEADROOM",
+        "QUOTA"
+      ],
+      "examples": [
+        "api/cloudlens_api/main.py:633: \"\"\"Quota, service limits, and headroom tracking exception handler (Prompt 54 / Rule 2.4).\"\"\"",
+        "api/cloudlens_api/main.py:633: \"\"\"Quota, service limits, and headroom tracking exception handler (Prompt 54 / Rule 2.4).\"\"\"",
+        "api/cloudlens_api/conventions/exceptions.py:128: \"\"\"HTTP 429 Too Many Requests / Quota limit exceeded.\"\"\"",
+        "api/cloudlens_api/conventions/rate_limit.py:9: - Returns 429 Too Many Requests with code 'RATE_LIMITED' when quota exceeded.",
+        "api/cloudlens_api/conventions/rate_limit.py:50: # Quota exceeded",
+        "api/cloudlens_api/routes/connectors.py:7: - Hourly quota consumption and headroom diagnostics (Item 94).",
+        "api/cloudlens_api/routes/connectors.py:7: - Hourly quota consumption and headroom diagnostics (Item 94).",
+        "api/cloudlens_api/routes/connectors.py:276: @router.get(\"/{connector_id}/diagnostics/quota\", response_model=HourlyQuotaDiagnostic)",
+        "api/cloudlens_api/routes/connectors.py:281: \"\"\"Exposes hourly API quota consumption and headroom diagnostics (Prompt 14 Item 94).\"\"\"",
+        "api/cloudlens_api/routes/connectors.py:281: \"\"\"Exposes hourly API quota consumption and headroom diagnostics (Prompt 14 Item 94).\"\"\"",
+        "api/cloudlens_api/routes/diagnostics.py:4: - Prompt 15 Item 104: Per-capability attempt, success, verbatim error, explanation, lag, headroom.",
+        "api/cloudlens_api/routes/diagnostics.py:40: \"\"\"Returns detailed per-capability diagnostics, freshness lag, and quota headroom (Item 104).\"\"\"",
+        "api/cloudlens_api/routes/diagnostics.py:40: \"\"\"Returns detailed per-capability diagnostics, freshness lag, and quota headroom (Item 104).\"\"\"",
+        "api/cloudlens_api/routes/quotas.py:1: \"\"\"Quota, Service Limits, and Headroom API Endpoints (Prompt 54).",
+        "api/cloudlens_api/routes/quotas.py:1: \"\"\"Quota, Service Limits, and Headroom API Endpoints (Prompt 54).",
+        "api/cloudlens_api/routes/quotas.py:4: - API-050: Filterable quota view per provider, scope, and service with headroom trends.",
+        "api/cloudlens_api/routes/quotas.py:4: - API-050: Filterable quota view per provider, scope, and service with headroom trends.",
+        "api/cloudlens_api/routes/quotas.py:5: - Prompt 54: Headroom summary endpoint for provider dashboards.",
+        "api/cloudlens_api/routes/quotas.py:6: - Prompt 54: Administrator manual quota limit registration with mandatory source notes.",
+        "api/cloudlens_api/routes/quotas.py:7: - Prompt 54: Formal quota increase request tracking with lead-time calculation.",
+        "api/cloudlens_api/routes/quotas.py:8: - Prompt 54: Threshold overrides for headroom alerting parameters.",
+        "api/cloudlens_api/routes/quotas.py:69: description=\"Returns filterable inventory of quotas, limits, and headroom states across connected providers.\",",
+        "api/cloudlens_api/routes/quotas.py:79: None, alias=\"status\", description=\"Filter by headroom state\"",
+        "api/cloudlens_api/routes/quotas.py:139: summary=\"Provider dashboard headroom summary\",",
+        "api/cloudlens_api/routes/quotas.py:140: description=\"Returns aggregate headroom counts and risk levels for an executive provider dashboard.\","
+      ]
+    },
+    "PROVISIONING_GATE": {
+      "description": "Provisioning gate (Prompt 55)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "GATE",
+        "REQUEST"
+      ],
+      "examples": [
+        "api/cloudlens_api/main.py:130: ProvisioningGateException,",
+        "api/cloudlens_api/main.py:131: ProvisioningRequestInvalidStateException,",
+        "api/cloudlens_api/main.py:132: ProvisioningRequestNotFoundException,",
+        "api/cloudlens_api/main.py:892: @app.exception_handler(ProvisioningGateException)",
+        "api/cloudlens_api/main.py:893: async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):",
+        "api/cloudlens_api/main.py:893: async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):",
+        "api/cloudlens_api/main.py:894: \"\"\"Standardized exception handler for Cost-Aware Provisioning Gate (Prompt 55 / Rule 2.4).\"\"\"",
+        "api/cloudlens_api/main.py:896: if isinstance(exc, (EstimateNotFoundException, ProvisioningRequestNotFoundException)):",
+        "api/cloudlens_api/main.py:898: elif isinstance(exc, ProvisioningRequestInvalidStateException):",
+        "api/cloudlens_api/routes/admin.py:299: \"name\": \"Cost-Aware Provisioning Gate\",",
+        "api/cloudlens_api/routes/provisioning.py:1: \"\"\"Cost-Aware Provisioning Gate REST API Endpoints (API-051 / Prompt 55).",
+        "api/cloudlens_api/routes/provisioning.py:6: - POST /api/v1/provisioning-requests - Submit provisioning request evaluated against pre-checks & gates",
+        "api/cloudlens_api/routes/provisioning.py:7: - GET /api/v1/provisioning-requests - List provisioning requests",
+        "api/cloudlens_api/routes/provisioning.py:8: - GET /api/v1/provisioning-requests/{id} - Get single provisioning request",
+        "api/cloudlens_api/routes/provisioning.py:35: ProvisioningRequest,",
+        "api/cloudlens_api/routes/provisioning.py:41: ProvisioningGateService,",
+        "api/cloudlens_api/routes/provisioning.py:42: get_provisioning_gate_service,",
+        "api/cloudlens_api/routes/provisioning.py:48: router = APIRouter(prefix=\"/api/v1/provisioning-requests\", tags=[\"Cost-Aware Provisioning Gate\"])",
+        "api/cloudlens_api/routes/provisioning.py:71: class SubmitProvisioningRequestDTO(BaseModel):",
+        "api/cloudlens_api/routes/provisioning.py:136: service: ProvisioningGateService = Depends(get_provisioning_gate_service),",
+        "api/cloudlens_api/routes/provisioning.py:136: service: ProvisioningGateService = Depends(get_provisioning_gate_service),",
+        "api/cloudlens_api/routes/provisioning.py:165: service: ProvisioningGateService = Depends(get_provisioning_gate_service),",
+        "api/cloudlens_api/routes/provisioning.py:165: service: ProvisioningGateService = Depends(get_provisioning_gate_service),",
+        "api/cloudlens_api/routes/provisioning.py:172: # 2. Provisioning Requests Lifecycle Endpoints",
+        "api/cloudlens_api/routes/provisioning.py:178: response_model=ProvisioningRequest,"
+      ]
+    },
+    "SHOWBACK": {
+      "description": "Showback statements (Prompt 52)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "DISPUTE",
+        "SHOWBACK",
+        "STATEMENT_LINE"
+      ],
+      "examples": [
+        "api/cloudlens_api/routes/statements.py:1: \"\"\"Showback Statements, Chargeback & Cost Allocation Packs REST API Endpoints (Prompt 52).",
+        "api/cloudlens_api/routes/statements.py:4: - API-053: GET /api/v1/statements - Showback statements and variance analysis.",
+        "api/cloudlens_api/routes/statements.py:7: - Line disputes routed to generic workflow engine with tracked SLA.",
+        "api/cloudlens_api/routes/statements.py:26: StatementDisputeException,",
+        "api/cloudlens_api/routes/statements.py:34: ShowbackStatement,",
+        "api/cloudlens_api/routes/statements.py:35: StatementDispute,",
+        "api/cloudlens_api/routes/statements.py:42: router = APIRouter(prefix=\"/api/v1/statements\", tags=[\"Showback & Cost Allocation Statements\"])",
+        "api/cloudlens_api/routes/statements.py:51: \"\"\"Payload to generate a new showback statement.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:70: default=False, description=\"Phase 2 toggle. Statements state they are showback when False.\"",
+        "api/cloudlens_api/routes/statements.py:99: class RaiseDisputeRequest(BaseModel):",
+        "api/cloudlens_api/routes/statements.py:100: \"\"\"Payload to query/dispute a statement line.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:104: disputed_amount: float = Field(..., gt=0, description=\"Amount under dispute\")",
+        "api/cloudlens_api/routes/statements.py:104: disputed_amount: float = Field(..., gt=0, description=\"Amount under dispute\")",
+        "api/cloudlens_api/routes/statements.py:106: reason: str = Field(..., min_length=5, description=\"Dispute explanation and evidence\")",
+        "api/cloudlens_api/routes/statements.py:108: default=\"finops-disputes@company.com\", description=\"Assigned investigator\"",
+        "api/cloudlens_api/routes/statements.py:112: class ResolveDisputeRequest(BaseModel):",
+        "api/cloudlens_api/routes/statements.py:113: \"\"\"Payload to resolve an existing dispute.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:131: statements: list[ShowbackStatement]",
+        "api/cloudlens_api/routes/statements.py:141: @router.post(\"/generate\", response_model=ShowbackStatement, status_code=status.HTTP_201_CREATED)",
+        "api/cloudlens_api/routes/statements.py:146: ) -> ShowbackStatement:",
+        "api/cloudlens_api/routes/statements.py:147: \"\"\"Generates an authoritative showback statement and cost allocation pack.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:178: \"\"\"API-053: Lists showback statements and variance analysis for the tenant.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:218: \"\"\"Generates an executive compliance report of unaccepted/overdue showback statements.\"\"\"",
+        "api/cloudlens_api/routes/statements.py:222: @router.get(\"/{statement_id}\", response_model=ShowbackStatement)",
+        "api/cloudlens_api/routes/statements.py:227: ) -> ShowbackStatement:"
+      ]
+    },
+    "BULK_IMPORT": {
+      "description": "Bulk import framework (Prompt 53)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "DRY RUN",
+        "DRYRUN",
+        "DRY_RUN",
+        "IMPORTRUN",
+        "IMPORT_RUN"
+      ],
+      "examples": [
+        "api/cloudlens_api/routes/bootstrap.py:101: dry_run: bool = Query(default=False, description=\"Dry-run simulation mode\"),",
+        "api/cloudlens_api/routes/bootstrap.py:106: return service.bootstrap(dry_run=dry_run, correlation_id=x_correlation_id)",
+        "api/cloudlens_api/routes/bootstrap.py:106: return service.bootstrap(dry_run=dry_run, correlation_id=x_correlation_id)",
+        "api/cloudlens_api/routes/bootstrap.py:116: report = service.bootstrap(dry_run=True)",
+        "api/cloudlens_api/routes/bulk_import.py:10: - GET /api/v1/imports/dry-run/{dry_run_id}/result: Download dry-run result report file.",
+        "api/cloudlens_api/routes/bulk_import.py:11: - POST /api/v1/imports/{dry_run_id}/apply: Apply validated import.",
+        "api/cloudlens_api/routes/bulk_import.py:12: - POST /api/v1/imports/{import_run_id}/rollback: Reverse import within configured window.",
+        "api/cloudlens_api/routes/bulk_import.py:14: - GET /api/v1/imports/history/{import_run_id}: Get detailed run report.",
+        "api/cloudlens_api/routes/bulk_import.py:45: DryRunSummary,",
+        "api/cloudlens_api/routes/bulk_import.py:48: ImportRunRecord,",
+        "api/cloudlens_api/routes/bulk_import.py:60: DryRunRequiredException,",
+        "api/cloudlens_api/routes/bulk_import.py:61: ImportRunNotFoundException,",
+        "api/cloudlens_api/routes/bulk_import.py:90: class DryRunJsonRequest(BaseModel):",
+        "api/cloudlens_api/routes/bulk_import.py:221: @router.post(\"/dry-run\", response_model=DryRunSummary)",
+        "api/cloudlens_api/routes/bulk_import.py:222: async def execute_dry_run_json(",
+        "api/cloudlens_api/routes/bulk_import.py:223: payload: DryRunJsonRequest,",
+        "api/cloudlens_api/routes/bulk_import.py:225: ) -> DryRunSummary:",
+        "api/cloudlens_api/routes/bulk_import.py:230: return engine.execute_dry_run(",
+        "api/cloudlens_api/routes/bulk_import.py:244: class UploadDryRunRequest(BaseModel):",
+        "api/cloudlens_api/routes/bulk_import.py:256: @router.post(\"/upload/dry-run\", response_model=DryRunSummary)",
+        "api/cloudlens_api/routes/bulk_import.py:257: async def execute_dry_run_upload(",
+        "api/cloudlens_api/routes/bulk_import.py:258: payload: UploadDryRunRequest,",
+        "api/cloudlens_api/routes/bulk_import.py:260: ) -> DryRunSummary:",
+        "api/cloudlens_api/routes/bulk_import.py:270: return engine.execute_dry_run(",
+        "api/cloudlens_api/routes/bulk_import.py:284: @router.get(\"/dry-run/{dry_run_id}/result\")"
+      ]
+    },
+    "MASTER_REGISTRY": {
+      "description": "Master data registry (Prompt 45)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "DATA",
+        "NONE"
+      ],
+      "examples": [
+        "domain/bootstrap/pre_identity.py:34: from masterdata.registry import SYSTEM_MASTER_REGISTRY",
+        "domain/bootstrap/pre_identity.py:164: for code, meta in SYSTEM_MASTER_REGISTRY.items():",
+        "domain/bulk_import/catalogue.py:7: - Dynamic integration with Prompt 45 SYSTEM_MASTER_REGISTRY.",
+        "domain/bulk_import/catalogue.py:18: from masterdata.registry import SYSTEM_MASTER_REGISTRY, list_registered_masters",
+        "domain/bulk_import/catalogue.py:894: if et in SYSTEM_MASTER_REGISTRY:",
+        "domain/bulk_import/catalogue.py:895: master = SYSTEM_MASTER_REGISTRY[et]",
+        "domain/workflows/appliers.py:192: \"\"\"Publishes approved master data registry versions.\"\"\"",
+        "domain/workflows/definitions.py:179: name=\"Master Data Registry Mutation Approval\",",
+        "masterdata/business_engines.py:158: f\"Fiscal calendar '{calendar_code}' not found in master registry.\"",
+        "masterdata/business_engines.py:591: raise MasterDataException(f\"Tag policy '{policy_code}' not found in master registry.\")",
+        "masterdata/enum_bridge.py:1: \"\"\"Enumeration Bridge & Master Registry Bidirectional Synchronizer (Prompt 48 Item 36).",
+        "masterdata/models.py:31: class MasterRegistryEntry(BaseModel):",
+        "masterdata/registry.py:1: \"\"\"Master Registry Manifest for CloudLens.",
+        "masterdata/registry.py:9: from masterdata.models import MasterRegistryEntry",
+        "masterdata/registry.py:12: # Master Registry Manifest",
+        "masterdata/registry.py:15: SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {",
+        "masterdata/registry.py:15: SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {",
+        "masterdata/registry.py:16: \"SERVICE_CATEGORY\": MasterRegistryEntry(",
+        "masterdata/registry.py:28: \"RESOURCE_TYPE\": MasterRegistryEntry(",
+        "masterdata/registry.py:40: \"UNIT\": MasterRegistryEntry(",
+        "masterdata/registry.py:57: \"METRIC\": MasterRegistryEntry(",
+        "masterdata/registry.py:73: \"PRICING_DIMENSION\": MasterRegistryEntry(",
+        "masterdata/registry.py:92: \"CLOUD_PROVIDER\": MasterRegistryEntry(",
+        "masterdata/registry.py:104: \"RUNTIME_STATUS\": MasterRegistryEntry(",
+        "masterdata/registry.py:116: \"CHARGE_CATEGORY\": MasterRegistryEntry("
+      ]
+    },
+    "FIRST_SYNC_PROGRESS": {
+      "description": "First-sync progress / alert delivery test (Prompt 15B)",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "DELIVERY",
+        "DELIVERY ",
+        "DELIVERY_",
+        "NONE"
+      ],
+      "examples": [
+        "api/cloudlens_api/main.py:96: FirstSyncNotFoundException,",
+        "api/cloudlens_api/main.py:476: exc, (SyncJobNotFoundException, WizardSessionNotFoundException, FirstSyncNotFoundException)",
+        "api/cloudlens_api/routes/wizard.py:28: AlertDeliveryTestReport,",
+        "api/cloudlens_api/routes/wizard.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport",
+        "api/cloudlens_api/routes/wizard.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport",
+        "api/cloudlens_api/routes/wizard.py:68: class TestAlertDeliveryRequest(BaseModel):",
+        "api/cloudlens_api/routes/wizard.py:83: first_sync_progress: dict[str, Any] | None = None",
+        "api/cloudlens_api/routes/wizard.py:242: response_model=AlertDeliveryTestReport,",
+        "api/cloudlens_api/routes/wizard.py:244: async def test_alert_delivery(",
+        "api/cloudlens_api/routes/wizard.py:246: payload: TestAlertDeliveryRequest,",
+        "api/cloudlens_api/routes/wizard.py:248: ) -> AlertDeliveryTestReport:",
+        "api/cloudlens_api/routes/wizard.py:251: return await service.test_alert_delivery_step(",
+        "api/cloudlens_api/routes/wizard.py:260: response_model=FirstSyncProgressReport,",
+        "api/cloudlens_api/routes/wizard.py:262: async def get_first_sync_progress(",
+        "api/cloudlens_api/routes/wizard.py:265: ) -> FirstSyncProgressReport:",
+        "api/cloudlens_api/routes/wizard.py:268: return service.get_first_sync_progress(session_id=session_id, tenant_context=tenant_context)",
+        "api/cloudlens_api/routes/wizard.py:293: \"\"\"Retrieves the notification audit log including test alerts (Prompt 15B Item 25).\"\"\"",
+        "connectors/sync/first_sync.py:32: from domain.models.exceptions import FirstSyncNotFoundException",
+        "connectors/sync/first_sync.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport, FirstSyncStage",
+        "connectors/sync/first_sync.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport, FirstSyncStage",
+        "connectors/sync/first_sync.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport, FirstSyncStage",
+        "connectors/sync/first_sync.py:35: FirstSyncProgressRepository,",
+        "connectors/sync/first_sync.py:36: get_first_sync_progress_repository,",
+        "connectors/sync/first_sync.py:108: class FirstSyncService:",
+        "connectors/sync/first_sync.py:113: progress_repo: FirstSyncProgressRepository | None = None,"
+      ]
+    },
+    "REQ_PREFIXES": {
+      "description": "Requirement prefixes PR/CST/USE/RUN/DEP/CON (Prompt 00R)",
+      "expectation": "all six prefixes present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "CON",
+        "CST",
+        "DEP",
+        "PR",
+        "RUN",
+        "USE"
+      ],
+      "examples": [
+        "docs/openapi.json:15440: \"description\": \"Pricing status classification for services and resources (API-029 / PR-002).\\n\\nSTRICT: Never defaults an unpriced or unclassified SKU to free o",
+        "docs/openapi.json:39588: \"description\": \"Immutable audit record of budget adjustments (Prompt 28 & CST-018 / AC-033).\"",
+        "docs/openapi.json:43873: \"description\": \"Hierarchical node supporting drill-through from high-level aggregate to charge lines (Prompt 22 Item 8 / CST-008).\"",
+        "docs/openapi.json:45761: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
+        "docs/openapi.json:45862: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
+        "docs/openapi.json:55333: \"description\": \"The canonical monitoring types per Prompt 25 / BBP Section 19.\\n\\nMT-01 through MT-14 are the core types; MT-15 is Quota Headroom (USE-001 / Pro",
+        "docs/openapi.json:65920: \"description\": \"Time-boxed runtime schedule exemption with mandatory recorded reason and auto-expiry.\\n\\nEnforces:\\n- RUN-005 / FR-254: Time-boxed, requires rec",
+        "docs/openapi.json:76680: \"description\": \"Categorisation of workload execution profile (RUN-009).\"",
+        "docs/open_items_register.md:44: - `domain/quotas`: Prompt 54 / CON-025 (Service Quotas & Headroom).",
+        "docs/orphan-requirements.md:18: | **PR-007** | Commitment coverage and utilisation analysis for reservations and savings plans must be supported in Phase 2. | Could | Phase 2 | Prompt 58 / P2 ",
+        "docs/orphan-requirements.md:19: | **CST-032** | Multi-year budget planning, what-if scenario modeling, and commitment capacity planning must be supported in Phase 2. | Could | Phase 2 | Prompt",
+        "docs/orphan-requirements.md:20: | **RUN-010** | Automated resource lifecycle governance (provisioning, active lifecycle, scheduled decommissioning) must be supported in Phase 2. | Could | Phas",
+        "docs/pricing-dimensions-reconciled.md:55: 1. **Requirement Register**: 29 dimensions referenced in PR-016 and catalogue definitions.",
+        "docs/requirements-register.md:145: | **PR-001** | FR-220 | Pricing dimensions, units and conversions must be configurable catalogue data, not hard-coded in logic. | Must | MVP | Prompt 07, 20 | A",
+        "docs/requirements-register.md:146: | **PR-002** | FR-221 | The system must store pricing as effective-dated records so historical estimates and rates can be accurately reproduced. | Must | MVP | ",
+        "docs/requirements-register.md:147: | **PR-003** | FR-222 | Where negotiated enterprise rates are available, the system must use them and never present public list rates as the organisation's cont",
+        "docs/requirements-register.md:148: | **PR-004** | FR-223 | The system must separate upfront and recurring reservation/savings plan purchase charges from runtime usage charges in all trend views. ",
+        "docs/requirements-register.md:149: | **PR-005** | FR-224 | The system must support both billed and amortised presentation with the active accounting basis prominently and unmistakably labelled. |",
+        "docs/requirements-register.md:150: | **PR-006** | FR-225 | Unmapped SKUs and dimensions must be ingested and reported as Unclassified rather than discarded or zero-rated. | Must | MVP | Prompt 07",
+        "docs/requirements-register.md:151: | **PR-007** | FR-226 | Commitment coverage and utilisation analysis for reservations and savings plans must be supported in Phase 2. | Could | Phase 2 | Prompt",
+        "docs/requirements-register.md:152: | **PR-008** | \u2014 | ABSOLUTE RULE: The application must NEVER invent or hallucinate pricing information. All rates must derive from verified sources following st",
+        "docs/requirements-register.md:153: | **PR-009** | \u2014 | Where a provider does not expose a pricing value via an API, CloudLens must display the verified provider documentation source, link, and eff",
+        "docs/requirements-register.md:154: | **PR-010** | \u2014 | Every discovered service, resource, and cost field must be classified into one of seven non-conflated pricing statuses: FREE, FREE TIER, COND",
+        "docs/requirements-register.md:155: | **PR-011** | \u2014 | The UI must never display a bare 'Free'; it must state the exact conditions, allowances, post-allowance rates, thresholds, source reference, ",
+        "docs/requirements-register.md:156: | **PR-012** | \u2014 | Every service, resource, and cost field must support an information icon revealing seventeen pricing metadata attributes and a direct link to"
+      ],
+      "missing_prefixes": []
+    },
+    "BREAK_GLASS": {
+      "description": "Break-glass handling (Prompt 49B)",
+      "expectation": "exactly one path",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "BREAK GLASS",
+        "BREAK-GLASS",
+        "BREAKGLASS",
+        "BREAK_GLASS"
+      ],
+      "examples": [
+        "build_requirements_register.py:2792: \"POST /api/v1/auth/login - Local superuser break-glass authentication.\",",
+        "build_requirements_register.py:3223: \"Local user authentication is permitted only for the initial superuser break-glass account.\",",
+        "requirements-register.json:4023: \"text\": \"POST /api/v1/auth/login - Local superuser break-glass authentication.\",",
+        "requirements-register.json:5239: \"text\": \"Local user authentication is permitted only for the initial superuser break-glass account.\",",
+        "api/cloudlens_api/routes/auth.py:6: - POST /api/v1/auth/break-glass/provision: Strictly limited emergency break-glass account setup (Item 65).",
+        "api/cloudlens_api/routes/auth.py:6: - POST /api/v1/auth/break-glass/provision: Strictly limited emergency break-glass account setup (Item 65).",
+        "api/cloudlens_api/routes/auth.py:7: - POST /api/v1/auth/break-glass/login: Emergency break-glass sign-in with mandatory MFA and alerting (Item 65).",
+        "api/cloudlens_api/routes/auth.py:7: - POST /api/v1/auth/break-glass/login: Emergency break-glass sign-in with mandatory MFA and alerting (Item 65).",
+        "api/cloudlens_api/routes/auth.py:29: BreakGlassAuthFailedException,",
+        "api/cloudlens_api/routes/auth.py:30: BreakGlassLimitExceededException,",
+        "api/cloudlens_api/routes/auth.py:84: class BreakGlassProvisionRequest(BaseModel):",
+        "api/cloudlens_api/routes/auth.py:85: \"\"\"Payload to provision a strictly limited emergency break-glass account.\"\"\"",
+        "api/cloudlens_api/routes/auth.py:88: account_name: str = Field(..., description=\"Break-glass account username identifier\")",
+        "api/cloudlens_api/routes/auth.py:95: class BreakGlassProvisionResponse(BaseModel):",
+        "api/cloudlens_api/routes/auth.py:106: class BreakGlassLoginRequest(BaseModel):",
+        "api/cloudlens_api/routes/auth.py:107: \"\"\"Payload for emergency break-glass account authentication.\"\"\"",
+        "api/cloudlens_api/routes/auth.py:110: account_name: str = Field(..., description=\"Break-glass username\")",
+        "api/cloudlens_api/routes/auth.py:316: \"/break-glass/provision\",",
+        "api/cloudlens_api/routes/auth.py:317: response_model=BreakGlassProvisionResponse,",
+        "api/cloudlens_api/routes/auth.py:318: summary=\"Provision emergency break-glass account\",",
+        "api/cloudlens_api/routes/auth.py:320: def provision_break_glass_account(",
+        "api/cloudlens_api/routes/auth.py:321: payload: BreakGlassProvisionRequest,",
+        "api/cloudlens_api/routes/auth.py:324: ) -> BreakGlassProvisionResponse:",
+        "api/cloudlens_api/routes/auth.py:325: \"\"\"Provisions a strictly limited break-glass emergency account (Prompt 10 Item 65).",
+        "api/cloudlens_api/routes/auth.py:340: bg_account, secret = ***REDACTED***"
+      ]
+    },
+    "OPENBAO_VAULT": {
+      "description": "Secret store integration",
+      "expectation": "present",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "VAULT"
+      ],
+      "examples": [
+        "connectors/azure/inventory.py:141: # 5. Key Vault",
+        "connectors/azure/pricing.py:52: \"service_name\": \"Key Vault\",",
+        "connectors/fixtures/azure_cost_export_sample.json:59: \"meterCategory\": \"Key Vault\",",
+        "domain/catalogues/seeds.py:640: example_services=\"AWS KMS crypto operations, Azure Key Vault ops, DynamoDB Read/Write Units\",",
+        "domain/config/surface.py:107: \"\"\"External secret management (HashiCorp Vault / Cloud KMS) configuration.\"\"\"",
+        "domain/config/surface.py:109: backend_type: str = Field(default=\"vault\", description=\"Secret store type: 'vault' or 'env'\")",
+        "domain/config/surface.py:109: backend_type: str = Field(default=\"vault\", description=\"Secret store type: 'vault' or 'env'\")",
+        "domain/config/surface.py:111: default=\"http://localhost:8200\", description=\"HashiCorp Vault server URL\"",
+        "domain/config/surface.py:114: default=\"dev-vault-token-cloudlens\",",
+        "domain/config/surface.py:115: description=\"Vault authentication token\",",
+        "domain/config/surface.py:118: mount_point: str = Field(default=\"secret\", description=\"Vault KV v2 mount point\")",
+        "domain/cost/focus_mapper.py:592: if any(w in s for w in (\"iam\", \"security\", \"guardduty\", \"key\", \"vault\", \"shield\")):",
+        "domain/credentials/models.py:41: description=\"Opaque secret store reference URI (e.g. vault://secret/data/tenants/{tid}/...)\",",
+        "domain/credentials/store.py:41: Returns an opaque reference URI (e.g. vault://secret/data/tenants/{tenant_id}/credentials/{profile_id}/v{version}).",
+        "domain/credentials/store.py:71: \"\"\"Thread-safe, reference-based secret store simulating external HashiCorp Vault KV v2.",
+        "domain/credentials/store.py:85: return f\"vault://{self._mount_point}/data/tenants/{clean_tenant}/credentials/{clean_profile}/v{version}\"",
+        "domain/credentials/store.py:159: \"\"\"HashiCorp Vault KV v2 secret store implementation.",
+        "domain/credentials/store.py:161: Delegates to Vault HTTP API in production environments, with fallback to in-memory store",
+        "domain/credentials/store.py:162: for testing or standalone evaluation when Vault is unavailable.",
+        "domain/credentials/store.py:176: # For local execution or test harness where Vault daemon is not running, delegate cleanly",
+        "domain/credentials/store.py:203: if cfg.backend_type.lower() == \"vault\":",
+        "domain/identity/token_engine.py:27: # Standard platform signing key (in production drawn from KMS/Vault, in memory for app lifetime)",
+        "domain/integrations/models.py:42: description=\"Opaque secret store reference URI (e.g. vault://secret/...); raw secrets forbidden\",",
+        "domain/integrations/sandbox.py:141: credential_ref=f\"vault://secret/data/tenants/sandbox/integrations/{integration_type.value.lower()}\",",
+        "ops/docker-compose.yml:53: vault:"
+      ]
+    },
+    "CRED_ENCRYPT_IN_DB": {
+      "description": "Credential encryption in app code (D-7)",
+      "expectation": "review: should be reference-only",
+      "hit_count_capped_examples": 0,
+      "distinct_tokens": [],
+      "examples": []
+    },
+    "RECON_TOLERANCE_LITERAL": {
+      "description": "Reconciliation tolerance literals (D-5)",
+      "expectation": "ZERO literals; from master data",
+      "hit_count_capped_examples": 10,
+      "distinct_tokens": [
+        "VARIANCE"
+      ],
+      "examples": [
+        "domain/cost/reconciliation/engine.py:165: (absolute_variance / provider_total) * Decimal(\"100.0\")",
+        "domain/cost/reconciliation/engine.py:311: spend_match = Decimal(\"100.0\") - ((total_variance / total_spend) * Decimal(\"100.0\"))",
+        "domain/cost/reconciliation/engine.py:703: elif percentage_variance >= Decimal(\"1.00\") or variance_amount >= Decimal(\"100.00\"):",
+        "domain/observability/metrics.py:87: slo_target=\"Variance < 0.1%\",",
+        "domain/pricing/models.py:377: ..., description=\"Percentage variance ((new - old) / old) * 100\"",
+        "domain/provisioning/reconciliation.py:85: variance_pct = round_currency((variance_amount / approved) * Decimal(\"100.00\"))",
+        "domain/resource_detail/service.py:912: variance = forecast_cost - budget_amount  # +100.00 (Unfavourable)",
+        "domain/resource_detail/service.py:1124: q12_budget=\"Target budget is $1,100.00 USD; current forecast variance is +$100.00 USD (unfavourable).\",",
+        "domain/resource_detail/service.py:1354: round((variance / budget_amount) * Decimal(\"100.00\"), 2)",
+        "domain/statements/generator.py:174: ((budget_variance / budget) * Decimal(\"100.0\"))"
+      ]
+    },
+    "CRON_0200": {
+      "description": "Fixed 02:00 ingestion schedule (D-6)",
+      "expectation": "configurable per connector",
+      "hit_count_capped_examples": 4,
+      "distinct_tokens": [
+        "\"0 2 * * *\"",
+        "'0 2 * * *'",
+        "02:00"
+      ],
+      "examples": [
+        "api/cloudlens_api/routes/bulk_import.py:107: cron_expression: str = \"0 2 * * *\"",
+        "connectors/fixtures/oci_usage_report_sample.json:88: \"lineItem/intervalUsageStart\": \"2026-09-01T02:00:00Z\",",
+        "domain/bulk_import/models.py:242: ..., description=\"Standard 5-part cron expression (e.g. '0 2 * * *')\"",
+        "domain/runtime/models.py:176: start_time: str = Field(default=\"02:00\", description=\"Start time in HH:MM (24-hour format)\")"
+      ]
+    },
+    "RETENTION_90": {
+      "description": "90-day retention literal (D-4)",
+      "expectation": "35-day DB PITR per BBP",
+      "hit_count_capped_examples": 11,
+      "distinct_tokens": [
+        "RETAIN",
+        "RETENTION"
+      ],
+      "examples": [
+        "build_requirements_register.py:2719: \"Sync history, execution logs, and row-level statistics must be retained for at least 90 days and be exportable.\",",
+        "README.md:361: - Full relational snapshots taken daily at `01:00 UTC` (retained for 90 days).",
+        "requirements-register.json:3911: \"text\": \"Sync history, execution logs, and row-level statistics must be retained for at least 90 days and be exportable.\",",
+        "db/lifecycle/downsampling.py:22: retention_days: int = 90,",
+        "docs/requirements-register.md:287: | **CON-028** | FR-059 | Sync history, execution logs, and row-level statistics must be retained for at least 90 days and be exportable. | Should | MVP | Prompt",
+        "docs/configuration/pre_identity_verification_report.json:12: \"raw_metrics_retention_days\": 90,",
+        "domain/bootstrap/pre_identity.py:192: \"raw_metrics_retention_days\": int(raw_retention.get(\"raw_metrics_retention_days\", 90)),",
+        "domain/bootstrap/superuser.py:501: raw_metrics_retention_days=90,",
+        "domain/synthetic/demo_tenant.py:169: raw_metrics_retention_days=90,",
+        "masterdata/seeds/system_tenant.json:16: \"raw_metrics_retention_days\": 90,",
+        "tests/unit/test_pre_identity_bootstrap.py:75: assert report.retention_profile[\"raw_metrics_retention_days\"] == 90"
+      ]
+    },
+    "MANDATES": {
+      "description": "Mandate wording in docs (D-3)",
+      "expectation": "3 mandates: M1 master data, M2 no hard-coding, M3 demo",
+      "hit_count_capped_examples": 19,
+      "distinct_tokens": [
+        "MANDATE M1",
+        "MANDATE M2",
+        "MANDATE M3"
+      ],
+      "examples": [
+        "README.md:421: \u2502   \u251c\u2500\u2500 check_no_hardcoded_constants.py # AST Literals Scan (Mandate M2)",
+        "docs/CLOUDLENS_BBP_v1.1.md:77: ### 4.2 Mock Data and Demo Mode (Prompt 47 / Mandate M3)",
+        "docs/decision-log.md:21: - **Consequences**: Ensures clean domain isolation; permits mock and stub connectors for offline demo mode (Mandate M3); simplifies testing.",
+        "docs/decision_log.md:32: | **ADR-010** | Centralized Master Data Registry & Bidirectional Enum Bridging | Prompt 45, 42B | ACCEPTED | Mandate M1 |",
+        "docs/decision_log.md:33: | **ADR-011** | Automated AST Anti-Hardcoding AST Scanner | Prompt 42B | ACCEPTED | Mandate M2 |",
+        "docs/decision_log.md:34: | **ADR-012** | Complete Synthetic Demo Mode Isolation with Mandatory Header | Prompt 47, 42B | ACCEPTED | Mandate M3 |",
+        "docs/decision_log.md:72: ### ADR-010: Centralized Master Data Authority (Mandate M1)",
+        "docs/decision_log.md:77: ### ADR-011: Automated AST Anti-Hardcoding Gate (Mandate M2)",
+        "docs/decision_log.md:82: ### ADR-012: Complete Synthetic Demo Mode Isolation (Mandate M3)",
+        "docs/module-map.md:23: | **3** | Master Data | `48` | Zero Hard-Coding Enforcement | Automated AST scanner enforcing Mandate M2 |",
+        "docs/module-map.md:27: | **4** | Attribution | `47` | Mock Data, Demo Mode, Simulator | Complete offline demonstrable demo mode (Mandate M3) |",
+        "docs/module-map.md:63: | **14**| Control | `47B`| Governance Mock Data Extension | Mock data for all 27 screens (Mandate M3) |",
+        "docs/openapi.json:9580: \"description\": \"Verifies that all 27 screens (S-01 to S-27) possess meaningful mock data (Mandate M3 / Prompt 47B).\",",
+        "docs/openapi.json:34363: \"description\": \"Mechanically checks that an explanation payload satisfies Mandate M2 requirements.\",",
+        "docs/openapi.json:67487: \"description\": \"End-to-end Mandate M3 verification report covering all 27 screens.\"",
+        "docs/open_items_register.md:46: - `domain/demo`: Prompt 47B / Mandate M3 (Synthetic Demo Mode).",
+        "docs/requirements-register.md:393: | **SEC-026** | \u2014 | Zero Hard-Coding Mandate M2: monetary values, enums, states, and rules must not be hard-coded. | Must | MVP | Prompt 48, AM-02 | Automated T",
+        "docs/configuration/exception_register.md:3: Enforces **Mandate M2** and **Prompt 48 Item 35**.",
+        "docs/configuration/remediation_list.md:3: This register records the retrospective static analysis and remediation performed across all modules built under Prompts 01\u201344, fulfilling **Mandate M2** and **"
+      ]
+    },
+    "TODO_FIXME": {
+      "description": "TODO / FIXME / NotImplemented markers",
+      "expectation": "low",
+      "hit_count_capped_examples": 25,
+      "distinct_tokens": [
+        "NOTIMPLEMENTEDERROR"
+      ],
+      "examples": [
+        "connectors/contract/base.py:116: raise NotImplementedError(",
+        "connectors/contract/base.py:124: raise NotImplementedError(",
+        "connectors/contract/base.py:136: raise NotImplementedError(",
+        "connectors/contract/base.py:149: raise NotImplementedError(",
+        "connectors/contract/base.py:161: raise NotImplementedError(",
+        "connectors/contract/base.py:174: raise NotImplementedError(",
+        "connectors/contract/base.py:187: raise NotImplementedError(",
+        "connectors/contract/base.py:201: raise NotImplementedError(",
+        "connectors/contract/base.py:214: raise NotImplementedError(",
+        "connectors/contract/base.py:230: raise NotImplementedError(",
+        "connectors/contract/base.py:243: raise NotImplementedError(",
+        "connectors/contract/base.py:256: raise NotImplementedError(",
+        "connectors/contract/base.py:269: raise NotImplementedError(",
+        "connectors/contract/base.py:282: raise NotImplementedError(",
+        "connectors/contract/base.py:295: raise NotImplementedError(",
+        "connectors/contract/base.py:303: raise NotImplementedError(",
+        "connectors/contract/base.py:311: raise NotImplementedError(",
+        "domain/tenant/object_store.py:72: raise NotImplementedError",
+        "domain/tenant/object_store.py:77: raise NotImplementedError",
+        "domain/tenant/object_store.py:82: raise NotImplementedError",
+        "domain/tenant/object_store.py:87: raise NotImplementedError",
+        "domain/tenant/object_store.py:92: raise NotImplementedError",
+        "domain/tenant/repository.py:35: raise NotImplementedError",
+        "domain/tenant/repository.py:47: raise NotImplementedError",
+        "domain/tenant/repository.py:52: raise NotImplementedError"
+      ]
+    },
+    "PROVIDER_SDK_ABOVE_CONNECTORS": {
+      "description": "Provider SDK import outside connectors/",
+      "expectation": "ZERO",
+      "hit_count_capped_examples": 0,
+      "distinct_tokens": [],
+      "examples": []
+    }
+  },
+  "docs": {
+    "files": [
+      "docs\\CLOUDLENS_BBP_v1.1.md",
+      "docs\\analytics\\data_dictionary.md",
+      "docs\\analytics\\reference_monthly_cost_pack.md",
+      "docs\\analytics\\semantic_to_focus_mapping.md",
+      "docs\\api-reference.md",
+      "docs\\api-versioning-and-deprecation.md",
+      "docs\\architecture-overview.md",
+      "docs\\build-and-signing.md",
+      "docs\\configuration\\exception_register.json",
+      "docs\\configuration\\exception_register.md",
+      "docs\\configuration\\identity_verification_report.json",
+      "docs\\configuration\\identity_verification_report.md",
+      "docs\\configuration\\pre_identity_verification_report.json",
+      "docs\\configuration\\pre_identity_verification_report.md",
+      "docs\\configuration\\remediation_list.md",
+      "docs\\connectors\\aws_research_note.md",
+      "docs\\connectors\\azure_research_note.md",
+      "docs\\connectors\\gcp_research_note.md",
+      "docs\\connectors\\oci_research_note.md",
+      "docs\\data-dictionary.md",
+      "docs\\decision-log.md",
+      "docs\\decision_log.md",
+      "docs\\environment-matrix.md",
+      "docs\\metric-registry.md",
+      "docs\\module-map.md",
+      "docs\\open_items_register.md",
+      "docs\\openapi.json",
+      "docs\\operational-dashboards.md",
+      "docs\\operational-runbook.md",
+      "docs\\operational_runbook.md",
+      "docs\\orphan-requirements.md",
+      "docs\\permissions\\aws.md",
+      "docs\\permissions\\azure.md",
+      "docs\\permissions\\gcp.md",
+      "docs\\permissions\\oci.md",
+      "docs\\pricing-dimensions-reconciled.json",
+      "docs\\pricing-dimensions-reconciled.md",
+      "docs\\provider_capability_register.md",
+      "docs\\requirement_traceability_matrix.md",
+      "docs\\requirements-register.md",
+      "docs\\sbom.json",
+      "docs\\sbom.md",
+      "docs\\security\\penetration_test_report.md"
+    ],
+    "rtm_requirement_ids_by_prefix": {
+      "BR": 23,
+      "NFR": 11,
+      "SEC": 13
+    },
+    "rtm_distinct_requirement_ids": 43,
+    "rtm_status_words": {
+      "deferred": 1,
+      "verified": 3,
+      "implemented": 42
+    },
+    "rtm_ac_missing_001_104": [
+      "AC-001",
+      "AC-002",
+      "AC-003",
+      "AC-004",
+      "AC-005",
+      "AC-006",
+      "AC-007",
+      "AC-008",
+      "AC-009",
+      "AC-010",
+      "AC-011",
+      "AC-012",
+      "AC-013",
+      "AC-014",
+      "AC-015",
+      "AC-016",
+      "AC-017",
+      "AC-018",
+      "AC-019",
+      "AC-020",
+      "AC-021",
+      "AC-022",
+      "AC-023",
+      "AC-024",
+      "AC-025",
+      "AC-026",
+      "AC-027",
+      "AC-028",
+      "AC-029",
+      "AC-030",
+      "AC-031",
+      "AC-032",
+      "AC-033",
+      "AC-034",
+      "AC-035",
+      "AC-036",
+      "AC-037",
+      "AC-038",
+      "AC-039",
+      "AC-040",
+      "AC-041",
+      "AC-042",
+      "AC-043",
+      "AC-044",
+      "AC-045",
+      "AC-046",
+      "AC-047",
+      "AC-048",
+      "AC-049",
+      "AC-050",
+      "AC-051",
+      "AC-052",
+      "AC-053",
+      "AC-054",
+      "AC-055",
+      "AC-056",
+      "AC-057",
+      "AC-058",
+      "AC-059",
+      "AC-060",
+      "AC-061",
+      "AC-062",
+      "AC-063",
+      "AC-064",
+      "AC-065",
+      "AC-066",
+      "AC-067",
+      "AC-068",
+      "AC-069",
+      "AC-070",
+      "AC-071",
+      "AC-072",
+      "AC-073",
+      "AC-074",
+      "AC-075",
+      "AC-076",
+      "AC-077",
+      "AC-078",
+      "AC-079",
+      "AC-080",
+      "AC-081",
+      "AC-082",
+      "AC-083",
+      "AC-084",
+      "AC-085",
+      "AC-086",
+      "AC-087",
+      "AC-088",
+      "AC-089",
+      "AC-090",
+      "AC-091",
+      "AC-092",
+      "AC-093",
+      "AC-094",
+      "AC-095",
+      "AC-096",
+      "AC-097",
+      "AC-098",
+      "AC-099",
+      "AC-100",
+      "AC-101",
+      "AC-102",
+      "AC-103",
+      "AC-104"
+    ],
+    "rtm_ac_missing_110_127": [
+      "AC-110",
+      "AC-111",
+      "AC-112",
+      "AC-113",
+      "AC-114",
+      "AC-115",
+      "AC-116",
+      "AC-117",
+      "AC-118",
+      "AC-119",
+      "AC-120",
+      "AC-121",
+      "AC-122",
+      "AC-123",
+      "AC-124",
+      "AC-125",
+      "AC-126",
+      "AC-127"
+    ]
+  },
+  "api": {
+    "route_decorator_count": 236,
+    "routes_first_120": [
+      "GET /api/v1/health  (api/cloudlens_api/main.py:1011)",
+      "GET /  (api/cloudlens_api/main.py:1024)",
+      "POST /step-up  (api/cloudlens_api/routes/admin.py:349)",
+      "GET /functions  (api/cloudlens_api/routes/admin.py:373)",
+      "GET /rbac/matrix  (api/cloudlens_api/routes/admin.py:382)",
+      "GET /rbac/access-review/export  (api/cloudlens_api/routes/admin.py:416)",
+      "POST /overrides  (api/cloudlens_api/routes/admin.py:472)",
+      "GET /overrides  (api/cloudlens_api/routes/admin.py:524)",
+      "GET /settings  (api/cloudlens_api/routes/admin.py:557)",
+      "PATCH /settings  (api/cloudlens_api/routes/admin.py:566)",
+      "GET /feature-flags  (api/cloudlens_api/routes/admin.py:579)",
+      "GET /catalogue  (api/cloudlens_api/routes/alerts.py:186)",
+      "GET /contextual  (api/cloudlens_api/routes/alerts.py:252)",
+      "POST /contextual  (api/cloudlens_api/routes/alerts.py:272)",
+      "POST /contextual/{contextual_id}/dismiss  (api/cloudlens_api/routes/alerts.py:293)",
+      "POST /contextual/{contextual_id}/acknowledge  (api/cloudlens_api/routes/alerts.py:308)",
+      "GET /subscriptions  (api/cloudlens_api/routes/alerts.py:324)",
+      "DELETE /subscriptions/{subscription_id}  (api/cloudlens_api/routes/alerts.py:356)",
+      "GET /delivery-logs  (api/cloudlens_api/routes/alerts.py:367)",
+      "POST /evaluate-auto-resolutions  (api/cloudlens_api/routes/alerts.py:378)",
+      "POST /evaluate-escalations  (api/cloudlens_api/routes/alerts.py:388)",
+      "GET /{alert_id}  (api/cloudlens_api/routes/alerts.py:407)",
+      "POST /{alert_id}/acknowledge  (api/cloudlens_api/routes/alerts.py:420)",
+      "POST /{alert_id}/ack  (api/cloudlens_api/routes/alerts.py:421)",
+      "POST /{alert_id}/resolve  (api/cloudlens_api/routes/alerts.py:437)",
+      "POST /{alert_id}/comments  (api/cloudlens_api/routes/alerts.py:453)",
+      "POST /{alert_id}/clear-condition  (api/cloudlens_api/routes/alerts.py:469)",
+      "POST /extracts  (api/cloudlens_api/routes/analytics.py:69)",
+      "GET /extracts  (api/cloudlens_api/routes/analytics.py:94)",
+      "GET /extracts/{extract_id}  (api/cloudlens_api/routes/analytics.py:111)",
+      "GET /extracts/{extract_id}/manifest  (api/cloudlens_api/routes/analytics.py:124)",
+      "POST /query  (api/cloudlens_api/routes/analytics.py:137)",
+      "GET /dictionary  (api/cloudlens_api/routes/analytics.py:152)",
+      "GET /reference/cost-pack  (api/cloudlens_api/routes/analytics.py:160)",
+      "GET /reference/focus-mapping  (api/cloudlens_api/routes/analytics.py:170)",
+      "POST /tags/normalise  (api/cloudlens_api/routes/attribution.py:63)",
+      "POST /ownership/resolve  (api/cloudlens_api/routes/attribution.py:87)",
+      "GET /allocation/rules  (api/cloudlens_api/routes/attribution.py:135)",
+      "POST /allocation/evaluate  (api/cloudlens_api/routes/attribution.py:145)",
+      "POST /allocation/aggregate  (api/cloudlens_api/routes/attribution.py:160)",
+      "POST /oidc/login  (api/cloudlens_api/routes/auth.py:233)",
+      "POST /saml/login  (api/cloudlens_api/routes/auth.py:276)",
+      "POST /token/refresh  (api/cloudlens_api/routes/auth.py:394)",
+      "POST /logout  (api/cloudlens_api/routes/auth.py:421)",
+      "POST /users/{user_id}/disable  (api/cloudlens_api/routes/auth.py:449)",
+      "POST /step-up/initiate  (api/cloudlens_api/routes/auth.py:584)",
+      "POST /step-up/verify  (api/cloudlens_api/routes/auth.py:605)",
+      "GET /me  (api/cloudlens_api/routes/auth.py:624)",
+      "GET /session  (api/cloudlens_api/routes/auth.py:645)",
+      "POST /pre-identity  (api/cloudlens_api/routes/bootstrap.py:99)",
+      "GET /pre-identity/status  (api/cloudlens_api/routes/bootstrap.py:109)",
+      "GET /templates  (api/cloudlens_api/routes/budgets.py:133)",
+      "GET /{budget_id}  (api/cloudlens_api/routes/budgets.py:170)",
+      "PATCH /{budget_id}  (api/cloudlens_api/routes/budgets.py:180)",
+      "POST /{budget_id}/approve  (api/cloudlens_api/routes/budgets.py:191)",
+      "POST /{budget_id}/reject  (api/cloudlens_api/routes/budgets.py:202)",
+      "DELETE /{budget_id}  (api/cloudlens_api/routes/budgets.py:262)",
+      "GET /entities  (api/cloudlens_api/routes/bulk_import.py:120)",
+      "GET /entities/{entity_type}  (api/cloudlens_api/routes/bulk_import.py:127)",
+      "GET /templates/{entity_type}  (api/cloudlens_api/routes/bulk_import.py:140)",
+      "GET /export/{entity_type}  (api/cloudlens_api/routes/bulk_import.py:160)",
+      "POST /profiles  (api/cloudlens_api/routes/bulk_import.py:186)",
+      "GET /profiles  (api/cloudlens_api/routes/bulk_import.py:206)",
+      "POST /dry-run  (api/cloudlens_api/routes/bulk_import.py:221)",
+      "POST /upload/dry-run  (api/cloudlens_api/routes/bulk_import.py:256)",
+      "GET /dry-run/{dry_run_id}/result  (api/cloudlens_api/routes/bulk_import.py:284)",
+      "POST /{dry_run_id}/apply  (api/cloudlens_api/routes/bulk_import.py:315)",
+      "POST /{import_run_id}/rollback  (api/cloudlens_api/routes/bulk_import.py:344)",
+      "GET /history  (api/cloudlens_api/routes/bulk_import.py:374)",
+      "GET /history/{import_run_id}  (api/cloudlens_api/routes/bulk_import.py:388)",
+      "POST /scheduled  (api/cloudlens_api/routes/bulk_import.py:409)",
+      "GET /scheduled  (api/cloudlens_api/routes/bulk_import.py:429)",
+      "POST /scheduled/{job_id}/run  (api/cloudlens_api/routes/bulk_import.py:438)",
+      "GET /features  (api/cloudlens_api/routes/config.py:151)",
+      "GET /features/{flag_key}/evaluate  (api/cloudlens_api/routes/config.py:161)",
+      "POST /features/{flag_key}/toggle  (api/cloudlens_api/routes/config.py:184)",
+      "GET /features/audit-log  (api/cloudlens_api/routes/config.py:209)",
+      "GET /{connector_id}  (api/cloudlens_api/routes/connectors.py:172)",
+      "POST /{connector_id}/probe  (api/cloudlens_api/routes/connectors.py:191)",
+      "GET /{connector_id}/diagnostics/quota  (api/cloudlens_api/routes/connectors.py:276)",
+      "GET /{connector_id}/landings  (api/cloudlens_api/routes/connectors.py:288)",
+      "POST /{connector_id}/transition  (api/cloudlens_api/routes/connectors.py:302)",
+      "PATCH /{connector_id}  (api/cloudlens_api/routes/connectors.py:347)",
+      "POST /{connector_id}/sync  (api/cloudlens_api/routes/connectors.py:404)",
+      "GET /{connector_id}/jobs  (api/cloudlens_api/routes/connectors.py:438)",
+      "POST /validate  (api/cloudlens_api/routes/connectors.py:481)",
+      "POST /ingest  (api/cloudlens_api/routes/cost.py:96)",
+      "GET /summary  (api/cloudlens_api/routes/cost.py:113)",
+      "GET /drill-through  (api/cloudlens_api/routes/cost.py:239)",
+      "GET /timeseries  (api/cloudlens_api/routes/cost.py:614)",
+      "GET /breakdown  (api/cloudlens_api/routes/cost.py:657)",
+      "GET /line-items  (api/cloudlens_api/routes/cost.py:704)",
+      "GET /executive  (api/cloudlens_api/routes/dashboards.py:50)",
+      "GET /landing  (api/cloudlens_api/routes/dashboards.py:129)",
+      "POST /landing  (api/cloudlens_api/routes/dashboards.py:139)",
+      "GET /export/{widget_id}  (api/cloudlens_api/routes/dashboards.py:154)",
+      "POST /seed  (api/cloudlens_api/routes/demo.py:41)",
+      "GET /status  (api/cloudlens_api/routes/demo.py:72)",
+      "GET /anomalies  (api/cloudlens_api/routes/demo.py:108)",
+      "GET /anomalies/cost-spikes  (api/cloudlens_api/routes/demo.py:120)",
+      "GET /anomalies/restatements  (api/cloudlens_api/routes/demo.py:127)",
+      "GET /anomalies/stale-connectors  (api/cloudlens_api/routes/demo.py:134)",
+      "GET /anomalies/unowned-clusters  (api/cloudlens_api/routes/demo.py:146)",
+      "GET /mode/status  (api/cloudlens_api/routes/demo_mode.py:48)",
+      "POST /mode/enable  (api/cloudlens_api/routes/demo_mode.py:57)",
+      "POST /mode/disable  (api/cloudlens_api/routes/demo_mode.py:80)",
+      "POST /reset  (api/cloudlens_api/routes/demo_mode.py:104)",
+      "GET /scenarios  (api/cloudlens_api/routes/demo_mode.py:118)",
+      "POST /scenarios/load  (api/cloudlens_api/routes/demo_mode.py:125)",
+      "GET /export  (api/cloudlens_api/routes/demo_mode.py:138)",
+      "GET /screens/verify  (api/cloudlens_api/routes/demo_mode.py:237)",
+      "POST /edges/manual  (api/cloudlens_api/routes/dependency.py:48)",
+      "GET /edges  (api/cloudlens_api/routes/dependency.py:59)",
+      "GET /edges/{edge_id}  (api/cloudlens_api/routes/dependency.py:86)",
+      "PUT /edges/{edge_id}  (api/cloudlens_api/routes/dependency.py:96)",
+      "PATCH /edges/{edge_id}  (api/cloudlens_api/routes/dependency.py:97)",
+      "POST /discovery/run  (api/cloudlens_api/routes/dependency.py:130)",
+      "GET /conflicts  (api/cloudlens_api/routes/dependency.py:156)",
+      "POST /conflicts/{conflict_id}/resolve  (api/cloudlens_api/routes/dependency.py:166)",
+      "GET /graph  (api/cloudlens_api/routes/dependency.py:185)"
+    ]
+  },
+  "web": {
+    "view_dir": "web\\src\\pages",
+    "view_file_count": 16,
+    "view_files": [
+      "AdminConsolePage.tsx",
+      "BudgetManagementPage.tsx",
+      "ConnectorManagementPage.tsx",
+      "CostExplorerPage.tsx",
+      "DependencyGraphPage.tsx",
+      "DesignSystemShowcase.tsx",
+      "ExecutiveDashboard.tsx",
+      "ExplanationLayerView.tsx",
+      "HierarchyExplorer.tsx",
+      "InvestigationViewPage.tsx",
+      "MasterDataConsole.tsx",
+      "PolicyManagementPage.tsx",
+      "ProviderDashboard.tsx",
+      "ResourceDetailPage.tsx",
+      "ServiceDashboard.tsx",
+      "ServiceInventory.tsx"
+    ]
+  },
+  "migrations": {
+    "migration_files": 10,
+    "mentions_partition": 18,
+    "mentions_row_level_security": 10,
+    "mentions_audit_append_only": 4
+  }
+}

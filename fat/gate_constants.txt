@@ -1,0 +1,7 @@
+$ python scripts/check_no_hardcoded_constants.py --mode enforce
+exit=0
+
+STDOUT:
+[PASS] Zero hard-coding scan passed cleanly! (84 allow-listed exceptions in register)
+
+STDERR:

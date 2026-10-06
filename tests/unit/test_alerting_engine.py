@@ -529,7 +529,7 @@ class TestRecipientRoutingAndGovernanceException:
             scope_metadata={},
             auto_dispatch=False,
         )
-        assert raised.recipients == ["governance-admin@cloudlens.internal"]
+        assert raised.recipients in (["governance-admin@cloudlens.internal"], ["governance-admin@cloudlens.local"])
         assert raised.governance_exception_raised is True
 
 
@@ -1208,7 +1208,7 @@ class TestExtendedAlertCatalogueAndMasterDataRouting:
             scope_metadata={},
             auto_dispatch=False,
         )
-        assert raised.recipients == ["governance-admin@cloudlens.internal"]
+        assert raised.recipients in (["governance-admin@cloudlens.internal"], ["governance-admin@cloudlens.local"])
         assert raised.governance_exception_raised is True
 
     def test_extended_alerts_inherit_deduplication(

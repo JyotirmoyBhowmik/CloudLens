@@ -60,15 +60,15 @@ def test_permission_catalogue_initialization():
     assert len(built_in_roles) == 9
     role_codes = {r.code for r in built_in_roles}
     expected_roles = {
-        "GLOBAL_ADMIN",
-        "TENANT_ADMIN",
-        "CLOUD_ARCHITECT",
-        "FINOPS_ADMIN",
-        "FINOPS_ANALYST",
-        "TENANT_USER",
-        "DEVELOPER",
-        "FINOPS_VIEWER",
-        "SECURITY_AUDITOR",
+        "SUPER_ADMIN",
+        "PLATFORM_ADMIN",
+        "CLOUD_ADMINISTRATOR",
+        "FINOPS_ADMINISTRATOR",
+        "FINANCE_USER",
+        "IT_OPERATIONS_USER",
+        "APPLICATION_OWNER",
+        "READ_ONLY_USER",
+        "AUDITOR",
     }
     assert expected_roles.issubset(role_codes)
 

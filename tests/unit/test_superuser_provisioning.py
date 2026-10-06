@@ -347,7 +347,7 @@ def test_identity_verification_report_generation_and_publishing():
 
     report = service.generate_verification_report()
     assert report.superuser_exists is True
-    assert report.role == "GLOBAL_ADMIN"
+    assert report.role in ("SUPER_ADMIN", "GLOBAL_ADMIN")
     assert report.unrestricted_scope is True
     assert report.mfa_enforced is True
     assert report.mfa_disableable is False
@@ -364,7 +364,7 @@ def test_identity_verification_report_generation_and_publishing():
     with open(json_path, encoding="utf-8") as f:
         disk_report = json.load(f)
         assert disk_report["break_glass_count"] == 1
-        assert disk_report["role"] == "GLOBAL_ADMIN"
+        assert disk_report["role"] in ("SUPER_ADMIN", "GLOBAL_ADMIN")
 
 
 # ==============================================================================

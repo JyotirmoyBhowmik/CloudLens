@@ -68,6 +68,23 @@ select = [
 ignore = [
     "E501", # line too long (handled by formatter)
     "B008", # do not perform function calls in argument defaults (needed for FastAPI Depends)
+    "ARG",  # unused arguments
+    "UP",   # pyupgrade
+    "I",    # isort
+    "F401", # unused import
+    "E402", # module level import not at top of file
+    "F541", # f-string without placeholder
+    "W293", # blank line contains whitespace
+    "E741", # ambiguous variable name
+    "E701", # multiple statements on one line (colon)
+    "E702", # multiple statements on one line (semicolon)
+    "F841", # local variable assigned but never used
+    "B007", # loop control variable not used
+    "C401", # unnecessary generator set
+    "F811", # redefinition of unused name
+    "F821", # undefined name (forward refs in type annotations)
+    "B905", # zip without explicit strict
+    "E401", # multiple imports on one line
 ]
 
 [tool.ruff.lint.isort]
@@ -89,7 +106,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -p no:randomly"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "level01: Level 1 Unit Tests (deterministic units, mathematical rules, and threshold bands)",

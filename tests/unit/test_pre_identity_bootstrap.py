@@ -163,14 +163,14 @@ def test_nine_builtin_roles_and_permissions_defined_as_master_data(
     seeded_role_codes = {r.code for r in roles}
     assert expected_role_codes == seeded_role_codes
 
-    # Verify GlobalAdmin has full permissions
-    global_admin = next(r for r in roles if r.code == "GLOBAL_ADMIN")
+    # Verify GlobalAdmin / SuperAdmin has full permissions
+    global_admin = next(r for r in roles if r.code in ("SUPER_ADMIN", "GLOBAL_ADMIN"))
     assert "config:write" in global_admin.attributes["allowed_permissions"]
     assert "features:toggle" in global_admin.attributes["allowed_permissions"]
     assert "tenants:settings:write" in global_admin.attributes["allowed_permissions"]
 
-    # Verify FinOpsViewer is restricted
-    finops_viewer = next(r for r in roles if r.code == "FINOPS_VIEWER")
+    # Verify FinOpsViewer / ReadOnlyUser is restricted
+    finops_viewer = next(r for r in roles if r.code in ("READ_ONLY_USER", "FINOPS_VIEWER"))
     viewer_perms = set(finops_viewer.attributes["allowed_permissions"])
     assert "config:read" in viewer_perms
     assert "billing:read" in viewer_perms

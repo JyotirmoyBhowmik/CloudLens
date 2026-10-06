@@ -1,0 +1,6 @@
+$ ruff check . --statistics
+exit=0
+
+STDOUT:
+
+STDERR:

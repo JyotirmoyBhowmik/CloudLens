@@ -337,7 +337,7 @@ export const ControlTowerPage: React.FC = () => {
                 fontWeight: 600,
               }}
             >
-              admin@jyotirmoyb.com
+              SUPERUSER CONTEXT
             </span>
             <div
               style={{
