@@ -1,0 +1,8 @@
+$ kubectl version --client
+exit=0 duration=0.5s
+
+--- STDOUT ---
+Client Version: v1.35.3-dispatcher
+Kustomize Version: v5.7.1
+
+--- STDERR ---

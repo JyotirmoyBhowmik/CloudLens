@@ -1,0 +1,7 @@
+$ git rev-list --count @{u}..HEAD
+exit=128 duration=0.1s
+
+--- STDOUT ---
+
+--- STDERR ---
+fatal: no upstream configured for branch 'main'

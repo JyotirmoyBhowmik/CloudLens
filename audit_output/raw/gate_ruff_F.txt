@@ -1,0 +1,59 @@
+$ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -m ruff check . --select F821,F811,F841,F401 --output-format=concise
+exit=1 duration=0.7s
+
+--- STDOUT ---
+api\cloudlens_api\routes\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+api\cloudlens_api\routes\__init__.py:11:57: F401 `api.cloudlens_api.routes.calendar.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+api\cloudlens_api\routes\control_tower.py:29:5: F401 [*] `domain.control_tower.models.BlastRadius` imported but unused
+api\cloudlens_api\routes\control_tower.py:31:5: F401 [*] `domain.control_tower.models.ControlTowerActionResult` imported but unused
+api\cloudlens_api\routes\inventory.py:32:33: F401 [*] `domain.models.enums.PricingStatus` imported but unused
+api\cloudlens_api\routes\inventory.py:32:48: F401 [*] `domain.models.enums.ProviderType` imported but unused
+api\cloudlens_api\routes\inventory.py:32:62: F401 [*] `domain.models.enums.ServiceCategory` imported but unused
+domain\attribution\governance_resolver.py:10:20: F401 [*] `typing.Any` imported but unused
+domain\control_tower\service.py:30:32: F401 [*] `datetime.timedelta` imported but unused
+domain\control_tower\service.py:34:8: F401 [*] `httpx` imported but unused
+domain\control_tower\service.py:46:38: F401 [*] `domain.credentials.store.get_secret_store` imported but unused
+domain\control_tower\service.py:48:34: F401 [*] `domain.observability.metrics` imported but unused
+domain\control_tower\service.py:52:5: F401 [*] `domain.sync.repository.get_connector_schedule_repository` imported but unused
+domain\control_tower\service.py:396:9: F811 Redefinition of unused `metrics` from line 48: `metrics` redefined here
+domain\synthetic\journey_monitor.py:20:33: F401 [*] `domain.models.enums.AlertSeverity` imported but unused
+domain\synthetic\journey_monitor.py:20:48: F401 [*] `domain.models.enums.AlertStatus` imported but unused
+domain\synthetic\journey_monitor.py:45:9: F841 Local variable `tc` is assigned to but never used
+domain\synthetic\journey_monitor.py:68:13: F841 Local variable `cost_engine` is assigned to but never used
+domain\synthetic\journey_monitor.py:105:17: F841 Local variable `alert_svc` is assigned to but never used
+scripts\count_level_markers.py:6:8: F401 [*] `subprocess` imported but unused
+scripts\count_level_markers.py:7:8: F401 [*] `sys` imported but unused
+scripts\generate_fat_package.py:22:22: F401 [*] `datetime.datetime` imported but unused
+scripts\generate_fat_package.py:22:32: F401 [*] `datetime.timezone` imported but unused
+scripts\generate_fat_package.py:24:38: F401 [*] `xml.etree.ElementTree` imported but unused
+scripts\generate_fat_package.py:140:9: F841 Local variable `content` is assigned to but never used
+scripts\generate_rtm.py:21:8: F401 [*] `os` imported but unused
+scripts\generate_rtm.py:23:8: F401 [*] `sys` imported but unused
+scripts\run_proof_tasks.py:15:8: F401 [*] `time` imported but unused
+scripts\run_proof_tasks.py:16:22: F401 [*] `datetime.UTC` imported but unused
+scripts\run_proof_tasks.py:16:27: F401 [*] `datetime.datetime` imported but unused
+scripts\run_proof_tasks.py:29:63: F401 [*] `workers.cloudlens_workers.locking.TaskConcurrencyLock` imported but unused
+scripts\run_proof_tasks.py:29:84: F401 [*] `workers.cloudlens_workers.locking.reset_in_memory_locks` imported but unused
+scripts\run_proof_tasks.py:76:5: F841 Local variable `sleep_1` is assigned to but never used
+scripts\run_proof_tasks.py:154:51: F821 Undefined name `Any`
+scripts\run_scale_load_test.py:13:8: F401 [*] `asyncio` imported but unused
+scripts\run_scale_load_test.py:16:8: F401 [*] `os` imported but unused
+scripts\run_scale_load_test.py:19:37: F401 [*] `datetime.timedelta` imported but unused
+tests\control_tower\test_control_tower_suite.py:17:8: F401 [*] `json` imported but unused
+tests\control_tower\test_control_tower_suite.py:23:41: F401 [*] `domain.control_tower.models.PanelStatus` imported but unused
+tests\control_tower\test_control_tower_suite.py:25:33: F401 [*] `domain.models.enums.SystemRole` imported but unused
+tests\dr\test_disaster_recovery.py:20:8: F401 [*] `pytest` imported but unused
+tests\improvements\test_improvements_suite.py:19:8: F401 [*] `json` imported but unused
+tests\improvements\test_improvements_suite.py:35:5: F401 [*] `domain.commitments.calendar.get_commitment_calendar_service` imported but unused
+tests\improvements\test_improvements_suite.py:53:5: F401 [*] `domain.release.service.get_release_service` imported but unused
+tests\security\test_rbac_negative_suite.py:26:34: F401 [*] `domain.audit.service.get_audit_service` imported but unused
+tests\security\test_rbac_negative_suite.py:30:33: F401 [*] `domain.models.enums.AuditEventType` imported but unused
+tests\workers\test_scheduled_work_suite.py:97:5: F841 Local variable `sleep_1` is assigned to but never used
+workers\cloudlens_workers\tasks.py:32:56: F401 [*] `domain.forecasting.models.ForecastGenerateRequest` imported but unused
+workers\cloudlens_workers\tasks.py:43:34: F401 [*] `domain.observability.current_correlation_id` imported but unused
+workers\cloudlens_workers\tasks.py:43:58: F401 [*] `domain.observability.current_tenant_id` imported but unused
+workers\cloudlens_workers\tasks.py:53:37: F401 [*] `domain.topology.service.get_topology_service` imported but unused
+Found 51 errors.
+[*] 41 fixable with the `--fix` option (6 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+--- STDERR ---

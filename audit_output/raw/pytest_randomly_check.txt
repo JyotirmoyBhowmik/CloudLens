@@ -1,0 +1,6 @@
+$ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -c import pytest_randomly
+exit=0 duration=0.7s
+
+--- STDOUT ---
+
+--- STDERR ---

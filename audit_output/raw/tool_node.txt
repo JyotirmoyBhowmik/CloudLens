@@ -1,0 +1,7 @@
+$ node --version
+exit=0 duration=0.1s
+
+--- STDOUT ---
+v24.11.1
+
+--- STDERR ---

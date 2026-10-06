@@ -1,0 +1,7 @@
+$ kubeconform -v
+exit=0 duration=0.6s
+
+--- STDOUT ---
+v0.8.0
+
+--- STDERR ---

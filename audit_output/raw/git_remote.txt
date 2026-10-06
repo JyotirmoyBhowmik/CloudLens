@@ -1,0 +1,8 @@
+$ git remote -v
+exit=0 duration=0.1s
+
+--- STDOUT ---
+origin	https://github.com/JyotirmoyBhowmik/CloudLens.git (fetch)
+origin	https://github.com/JyotirmoyBhowmik/CloudLens.git (push)
+
+--- STDERR ---

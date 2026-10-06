@@ -1,0 +1,50 @@
+$ git log -15 --shortstat --pretty=format:@@%h|%s
+exit=0 duration=0.5s
+
+--- STDOUT ---
+@@e3b3f74|Add files via upload
+ 1 file changed, 919 insertions(+)
+
+@@205761a|chore(audit): update exception register timestamps
+ 2 files changed, 85 insertions(+), 85 deletions(-)
+
+@@e3549ad|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification
+ 3 files changed, 19 insertions(+), 6 deletions(-)
+
+@@2db198c|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
+ 35 files changed, 2847 insertions(+), 133 deletions(-)
+
+@@51d29c2|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and fat artifacts
+ 30 files changed, 4071 insertions(+), 554 deletions(-)
+
+@@ea1cc4f|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-level markers (Prompt R-PERF)
+ 11 files changed, 1206 insertions(+), 65 deletions(-)
+
+@@2027ff7|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS, R-CT, R-OPS, R-UI, R-FEAT)
+ 250 files changed, 21422 insertions(+), 1857 deletions(-)
+
+@@7831aa5|chore: add cloudlens_audit.py script
+ 1 file changed, 374 insertions(+)
+
+@@d01098a|chore: add audit_output/ to .gitignore
+ 1 file changed, 1 insertion(+)
+
+@@c4b90ce|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook
+ 1 file changed, 512 insertions(+), 72 deletions(-)
+
+@@3303556|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack
+ 15 files changed, 2901 insertions(+), 3 deletions(-)
+
+@@6cb8436|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox
+ 18 files changed, 3870 insertions(+), 3 deletions(-)
+
+@@d6c1024|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks
+ 8 files changed, 487 insertions(+), 32 deletions(-)
+
+@@9813329|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)
+ 5 files changed, 499 insertions(+), 25 deletions(-)
+
+@@25c68bc|docs: add provider capability register and open items register (Prompt 43)
+ 2 files changed, 143 insertions(+)
+
+--- STDERR ---

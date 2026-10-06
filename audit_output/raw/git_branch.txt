@@ -1,0 +1,7 @@
+$ git rev-parse --abbrev-ref HEAD
+exit=0 duration=0.1s
+
+--- STDOUT ---
+main
+
+--- STDERR ---

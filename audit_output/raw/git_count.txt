@@ -1,0 +1,7 @@
+$ git rev-list --count HEAD
+exit=0 duration=0.1s
+
+--- STDOUT ---
+78
+
+--- STDERR ---

@@ -1,0 +1,10 @@
+$ helm lint C:\Users\TEST\CloudLens\ops\helm\cloudlens
+exit=0 duration=0.3s
+
+--- STDOUT ---
+==> Linting C:\Users\TEST\CloudLens\ops\helm\cloudlens
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+
+--- STDERR ---

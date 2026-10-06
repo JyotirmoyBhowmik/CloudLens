@@ -1,0 +1,83 @@
+$ git log --pretty=format:%h|%ad|%s --date=short
+exit=0 duration=0.1s
+
+--- STDOUT ---
+e3b3f74|2026-10-06|Add files via upload
+205761a|2026-10-06|chore(audit): update exception register timestamps
+e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification
+2db198c|2026-10-06|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
+51d29c2|2026-10-06|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and fat artifacts
+ea1cc4f|2026-10-06|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-level markers (Prompt R-PERF)
+2027ff7|2026-10-06|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS, R-CT, R-OPS, R-UI, R-FEAT)
+7831aa5|2026-10-04|chore: add cloudlens_audit.py script
+d01098a|2026-10-04|chore: add audit_output/ to .gitignore
+c4b90ce|2026-10-04|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook
+3303556|2026-10-04|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack
+6cb8436|2026-10-04|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox
+d6c1024|2026-10-04|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks
+9813329|2026-10-04|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)
+25c68bc|2026-10-04|docs: add provider capability register and open items register (Prompt 43)
+23f28b6|2026-10-04|chore: sync exception register after AST scan verification
+634243c|2026-10-04|feat(enterprise): complete Prompts 42B, 43, 44, 62, 57, 58, 59 - hardening, BBP v1.1, planning, commitments, and lifecycle
+2705332|2026-10-03|feat(interfaces): implement dependency graph, budget, policy and admin console screens (Prompt 41)
+d63f747|2026-10-03|feat(explanation): implement information icons, contextual alerts and explanation layer (Prompt 40)
+4ea77a0|2026-10-03|feat(resource-detail): implement resource detail, cost detail, usage and runtime views (Prompt 39)
+b7d7570|2026-10-03|feat(hierarchy): implement hierarchy explorer, inventory and search (Prompt 38)
+7e9f5bd|2026-10-03|feat(dashboards): implement executive, provider and service dashboards (Prompt 37)
+5667989|2026-10-03|feat(ui): implement enterprise design system and global patterns (Prompt 36)
+c69664e|2026-10-03|feat(import): implement bulk import framework and data onboarding (Prompt 53)
+dc5776b|2026-10-03|feat(demo): Prompt 47B governance-layer mock data extension (closes defect D-04)
+9c9e81d|2026-10-03|feat(provisioning): implement cost-aware provisioning gate (Prompt 55)
+a1c02ca|2026-10-03|docs: update verification reports timestamp
+044e822|2026-10-03|feat: implement showback, chargeback statements and cost allocation packs (Prompt 52)
+4b754fd|2026-10-03|feat(analytics): implement scheduled analytical extract, BI feed, and semantic layer (Prompt 56)
+544514d|2026-10-03|feat(reporting): implement reporting and export engine across 21 reports (Prompt 35)
+27f5199|2026-10-02|feat(api): implement public API surface across 48 catalogue endpoints and conventions (Prompt 34)
+e4d3261|2026-10-02|feat(topology): implement cost-aware topology service with 8 canonical views and chain cost aggregation (Prompt 33)
+02974f6|2026-10-02|feat(dependency): implement dependency model, multi-layer discovery, and impact analysis (Prompt 32)
+72d9348|2026-10-02|feat(remediation): implement remediation task assignment and accountability tracking (Prompt 51)
+c50ea34|2026-10-02|feat(workflow): implement unified workflow, approval, and delegation engine (Prompt 50)
+4136b4a|2026-10-02|feat(governance): implement alert and policy catalogue extension AL-17..AL-20 and POL-17..POL-18 (Prompt 31B, closes D-08, D-09)
+6ffc71c|2026-10-02|feat(alerting): implement alerting engine, notifications, and contextual alerts (Prompt 31)
+53bb77d|2026-10-02|feat(policy): implement declarative versioned policy engine, simulate/enforce modes, and default catalogue (Prompt 30)
+6944bfa|2026-10-02|feat(forecasting): implement forecasting engine, methods, outputs, and accuracy tracking (Prompt 29)
+c44f471|2026-10-02|feat(budgets): implement budget model, approval workflows, and overlap detection (Prompt 28)
+ddca473|2026-10-02|feat(quotas): implement service limit, quota headroom tracking, and lead-time forecasting (Prompt 54)
+3bd5cd8|2026-10-02|feat(thresholds): implement 6-state 10-basis threshold engine with anti-flapping (Prompt 27)
+e4bfb85|2026-10-02|feat(runtime): implement 6-state runtime model, schedule adherence, and breach valuation (Prompt 26)
+726b786|2026-10-02|feat(usage): implement 14 monitoring types, cardinality control, and usage expectations (Prompt 25)
+1281e8d|2026-10-01|feat(cost): implement cost reconciliation engine, executive trust indicator, and investigation workflow (Prompt 24)
+3d29bf3|2026-10-01|feat(cost): implement cost calculation engine and pre-deployment estimation (Prompt 23)
+7674586|2026-10-01|feat(cost): implement FOCUS cost ingestion, normalisation, restatement, and currency conversion (Prompt 22)
+277ddd9|2026-09-28|feat(pricing): implement 7-state pricing status engine, statement composer, and source traceability (Prompt 21)
+1a0e664|2026-09-28|feat(pricing): implement centralised effective-dated pricing catalogue with SCD Type 2 history (Prompt 20)
+5299a28|2026-09-27|feat(connectors): implement OCI connector with compartment depth preservation and non-retroactive tag attribution (Prompt 19)
+f3e4758|2026-09-27|feat(connectors): implement GCP connector with dual hierarchy and BigQuery billing export (Prompt 18)
+4b5d157|2026-09-27|feat(connectors): implement Amazon Web Services (AWS) connector (Prompt 17)
+e173391|2026-09-27|test(azure): add explicit acceptance tests for sandbox/fixtures hierarchy, both agreement types idempotency, and pricing discipline
+d65dc75|2026-09-27|feat(connectors): implement Microsoft Azure cloud connector (Prompt 16)
+40aaff3|2026-09-27|feat(wizard): implement Prompt 15B onboarding step restoration and alert delivery test (closes defect D-07)
+440b544|2026-09-27|feat(p15): sync orchestration, 13-step onboarding wizard and connector diagnostics
+a75d5ab|2026-09-27|feat(p14): connector contract, capabilities, resilience, and conformance test kit
+7afacb3|2026-09-26|feat(p13): tenant isolation, append-only audit stream, and governance overrides
+600b9e4|2026-09-26|feat(p12): secret management and credential lifecycle
+0f22235|2026-09-26|feat(p49b): superuser provisioning and break-glass consolidation
+9ac9595|2026-09-26|feat(p11): rbac, scope grants and financial data sensitivity
+1773ff4|2026-09-26|feat(p10): authentication and session management
+d618903|2026-09-26|fix(ci): migrate enums to StrEnum and resolve ruff UP042, C420, B033 lint checks
+710a146|2026-09-26|feat(p47): mock data, demo mode and provider simulator
+d11e5ca|2026-09-26|feat(p09): reference data seeding and synthetic estate
+4e0184a|2026-09-26|feat(p08): tag normalisation, ownership resolution and allocation rules
+5c84653|2026-09-26|feat(p49a): system bootstrap - pre-identity stage
+d7e9c93|2026-09-26|feat(p48): zero hard-coding enforcement and configuration audit
+77f096a|2026-09-26|feat(p46): business master data - organisation, financial and operational masters
+793ac3d|2026-09-26|feat(p45): master data management framework and console
+b343241|2026-09-26|feat(p07): catalogues - service, resource type, metric, unit, pricing dimension
+9891603|2026-09-26|feat(p06): database schema, partitioning and migrations
+b787c39|2026-09-26|feat(p05): canonical domain model, four-state null measures, scope tree with SCD-2 history
+726c25c|2026-09-26|feat(p04): continuous integration and quality gates
+17f6a08|2026-09-26|feat(p03): observability skeleton, distributed tracing, metrics and redaction
+38af4b2|2026-09-26|feat(p02): configuration, feature flags and environment model
+30177bd|2026-09-26|feat(p01): monorepo skeleton, service boundaries and developer bootstrap
+52c95c5|2026-09-26|feat(p00r): requirements reconciliation, 13 prefix registry and 29 pricing dimensions
+--- STDERR ---

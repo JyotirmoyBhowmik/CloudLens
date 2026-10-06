@@ -1,0 +1,20 @@
+$ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -c import sys
+try:
+    from fastapi.testclient import TestClient
+    from api.cloudlens_api.main import app
+    with TestClient(app) as c:
+        print('HEALTH', c.get('/api/v1/health').status_code)
+except (ImportError, ModuleNotFoundError) as e:
+    print('PROBE_INCONCLUSIVE import failed', str(e)[:200])
+except SystemExit as e:
+    print('REFUSED_TO_START exit', e.code)
+except Exception as e:
+    print('REFUSED_TO_START', type(e).__name__, str(e)[:200])
+
+exit=0 duration=11.3s
+
+--- STDOUT ---
+REFUSED_TO_START exit 1
+
+--- STDERR ---
+CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is 'staging' but Vault health_check() failed. Exiting non-zero.

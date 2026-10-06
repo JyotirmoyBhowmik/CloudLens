@@ -1,0 +1,7 @@
+$ pnpm --version
+exit=-1 duration=0.0s
+
+--- STDOUT ---
+
+--- STDERR ---
+NOT FOUND: [WinError 2] The system cannot find the file specified

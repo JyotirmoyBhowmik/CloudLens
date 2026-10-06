@@ -1,0 +1,7 @@
+$ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe scripts/check_no_hardcoded_constants.py
+exit=0 duration=2.7s
+
+--- STDOUT ---
+[PASS] Zero hard-coding scan passed cleanly! (84 allow-listed exceptions in register)
+
+--- STDERR ---

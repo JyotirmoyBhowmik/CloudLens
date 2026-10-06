@@ -1,0 +1,7 @@
+$ docker --version
+exit=0 duration=0.2s
+
+--- STDOUT ---
+Docker version 29.8.1, build 4a63305
+
+--- STDERR ---

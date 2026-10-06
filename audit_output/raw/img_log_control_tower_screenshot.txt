@@ -1,0 +1,7 @@
+$ git log --format=%h %ad %s --date=short -- fat/control_tower_screenshot.jpg
+exit=0 duration=0.3s
+
+--- STDOUT ---
+2db198c 2026-10-06 feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
+
+--- STDERR ---
