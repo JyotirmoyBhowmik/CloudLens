@@ -43,7 +43,7 @@ This document consolidates every Report Back block across the 62 build prompts o
 | **ADR-021** | Evidence-Based Commitment Renewal Pipeline | Prompt 58 | ACCEPTED | Commitment Management |
 | **ADR-022** | Multi-Stage Resource Decommissioning & Dependency Guard | Prompt 59 | ACCEPTED | Resource Lifecycle |
 | **ADR-023** | Open Format Long-Term Cost Archival (Parquet/JSON-L) | Prompt 44, 46 | ACCEPTED | Data Retention |
-| **ADR-024** | Zero-Downtime Rolling Blue-Green Deployment & Migration | Prompt 44, 45 | ACCEPTED | High Availability |
+| **ADR-024** | Zero-Downtime Weighted Canary Deployment & Migration | Prompt 44, 45, R-DOC | ACCEPTED | High Availability |
 | **ADR-025** | Software Bill of Materials (SBOM) CycloneDX Standard | Prompt 43, 44 | ACCEPTED | Supply Chain Security |
 | **ADR-026** | BBP Nine Roles, Platform Observer Capability & RBAC Matrix | Prompt R-ROLES | ACCEPTED | Security & RBAC |
 | **ADR-027** | Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager | Prompt R-OBS | ACCEPTED | Observability & SRE |

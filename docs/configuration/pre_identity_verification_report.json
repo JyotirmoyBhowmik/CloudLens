@@ -228,7 +228,7 @@
     },
     "PERMISSION": {
       "master_code": "PERMISSION",
-      "record_count": 39,
+      "record_count": 48,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/permission.json"
     },
@@ -321,20 +321,38 @@
       "record_count": 8,
       "applied_version": 1,
       "seed_file": "masterdata/seeds/topology_view.json"
+    },
+    "CONNECTOR_SCHEDULE": {
+      "master_code": "CONNECTOR_SCHEDULE",
+      "record_count": 23,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/connector_schedule.json"
+    },
+    "CONTROL_TOWER_THRESHOLDS": {
+      "master_code": "CONTROL_TOWER_THRESHOLDS",
+      "record_count": 14,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/control_tower_thresholds.json"
+    },
+    "IMPROVEMENT_FEATURES": {
+      "master_code": "IMPROVEMENT_FEATURES",
+      "record_count": 12,
+      "applied_version": 1,
+      "seed_file": "masterdata/seeds/improvement_features.json"
     }
   },
   "roles_defined": [
-    "GLOBAL_ADMIN",
-    "TENANT_ADMIN",
-    "FINOPS_ADMIN",
-    "FINOPS_ANALYST",
-    "FINOPS_VIEWER",
-    "CLOUD_ARCHITECT",
-    "DEVELOPER",
-    "SECURITY_AUDITOR",
-    "TENANT_USER"
+    "SUPER_ADMIN",
+    "PLATFORM_ADMIN",
+    "CLOUD_ADMINISTRATOR",
+    "FINOPS_ADMINISTRATOR",
+    "FINANCE_USER",
+    "IT_OPERATIONS_USER",
+    "APPLICATION_OWNER",
+    "READ_ONLY_USER",
+    "AUDITOR"
   ],
-  "permission_count": 39,
+  "permission_count": 48,
   "catalogues_populated": {
     "pricing_dimensions": 29,
     "units": 21,
@@ -386,11 +404,11 @@
     ]
   },
   "audit_stream_initialized": true,
-  "first_audit_event_id": "aud-boot-31dcc6c18d31",
+  "first_audit_event_id": "aud-boot-c318bb81b30e",
   "identities_count": 0,
   "credentials_count": 0,
   "grants_count": 0,
   "status_statement": "Pre-identity bootstrap completed successfully. All global masters, roles, templates, and provider capability profiles are seeded. Explicit Notice: No user identities, credentials, or grants exist yet; the platform is not yet interactively usable (Authentication & Admin Provisioning belong to Prompt 49B).",
-  "timestamp": "2026-10-04T19:57:58.664267Z",
-  "correlation_id": "corr-boot-7fe9a9c8"
+  "timestamp": "2026-10-06T02:08:49.829517Z",
+  "correlation_id": "corr-audit-test"
 }

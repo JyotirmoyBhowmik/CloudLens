@@ -2,8 +2,8 @@
 
 > **Stage**: Stage 3 — Pre-Identity Bootstrap (Prompt 49A)
 > **Closes Defect**: **D-01** (Decouples pre-identity seed foundation from authentication & RBAC)
-> **Execution Timestamp**: `2026-10-04T19:57:58.664267+00:00`
-> **Trace Correlation ID**: `corr-boot-7fe9a9c8`
+> **Execution Timestamp**: `2026-10-06T02:08:49.829517+00:00`
+> **Trace Correlation ID**: `corr-audit-test`
 > **Bootstrap Status**: `INITIALIZED`
 > **Interactively Usable**: **`False`** (NOTICE: Zero identities or credentials exist)
 
@@ -46,17 +46,17 @@
 
 ## 3. RBAC Foundation & Built-in Roles
 
-- **Total Permissions Defined**: `39` fine-grained permissions
+- **Total Permissions Defined**: `48` fine-grained permissions
 - **Nine Built-in Roles**:
-  1. `GLOBAL_ADMIN`
-  2. `TENANT_ADMIN`
-  3. `FINOPS_ADMIN`
-  4. `FINOPS_ANALYST`
-  5. `FINOPS_VIEWER`
-  6. `CLOUD_ARCHITECT`
-  7. `DEVELOPER`
-  8. `SECURITY_AUDITOR`
-  9. `TENANT_USER`
+  1. `SUPER_ADMIN`
+  2. `PLATFORM_ADMIN`
+  3. `CLOUD_ADMINISTRATOR`
+  4. `FINOPS_ADMINISTRATOR`
+  5. `FINANCE_USER`
+  6. `IT_OPERATIONS_USER`
+  7. `APPLICATION_OWNER`
+  8. `READ_ONLY_USER`
+  9. `AUDITOR`
 
 > **IMPORTANT**: The role definitions exist as master data only.
 > **Zero users exist** (`identities_count = 0`), **zero credentials exist** (`credentials_count = 0`), and **zero scope grants exist** (`grants_count = 0`).
@@ -79,7 +79,7 @@
 ## 5. Audit Stream Initialization
 
 - **Audit Stream Initialized**: `True`
-- **Initial Audit Event ID**: `aud-boot-31dcc6c18d31`
+- **Initial Audit Event ID**: `aud-boot-c318bb81b30e`
 - **Action Recorded**: `BOOTSTRAP_PRE_IDENTITY_INITIALIZED`
 - **Actor Identity**: `SYSTEM_BOOTSTRAP`
 

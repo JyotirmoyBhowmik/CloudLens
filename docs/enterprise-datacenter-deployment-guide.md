@@ -232,3 +232,105 @@ flowchart TD
    - All pods $\to$ CoreDNS on UDP/TCP port 53.
 5. **Application Egress (`allow-app-egress`)**:
    - Explicitly restricted to PostgreSQL (5432), Redis (6379/26379), OpenBao (8200), MinIO (9000), Keycloak (8080/8443), SMTP (25/587/1025), and outbound Cloud HTTPS (443).
+
+---
+
+## 7. Traffic Shifting: Weighted Canary Deployment Protocol
+
+Per Enterprise Datacenter standards, CloudLens uses **one traffic-shift method only: Weighted Canary** via NGINX Ingress Controller annotations.
+
+```mermaid
+flowchart LR
+    Client([Enterprise Traffic]) --> Ingress[Ingress Controller]
+    Ingress -->|90% Traffic / Main| StablePool["Stable Release (v1.0.x)\nDeployment: cloudlens-api"]
+    Ingress -->|10% -> 50% -> 100% / Canary| CanaryPool["Canary Release (v1.1.x)\nDeployment: cloudlens-api-canary"]
+```
+
+### 7.1 Progressive Traffic Steps
+1. **Stage 1 (Pre-Flight)**: Deploy `cloudlens-api-canary` with 0% traffic. Validate Kubernetes readiness probes and execute production smoke checks.
+2. **Stage 2 (10% Canary)**:
+   ```bash
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary="true" \
+     nginx.ingress.kubernetes.io/canary-weight="10" --overwrite
+   ```
+   Monitor error rate, `api_requests_total{status=~"5.."}` and `api_request_duration_seconds` for 15 minutes.
+3. **Stage 3 (50% Canary)**:
+   ```bash
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary-weight="50" --overwrite
+   ```
+4. **Stage 4 (100% Cutover)**: Promote canary to primary release deployment and retire previous version.
+5. **Emergency Rollback**: If error rate $> 0.1\%$ or p95 latency $> 500\text{ms}$:
+   ```bash
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary-weight="0" --overwrite
+   ```
+
+---
+
+## 8. Production Smoke Checks (Replacing Simulator 'Canary')
+
+In datacenter production, synthetic simulator runs are forbidden as deployment validation. Instead, automated **Production Smoke Checks** validate live services against real endpoints:
+
+```bash
+# Execute production smoke test suite against live deployment
+python scripts/verify_release_readiness.py \
+  --endpoint https://cloudlens.corp.internal \
+  --role SUPER_ADMIN \
+  --check-live-probes
+```
+
+Smoke Check Stages:
+1. **Liveness & Readiness Probes**: Verify HTTP 200 on `/api/v1/health` and database connection pool responsiveness.
+2. **Control Tower 14 Panels Verification**: Verify `GET /api/v1/control-tower/overview` returns all 14 panels in `GREEN` or `AMBER` status (zero `RED` tiles).
+3. **OpenBao Secret Mount Verification**: Confirm unsealed OpenBao engine is resolving credentials.
+4. **MinIO Object Store Connectivity**: Read bucket root and confirm write latency $< 50\text{ms}$.
+5. **Valkey Sentinel Connectivity**: Confirm quorum and broker task pub/sub latency $< 5\text{ms}$.
+
+---
+
+## 9. High-Availability Infrastructure Matrix
+
+| Subsystem | Technology | HA Architecture | Failover Mechanism |
+|:---|:---|:---|:---|
+| **Container Platform** | RKE2 (Rancher Kubernetes Engine) | 3 Control Plane nodes, N Worker nodes | Etcd raft quorum, automated worker reschedule |
+| **Relational Database** | CloudNativePG (PostgreSQL 16) | 3-instance cluster (1 Primary + 2 Sync Standbys) | Automated quorum failover via CNPG operator, RPO $\approx$ 0 |
+| **Secret Store** | OpenBao HA | 3-node Raft consensus cluster | Hardware Security Module (HSM) PKCS#11 auto-unseal |
+| **Object Store** | MinIO Enterprise | Distributed erasure-coded cluster (4+ drives) | Bitrot protection, continuous cross-rack replication |
+| **Cache & Task Broker** | Valkey Sentinel | 3-node Sentinel + Primary/Replica pair | Automated master failover within 5 seconds |
+| **Identity Provider** | Keycloak OIDC | Multi-replica deployment with Infinispan cross-pod cache | Active-active session replication |
+
+---
+
+## 10. Air-Gapped Operation & Secret Zeroization
+
+1. **Air-Gapped Container Registry**: All images mirrored to corporate Harbor / JFrog Artifactory with cosign signature verification enforced at admission controller (`Kyverno` / `Cosign Gate`).
+2. **Zero-Secret Storage**: No credentials exist on node local disk or Git repositories. Pods acquire short-lived tokens through projected service account volume mounts.
+
+---
+
+## 11. Production Go-Live Checklist (Guide §11)
+
+All criteria must be evidenced prior to production cutover:
+
+| Gate | Category | Verification Item | Status | Verification Method | Evidence Required |
+|:---:|:---|:---|:---:|:---|:---|
+| **G-01** | Architecture | RKE2 production cluster healthy with $\ge 3$ control plane nodes | [ ] | `kubectl get nodes` | Node status `Ready`, etcd quorum verified |
+| **G-02** | Security | OpenBao HA cluster initialized and HSM auto-unseal verified | [ ] | `vault status` | Sealed: `false`, Storage Type: `raft`, HA Cluster active |
+| **G-03** | Storage | MinIO distributed buckets created with encryption & lifecycle rules | [ ] | `mc admin info` | Buckets `cloudlens-raw`, `cloudlens-parquet`, `cloudlens-backups` |
+| **G-04** | Database | CloudNativePG 3-instance cluster healthy with WAL continuous streaming | [ ] | `kubectl cnpg status` | Primary + 2 Standbys streaming, lag $< 100\text{ms}$ |
+| **G-05** | Cache | Valkey Sentinel cluster healthy with 3-node quorum | [ ] | `redis-cli -p 26379 sentinel ckquorum` | OK 3 usable sentinels |
+| **G-06** | Identity | Keycloak OIDC realm `cloudlens` configured with 9 enterprise roles | [ ] | OIDC Discovery probe | `/.well-known/openid-configuration` HTTP 200, role mapper active |
+| **G-07** | Network | Zero-Trust NetworkPolicies active (default-deny enforced) | [ ] | `kubectl get netpol -n cloudlens` | 5 policies active; inter-pod rogue traffic blocked |
+| **G-08** | Security | Non-root container execution & read-only root filesystems | [ ] | Kubeconform & Pod audit | SecurityContext `runAsNonRoot: true`, `readOnlyRootFilesystem: true` |
+| **G-09** | Backup | CloudNativePG scheduled base backup & 35-day PITR verified | [ ] | `kubectl get scheduledbackup` | First base backup completed to MinIO with WAL archive |
+| **G-10** | Backup | OpenBao Raft snapshot CronJob active | [ ] | `kubectl get cronjob backup-openbao-snapshot` | Scheduled daily at `02:00 UTC` with S3 target |
+| **G-11** | Ingestion | Disconnected worker pools (ingestion, evaluation, reporting) healthy | [ ] | Celery inspect probe | All 3 queues active, zero cross-worker queue contention |
+| **G-12** | Telemetry | Prometheus ServiceMonitors collecting 18 mandatory metric families | [ ] | Prometheus API query | `up{namespace="cloudlens"} == 1` across all components |
+| **G-13** | Alerting | Alertmanager webhook active with Mailpit/Postfix relay and Watchdog heartbeat | [ ] | Alertmanager API probe | Dead-man's Watchdog alert active, zero dropped notifications |
+| **G-14** | Control Tower | Control Tower overview accessible to `admin@jyotirmoyb.com` with 14 panels green | [ ] | `GET /api/v1/control-tower/overview` | HTTP 200, 14 panels green/amber, zero red status |
+| **G-15** | Performance | Ingestion throughput $\ge 10,000$ rows / 60s benchmarked | [ ] | Performance load test | p95 API response $< 500\text{ms}$, ingestion memory leak 0 MB |
+| **G-16** | Upgrade | Weighted canary ingress configured and rollback verified | [ ] | Ingress canary test | Canary weight 0% -> 10% -> 50% -> 100% test executed cleanly |
+| **G-17** | Sign-Off | Factory Acceptance Test (FAT) passed with zero unverified regressions | [ ] | [`fat/test_summary.md`](../fat/test_summary.md) | 350 passed, 0 failed, 76 BBP acceptance criteria verified |
+

@@ -59,7 +59,7 @@ class ReleaseService:
                     "Multi-cloud connectors across AWS (CUR 2.0), Azure Cost Management, GCP BigQuery, and OCI.",
                     "Automated Celery Beat database-backed scheduler with leader election and zero cron literals.",
                     "Full open-source observability stack: Prometheus, Grafana, Loki, Tempo, OpenTelemetry.",
-                    "Platform Control Tower for admin@jyotirmoyb.com with 14 traffic-light panels and step-up actions.",
+                    "Platform Control Tower for Platform Super Administrator with 14 traffic-light panels and step-up actions.",
                     "10 Enterprise Improvements (IMP-01 through IMP-10) with master-data governance.",
                 ],
             }

@@ -29,7 +29,7 @@ def main() -> int:
 
     try:
         t0 = time.perf_counter()
-        results = suite.test_rolling_upgrade_data_integrity_and_zero_loss()
+        results = suite.execute_rolling_upgrade_data_integrity_and_zero_loss()
         elapsed = time.perf_counter() - t0
 
         print(f"\n[UPGRADE COMPLETED IN {elapsed:.3f}s]")

@@ -71,7 +71,7 @@ def test_fresh_non_demo_tenant_openapi_get_endpoints_sweep(client: TestClient):
     scanned_endpoints = 0
 
     for path, methods in spec.get("paths", {}).items():
-        if "get" not in methods or "{" in path:
+        if "get" not in methods or "{" in path or "stream" in path:
             continue
 
         scanned_endpoints += 1

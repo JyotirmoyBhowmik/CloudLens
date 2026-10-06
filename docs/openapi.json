@@ -6,6 +6,78 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/about": {
+      "get": {
+        "tags": [
+          "About & Release"
+        ],
+        "summary": "Get About Info",
+        "description": "Returns platform version, commit hash, database migration head, and release notes.",
+        "operationId": "get_about_info_api_v1_about_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get About Info Api V1 About Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commitments/calendar": {
+      "get": {
+        "tags": [
+          "Commitment & Expiry Calendar"
+        ],
+        "summary": "Unified Expiry Calendar (IMP-10)",
+        "description": "Returns a unified calendar aggregating credential, certificate, commitment, licence, and fiscal closes.",
+        "operationId": "get_commitment_calendar_api_v1_commitments_calendar_get",
+        "parameters": [
+          {
+            "name": "lookahead_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "description": "Lookahead horizon in days",
+              "default": 90,
+              "title": "Lookahead Days"
+            },
+            "description": "Lookahead horizon in days"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Commitment Calendar Api V1 Commitments Calendar Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/alerts/catalogue": {
       "get": {
         "tags": [
@@ -2416,6 +2488,225 @@
                     "type": "string"
                   },
                   "title": "Response Logout Api V1 Auth Logout Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "tags": [
+          "Authentication & Identity"
+        ],
+        "summary": "List active sessions (IMP-02)",
+        "description": "Lists active user sessions with idle and absolute expiry metadata (IMP-02).",
+        "operationId": "list_sessions_api_v1_auth_sessions_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response List Sessions Api V1 Auth Sessions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "Authentication & Identity"
+        ],
+        "summary": "Revoke single session (IMP-02)",
+        "description": "Revokes a specific user session and blacklists its token family (IMP-02).",
+        "operationId": "revoke_session_api_v1_auth_sessions__session_id__delete",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-correlation-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Correlation-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Revoke Session Api V1 Auth Sessions  Session Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/user/{user_id}": {
+      "delete": {
+        "tags": [
+          "Authentication & Identity"
+        ],
+        "summary": "Revoke all sessions for user (IMP-02)",
+        "description": "Revokes all active sessions for a given user (IMP-02).",
+        "operationId": "revoke_all_user_sessions_api_v1_auth_sessions_user__user_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-correlation-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Correlation-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Revoke All User Sessions Api V1 Auth Sessions User  User Id  Delete"
                 }
               }
             }
@@ -9178,7 +9469,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "default": "admin@cloudlens.internal",
+              "default": "demo-admin",
               "title": "X-Actor-Id"
             }
           }
@@ -9256,7 +9547,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "default": "admin@cloudlens.internal",
+              "default": "demo-admin",
               "title": "X-Actor-Id"
             }
           }
@@ -35235,6 +35526,1294 @@
         }
       }
     },
+    "/api/v1/control-tower/overview": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Control Tower Overview",
+        "description": "Returns the unified Control Tower overview with all 14 monitoring panels.",
+        "operationId": "get_control_tower_overview_api_v1_control_tower_overview_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/health": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Health Panel",
+        "operationId": "get_health_panel_api_v1_control_tower_health_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/release": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Release Panel",
+        "operationId": "get_release_panel_api_v1_control_tower_release_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/tenants": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Tenants Panel",
+        "operationId": "get_tenants_panel_api_v1_control_tower_tenants_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/connectors": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Connectors Panel",
+        "operationId": "get_connectors_panel_api_v1_control_tower_connectors_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/jobs": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Jobs Panel",
+        "operationId": "get_jobs_panel_api_v1_control_tower_jobs_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/queues": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Queues Panel",
+        "operationId": "get_queues_panel_api_v1_control_tower_queues_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/pipeline": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Pipeline Panel",
+        "operationId": "get_pipeline_panel_api_v1_control_tower_pipeline_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/security": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Security Panel",
+        "operationId": "get_security_panel_api_v1_control_tower_security_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/alerts-pipeline": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Alerts Pipeline Panel",
+        "operationId": "get_alerts_pipeline_panel_api_v1_control_tower_alerts_pipeline_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/collection-cost": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Collection Cost Panel",
+        "operationId": "get_collection_cost_panel_api_v1_control_tower_collection_cost_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/capacity": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Capacity Panel",
+        "operationId": "get_capacity_panel_api_v1_control_tower_capacity_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/backups": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Backups Panel",
+        "operationId": "get_backups_panel_api_v1_control_tower_backups_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/expiries": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Expiries Panel",
+        "operationId": "get_expiries_panel_api_v1_control_tower_expiries_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/value": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Value Panel",
+        "operationId": "get_value_panel_api_v1_control_tower_value_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlTowerPanel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/audit/tail": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Get Audit Tail",
+        "description": "Returns the live audit tail up to 200 events for Control Tower inspection.",
+        "operationId": "get_audit_tail_api_v1_control_tower_audit_tail_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 200,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Audit Tail Api V1 Control Tower Audit Tail Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/stream": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Control Tower Stream",
+        "description": "Streams live Control Tower status changes as Server-Sent Events (SSE) every 10s.",
+        "operationId": "control_tower_stream_api_v1_control_tower_stream_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/abuse": {
+      "get": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Rate-Limit and Abuse Dashboard (IMP-07)",
+        "description": "Returns real-time rate limiting, 429 counts, top callers, and lockout status (IMP-07).",
+        "operationId": "get_abuse_dashboard_api_v1_control_tower_abuse_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Abuse Dashboard Api V1 Control Tower Abuse Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/control-tower/actions/{action_name}": {
+      "post": {
+        "tags": [
+          "Platform Control Tower"
+        ],
+        "summary": "Handle Control Tower Action",
+        "description": "Executes a confirmed Control Tower operational action or returns its blast radius.",
+        "operationId": "handle_control_tower_action_api_v1_control_tower_actions__action_name__post",
+        "parameters": [
+          {
+            "name": "action_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action Name"
+            }
+          },
+          {
+            "name": "X-Step-Up-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Token"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Tenant-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Tenant-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlTowerActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Handle Control Tower Action Api V1 Control Tower Actions  Action Name  Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -39047,7 +40626,8 @@
           "PROVISIONING_GATE_BYPASSED",
           "PROVISIONING_RESOURCE_LINKED",
           "UNAPPROVED_DEPLOYMENT_DETECTED",
-          "PROVISIONING_ACCURACY_EVALUATED"
+          "PROVISIONING_ACCURACY_EVALUATED",
+          "CT_ACTION"
         ],
         "title": "AuditEventType",
         "description": "Full canonical taxonomy of audit event types (Prompt 13 Item 86)."
@@ -43874,6 +45454,153 @@
         ],
         "title": "ContributingResourceItem",
         "description": "Contributing resource backing a statement line."
+      },
+      "ControlTowerActionRequest": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "Action name to execute"
+          },
+          "params": {
+            "type": "object",
+            "title": "Params",
+            "description": "Action parameters"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 20,
+            "title": "Reason",
+            "description": "Mandatory operational justification (>= 20 chars)"
+          },
+          "step_up_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Up Token",
+            "description": "Step-up MFA authentication proof token"
+          },
+          "confirm": {
+            "type": "boolean",
+            "title": "Confirm",
+            "description": "Set True to execute; False returns blast radius only",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "reason"
+        ],
+        "title": "ControlTowerActionRequest",
+        "description": "Payload for executing sensitive operational actions in Control Tower."
+      },
+      "ControlTowerOverview": {
+        "properties": {
+          "overall_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PanelStatus"
+              }
+            ],
+            "description": "Worst-case aggregated platform health status"
+          },
+          "overall_label": {
+            "type": "string",
+            "title": "Overall Label",
+            "description": "Accessible overall health label"
+          },
+          "maintenance_mode": {
+            "type": "boolean",
+            "title": "Maintenance Mode",
+            "description": "Whether platform maintenance mode is engaged",
+            "default": false
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/ControlTowerPanel"
+            },
+            "type": "array",
+            "title": "Panels",
+            "description": "Collection of all 14 monitoring panels"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "overall_status",
+          "overall_label",
+          "panels"
+        ],
+        "title": "ControlTowerOverview",
+        "description": "Complete Control Tower status overview containing all 14 panels."
+      },
+      "ControlTowerPanel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique panel identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable panel title"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PanelStatus"
+              }
+            ],
+            "description": "Traffic light status indicator (green/amber/red/grey)"
+          },
+          "status_label": {
+            "type": "string",
+            "title": "Status Label",
+            "description": "Accessible status string (never color alone)"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Empirical explanation of the current status"
+          },
+          "metrics": {
+            "type": "object",
+            "title": "Metrics",
+            "description": "Key operational metric values"
+          },
+          "last_updated": {
+            "type": "string",
+            "title": "Last Updated",
+            "description": "ISO 8601 UTC timestamp of last probe/update"
+          },
+          "grafana_url": {
+            "type": "string",
+            "title": "Grafana Url",
+            "description": "SSO deep link to corresponding Grafana dashboard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "status_label",
+          "reason",
+          "last_updated",
+          "grafana_url"
+        ],
+        "title": "ControlTowerPanel",
+        "description": "Overview summary for a single Control Tower monitoring panel."
       },
       "ConvertedCostFigure": {
         "properties": {
@@ -52168,16 +53895,28 @@
             "default": "Retail & E-Commerce Business Unit"
           },
           "recipient_owner_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Recipient Owner Id",
-            "description": "Recipient owner user ID",
-            "default": "usr-retail-lead"
+            "description": "Recipient owner user ID (resolved from master data if omitted)"
           },
           "recipient_owner_email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Recipient Owner Email",
-            "description": "Recipient email",
-            "default": "retail-lead@company.com"
+            "description": "Recipient email (resolved from master data if omitted)"
           },
           "template_id": {
             "anyOf": [
@@ -57399,6 +59138,17 @@
         "title": "OwnershipResolutionRule",
         "description": "Deterministic precedence order for ownership attribution (BBP Section 16.2)."
       },
+      "PanelStatus": {
+        "type": "string",
+        "enum": [
+          "green",
+          "amber",
+          "red",
+          "grey"
+        ],
+        "title": "PanelStatus",
+        "description": "Panel status indicators for Control Tower monitoring."
+      },
       "PeriodAccuracyReport": {
         "properties": {
           "period_identifier": {
@@ -61092,7 +62842,8 @@
           "MONETARY_SANITY_FAILURE",
           "MISSING_REQUIRED_FIELDS",
           "UNPARSEABLE_PAYLOAD",
-          "RATE_LIMIT_EXHAUSTED"
+          "RATE_LIMIT_EXHAUSTED",
+          "RETRIES_EXHAUSTED"
         ],
         "title": "QuarantineReason",
         "description": "Dead-letter quarantine classifications for ingested data failure (Prompt 15 Item 99)."
@@ -62339,10 +64090,16 @@
             "description": "Dispute explanation and evidence"
           },
           "assigned_owner": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Assigned Owner",
-            "description": "Assigned investigator",
-            "default": "finops-disputes@company.com"
+            "description": "Assigned investigator (resolved from master data if omitted)"
           }
         },
         "type": "object",
@@ -69082,8 +70839,7 @@
           "assigned_owner": {
             "type": "string",
             "title": "Assigned Owner",
-            "description": "Assigned investigator",
-            "default": "finops-analyst@company.com"
+            "description": "Assigned investigator"
           },
           "sla_deadline": {
             "type": "string",
@@ -69152,6 +70908,7 @@
           "disputed_amount",
           "proposed_amount",
           "reason",
+          "assigned_owner",
           "sla_deadline"
         ],
         "title": "StatementDispute",
@@ -70254,18 +72011,18 @@
       "SystemRole": {
         "type": "string",
         "enum": [
-          "GLOBAL_ADMIN",
-          "TENANT_ADMIN",
-          "FINOPS_ADMIN",
-          "FINOPS_ANALYST",
-          "FINOPS_VIEWER",
-          "CLOUD_ARCHITECT",
-          "DEVELOPER",
-          "SECURITY_AUDITOR",
-          "TENANT_USER"
+          "SUPER_ADMIN",
+          "PLATFORM_ADMIN",
+          "CLOUD_ADMINISTRATOR",
+          "FINOPS_ADMINISTRATOR",
+          "FINANCE_USER",
+          "IT_OPERATIONS_USER",
+          "APPLICATION_OWNER",
+          "READ_ONLY_USER",
+          "AUDITOR"
         ],
         "title": "SystemRole",
-        "description": "Nine built-in canonical roles for enterprise FinOps RBAC (Prompt 49A Item 9)."
+        "description": "The nine canonical BBP roles for enterprise FinOps RBAC (Prompt R-ROLES / BBP Section 33)."
       },
       "SystemSettingsDTO": {
         "properties": {

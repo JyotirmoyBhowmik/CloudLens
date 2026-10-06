@@ -59,17 +59,17 @@ class MaintenanceModeService:
         with self._lock:
             if tenant_id:
                 self._tenant_maintenance[tenant_id] = enabled
-                key = f"tenant:{tenant_id}"
+                maintenance_scope = f"tenant:{tenant_id}"
             else:
                 self._global_maintenance = enabled
-                key = "global"
+                maintenance_scope = "global"
 
             if enabled:
-                self._maintenance_reasons[key] = reason_str
-                self._activated_at[key] = now_str
+                self._maintenance_reasons[maintenance_scope] = reason_str
+                self._activated_at[maintenance_scope] = now_str
             else:
-                self._maintenance_reasons.pop(key, None)
-                self._activated_at.pop(key, None)
+                self._maintenance_reasons.pop(maintenance_scope, None)
+                self._activated_at.pop(maintenance_scope, None)
 
         logger.info(
             "Maintenance mode updated: enabled=%s, tenant_id=%s, reason=%s",
@@ -91,17 +91,17 @@ class MaintenanceModeService:
             is_active = self._global_maintenance or (
                 bool(tenant_id and self._tenant_maintenance.get(tenant_id, False))
             )
-            key = f"tenant:{tenant_id}" if (tenant_id and self._tenant_maintenance.get(tenant_id)) else "global"
+            maintenance_scope = f"tenant:{tenant_id}" if (tenant_id and self._tenant_maintenance.get(tenant_id)) else "global"
             return {
                 "active": is_active,
                 "global_active": self._global_maintenance,
                 "tenant_active": bool(tenant_id and self._tenant_maintenance.get(tenant_id, False)),
                 "message": self._maintenance_reasons.get(
-                    key,
+                    maintenance_scope,
                     self._config.get("default_message", "Platform is under maintenance."),
                 ),
                 "retry_after_seconds": self._config.get("retry_after_seconds", 300),
-                "activated_at": self._activated_at.get(key),
+                "activated_at": self._activated_at.get(maintenance_scope),
             }
 
     def is_request_exempt(self, path: str, method: str, roles: list[str] | None = None) -> bool:

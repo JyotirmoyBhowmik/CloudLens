@@ -19,32 +19,45 @@ CloudLens is composed of high-availability microservices and background job exec
 
 ## 2. Deployment & Upgrades
 
-### 2.1 Standard Zero-Downtime Rolling Deployment (Blue-Green)
-```bash
-# 1. Pre-deployment health check & schema migration validation
-python scripts/run_upgrade_test.py --pre-check
+### 2.1 Standard Progressive Deployment: Weighted Canary
+Per the Enterprise Datacenter Deployment Guide (§7), CloudLens enforces one traffic-shift method only: **Weighted Canary**.
 
-# 2. Deploy green container replica pool
-kubectl apply -f k8s/green-deployment.yaml
+```bash
+# 1. Pre-deployment schema migration validation
+alembic upgrade head
+
+# 2. Deploy canary container replica pool (0% traffic)
+kubectl apply -f ops/helm/cloudlens/templates/deployment-api.yaml
 
 # 3. Wait for readiness probe (HTTP 200 on /api/v1/health)
-kubectl rollout status deployment/cloudlens-green -n cloudlens
+kubectl rollout status deployment/cloudlens-api-canary -n cloudlens
 
-# 4. Shift traffic via service selector update
-kubectl patch service cloudlens-api -p '{"spec":{"selector":{"version":"green"}}}'
+# 4. Execute live production smoke checks (replaces simulator canary)
+python scripts/verify_release_readiness.py --endpoint https://cloudlens.corp.internal --check-live-probes
 
-# 5. Verify live synthetic canary
-python scripts/verify_release_readiness.py --canary-check
+# 5. Shift 10% traffic via NGINX Ingress annotations
+kubectl annotate ingress cloudlens-api-canary \
+  nginx.ingress.kubernetes.io/canary="true" \
+  nginx.ingress.kubernetes.io/canary-weight="10" --overwrite
+
+# 6. Shift 50% traffic after 15 minutes of zero errors
+kubectl annotate ingress cloudlens-api-canary \
+  nginx.ingress.kubernetes.io/canary-weight="50" --overwrite
+
+# 7. Complete cutover (100% traffic) and promote canary
+kubectl patch deployment cloudlens-api --patch-file deploy-v1.1.yaml
+kubectl annotate ingress cloudlens-api-canary nginx.ingress.kubernetes.io/canary="false" --overwrite
 ```
 
 ### 2.2 Emergency Rollback Procedure
-If error rates exceed 0.5% or health probes fail following deployment:
-1. Revert service selector immediately to blue deployment:
+If error rates exceed 0.1% or health probes fail following deployment:
+1. Immediately zero out canary ingress weight:
    ```bash
-   kubectl patch service cloudlens-api -p '{"spec":{"selector":{"version":"blue"}}}'
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary-weight="0" --overwrite
    ```
-2. Verify blue pool responds with 200 OK across all endpoints.
-3. Drain and isolate green deployment for root-cause inspection.
+2. Verify primary stable pool responds with 200 OK across all endpoints.
+3. Drain and isolate canary deployment for root-cause inspection.
 4. If database schema was migrated, execute backwards-compatible down-migration script.
 
 ---

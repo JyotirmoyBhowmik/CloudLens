@@ -83,7 +83,13 @@ class RollingUpgradeCoordinator:
 class TestRollingUpgradeSuite:
     """Verifies that rolling upgrades preserve data integrity with zero downtime."""
 
-    def test_rolling_upgrade_data_integrity_and_zero_loss(self) -> dict[str, Any]:
+    def test_rolling_upgrade_data_integrity_and_zero_loss(self) -> None:
+        """Pytest test case verifying zero downtime and identical reconciliation totals."""
+        report = self.execute_rolling_upgrade_data_integrity_and_zero_loss()
+        assert report["availability_pct"] == 100.0
+        assert report["variance_usd"] == Decimal("0.00")
+
+    def execute_rolling_upgrade_data_integrity_and_zero_loss(self) -> dict[str, Any]:
         """Applies rolling upgrade to an active dataset with continuous probing, verifying zero downtime and identical reconciliation totals."""
         repo = CostFactRepository()
         tenant_context = TenantContext(

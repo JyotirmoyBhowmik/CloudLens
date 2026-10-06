@@ -1,36 +1,37 @@
 # CloudLens: Enterprise Multi-Cloud Governance, Inventory & FinOps Platform
 
-[![Build Status](https://img.shields.io/badge/Build-Passing%20(v1.1)-brightgreen.svg)](#)
-[![Automated Tests](https://img.shields.io/badge/Tests-1%2C311%20Passed-success.svg)](#)
-[![BBP v1.1](https://img.shields.io/badge/BBP-100%25%20Traceable%20(458%2F458)-blue.svg)](#)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](#)
-[![React 18](https://img.shields.io/badge/React-18.3-61DAFB.svg)](#)
-[![FOCUS 1.0](https://img.shields.io/badge/FOCUS-1.0%20Compliant-orange.svg)](#)
+[![Build Status](https://img.shields.io/badge/Build-Passing%20(v1.1)-brightgreen.svg)](docs/build-and-signing.md)
+[![Automated Tests](https://img.shields.io/badge/Tests-350%20Passed%20(FAT)-success.svg)](fat/test_summary.md)
+[![BBP v1.1](https://img.shields.io/badge/BBP-458%20Requirements%20Traceable-blue.svg)](docs/requirement_traceability_matrix.md)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](pyproject.toml)
+[![React 18](https://img.shields.io/badge/React-18.3-61DAFB.svg)](web/package.json)
+[![FOCUS 1.0](https://img.shields.io/badge/FOCUS-1.0%20Compliant-orange.svg)](docs/data-dictionary.md)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)](LICENSE)
 
-**CloudLens** is an enterprise-wide, multi-cloud FinOps, governance, service inventory, cloud pricing, cost management, runtime monitoring, dependency mapping, budgeting, alerting, and reporting platform across **Microsoft Azure**, **Amazon Web Services (AWS)**, **Google Cloud Platform (GCP)**, and **Oracle Cloud Infrastructure (OCI)**.
+**CloudLens** is an enterprise multi-cloud FinOps, governance, service inventory, cloud pricing, cost management, runtime monitoring, dependency mapping, budgeting, alerting, and reporting platform across **Microsoft Azure**, **Amazon Web Services (AWS)**, **Google Cloud Platform (GCP)**, and **Oracle Cloud Infrastructure (OCI)**.
 
-Built strictly against **BBP v1.1** and the 6 Core Enterprise Mandates, CloudLens provides a single, unified control plane that eliminates cloud waste, enforces organizational policies, reconciles billing discrepancies, models multi-year scenarios, and measures empirical platform value delivered.
+Built strictly against [BBP v1.1](docs/CLOUDLENS_BBP_v1.1.md) and the [Core Enterprise Mandates](docs/decision_log.md), CloudLens provides a single, unified control plane that eliminates cloud waste, enforces organizational policies, reconciles billing discrepancies, models multi-year scenarios, and measures empirical platform value delivered.
 
 ---
 
 ## Table of Contents
 1. [Core Value Proposition & Scope](#1-core-value-proposition--scope)
 2. [High-Level System Architecture](#2-high-level-system-architecture)
-3. [Low-Level Design (LLD)](#3-low-level-design-lld)
-   - [3.1 Production Deployment Topology](#31-production-deployment-topology)
-   - [3.2 Daily Ingestion & FOCUS 1.0 Pipeline](#32-daily-ingestion--focus-10-pipeline)
-   - [3.3 Cost Reconciliation & Dispute Pipeline](#33-cost-reconciliation--dispute-pipeline)
-   - [3.4 Integration Hub & Webhook Event Replay](#34-integration-hub--webhook-event-replay)
-   - [3.5 Resource Lifecycle & Dependency Impact Workflow](#35-resource-lifecycle--dependency-impact-workflow)
-   - [3.6 Adoption Analytics & Platform Value Ledger](#36-adoption-analytics--platform-value-ledger)
-   - [3.7 Security, Zero-Trust & Tenant Isolation](#37-security-zero-trust--tenant-isolation)
-   - [3.8 High Availability & Disaster Recovery](#38-high-availability--disaster-recovery)
+3. [Low-Level Design (LLD): On-Premises Datacenter](#3-low-level-design-lld-on-premises-datacenter)
+   - [3.1 Datacenter Deployment Topology](#31-datacenter-deployment-topology)
+   - [3.2 High-Availability Infrastructure Matrix](#32-high-availability-infrastructure-matrix)
+   - [3.3 Daily Ingestion & FOCUS 1.0 Pipeline](#33-daily-ingestion--focus-10-pipeline)
+   - [3.4 Cost Reconciliation & Dispute Pipeline](#34-cost-reconciliation--dispute-pipeline)
+   - [3.5 Enterprise Integration Hub & Webhooks](#35-enterprise-integration-hub--webhooks)
+   - [3.6 Resource Lifecycle & Decommissioning Engine](#36-resource-lifecycle--decommissioning-engine)
+   - [3.7 Platform Value Ledger & Adoption Analytics](#37-platform-value-ledger--adoption-analytics)
+   - [3.8 Security, Zero-Trust & Tenant Isolation](#38-security-zero-trust--tenant-isolation)
+   - [3.9 High Availability & 35-Day PITR Disaster Recovery](#39-high-availability--35-day-pitr-disaster-recovery)
 4. [Codebase Detailed Directory Blueprint](#4-codebase-detailed-directory-blueprint)
-5. [Factory Acceptance Test (FAT) & Verification Results](#5-factory-acceptance-test-fat--verification-results)
+5. [Factory Acceptance Test (FAT) & Verification Evidence](#5-factory-acceptance-test-fat--verification-evidence)
 6. [Developer Bootstrap & Quickstart](#6-developer-bootstrap--quickstart)
-7. [Production SRE Runbook & Cutover Protocol](#7-production-sre-runbook--cutover-protocol)
+7. [Production SRE Runbook & Weighted Canary Cutover](#7-production-sre-runbook--weighted-canary-cutover)
 8. [Authoritative Documentation Index](#8-authoritative-documentation-index)
 
 ---
@@ -38,21 +39,22 @@ Built strictly against **BBP v1.1** and the 6 Core Enterprise Mandates, CloudLen
 ## 1. Core Value Proposition & Scope
 
 ### What CloudLens Delivers:
-- **Unified Multi-Cloud Inventory**: Automated discovery of services, resources, tags, and native cloud hierarchies (Azure Management Groups, AWS Organizations, GCP Folders/Projects, OCI Compartments).
-- **FOCUS 1.0 Normalized Cost Management**: Ingests disparate cloud billing data (AWS CUR 2.0, Azure Cost Export, GCP BigQuery Billing, OCI Cost Reports) into the FinOps Open Cost & Usage Specification (FOCUS 1.0) standard with strict 4-state null discipline (`NO_COST`, `NO_DATA`, `NOT_APPLICABLE`, `NOT_SUPPORTED`).
-- **Invoice Reconciliation & Dispute Generation**: Deterministic mathematical comparison of FOCUS aggregated costs against authoritative provider invoice PDFs/data, automatically raising formal billing disputes when variances exceed thresholds.
-- **Budget Planning & Scenario Modelling (Prompt 57)**: Master-data driven planning cycles, bottom-up submission vs top-down target setting, immutable draft versioning, and what-if scenario modelling.
-- **Commitment Renewal & Coverage Management (Prompt 58)**: Tracks Reserved Instances (RIs) and Savings Plans across coverage vs utilization trends, ranking renewals by value-at-risk with explainable recommendations.
-- **10-State Resource Lifecycle & Decommissioning (Prompt 59)**: Governed decommissioning workflow enforcing cross-team dependency impact checks, staged stop-and-observe windows, and billing cost-stop confirmation.
-- **Enterprise Integration Hub (Prompt 60)**: Unified integration framework delivering bidirectional ITSM synchronization, CMDB authoritative import with conflict surfacing, Finance ERP accrual export, Microsoft Teams / Slack webhooks, and Directory leaver sweeps.
-- **Adoption Analytics & Value Ledger (Prompt 61)**: Privacy-respecting telemetry by role and team (individual surveillance strictly prohibited), governance velocity metrics (MTTA/MTTC), transparent 7-component Data Quality Score (0–100%), and an empirical net value ledger paired with platform self-costs.
-- **27 Enterprise Presentation Views (Prompts 36–41)**: Modern React/TypeScript SPA delivering executive dashboards, hierarchy explorer, inventory grids, interactive dependency graphs, and contextual explanation panels.
+- **Unified Multi-Cloud Inventory**: Automated discovery of services, resources, tags, and native cloud hierarchies across [4 Cloud Providers](docs/provider_capability_register.md) (Azure Management Groups, AWS Organizations, GCP Folders/Projects, OCI Compartments).
+- **FOCUS 1.0 Normalized Cost Management**: Ingests disparate cloud billing data (AWS CUR 2.0, Azure Cost Export, GCP BigQuery Billing, OCI Cost Reports) into the FinOps Open Cost & Usage Specification (FOCUS 1.0) standard with strict [4-State Null Discipline](docs/data-dictionary.md) (`NO_COST`, `NO_DATA`, `NOT_APPLICABLE`, `NOT_SUPPORTED`).
+- **Invoice Reconciliation & Dispute Generation**: Deterministic mathematical comparison of FOCUS aggregated costs against authoritative provider invoices, automatically raising formal billing disputes when variances exceed tolerance.
+- **Budget Planning & Scenario Modelling**: Master-data driven planning cycles, bottom-up submission vs top-down target setting, immutable draft versioning, and what-if scenario modelling.
+- **Commitment Renewal & Coverage Management**: Tracks Reserved Instances (RIs) and Savings Plans across coverage vs utilization trends, ranking renewals by value-at-risk with explainable recommendations.
+- **Resource Lifecycle & Decommissioning**: Governed [10-State Resource Lifecycle](docs/CLOUDLENS_BBP_v1.1.md) enforcing cross-team dependency impact checks, staged stop-and-observe windows, and billing cost-stop confirmation.
+- **Enterprise Integration Hub**: Bidirectional ITSM synchronization, CMDB authoritative import with conflict surfacing, Finance ERP accrual export, Microsoft Teams / Slack webhooks, and Directory leaver sweeps.
+- **Adoption Analytics & Value Ledger**: Privacy-respecting telemetry by role and team, governance velocity metrics (MTTA/MTTC), transparent [7-Component Data Quality Score](docs/CLOUDLENS_BBP_v1.1.md), and an empirical net value ledger paired with platform self-costs.
+- **Enterprise Presentation Views**: Modern React/TypeScript SPA delivering [27 Responsive Views](web/src/App.tsx), executive dashboards, hierarchy explorer, inventory grids, interactive dependency graphs, and contextual explanation panels.
+- **Platform Control Tower**: Cockpit delivering [14 Operational Monitoring Panels](docs/control-tower-guide.md), live SSE status stream, and audited administrative actions guarded by step-up MFA.
 
 ### Strict Architectural Boundaries:
 - **NOT an APM or Infrastructure Monitoring Replacement**: Deliberately does not replace Datadog, Dynatrace, CloudWatch, or Azure Monitor.
-- **Read-Only Cloud Boundary**: Connectors require zero write, create, update, or mutate permissions in cloud estates.
+- **Read-Only Cloud Boundary**: Connectors require [Zero Cloud Mutate Permissions](docs/decision_log.md).
 - **No Pricing Invention**: Absolute invariant: pricing is never hallucinated or assumed without backing from official APIs or rate cards.
-- **Anti-Surveillance Privacy Guarantee**: Telemetry is aggregated strictly by role and organizational team. Individual employee tracking, surveillance, or leaderboard ranking is strictly rejected at the domain boundary.
+- **Anti-Surveillance Privacy Guarantee**: Telemetry is aggregated strictly by role and organizational team. Individual employee tracking or leaderboard ranking is strictly rejected at the domain boundary.
 
 ---
 
@@ -88,22 +90,23 @@ flowchart TD
         Recon["Cost Reconciliation & Dispute Engine"]
         Alert["Contextual Alerting & Hysteresis Engine"]
         Remed["Remediation Tasks & Realised Saving Ledger"]
-        Plan["Budget Planning & Scenarios (Prompt 57)"]
-        Commit["Commitment Coverage & Renewal (Prompt 58)"]
-        Life["Resource Lifecycle & Decommissioning (Prompt 59)"]
-        Integ["Integration Hub & Event Replay (Prompt 60)"]
-        Value["Adoption Analytics & Value Ledger (Prompt 61)"]
+        Plan["Budget Planning & Scenarios"]
+        Commit["Commitment Coverage & Renewal"]
+        Life["Resource Lifecycle & Decommissioning"]
+        Integ["Integration Hub & Event Replay"]
+        Value["Adoption Analytics & Value Ledger"]
+        CT["Platform Control Tower"]
     end
 
     subgraph Persistence_Layer["Storage & Message Tier"]
-        DB[("PostgreSQL 16 Primary<br/>(Range-Partitioned, RLS)")]
-        Redis[("Redis 7.2 Cluster<br/>(State, Queues, Throttling)")]
-        Parquet[("DuckDB / Parquet Store<br/>(Semantic BI Extracts)")]
+        DB[("CloudNativePG PostgreSQL 16<br/>(Range-Partitioned, RLS)")]
+        Valkey[("Valkey Sentinel Cluster<br/>(State, Queues, Throttling)")]
+        MinIO[("MinIO Enterprise Object Store<br/>(Raw Landing & Parquet Extracts)")]
     end
 
     subgraph Application_Layer["Application Control Plane (api/ & workers/)"]
         FastAPI["FastAPI REST API Nodes (/api/v1/...)"]
-        Celery["Async Ingestion & Reconciliation Workers"]
+        Celery["Async Worker Pools (Ingest / Eval / Report)"]
     end
 
     subgraph Presentation_Layer["Presentation Tier (web/)"]
@@ -120,91 +123,105 @@ flowchart TD
 
 ---
 
-## 3. Low-Level Design (LLD)
+## 3. Low-Level Design (LLD): On-Premises Datacenter
 
-### 3.1 Production Deployment Topology
+Per the [Enterprise Datacenter Deployment Guide](docs/enterprise-datacenter-deployment-guide.md), CloudLens is architected for on-premises enterprise datacenters running on sovereign, air-gapped infrastructure.
 
-The production environment operates as a high-availability, containerized topology on Kubernetes across multiple availability zones (Multi-AZ):
+### 3.1 Datacenter Deployment Topology
 
 ```mermaid
-graph TD
-    Client([Enterprise Browser / SSO]) -->|HTTPS / TLS 1.3| WAF[Cloud WAF / L7 Ingress]
-    WAF --> Ingress[Kubernetes Ingress Controller]
+flowchart TD
+    Client([Enterprise Browser / SSO]) -->|HTTPS / TLS 1.3| Ingress[NGINX Ingress Controller]
 
-    subgraph K8s_Cluster["Kubernetes Production Cluster (Multi-AZ)"]
-        subgraph Web_Tier["Web Presentation Pool"]
-            Web1["SPA Pod 1"]
-            Web2["SPA Pod 2"]
+    subgraph RKE2_Cluster["RKE2 Enterprise Kubernetes Cluster (On-Premises)"]
+        subgraph Web_Pool["Web Presentation Pool (web)"]
+            Web1["Web Pod 1 (React 18 SPA)"]
+            Web2["Web Pod 2 (React 18 SPA)"]
         end
 
-        subgraph API_Tier["API Control Plane Pool"]
-            API1["FastAPI Pod 1<br/>(Gunicorn + Uvicorn)"]
-            API2["FastAPI Pod 2<br/>(Gunicorn + Uvicorn)"]
+        subgraph API_Pool["API Control Plane Pool (api)"]
+            API1["FastAPI Pod 1 (Uvicorn ASGI)"]
+            API2["FastAPI Pod 2 (Uvicorn ASGI)"]
         end
 
-        subgraph Worker_Tier["Asynchronous Execution Pool"]
-            Worker1["Ingestion Worker"]
-            Worker2["Reconciliation Worker"]
-            Worker3["Workflow / Scheduler Worker"]
+        subgraph Worker_Pools["Decoupled Celery Worker Pools"]
+            W_Ingest["Ingestion Worker Pool (-Q ingestion)"]
+            W_Eval["Evaluation Worker Pool (-Q evaluation)"]
+            W_Report["Reporting Worker Pool (-Q reporting)"]
+            Beat["Celery Beat (1 Replica + Redis Lock)"]
         end
 
-        subgraph In_Memory["Distributed Cache & Queue"]
-            RedisCluster[("Redis 7.2 Cluster<br/>(Session Tokens, Task Queues)")]
+        subgraph Observability["Observability Subsystem"]
+            Prom["Prometheus Operator"]
+            Loki["Grafana Loki Logs"]
+            Tempo["Grafana Tempo Traces"]
+            AlertMgr["Alertmanager + Mailpit Relay"]
         end
+    end
+
+    subgraph Enterprise_Infra["Datacenter Infrastructure Tier"]
+        CNPG[("CloudNativePG 16 HA<br/>(1 Primary + 2 Sync Standbys)")]
+        Valkey[("Valkey Sentinel HA<br/>(3 Sentinels + Master/Replica)")]
+        OpenBao[("OpenBao HA Cluster<br/>(3 Nodes + HSM Auto-Unseal)")]
+        MinIO[("MinIO Enterprise S3<br/>(Erasure Coded Object Storage)")]
+        IdP["Keycloak OIDC<br/>(Corporate Identity Provider)")]
     end
 
     Ingress --> Web1 & Web2
     Ingress --> API1 & API2
-    API1 & API2 --> RedisCluster
-    Worker1 & Worker2 & Worker3 --> RedisCluster
-
-    subgraph Storage_Tier["Data Persistence Tier"]
-        PGPrimary[("PostgreSQL 16 Primary<br/>(Range-Partitioned, Row-Level Security)")]
-        PGReplica[("PostgreSQL 16 Standby Replica<br/>(Read Analytical Queries)")]
-        S3Bucket[("Object Storage (S3 / GCS / Blob)<br/>(Parquet Semantic Extract)")]
-        KMS["Cloud KMS / HashiCorp Vault<br/>(Envelope Encryption Keys)")]
-    end
-
-    API1 & API2 --> PGPrimary & PGReplica
-    Worker1 & Worker2 & Worker3 --> PGPrimary & S3Bucket
-    PGPrimary -.->|Continuous Streaming WAL| PGReplica
-    API1 & API2 & Worker1 --> KMS
+    API1 & API2 --> CNPG & Valkey & OpenBao & MinIO & IdP
+    W_Ingest & W_Eval & W_Report --> CNPG & Valkey & OpenBao & MinIO
+    Beat --> Valkey & CNPG
+    Prom --> API1 & API2 & W_Ingest & W_Eval & W_Report
 ```
 
 ---
 
-### 3.2 Daily Ingestion & FOCUS 1.0 Pipeline
+### 3.2 High-Availability Infrastructure Matrix
 
-The ingestion pipeline executes on a scheduled cron or on-demand trigger, streaming cloud provider billing extracts into normalized, partitioned data:
+| Subsystem | Technology Component | High Availability Architecture | Failover Mechanism | Backup / Recovery Protocol |
+|:---|:---|:---|:---|:---|
+| **Container Platform** | RKE2 (Rancher Kubernetes Engine) | [3 Control Plane Nodes](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) | Etcd Raft consensus | Velero daily backup (`840h` TTL) |
+| **Relational Database** | CloudNativePG (PostgreSQL 16) | [3-Instance Quorum](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) (1 Primary + 2 Sync Standbys) | Automated failover via CNPG operator | Barman continuous WAL streaming, [35-day PITR](docs/enterprise-datacenter-deployment-guide.md#4-disaster-recovery--backup-architecture-35-day-pitr) |
+| **Secret Management** | OpenBao HA (`v1.16+`) | [3-Node Raft Cluster](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) | Hardware Security Module (HSM) PKCS#11 auto-unseal | Daily automated Raft snapshot CronJob to MinIO |
+| **Object Storage** | MinIO Enterprise S3 | [Distributed Erasure Coding](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) | Continuous bitrot healing across drives | Multi-rack mirroring and immutable buckets |
+| **Cache & Task Broker** | Valkey Sentinel (`7.2+`) | [3 Sentinel Nodes](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) + Primary/Replica pair | Automated Sentinel master election | In-memory append-only file (AOF) persistence |
+| **Identity Provider** | Keycloak OIDC (`24.0+`) | [Multi-Replica Deployment](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) | Infinispan cross-pod distributed cache | Git-versioned realm exports |
+
+---
+
+### 3.3 Daily Ingestion & FOCUS 1.0 Pipeline
+
+The ingestion pipeline executes on a scheduled cron or on-demand trigger, streaming cloud provider billing exports into normalized, partitioned data:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Scheduler as Celery Scheduler
-    participant Worker as Ingestion Worker
-    participant Vault as SecretStore (KMS/Vault)
-    participant Provider as Cloud Provider API / Bucket
+    participant Scheduler as Celery Scheduler (Beat)
+    participant Worker as Ingestion Worker (-Q ingestion)
+    participant Vault as OpenBao SecretStore
+    participant Provider as Cloud Provider API / Export
     participant Normaliser as FOCUS 1.0 Normaliser
-    participant DB as PostgreSQL (Partitioned)
-    participant Duck as DuckDB / Parquet Extract
+    participant DB as CloudNativePG (PostgreSQL 16)
+    participant MinIO as MinIO Parquet Store
 
     Scheduler->>Worker: Trigger Daily Sync (tenant_id, connector_id)
-    Worker->>Vault: Fetch Decrypted Cloud Credentials
+    Worker->>Vault: Fetch Decrypted Cloud Credentials (Read-Only)
     Vault-->>Worker: Read-Only IAM Credentials
-    Worker->>Provider: Request Billing & Usage Exports (CUR / Blob / BQ)
+    Worker->>Provider: Request Billing & Usage Exports (CUR / Blob / BQ / OCI)
     Provider-->>Worker: Compressed Raw Billing Data Stream
     loop Line-by-Line Normalization
         Worker->>Normaliser: Map native fields to FOCUS 1.0 columns
         Normaliser-->>Worker: Normalized FOCUS Record (4-state nulls applied)
     end
     Worker->>DB: Upsert partitioned billing facts (Idempotency key check)
-    Worker->>Duck: Generate summarized Parquet semantic extracts
+    Worker->>MinIO: Generate summarized Parquet semantic extracts
     Worker->>Scheduler: Acknowledge Sync Complete & Freshness Logged
 ```
 
 ---
 
-### 3.3 Cost Reconciliation & Dispute Pipeline
+### 3.4 Cost Reconciliation & Dispute Pipeline
 
 Reconciliation mathematically compares ingested, normalized FOCUS costs against authoritative provider invoice totals:
 
@@ -224,9 +241,9 @@ flowchart TD
 
 ---
 
-### 3.4 Integration Hub & Webhook Event Replay
+### 3.5 Enterprise Integration Hub & Webhooks
 
-The **Integration Hub (Prompt 60)** unifies enterprise external connections under a single, audited adapter framework:
+The **Integration Hub** unifies external enterprise connections under a single, audited adapter framework:
 
 ```mermaid
 flowchart LR
@@ -260,14 +277,14 @@ flowchart LR
 
 - **HMAC-SHA256 Signature Header**: Every webhook request carries `X-CloudLens-Signature-256` computed as:
   $$\text{Signature} = \text{HMAC-SHA256}(\text{PayloadBytes}, K_{\text{shared\_secret}})$$
-- **Retry with Jitter**: Network failures are retried up to 5 times with exponential backoff:
+- **Retry with Jitter**: Network failures are retried up to [5 Times](domain/integrations/service.py) with exponential backoff:
   $$t_{\text{wait}} = \min(60, 2^{\text{attempt}} + \text{random}(0, 1))$$
 
 ---
 
-### 3.5 Resource Lifecycle & Dependency Impact Workflow
+### 3.6 Resource Lifecycle & Decommissioning Engine
 
-The **Lifecycle & Decommissioning Engine (Prompt 59)** ensures retired infrastructure follows a verified path rather than a hopeful deletion:
+The **Lifecycle & Decommissioning Engine** ensures retired infrastructure follows a verified path:
 
 ```mermaid
 stateDiagram-v2
@@ -286,7 +303,7 @@ stateDiagram-v2
 
     DEPENDENCY_CHECK --> DECOMMISSION_APPROVED: Sign-off
     DECOMMISSION_APPROVED --> STOPPED: Cost-stop initiated
-    STOPPED --> OBSERVE_WINDOW: Configurable observation period (e.g. 14d)
+    STOPPED --> OBSERVE_WINDOW: 14-day observation period
     OBSERVE_WINDOW --> PENDING_DELETION: Zero incidents reported
     OBSERVE_WINDOW --> ACTIVE: Rolled back if break detected
     PENDING_DELETION --> DELETED: Resource removed
@@ -296,9 +313,9 @@ stateDiagram-v2
 
 ---
 
-### 3.6 Adoption Analytics & Platform Value Ledger
+### 3.7 Platform Value Ledger & Adoption Analytics
 
-The **Platform Value Measurement Engine (Prompt 61)** pairs verified empirical cost savings with the platform's own running costs:
+The **Platform Value Measurement Engine** pairs verified empirical cost savings with the platform's own running costs:
 
 $$\text{Net Value Delivered} = \sum \text{Realised Savings}_{\text{Empirical}} - \text{Total Platform Running Cost}$$
 
@@ -323,7 +340,7 @@ flowchart TD
         TotS["Total Verified Savings ($)"]
         TotC["Total Platform Running Cost ($)"]
         Net["Net Value Delivered ($)"]
-        ROI["Platform ROI Multiple (e.g. 12.4x)"]
+        ROI["Platform ROI Multiple"]
     end
 
     subgraph Governance["Data Quality & Steering Committee"]
@@ -340,28 +357,29 @@ flowchart TD
 
 ---
 
-### 3.7 Security, Zero-Trust & Tenant Isolation
+### 3.8 Security, Zero-Trust & Tenant Isolation
 
-| Layer | Implementation Architecture |
-| :--- | :--- |
-| **Authentication (AuthN)** | Enterprise SSO via OpenID Connect (OIDC) / SAML 2.0 (Entra ID, Okta). Stateless JWT access tokens with 15-minute expiration, backed by Redis token blocklists for immediate revocation. |
-| **Authorization (AuthZ)** | Multi-tier Role-Based Access Control (`SUPERUSER`, `FINOPS_ADMIN`, `BUDGET_OWNER`, `ENGINEERING_LEAD`, `DEVELOPER`, `AUDITOR`). Fine-grained scope grants restrict visibility to designated subscriptions, accounts, or cost centres. |
-| **Mechanical Multi-Tenancy** | Every database query and business transaction requires an explicit [`TenantContext`](file:///c:/Users/TEST/CloudLens/domain/tenant/context.py). PostgreSQL Row-Level Security (RLS) dynamically enforces tenant boundaries at the SQL engine level. |
-| **Secret Management** | Cloud credentials and webhook secrets are encrypted with AES-256-GCM. Root keys reside in Cloud KMS or HashiCorp Vault. Master secrets are never logged or stored in plaintext. |
-| **PII & Credential Redaction** | Application logs use structured JSON with an automated redaction interceptor masking passwords, tokens, emails, and user identifiers. |
-| **Immutable Audit Ledger** | All security overrides, rule exemptions, and workflow approvals append cryptographic audit entries with immutable timestamps and correlation IDs. |
+| Layer | Implementation Architecture | Reference Document |
+| :--- | :--- | :--- |
+| **Authentication (AuthN)** | Enterprise SSO via OpenID Connect (OIDC) / SAML 2.0 (Keycloak, Okta, Entra ID). Stateless JWT tokens with 15-minute expiration, backed by Valkey token blocklists. | [`domain/identity/`](domain/identity/) |
+| **Authorization (AuthZ)** | [9 Built-In Enterprise Roles](docs/control-tower-guide.md#1-authentication--access-governance) (`SUPER_ADMIN`, `PLATFORM_ADMIN`, `FINOPS_ADMINISTRATOR`, `CLOUD_ADMINISTRATOR`, `FINANCE_USER`, `APPLICATION_OWNER`, `IT_OPERATIONS_USER`, `AUDITOR`, `READ_ONLY_USER`). | [`tests/rbac/test_rbac_matrix_suite.py`](tests/rbac/test_rbac_matrix_suite.py) |
+| **Mechanical Multi-Tenancy** | Every database query requires an explicit [`TenantContext`](domain/tenant/context.py). PostgreSQL Row-Level Security (RLS) enforces tenant boundaries at SQL engine level. | [`tests/security/test_tenant_isolation_suite.py`](tests/security/test_tenant_isolation_suite.py) |
+| **Secret Management** | Cloud credentials and secrets encrypted with AES-256-GCM. Root keys unsealed via OpenBao HA with Hardware Security Module (HSM). | [`docs/enterprise-datacenter-deployment-guide.md`](docs/enterprise-datacenter-deployment-guide.md#2-infrastructure-dependency-reference-model) |
+| **PII & Credential Redaction**| Structured JSON logs with automated redaction interceptor masking passwords, tokens, emails, and identifiers before shipping to Loki. | [`domain/observability/`](domain/observability/) |
+| **Immutable Audit Ledger** | Append-only cryptographic audit stream with immutable timestamps, sequence numbers, and correlation IDs. | [`domain/audit/`](domain/audit/) |
 
 ---
 
-### 3.8 High Availability & Disaster Recovery
+### 3.9 High Availability & 35-Day PITR Disaster Recovery
 
-- **Recovery Time Objective (RTO)**: $\le 4\text{ hours}$ (Automated benchmark drill restores full operational service in $< 4\text{ minutes}$).
-- **Recovery Point Objective (RPO)**: $\le 1\text{ hour}$ (Continuous PostgreSQL Write-Ahead Log (WAL) streaming to cross-region object storage ensures near-zero data loss).
-- **Automated Backup Cadence**:
-  - Full relational snapshots taken daily at `01:00 UTC` (retained for 90 days).
-  - Continuous WAL segment streaming with $< 60\text{ second}$ sync lag.
-  - Configuration and master data catalogues backed up to versioned, immutable storage on every deployment.
-- **Failover Topology**: Multi-AZ pod disruption budgets on Kubernetes paired with automated database replica promotion.
+- **Recovery Time Objective (RTO)**: [RTO $\le$ 4 hours (measured 3.2m in drill)](fat/performance_benchmark.md).
+- **Recovery Point Objective (RPO)**: [RPO $\approx$ 0 (< 60s WAL lag, 0 bytes lost)](fat/performance_benchmark.md).
+- **Automated Backup Architecture**:
+  - Daily physical base backup scheduled at `00:00 UTC` with [35-Day PITR Retention](docs/enterprise-datacenter-deployment-guide.md#4-disaster-recovery--backup-architecture-35-day-pitr) via CloudNativePG and Barman archiving to MinIO.
+  - Continuous WAL segment streaming with sync lag $< 60\text{ seconds}$.
+  - Daily OpenBao Raft snapshot CronJob scheduled at `02:00 UTC` shipping encrypted state to MinIO.
+  - Velero daily Kubernetes persistent volume backup with `840h` TTL.
+- **Failover Topology**: 3-instance CloudNativePG quorum paired with Valkey Sentinel automatic leader election.
 
 ---
 
@@ -371,8 +389,8 @@ flowchart TD
 CloudLens/
 ├── api/                           # FastAPI Application & Routing Layer
 │   ├── auth/                      # Authentication & Session Handlers
-│   ├── middleware/                # Global Correlation ID, RBAC & Error Interceptors
-│   ├── routes/                    # Versioned API Endpoint Controllers (/api/v1/...)
+│   ├── middleware/                # Correlation ID, RBAC & Error Interceptors
+│   ├── routes/                    # Versioned REST Controllers (/api/v1/...)
 │   └── main.py                    # ASGI Application Factory & Lifecycle Hooks
 ├── connectors/                    # Multi-Cloud Ingestion Adapters (Read-Only)
 │   ├── aws/                       # AWS CUR 2.0, Organizations & CloudWatch
@@ -382,26 +400,28 @@ CloudLens/
 │   ├── contract/                  # BaseCloudConnector Interface & Conformance Kit
 │   └── simulator/                 # Deterministic Multi-Cloud Data Generator
 ├── domain/                        # Pure Domain Business Logic & Entities
-│   ├── adoption/                  # Adoption Telemetry, Value Ledger & Review Pack (Prompt 61)
-│   ├── alerting/                  # Alerting Engine, Hysteresis & Storm Grouping (Prompt 31)
-│   ├── analytics/                 # Analytical Extract & Semantic BI Engine (Prompt 56)
-│   ├── attribution/               # Tag & Scope Cost Allocation Rules (Prompt 11)
-│   ├── budgets/                   # Budget Variance, Thresholds & Notifications (Prompt 22)
-│   ├── commitments/               # RI/Savings Plan Coverage & Renewal Engine (Prompt 58)
-│   ├── cost/                      # Cost Calculation & Invoice Reconciliation (Prompt 09)
-│   ├── credentials/               # SecretStore & Cloud Credential Manager (Prompt 45)
-│   ├── integrations/              # Integration Hub, Adapters & Webhooks (Prompt 60)
-│   ├── lifecycle/                 # 10-State Resource Lifecycle & Decommissioning (Prompt 59)
-│   ├── planning/                  # Future Budget Planning & Scenarios (Prompt 57)
-│   ├── policy/                    # FinOps Governance Policy Engine (Prompt 34)
-│   ├── remediation/               # Remediation Tasks & Realized Saving Ledger (Prompt 51)
-│   ├── runtime/                   # Runtime Schedule Adherence & Idle Detection (Prompt 26)
-│   ├── tenant/                    # Tenant Context & Boundary Isolation (Prompt 13)
-│   ├── topology/                  # Cross-Resource Dependency Graph Engine (Prompt 32)
-│   └── workflow/                  # Generic Master-Data Workflow State Machine (Prompt 50)
+│   ├── adoption/                  # Adoption Telemetry, Value Ledger & Review Pack
+│   ├── alerting/                  # Alerting Engine, Hysteresis & Storm Grouping
+│   ├── analytics/                 # Analytical Extract & Star-Schema Semantic BI
+│   ├── attribution/               # Tag & Scope Cost Allocation Precedence
+│   ├── budgets/                   # Budget Variance, Thresholds & Approvals
+│   ├── commitments/               # RI/Savings Plan Coverage & Renewal Pipeline
+│   ├── control_tower/             # Platform Cockpit & 14 Monitoring Panels
+│   ├── cost/                      # Cost Calculation & Invoice Reconciliation
+│   ├── credentials/               # SecretStore & Cloud Credential Lifecycle
+│   ├── integrations/              # Integration Hub, Adapters & Webhooks
+│   ├── lifecycle/                 # 10-State Resource Lifecycle & Decommissioning
+│   ├── planning/                  # Future Budget Planning & Scenarios
+│   ├── policy/                    # FinOps Governance Policy Engine
+│   ├── remediation/               # Remediation Tasks & Realized Saving Ledger
+│   ├── runtime/                   # Runtime Schedule Adherence & Idle Detection
+│   ├── tenant/                    # Tenant Context & Boundary Isolation
+│   ├── topology/                  # Cross-Resource Dependency Graph Engine
+│   └── workflow/                  # Generic Master-Data Workflow State Machine
 ├── masterdata/                    # Authoritative Master Data Catalogues (AM-01)
 │   ├── catalogues/                # Currency, SKUs, Units, Metric Registries
-│   └── models/                    # Pydantic Schemas for Reference Data
+│   ├── models/                    # Pydantic Schemas for Reference Data
+│   └── seeds/                     # Authoritative JSON Seed Files
 ├── normalisation/                 # FOCUS 1.0 & Unit Normalization
 │   ├── focus/                     # Provider to FOCUS 1.0 Column Mapper
 │   └── units/                     # Binary Multiples, Currency & Time Standardizer
@@ -411,69 +431,76 @@ CloudLens/
 │   └── session.py                 # Async Database Engine & Connection Pooling
 ├── docs/                          # Comprehensive Enterprise Documentation
 │   ├── CLOUDLENS_BBP_v1.1.md      # Authoritative Business Blueprint
-│   ├── architecture-overview.md   # System Architecture Overview
-│   ├── data-dictionary.md         # Canonical Data Dictionary
-│   ├── decision_log.md            # Master Architectural Decision Log
-│   ├── operational-runbook.md     # Production SRE Runbook
+│   ├── architecture-overview.md   # Low-Level Design (LLD) for Datacenter
+│   ├── control-tower-guide.md     # Superuser Cockpit Operations Manual
+│   ├── cost-register.md           # Collection Overhead & Telemetry Cost Register
+│   ├── data-dictionary.md         # Canonical Data Dictionary (FOCUS + Semantics)
+│   ├── decision_log.md            # Master Architectural Decision Log (ADR-001..027)
+│   ├── enterprise-datacenter-deployment-guide.md # On-Premises Kubernetes Guide
+│   ├── operational-runbook.md     # Production SRE Runbook & Weighted Canary
 │   └── requirement_traceability_matrix.md # Full RTM (458 Requirements)
+├── fat/                           # Factory Acceptance Test Evidence Artifacts
+│   ├── junit.xml                  # Raw Pytest JUnit XML Execution Output
+│   ├── test_summary.md            # Detailed Test Suite Execution Summary
+│   ├── acceptance_criteria_results.md # 76 BBP Acceptance Criteria Verification
+│   └── performance_benchmark.md   # NFR Latency & Throughput Targets vs Measured
+├── ops/                           # Infrastructure as Code & Orchestration
+│   ├── helm/cloudlens/            # Production Air-Gapped Helm Chart
+│   ├── dashboards/                # 10 Authoritative Grafana Dashboards
+│   └── docker-compose.yml         # Local Developer Observability & Service Stack
 ├── scripts/                       # Quality Gates & Verification Tooling
 │   ├── check_layering.py          # Architectural Inward Dependency Scanner
 │   ├── check_no_hardcoded_constants.py # AST Literals Scan (Mandate M2)
-│   └── run_dr_drill.py            # Automated Disaster Recovery Exercise
-├── tests/                         # 1,311 Automated Verification Tests
-│   ├── acceptance/                # Level 17 Acceptance Criteria Suites
-│   ├── adoption/                  # Prompt 61 Adoption & Value Tests
-│   ├── cloud_provider/            # Level 04 Multi-Cloud Provider Conformance
-│   ├── commitments/               # Prompt 58 Commitment Management Tests
-│   ├── cost_reconciliation/       # Level 07 Cost Correctness & Invoices
-│   ├── dr/                        # Level 14 Disaster Recovery Benchmark Tests
-│   ├── e2e/                       # Level 13 20 Core FinOps Business Processes
-│   ├── integrations/              # Prompt 60 Integration Hub Suite
-│   ├── lifecycle/                 # Prompt 59 Lifecycle & Decommissioning Tests
-│   ├── planning/                  # Prompt 57 Budget Planning & Scenarios Tests
-│   ├── rbac/                      # Level 08 Role-Based Access Control Tests
-│   └── security/                  # Level 09 Tenant Isolation & Vault Tests
+│   ├── generate_rtm.py            # Automated Traceability Matrix Generator
+│   └── verify_release_readiness.py# Production Live Smoke Check Runner
+├── tests/                         # Automated Verification Test Suite
+│   ├── acceptance/                # Quality Gate Acceptance Verification
+│   ├── adoption/                  # Adoption Telemetry & Value Ledger Tests
+│   ├── cloud_provider/            # Multi-Cloud Provider Conformance Tests
+│   ├── commitments/               # Commitment Management & Renewal Tests
+│   ├── contracts/                 # Connector Conformance & OpenAPI Contracts
+│   ├── control_tower/             # Platform Cockpit Verification Tests
+│   ├── cost_reconciliation/       # Hand-Calculated Cost Correctness Fixtures
+│   ├── dr/                        # Disaster Recovery Benchmark Tests
+│   ├── e2e/                       # 26 Core FinOps End-to-End Business Processes
+│   ├── integrations/              # Integration Hub Adapter & Webhook Tests
+│   ├── lifecycle/                 # Resource Lifecycle & Decommissioning Tests
+│   ├── mandates/                  # Core Mandates M1, M2, M3 Compliance Tests
+│   ├── masterdata/                # Master Data Integrity & Enum Parity Tests
+│   ├── perf/                      # Latency & Throughput Benchmark Tests
+│   ├── planning/                  # Budget Planning & Scenarios Tests
+│   ├── rbac/                      # Role-Based Access Control Matrix Tests
+│   ├── regression/                # Arithmetic Precision & Null Discipline Tests
+│   ├── security/                  # Tenant Isolation, Vault & Auth Tests
+│   ├── ui/                        # Presentation Contract & View Verification
+│   ├── upgrade/                   # Rolling Upgrade Zero-Downtime Tests
+│   └── workflow/                  # Generic Approval Workflow State Engine Tests
 └── web/                           # Presentation Layer (React 18 / TypeScript / Vite)
     ├── src/components/            # UI Components & Contextual Explanation Panels
-    ├── src/views/                 # 27 Enterprise Single Page Application Screens
+    ├── src/pages/                 # 27 Enterprise Single Page Application Views
     └── vite.config.ts             # Production Build Bundler Configuration
 ```
 
 ---
 
-## 5. Factory Acceptance Test (FAT) & Verification Results
+## 5. Factory Acceptance Test (FAT) & Verification Evidence
 
-CloudLens enforces automated quality verification across **1,311 automated tests** spanning 20 testing tiers:
+All test executions are evidenced by committed machine artifacts in [`fat/`](fat/):
 
-```
-========================= 1,311 Passed Across 20 Test Levels =========================
-- Level 01: Unit Tests (Mathematical & Logic Engines)        : 214 Passed
-- Level 02: Pydantic Schema & DTO Boundary Tests             : 142 Passed
-- Level 03: API Contract & OpenAPI Drift Tests               :  96 Passed
-- Level 04: Multi-Cloud Connector Conformance (Dual-Mode)    :  88 Passed
-- Level 05: Master Data Catalogues & Units                   :  74 Passed
-- Level 06: FOCUS 1.0 Normalisation & Ingestion              :  92 Passed
-- Level 07: Cost Reconciliation & Variance Dispute           : 110 Passed (100% Hand-Calculated)
-- Level 08: RBAC, Permissions & Separation-of-Duties        :  65 Passed
-- Level 09: Tenant Isolation & Cryptographic Boundary        :  48 Passed
-- Level 10: Performance & Query Response SLA Tests           :  38 Passed
-- Level 11: Scalability & Large Dataset Ingestion Tests      :  32 Passed
-- Level 12: Dependency Graph & Topology Cycle Tests          :  44 Passed
-- Level 13: 20 Core FinOps End-to-End Business Processes     :  62 Passed
-- Level 14: Disaster Recovery, Backup & RTO/RPO Drills       :  18 Passed
-- Level 15: Failure Injection & Chaos Recovery               :  26 Passed
-- Level 16: Upgrades & Backward-Compatible Migrations        :  16 Passed
-- Level 17: Acceptance Gate (AC-001 to AC-076)               :  76 Passed
-- Level 18: Prompt 57 (Budget Planning & Scenarios)          :  24 Passed
-- Level 19: Prompt 58 & 59 (Commitments & Decommissioning)   :  30 Passed
-- Level 20: Prompt 60 & 61 (Integration Hub & Adoption/Value):  44 Passed
-```
+| Verification Category | Executed Test Cases | Status | Evidence Artifact Link |
+|:---|:---:|:---:|:---|
+| **Total Test Suite Execution** | [354 Testcases](fat/test_summary.md) | **350 Passed / 4 Skipped / 0 Failed** | [`fat/junit.xml`](fat/junit.xml) |
+| **Requirements Traceability** | [458 Requirements](docs/requirement_traceability_matrix.md) | **431 Verified / 1 FAT-Exempt / 26 Unverified** | [`docs/requirement_traceability_matrix.md`](docs/requirement_traceability_matrix.md) |
+| **BBP Acceptance Criteria** | [76 Acceptance Criteria](fat/acceptance_criteria_results.md) | **75 Passed / 1 FAT-Exempt / 0 Failed** | [`fat/acceptance_criteria_results.md`](fat/acceptance_criteria_results.md) |
+| **Performance & Latency SLAs** | [14 Performance SLAs](fat/performance_benchmark.md) | **100% Targets Met** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md) |
+| **Disaster Recovery RTO/RPO** | [5 DR Scenarios](fat/test_summary.md) | **RTO 3.2m / RPO 0 bytes lost** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md) |
+| **Rolling Upgrade Continuity**| [1 Upgrade Drill](fat/test_summary.md) | **Zero Downtime, Zero Data Loss** | [`fat/test_summary.md`](fat/test_summary.md) |
+| **Mandates M1, M2, M3** | [3 Mandate Suites](fat/test_summary.md) | **100% Strict Compliance** | [`fat/test_summary.md`](fat/test_summary.md) |
 
-### Static Quality Gates Summary
+### Static Quality Gates Summary:
 1. **Architectural Layering Scan**: `python scripts/check_layering.py` $\implies$ **PASS** (Zero provider SDK imports outside `connectors/`).
 2. **Zero Hardcoded Constants**: `python scripts/check_no_hardcoded_constants.py` $\implies$ **PASS** (100% of literals governed by master data).
-3. **Linter & Type Checker**: `ruff check .` $\implies$ **PASS** (0 errors).
-4. **Web Frontend Production Compilation**: `pnpm build` $\implies$ **PASS** (1,604 modules compiled in 3.15s, bundle size $< 650\text{KB}$).
+3. **Web Frontend Production Compilation**: `pnpm build` $\implies$ **PASS** ([1,636 modules compiled cleanly](web/package.json)).
 
 ---
 
@@ -482,10 +509,9 @@ CloudLens enforces automated quality verification across **1,311 automated tests
 ### Prerequisites
 - Python 3.11+
 - Node.js 20+ & pnpm 10+
-- Docker & Docker Compose (optional for local database and Redis services)
+- Docker & Docker Compose (for local dependencies)
 
 ### Quickstart Execution
-
 ```bash
 # 1. Clone repository
 git clone https://github.com/JyotirmoyBhowmik/CloudLens.git
@@ -508,38 +534,50 @@ cd web && pnpm dev
 - **Web User Interface**: `http://localhost:3000`
 - **FastAPI Health Endpoint**: `http://localhost:8000/api/v1/health`
 - **OpenAPI Swagger Documentation**: `http://localhost:8000/docs`
+- **Control Tower Cockpit**: `http://localhost:3000/control-tower`
 
 ---
 
-## 7. Production SRE Runbook & Cutover Protocol
+## 7. Production SRE Runbook & Weighted Canary Cutover
 
-### 7.1 Zero-Downtime Blue-Green Deployment Sequence
-1. **Health Verification**: Verify green container deployment readiness probe:
-   ```bash
-   kubectl rollout status deployment/cloudlens-green -n cloudlens
-   curl -f http://cloudlens-green-api/api/v1/health
-   ```
-2. **Database Forward Migration**: Apply non-breaking database schema changes:
+Per the [Enterprise Datacenter Guide](docs/enterprise-datacenter-deployment-guide.md#7-traffic-shifting-weighted-canary-deployment-protocol), deployments enforce **Weighted Canary** traffic shifting via NGINX Ingress annotations:
+
+```mermaid
+flowchart LR
+    Client([Enterprise Traffic]) --> Ingress[Ingress Controller]
+    Ingress -->|90% Traffic / Main| StablePool["Stable Release (v1.0.x)\nDeployment: cloudlens-api"]
+    Ingress -->|10% -> 50% -> 100% / Canary| CanaryPool["Canary Release (v1.1.x)\nDeployment: cloudlens-api-canary"]
+```
+
+### 7.1 Progressive Cutover Sequence
+1. **Apply Schema Migrations**:
    ```bash
    alembic upgrade head
    ```
-3. **Synthetic Canary Test**: Execute conformance suite in simulator mode:
+2. **Deploy Canary Replicas & Execute Live Smoke Checks**:
    ```bash
-   python -m pytest tests/cloud_provider/ -k "test_connector_conformance"
+   kubectl apply -f ops/helm/cloudlens/templates/deployment-api.yaml
+   python scripts/verify_release_readiness.py --endpoint https://cloudlens.corp.internal --check-live-probes
    ```
-4. **Traffic Cutover**: Update service routing selector to green pods:
+3. **Shift Initial Traffic (10% Canary)**:
    ```bash
-   kubectl patch service cloudlens-api -p '{"spec":{"selector":{"version":"green"}}}'
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary="true" \
+     nginx.ingress.kubernetes.io/canary-weight="10" --overwrite
    ```
-
-### 7.2 Emergency Rollback Procedure
-If error rates exceed $0.5\%$ post-deployment:
-1. Immediately revert service routing selector to blue pods:
+4. **Advance to 50% and 100%**:
    ```bash
-   kubectl patch service cloudlens-api -p '{"spec":{"selector":{"version":"blue"}}}'
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary-weight="50" --overwrite
+   # After 15 minutes of nominal metrics, promote to primary
+   kubectl patch deployment cloudlens-api --patch-file deploy-v1.1.yaml
+   kubectl annotate ingress cloudlens-api-canary nginx.ingress.kubernetes.io/canary="false" --overwrite
    ```
-2. Confirm blue pool is servicing 100% of traffic with HTTP 200 responses.
-3. Isolate green pods for forensic root-cause analysis.
+5. **Emergency Rollback**:
+   ```bash
+   kubectl annotate ingress cloudlens-api-canary \
+     nginx.ingress.kubernetes.io/canary-weight="0" --overwrite
+   ```
 
 ---
 
@@ -548,9 +586,13 @@ If error rates exceed $0.5\%$ post-deployment:
 | Document | File Path | Scope & Authority |
 | :--- | :--- | :--- |
 | **Business Blueprint (BBP v1.1)** | [`docs/CLOUDLENS_BBP_v1.1.md`](docs/CLOUDLENS_BBP_v1.1.md) | Authoritative scope specification and functional blueprint. |
-| **Requirement Traceability Matrix**| [`docs/requirement_traceability_matrix.md`](docs/requirement_traceability_matrix.md) | Full mapping of all 458 requirements (`BR`, `FR`, `PR`, `CST`, etc.). |
-| **Operational Runbook & SRE Guide** | [`docs/operational-runbook.md`](docs/operational-runbook.md) | Incident response, DR failover protocols, and SRE runbooks. |
-| **Architecture Overview** | [`docs/architecture-overview.md`](docs/architecture-overview.md) | System architecture layers and design principles. |
-| **Data Dictionary** | [`docs/data-dictionary.md`](docs/data-dictionary.md) | Canonical data dictionary, FOCUS fields, and entity models. |
-| **Master Architectural Decision Log**| [`docs/decision_log.md`](docs/decision_log.md) | Recorded architectural choices, rationales, and validations. |
+| **Requirement Traceability Matrix**| [`docs/requirement_traceability_matrix.md`](docs/requirement_traceability_matrix.md) | Full mapping of all [458 Requirements](docs/requirement_traceability_matrix.md) (`BR`, `FR`, `PR`, `CST`, etc.). |
+| **Platform Control Tower Guide** | [`docs/control-tower-guide.md`](docs/control-tower-guide.md) | Operator guide for [14 Monitoring Panels](docs/control-tower-guide.md) and step-up actions. |
+| **Cost of Collection Register** | [`docs/cost-register.md`](docs/cost-register.md) | Telemetry query pricing, daily envelope, and provider API limits. |
+| **Datacenter Deployment Guide** | [`docs/enterprise-datacenter-deployment-guide.md`](docs/enterprise-datacenter-deployment-guide.md) | Air-gapped on-premises Kubernetes deployment and [Guide §11 Checklist](docs/enterprise-datacenter-deployment-guide.md#11-production-go-live-checklist-guide-11). |
+| **Low-Level Design (LLD)** | [`docs/architecture-overview.md`](docs/architecture-overview.md) | System architecture layers, on-prem topology, and data flows. |
+| **Canonical Data Dictionary** | [`docs/data-dictionary.md`](docs/data-dictionary.md) | Canonical data dictionary, FOCUS fields, and semantic layer. |
+| **Master Architectural Decision Log**| [`docs/decision_log.md`](docs/decision_log.md) | Master ADR register ([ADR-001 through ADR-027](docs/decision_log.md)). |
+| **Operational Runbook & SRE Guide** | [`docs/operational-runbook.md`](docs/operational-runbook.md) | Incident response, disaster recovery protocols, and runbooks. |
 | **Open Items & Capability Register**| [`docs/open_items_register.md`](docs/open_items_register.md) | Cloud provider capability matrix and runtime probing register. |
+| **Factory Acceptance Test Summary** | [`fat/test_summary.md`](fat/test_summary.md) | Verified test execution evidence ([350 Passed / 4 Skipped](fat/test_summary.md)). |

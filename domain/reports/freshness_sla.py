@@ -2,7 +2,7 @@
 
 Calculates weekly SLA compliance per provider (AWS, Azure, GCP, OCI) and capability
 (cost, inventory, usage, pricing, quota) against master-data freshness targets,
-and dispatches the signed weekly report to the platform owner (admin@jyotirmoyb.com).
+and dispatches the signed weekly report to the platform owner.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ class FreshnessSLAService:
             "freshness_targets_seconds",
             {"cost": 21600, "inventory": 21600, "usage": 86400, "pricing": 604800, "quota": 86400},
         )
-        self._recipient = self._config.get("recipient_email", "admin@jyotirmoyb.com")
+        self._recipient = self._config.get("recipient_email", "")
 
     def generate_sla_report(self, window_days: int = 7) -> dict[str, Any]:
         """Calculates SLA compliance metrics per cloud provider and capability."""

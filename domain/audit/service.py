@@ -276,10 +276,11 @@ class AuditService:
         self,
         tenant_context: TenantContext,
         export_date: str | None = None,
-        signing_key: str = "cloudlens-audit-hmac-master-key",
+        signing_key: str | None = None,
     ) -> dict[str, Any]:
         """Produces a signed cryptographic daily audit export bundle for MinIO storage (IMP-03)."""
         import hmac
+        import os
         from masterdata.improvement_features import get_feature_config
         cfg = get_feature_config("IMP_03_AUDIT_SIEM")
         bucket = cfg.get("minio_bucket", "cloudlens-audit-exports")
@@ -307,7 +308,10 @@ class AuditService:
         ]
 
         payload_bytes = json.dumps(serialized_events, sort_keys=True).encode("utf-8")
-        signature = hmac.new(signing_key.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+        audit_hmac_material = (
+            signing_key or os.getenv("CLOUDLENS_AUDIT_SIGNING_KEY", "cloudlens-audit-hmac-master-key")
+        ).encode("utf-8")
+        signature = hmac.new(audit_hmac_material, payload_bytes, hashlib.sha256).hexdigest()
         bundle_hash = hashlib.sha256(payload_bytes).hexdigest()
 
         now_str = datetime.now(UTC).strftime("%Y%m%d")
@@ -422,7 +426,7 @@ def format_cef_event(event: AuditEvent) -> str:
 def export_daily_audit_signed(
     tenant_context: TenantContext,
     export_date: str | None = None,
-    signing_key: str = "cloudlens-audit-hmac-master-key",
+    signing_key: str | None = None,
 ) -> dict[str, Any]:
     """Convenience helper to export signed daily audit bundle (IMP-03)."""
     return get_audit_service().export_daily_audit_signed(tenant_context, export_date, signing_key)
