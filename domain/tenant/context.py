@@ -28,6 +28,21 @@ class TenantContext(BaseModel):
         default=False, description="True for unrestricted platform superuser"
     )
     is_system: bool = Field(default=False, description="True for internal background jobs")
+    act_as_tenant_id: str | None = Field(
+        default=None, description="Audited act-as assumed tenant ID"
+    )
+
+    @property
+    def effective_tenant_id(self) -> str:
+        """Returns the audited act-as tenant ID if assumed, otherwise the base tenant ID."""
+        return self.act_as_tenant_id or self.tenant_id
+
+    @property
+    def is_super_admin(self) -> bool:
+        """Convenience property indicating unrestricted administrative access."""
+        return self.is_superuser or any(
+            r in ("SUPER_ADMIN", "SystemRole.SUPER_ADMIN") for r in self.roles
+        )
 
     @property
     def actor_id(self) -> str:
@@ -47,6 +62,16 @@ class TenantContext(BaseModel):
             if role_def and (capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions):
                 return True
         return False
+
+    def require_capability(self, capability: str) -> None:
+        """Enforces that this tenant context holds the specified capability; raises 403 otherwise."""
+        if not self.has_capability(capability):
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Forbidden: caller lacks required capability '{capability}'.",
+            )
 
     @field_validator("tenant_id")
     @classmethod

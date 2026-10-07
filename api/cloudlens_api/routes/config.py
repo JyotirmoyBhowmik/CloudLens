@@ -2,9 +2,10 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
 from domain.config import (
     ConfigProvenance,
     ConfigurationAuditEngine,
@@ -17,6 +18,7 @@ from domain.config import (
     tenant_settings_store,
 )
 from domain.config.tenant_settings import TenantSettings
+from domain.tenant.context import TenantContext
 
 router = APIRouter(prefix="/api/v1", tags=["Configuration & Feature Flags"])
 
@@ -26,8 +28,9 @@ class FeatureToggleRequest(BaseModel):
 
     enabled: bool = Field(description="New toggle state")
     tenant_id: str | None = Field(default=None, description="Optional tenant scope")
-    changed_by: str = Field(default="system-admin", description="Principal modifying the flag")
+    changed_by: str | None = Field(default=None, description="Principal modifying the flag")
     reason: str = Field(default="Administrative update", description="Audit rationale")
+    step_up_token: str | None = Field(default=None, description="Step-up session token for global flags")
 
 
 class TenantSettingsUpdateRequest(BaseModel):
@@ -55,12 +58,14 @@ async def inspect_all_configurations(
     tenant_id: str | None = Query(
         default=None, description="Optional tenant ID to include tenant-layer settings"
     ),
+    tc: TenantContext = Depends(require_auth),
 ) -> list[ConfigProvenance]:
     """Inspect all configuration settings with layer provenance (BUILTIN_DEFAULT, ENVIRONMENT, TENANT).
 
     All secrets (passwords, tokens, keys) are automatically masked for security.
     """
-    return config_resolver.inspect_all(tenant_id=tenant_id, mask_secrets=True)
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
+    return config_resolver.inspect_all(tenant_id=eff_tenant, mask_secrets=True)
 
 
 @router.get(
@@ -73,11 +78,13 @@ async def inspect_setting(
     tenant_id: str | None = Query(
         default=None, description="Optional tenant ID for tenant-scoped settings"
     ),
+    tc: TenantContext = Depends(require_auth),
 ) -> ConfigProvenance:
     """Inspect provenance and effective value of a single configuration setting."""
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
     try:
         return config_resolver.resolve_provenance(
-            setting_key, tenant_id=tenant_id, mask_secrets=True
+            setting_key, tenant_id=eff_tenant, mask_secrets=True
         )
     except KeyError:
         raise HTTPException(
@@ -95,13 +102,12 @@ async def get_configuration_audit_report(
     tenant_id: str | None = Query(
         default=None, description="Optional tenant ID to include tenant-layer settings"
     ),
+    tc: TenantContext = Depends(require_auth),
 ) -> ConfigurationAuditReport:
-    """Returns comprehensive configuration audit report accounting for every effective setting.
-
-    Acceptance: The configuration audit report accounts for every effective setting with its source layer.
-    """
+    """Returns comprehensive configuration audit report accounting for every effective setting."""
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
     engine = ConfigurationAuditEngine()
-    return engine.generate_audit_report(tenant_id=tenant_id, mask_secrets=True)
+    return engine.generate_audit_report(tenant_id=eff_tenant, mask_secrets=True)
 
 
 @router.get(
@@ -113,10 +119,12 @@ async def get_configuration_drift(
     tenant_id: str | None = Query(
         default=None, description="Optional tenant ID to evaluate tenant configuration drift"
     ),
+    tc: TenantContext = Depends(require_auth),
 ) -> ConfigurationDriftReport:
     """Compares running configuration against shipped defaults and reports all deviations."""
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
     engine = ConfigurationDriftEngine()
-    return engine.detect_drift(tenant_id=tenant_id, mask_secrets=True)
+    return engine.detect_drift(tenant_id=eff_tenant, mask_secrets=True)
 
 
 # --- Tenant Settings Endpoints ---
@@ -125,8 +133,16 @@ async def get_configuration_drift(
 @router.get(
     "/tenants/{tenant_id}/settings", response_model=TenantSettings, summary="Get tenant settings"
 )
-async def get_tenant_settings(tenant_id: str) -> TenantSettings:
+async def get_tenant_settings(
+    tenant_id: str,
+    tc: TenantContext = Depends(require_auth),
+) -> TenantSettings:
     """Retrieve effective tenant settings profile."""
+    if tenant_id != tc.effective_tenant_id and not (tc.is_superuser or tc.has_capability("platform.operate")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot access settings of another tenant without super administrator privileges.",
+        )
     return tenant_settings_store.get(tenant_id)
 
 
@@ -136,11 +152,15 @@ async def get_tenant_settings(tenant_id: str) -> TenantSettings:
 async def update_tenant_settings(
     tenant_id: str,
     payload: TenantSettingsUpdateRequest,
+    tc: TenantContext = Depends(require_auth),
 ) -> TenantSettings:
-    """Dynamically update tenant configuration (e.g. threshold defaults).
-
-    Takes effect immediately across the platform with zero downtime, no restart, and no code change.
-    """
+    """Dynamically update tenant configuration (e.g. threshold defaults)."""
+    if tenant_id != tc.effective_tenant_id and not (tc.is_superuser or tc.has_capability("platform.operate")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot modify settings of another tenant without super administrator privileges.",
+        )
+    tc.require_capability("tenants:settings:write")
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
     return tenant_settings_store.update(tenant_id, update_data)
 
@@ -153,25 +173,29 @@ async def list_features(
     tenant_id: str | None = Query(
         default=None, description="Optional tenant ID to evaluate tenant overrides"
     ),
+    tc: TenantContext = Depends(require_auth),
 ) -> list[dict[str, Any]]:
     """List all registered canonical feature flags and their effective states."""
-    return feature_flag_service.list_flags(tenant_id=tenant_id)
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
+    return feature_flag_service.list_flags(tenant_id=eff_tenant)
 
 
 @router.get("/features/{flag_key}/evaluate", summary="Evaluate a feature flag")
 async def evaluate_feature(
     flag_key: str,
     tenant_id: str | None = Query(default=None, description="Optional tenant ID"),
+    tc: TenantContext = Depends(require_auth),
 ) -> dict[str, Any]:
     """Evaluate whether a registered feature flag is enabled globally or for a specific tenant."""
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
     try:
-        enabled = feature_flag_service.evaluate(flag_key, tenant_id=tenant_id)
+        enabled = feature_flag_service.evaluate(flag_key, tenant_id=eff_tenant)
         definition = feature_flag_service.get_definition(flag_key)
         return {
             "flag_key": flag_key,
             "name": definition.name,
             "enabled": enabled,
-            "tenant_id": tenant_id,
+            "tenant_id": eff_tenant,
             "stage": definition.stage,
         }
     except UnregisteredFeatureFlagError as exc:
@@ -185,14 +209,40 @@ async def evaluate_feature(
 async def toggle_feature(
     flag_key: str,
     payload: FeatureToggleRequest,
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+    tc: TenantContext = Depends(require_auth),
 ) -> dict[str, Any]:
     """Toggle a feature flag globally or for a tenant with mandatory audit event logging."""
+    is_global = payload.tenant_id is None or payload.tenant_id.strip() in ("", "global")
+    if is_global:
+        if not (tc.is_superuser or tc.has_capability("platform.operate")):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Toggling global feature flags requires 'platform.operate' capability.",
+            )
+        step_up = payload.step_up_token or x_step_up_token
+        if not step_up or str(step_up).strip() == "":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Step-up authentication required to toggle global feature flags.",
+            )
+        target_tenant = None
+    else:
+        if not (tc.is_superuser or tc.has_capability("platform.operate")) and payload.tenant_id != tc.effective_tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot toggle feature flags for another tenant.",
+            )
+        tc.require_capability("features:toggle")
+        target_tenant = payload.tenant_id if (tc.is_superuser or tc.has_capability("platform.operate")) else tc.effective_tenant_id
+
+    actor_id = tc.email or tc.user_id
     try:
         audit_event = feature_flag_service.set_flag(
             flag_key=flag_key,
             enabled=payload.enabled,
-            tenant_id=payload.tenant_id,
-            changed_by=payload.changed_by,
+            tenant_id=target_tenant,
+            changed_by=actor_id,
             reason=payload.reason,
         )
         return {
@@ -210,7 +260,9 @@ async def toggle_feature(
 async def get_feature_audit_log(
     flag_key: str | None = Query(default=None, description="Filter by flag key"),
     tenant_id: str | None = Query(default=None, description="Filter by tenant ID"),
+    tc: TenantContext = Depends(require_auth),
 ) -> list[dict[str, Any]]:
     """Retrieve full audit log history of all feature flag modifications."""
-    events = feature_flag_service.get_audit_log(flag_key=flag_key, tenant_id=tenant_id)
+    eff_tenant = tc.effective_tenant_id if (not tc.is_superuser and not tc.has_capability("platform.operate")) else (tenant_id or tc.effective_tenant_id)
+    events = feature_flag_service.get_audit_log(flag_key=flag_key, tenant_id=eff_tenant)
     return [e.model_dump() for e in events]

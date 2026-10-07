@@ -12,12 +12,13 @@ Enforces:
   - POST /api/v1/system/bootstrap/superuser/delegate: Superuser first task: creates working tenant & Platform Admin.
   - POST /api/v1/system/bootstrap/superuser/routine-check: Tracks routine operations and alerts when threshold exceeded.
 """
-
+import os
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
 from domain.bootstrap import (
     IdentityVerificationReport,
     PreIdentityVerificationReport,
@@ -26,10 +27,12 @@ from domain.bootstrap import (
     get_superuser_service,
 )
 from domain.identity.models import TokenPair
+from domain.models.enums import SystemRole
 from domain.models.exceptions import (
     SuperuserActivationException,
 )
 from domain.observability import get_logger
+from domain.tenant.context import TenantContext
 
 logger = get_logger("cloudlens.api.bootstrap")
 
@@ -80,6 +83,7 @@ class DelegationHandoverRequest(BaseModel):
     working_tenant_name: str = Field(..., description="Human-readable tenant display name")
     admin_email: str = Field(..., description="Platform Administrator email address")
     admin_name: str = Field(..., description="Platform Administrator display name")
+    step_up_token: str | None = Field(default=None, description="Step-up session token")
 
 
 class RoutineOperationCheckRequest(BaseModel):
@@ -101,8 +105,24 @@ def run_pre_identity_bootstrap(
     dry_run: bool = Query(default=False, description="Dry-run simulation mode"),
     x_correlation_id: str | None = Header(default=None),
 ) -> PreIdentityVerificationReport:
-    """Executes the pre-identity system bootstrap sequence (Prompt 49A)."""
+    """Executes the pre-identity system bootstrap sequence (Prompt 49A & P01B)."""
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
     service = get_pre_identity_bootstrap_service()
+
+    if env == "production":
+        in_cluster = bool(os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true")
+        if not in_cluster:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bootstrap in production is only permitted from an in-cluster Job.",
+            )
+
+    if service.is_initialised() and not dry_run:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Bootstrap has already been executed. One-time execution enforced.",
+        )
+
     return service.bootstrap(dry_run=dry_run, correlation_id=x_correlation_id)
 
 
@@ -139,6 +159,15 @@ def provision_superuser(
     x_correlation_id: str | None = Header(default=None),
 ) -> SuperuserProvisionResponse:
     """Provisions exactly one superuser from master data with unrestricted scope (Item 15, 16)."""
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+    if env == "production":
+        in_cluster = bool(os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true")
+        if not in_cluster:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Superuser provisioning in production is only permitted from an in-cluster Job.",
+            )
+
     service = get_superuser_service()
     user, token = service.provision_superuser(correlation_id=x_correlation_id)
     return SuperuserProvisionResponse(
@@ -214,9 +243,23 @@ def get_identity_verification_report(
 )
 def delegate_to_platform_admin(
     payload: DelegationHandoverRequest,
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+    tc: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Superuser first operational task: creates working tenant, creates Platform Admin, and hands over."""
+    if not (tc.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tc.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superuser delegation requires SUPER_ADMIN role.",
+        )
+    step_up = payload.step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required for superuser delegation.",
+        )
+
     service = get_superuser_service()
     admin_user = service.delegate_to_platform_admin(
         working_tenant_id=payload.working_tenant_id,
@@ -240,9 +283,16 @@ def delegate_to_platform_admin(
 )
 def check_routine_use(
     payload: RoutineOperationCheckRequest,
+    tc: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Tracks consecutive days of routine superuser use and alerts when limit exceeded (Item 19)."""
+    if not (tc.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tc.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Routine operation check requires SUPER_ADMIN role.",
+        )
+
     service = get_superuser_service()
     alert = service.record_routine_operation(
         action=payload.action,

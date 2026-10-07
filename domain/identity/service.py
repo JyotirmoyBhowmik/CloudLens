@@ -12,12 +12,19 @@ Enforces:
 - Prompt 10 Item 69: Explicit rule: users with no mapped role receive NO ACCESS and trigger an administrator alert.
 """
 
+import base64
+import hashlib
 import logging
+import os
 import secrets
 import time
+import urllib.parse
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
+
+import httpx
+import jwt
 
 from domain.config.tenant_settings import TenantSettingsStore, tenant_settings_store
 from domain.identity.models import (
@@ -167,6 +174,7 @@ class IdentityService:
         ] = {}  # (tenant_id, account_name) -> BreakGlassAccount
         self._machine_clients: dict[str, MachineClient] = {}  # client_id -> MachineClient
         self._step_up_challenges: dict[str, StepUpChallenge] = {}  # challenge_id -> StepUpChallenge
+        self._oidc_flow_states: dict[str, dict[str, Any]] = {}  # state -> flow metadata
 
         # Observability events
         self._audit_events: list[AuditEvent] = []
@@ -224,6 +232,162 @@ class IdentityService:
     # ----------------------------------------------------------------------
     # Item 64 & Item 69: OIDC and SAML Single Sign-On
     # ----------------------------------------------------------------------
+
+    def initiate_oidc_authorization(
+        self,
+        redirect_uri: str | None = None,
+        correlation_id: str | None = None,
+    ) -> dict[str, str]:
+        """Initiates OIDC Authorization Code Flow with PKCE (Prompt P01B Item 1)."""
+        issuer = os.getenv("OIDC_ISSUER", "http://localhost:8081/realms/cloudlens").rstrip("/")
+        client_id = os.getenv("OIDC_CLIENT_ID", "cloudlens-api")
+        eff_redirect_uri = redirect_uri or os.getenv("OIDC_REDIRECT_URI", "http://localhost:8000/api/v1/auth/oidc/callback")
+
+        code_verifier = secrets.token_urlsafe(64)
+        code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest()).decode().rstrip("=")
+        state = secrets.token_urlsafe(32)
+        nonce = secrets.token_urlsafe(32)
+
+        self._oidc_flow_states[state] = {
+            "code_verifier": code_verifier,
+            "nonce": nonce,
+            "redirect_uri": eff_redirect_uri,
+            "created_at": time.time(),
+        }
+
+        params = {
+            "response_type": "code",
+            "client_id": client_id,
+            "redirect_uri": eff_redirect_uri,
+            "scope": "openid email profile",
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+            "nonce": nonce,
+        }
+        auth_url = f"{issuer}/protocol/openid-connect/auth?{urllib.parse.urlencode(params)}"
+        return {
+            "authorization_url": auth_url,
+            "state": state,
+            "code_challenge": code_challenge,
+        }
+
+    def complete_oidc_authorization_code_flow(
+        self,
+        code: str,
+        state: str,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        correlation_id: str | None = None,
+    ) -> TokenPair:
+        """Exchanges authorization code for tokens, verifies IdP signature, and mints session tokens (Prompt P01B Item 1)."""
+        flow = self._oidc_flow_states.pop(state, None)
+        if not flow or (time.time() - flow["created_at"] > 600):
+            raise IdentityException("Invalid, expired, or previously redeemed OIDC state parameter.")
+
+        issuer = os.getenv("OIDC_ISSUER", "http://localhost:8081/realms/cloudlens").rstrip("/")
+        client_id = os.getenv("OIDC_CLIENT_ID", "cloudlens-api")
+        client_secret = os.getenv("OIDC_CLIENT_SECRET", "dev-client-secret")
+        jwks_uri = os.getenv("OIDC_JWKS_URI", f"{issuer}/protocol/openid-connect/certs")
+
+        token_url = f"{issuer}/protocol/openid-connect/token"
+        token_payload = {
+            "grant_type": "authorization_code",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "code": code,
+            "code_verifier": flow["code_verifier"],
+            "redirect_uri": flow["redirect_uri"],
+        }
+
+        try:
+            resp = httpx.post(token_url, data=token_payload, timeout=5.0)
+            if resp.status_code != 200:
+                raise IdentityException(f"OIDC token endpoint rejected code exchange: {resp.status_code} {resp.text}")
+            token_resp = resp.json()
+        except IdentityException:
+            raise
+        except Exception as e:
+            raise IdentityException(f"Failed to communicate with OIDC provider token endpoint: {e}") from e
+
+        raw_id_token = token_resp.get("id_token")
+        if not raw_id_token:
+            raise IdentityException("OIDC token response did not contain required id_token.")
+
+        # Verify id_token signature against IdP JWKS
+        try:
+            jwks_resp = httpx.get(jwks_uri, timeout=5.0)
+            if jwks_resp.status_code != 200:
+                raise IdentityException(f"Failed to fetch IdP JWKS: status {jwks_resp.status_code}")
+            jwks_data = jwks_resp.json()
+        except IdentityException:
+            raise
+        except Exception as e:
+            raise IdentityException(f"Could not connect to IdP JWKS endpoint: {e}") from e
+
+        try:
+            unverified_header = jwt.get_unverified_header(raw_id_token)
+        except Exception as e:
+            raise IdentityException(f"Malformed id_token header: {e}") from e
+
+        alg = unverified_header.get("alg")
+        if str(alg).lower() == "none":
+            raise IdentityException("IdP token algorithm 'none' is strictly prohibited.")
+
+        kid = unverified_header.get("kid")
+        matching_key = None
+        for key_dict in jwks_data.get("keys", []):
+            if key_dict.get("kid") == kid:
+                matching_key = key_dict
+                break
+
+        if not matching_key:
+            raise IdentityException(f"No matching public key found in IdP JWKS for kid '{kid}'.")
+
+        try:
+            rsa_key = jwt.algorithms.RSAAlgorithm.from_jwk(matching_key)
+            claims = jwt.decode(
+                raw_id_token,
+                rsa_key,
+                algorithms=["RS256"],
+                audience=client_id,
+                issuer=issuer,
+                options={"verify_exp": True},
+            )
+        except Exception as e:
+            raise IdentityException(f"IdP id_token cryptographic verification failed: {e}") from e
+
+        expected_nonce = flow.get("nonce")
+        if expected_nonce and claims.get("nonce") != expected_nonce:
+            raise IdentityException("OIDC nonce verification mismatch.")
+
+        email = claims.get("email")
+        if not email:
+            raise IdentityException("Verified IdP token is missing required 'email' claim.")
+
+        groups = claims.get("groups") or []
+        if not groups and "realm_access" in claims:
+            groups = claims["realm_access"].get("roles", [])
+
+        # Tenant derived strictly server-side (never from client)
+        user = self.get_user_by_email(email)
+        if user:
+            tenant_id = user.tenant_id
+        else:
+            tenant_id = "T-DEMO" if "demo" in email.lower() else "primary"
+
+        return self.authenticate_oidc(
+            tenant_id=tenant_id,
+            id_token_claims={
+                "sub": claims.get("sub", email),
+                "email": email,
+                "name": claims.get("name", email.split("@")[0]),
+                "groups": groups,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+            correlation_id=correlation_id,
+        )
 
     def authenticate_oidc(
         self,
@@ -431,18 +595,21 @@ class IdentityService:
                 f"Break-glass access denied: account '{account_name}' is not the consolidated superuser identity."
             )
 
-        # 3. Verify IdP identity assertion if provided
-        if idp_assertion:
-            idp_email = str(
-                idp_assertion.get("email")
-                or idp_assertion.get("nameID")
-                or idp_assertion.get("sub")
-                or ""
-            ).strip().lower()
-            if idp_email != expected_superuser:
-                raise BreakGlassAuthFailedException(
-                    f"IdP assertion '{idp_email}' does not match superuser identity '{expected_superuser}'."
-                )
+        # 3. Mandatory IdP identity assertion (Prompt P01B Item 3)
+        if not idp_assertion:
+            raise BreakGlassAuthFailedException(
+                "IdP identity assertion is mandatory for break-glass. Break-glass must be through the IdP."
+            )
+        idp_email = str(
+            idp_assertion.get("email")
+            or idp_assertion.get("nameID")
+            or idp_assertion.get("sub")
+            or ""
+        ).strip().lower()
+        if idp_email != expected_superuser:
+            raise BreakGlassAuthFailedException(
+                f"IdP assertion '{idp_email}' does not match superuser identity '{expected_superuser}'."
+            )
 
         # 4. Mandatory MFA
         if not mfa_code:

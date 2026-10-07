@@ -47,9 +47,9 @@ def configure_security_tenant():
 
 
 def test_api_oidc_login_and_unmapped_role_rejection(client: TestClient):
-    """API endpoint /api/v1/auth/oidc/login enforces mapped role requirement and fires alert."""
-    # 1. Success case: mapped group
-    res_ok = client.post(
+    """Body-claims login endpoint is deleted (Prompt P01B Item 1) and unmapped role access is denied."""
+    # 1. Body claims endpoint is deleted -> 404 (Prompt P01B Item 1)
+    res_deleted = client.post(
         "/api/v1/auth/oidc/login",
         json={
             "tenant_id": "sec-tenant",
@@ -59,28 +59,22 @@ def test_api_oidc_login_and_unmapped_role_rejection(client: TestClient):
             "groups": ["FinOps-Admins"],
         },
     )
-    assert res_ok.status_code == 200
-    data = res_ok.json()
-    assert "access_token" in data
-    assert "refresh_token" in data
-    assert SystemRole.FINOPS_ADMIN.value in data["roles"]
+    assert res_deleted.status_code == 404, f"Expected 404, got {res_deleted.status_code}"
 
-    # 2. Failure case: unmapped group returns 403 Forbidden (Item 69)
-    res_deny = client.post(
-        "/api/v1/auth/oidc/login",
-        json={
-            "tenant_id": "sec-tenant",
-            "idp_sub": "sub-5678",
-            "email": "unmapped@sec.com",
-            "display_name": "Unmapped User",
-            "groups": ["Unknown-Group"],
-        },
-    )
-    assert res_deny.status_code == 403
-    assert "no mapped platform roles" in res_deny.json()["message"].lower()
+    # 2. Unmapped groups cannot yield a token via identity service (Item 69)
+    svc = get_identity_service()
+    with pytest.raises(Exception) as exc_info:
+        svc.authenticate_oidc(
+            tenant_id="sec-tenant",
+            id_token_claims={
+                "sub": "sub-5678",
+                "email": "unmapped@sec.com",
+                "groups": ["Unknown-Group"],
+            },
+        )
+    assert "no mapped platform roles" in str(exc_info.value).lower() or "unmapped" in str(exc_info.value).lower()
 
     # Check alert was recorded in identity service
-    svc = get_identity_service()
     unmapped_alerts = [a for a in svc.alerts if a.alert_type == "UNMAPPED_ROLE_ACCESS_DENIED"]
     assert len(unmapped_alerts) >= 1
     assert unmapped_alerts[-1].severity == AlertSeverity.ERROR
@@ -150,19 +144,18 @@ def test_api_break_glass_flow_and_alerts(client: TestClient):
 
 def test_api_user_disablement_immediate_token_kill(client: TestClient):
     """API endpoint /users/{id}/disable terminates all active sessions and revokes tokens immediately."""
-    # 1. Login user
-    res_login = client.post(
-        "/api/v1/auth/oidc/login",
-        json={
-            "tenant_id": "sec-tenant",
-            "idp_sub": "sub-revocation",
+    # 1. Setup user and session via OIDC SSO
+    svc = get_identity_service()
+    tokens = svc.authenticate_oidc(
+        tenant_id="sec-tenant",
+        id_token_claims={
+            "sub": "sub-revocation",
             "email": "terminated@sec.com",
             "groups": ["FinOps-Admins"],
         },
     )
-    assert res_login.status_code == 200
-    token = res_login.json()["access_token"]
-    refresh = res_login.json()["refresh_token"]
+    token = tokens.access_token
+    refresh = tokens.refresh_token
 
     # 2. Check /me works with bearer token
     res_me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})

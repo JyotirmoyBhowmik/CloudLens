@@ -16,17 +16,12 @@ Provides:
 
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 
-from domain.identity.service import get_identity_service
+from api.cloudlens_api.tenant_context import require_auth
 from domain.models.enums import FinancialSensitivity, GranteeType, GrantEffect, SystemRole
-from domain.models.exceptions import (
-    CustomRoleInvalidException,
-    TokenExpiredException,
-    TokenInvalidException,
-    TokenRevokedException,
-)
+from domain.models.exceptions import CustomRoleInvalidException
 from domain.observability import get_logger
 from domain.rbac.models import (
     AuthorizationDecision,
@@ -37,6 +32,7 @@ from domain.rbac.models import (
     ScopeGrant,
 )
 from domain.rbac.service import get_rbac_service
+from domain.tenant.context import TenantContext
 
 logger = get_logger("cloudlens.api.rbac")
 
@@ -115,47 +111,19 @@ class FilterDemoRequest(BaseModel):
 
 
 # ==============================================================================
-# Helper Caller Context Extractor
-# ==============================================================================
-
-
-def _extract_caller_context(
-    authorization: str | None,
-    x_user_id: str | None = None,
-    x_tenant_id: str | None = None,
-    x_roles: str | None = None,
-) -> tuple[str, str, list[str]]:
-    """Resolves caller (user_id, tenant_id, role_codes) strictly from Bearer token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required: missing or invalid Bearer token.",
-        )
-    token = authorization[len("Bearer ") :].strip()
-    identity_service = get_identity_service()
-    try:
-        auth_ctx = identity_service.token_engine.extract_auth_context(token)
-        return auth_ctx.user_id, auth_ctx.tenant_id, [r.value for r in auth_ctx.roles]
-    except TokenExpiredException as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-    except (TokenRevokedException, TokenInvalidException) as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-
-
-# ==============================================================================
 # Endpoints
 # ==============================================================================
 
 
 @router.get("/permissions", response_model=list[Permission], summary="List Permission Catalogue")
-def list_permissions() -> list[Permission]:
+def list_permissions(tc: TenantContext = Depends(require_auth)) -> list[Permission]:
     """Returns all standard platform permissions declared in the catalogue (Prompt 11 Item 70)."""
     service = get_rbac_service()
     return service.list_permissions()
 
 
 @router.get("/permissions/{code}", response_model=Permission, summary="Get Permission Detail")
-def get_permission(code: str) -> Permission:
+def get_permission(code: str, tc: TenantContext = Depends(require_auth)) -> Permission:
     """Retrieves a single permission definition by its code."""
     service = get_rbac_service()
     perm = service.get_permission(code)
@@ -170,14 +138,10 @@ def get_permission(code: str) -> Permission:
 @router.get("/roles", response_model=list[RoleDefinition], summary="List Roles")
 def list_roles(
     tenant_id: str | None = Query(default=None, description="Optional tenant boundary"),
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> list[RoleDefinition]:
     """Lists built-in platform roles and tenant-specific custom roles."""
-    _, caller_tenant, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
-    effective_tenant = tenant_id or caller_tenant
+    effective_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
     service = get_rbac_service()
     return service.list_roles(tenant_id=effective_tenant)
 
@@ -186,14 +150,10 @@ def list_roles(
 def get_role(
     code: str,
     tenant_id: str | None = Query(default=None),
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> RoleDefinition:
     """Retrieves a role definition and its allowed permissions."""
-    _, caller_tenant, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
-    effective_tenant = tenant_id or caller_tenant
+    effective_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
     service = get_rbac_service()
     role = service.get_role(code, tenant_id=effective_tenant)
     if not role:
@@ -212,17 +172,14 @@ def get_role(
 )
 def create_custom_role(
     payload: CustomRoleCreateRequest,
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> RoleDefinition:
     """Creates a custom role composed from the platform permission catalogue (Prompt 11 Item 70)."""
-    _, tenant_id, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
+    tc.require_capability("iam.manage")
     service = get_rbac_service()
     try:
         return service.create_custom_role(
-            tenant_id=tenant_id,
+            tenant_id=tc.tenant_id,
             code=payload.code,
             display_name=payload.display_name,
             description=payload.description,
@@ -237,15 +194,12 @@ def list_scope_grants(
     grantee_id: str | None = Query(
         default=None, description="Optional grantee user ID or role code"
     ),
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> list[ScopeGrant]:
     """Lists active multidimensional scope grants for caller's tenant (Prompt 11 Item 71)."""
-    _, tenant_id, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
+    tc.require_capability("iam.read")
     service = get_rbac_service()
-    return service.list_scope_grants(tenant_id=tenant_id, grantee_id=grantee_id)
+    return service.list_scope_grants(tenant_id=tc.tenant_id, grantee_id=grantee_id)
 
 
 @router.post(
@@ -256,16 +210,13 @@ def list_scope_grants(
 )
 def create_scope_grant(
     payload: ScopeGrantCreateRequest,
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> ScopeGrant:
     """Registers a declarative multidimensional scope grant (Prompt 11 Item 71)."""
-    user_id, tenant_id, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
+    tc.require_capability("iam.manage")
     service = get_rbac_service()
     grant = ScopeGrant(
-        tenant_id=tenant_id,
+        tenant_id=tc.tenant_id,
         grantee_type=payload.grantee_type,
         grantee_id=payload.grantee_id,
         effect=payload.effect,
@@ -280,7 +231,7 @@ def create_scope_grant(
         financial_sensitivity=payload.financial_sensitivity,
         is_administrative=payload.is_administrative,
         resource_exceptions=payload.resource_exceptions,
-        created_by=user_id,
+        created_by=tc.user_id,
         description=payload.description,
     )
     return service.create_scope_grant(grant)
@@ -289,8 +240,9 @@ def create_scope_grant(
 @router.delete(
     "/grants/{grant_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete Scope Grant"
 )
-def delete_scope_grant(grant_id: str) -> None:
+def delete_scope_grant(grant_id: str, tc: TenantContext = Depends(require_auth)) -> None:
     """Revokes an active scope grant."""
+    tc.require_capability("iam.manage")
     service = get_rbac_service()
     deleted = service.delete_scope_grant(grant_id)
     if not deleted:
@@ -305,18 +257,12 @@ def delete_scope_grant(grant_id: str) -> None:
 )
 def evaluate_authorization(
     payload: EvaluateRequest,
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> AuthorizationDecision:
     """Evaluates caller permissions and scope grants for target context (Prompt 11 Item 71-73)."""
-    user_id, tenant_id, roles = _extract_caller_context(
-        authorization, x_user_id, x_tenant_id, x_roles
-    )
-    eff_user_id = payload.user_id or user_id
-    eff_tenant_id = payload.tenant_id or tenant_id
-    eff_roles = payload.role_codes or roles
+    eff_user_id = payload.user_id if (payload.user_id and tc.is_superuser) else tc.user_id
+    eff_tenant_id = payload.tenant_id if (payload.tenant_id and tc.is_superuser) else tc.tenant_id
+    eff_roles = payload.role_codes if (payload.role_codes and tc.is_superuser) else tc.roles
 
     service = get_rbac_service()
     return service.authorize(
@@ -331,16 +277,12 @@ def evaluate_authorization(
 @router.get("/access-review", summary="Export Access Review Audit Report")
 def export_access_review(
     tenant_id: str | None = Query(default=None, description="Target tenant ID"),
-    # no-hardcode-allow: reason="Query parameter default for export format", reviewer="SecurityArchitect"
     format: str = Query(default="json", description="Export format: 'json' or 'csv'"),
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> Any:
     """Exports comprehensive access review audit report in JSON or CSV format (Prompt 11 Item 75)."""
-    _, caller_tenant, _ = _extract_caller_context(authorization, x_user_id, x_tenant_id, x_roles)
-    target_tenant = tenant_id or caller_tenant
+    tc.require_capability("iam.read")
+    target_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
     service = get_rbac_service()
 
     if format.lower() == "csv":
@@ -361,20 +303,15 @@ def export_access_review(
 )
 def filter_aggregate_demo(
     payload: FilterDemoRequest,
-    authorization: str | None = Header(default=None),
-    x_user_id: str | None = Header(default=None),
-    x_tenant_id: str | None = Header(default=None),
-    x_roles: str | None = Header(default=None),
+    tc: TenantContext = Depends(require_auth),
 ) -> FilteredAggregateResult:
     """Filters dataset records against caller scope grants with mandatory disclosure metadata (Item 73, 74)."""
-    user_id, tenant_id, roles = _extract_caller_context(
-        authorization, x_user_id, x_tenant_id, x_roles
-    )
+    tc.require_capability("iam.read")
     service = get_rbac_service()
     return service.filter_dataset(
-        user_id=user_id,
-        tenant_id=tenant_id,
-        role_codes=roles,
+        user_id=tc.user_id,
+        tenant_id=tc.tenant_id,
+        role_codes=tc.roles,
         permission_code=payload.permission_code,
         items=payload.items,
     )

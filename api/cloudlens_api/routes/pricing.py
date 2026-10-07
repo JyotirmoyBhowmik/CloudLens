@@ -16,12 +16,14 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
 from domain.cost.calculation import (
     PreDeploymentEstimateRequest,
     PreDeploymentEstimateResult,
     PreDeploymentEstimator,
     get_pre_deployment_estimator,
 )
+from domain.tenant.context import TenantContext
 from domain.models.exceptions import PricingRecordNotFoundException
 from domain.pricing.information_panel import (
     InformationPanelBuilder,
@@ -142,12 +144,14 @@ async def resolve_pricing_rate(
 @router.post("/records", response_model=IngestPricingResponse, status_code=status.HTTP_201_CREATED)
 async def ingest_pricing_record(
     record: PricingRecord,
+    tc: TenantContext = Depends(require_auth),
     service_engine: PricingCatalogueService = Depends(get_pricing_service),
 ) -> IngestPricingResponse:
     """Ingests a pricing record following SCD Type 2 rules.
 
     Emits a Pricing Change Signal if the rate has changed relative to the previous version.
     """
+    tc.require_capability("pricing:write")
     stored_rec, change = service_engine.ingest_price_record(record)
     return IngestPricingResponse(record=stored_rec, change_signal=change)
 
@@ -182,9 +186,11 @@ async def list_unknown_skus(
 )
 async def resolve_unknown_sku(
     payload: ResolveUnknownSkuRequest,
+    tc: TenantContext = Depends(require_auth),
     service_engine: PricingCatalogueService = Depends(get_pricing_service),
 ) -> UnknownSkuRecord | None:
     """Manually marks an unknown SKU gap entry as resolved to a pricing catalogue record."""
+    tc.require_capability("pricing:write")
     return service_engine.repository.mark_unknown_sku_resolved(
         provider=payload.provider,
         service_sku=payload.service_sku,

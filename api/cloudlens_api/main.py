@@ -70,6 +70,10 @@ from api.cloudlens_api.routes import (
 from api.cloudlens_api.tenant_context import require_auth
 from db.session import verify_persistence_startup_guard
 from domain.credentials.store import verify_secret_store_startup_guard
+from domain.identity.token_engine import (
+    get_default_key_manager,
+    verify_token_signing_key_startup_guard,
+)
 from domain.explanation.exceptions import ExplanationNotFoundException
 from domain.models.exceptions import (
     AlertException,
@@ -194,9 +198,10 @@ from domain.observability import (
 setup_tracing(service_name="cloudlens-api", in_memory=True)
 logger = get_logger("cloudlens.api")
 
-# Enforce Prompt R-SEC Part 2.4 & P01: Startup guards in staging/production
+# Enforce Prompt R-SEC Part 2.4 & P01/P01B: Startup guards in staging/production
 verify_secret_store_startup_guard()
 verify_persistence_startup_guard()
+verify_token_signing_key_startup_guard()
 
 app = FastAPI(
     title="CloudLens API",
@@ -206,6 +211,21 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+
+@app.get(
+    "/.well-known/jwks.json",
+    tags=["Authentication & Identity"],
+    summary="JSON Web Key Set (Prompt P01B Item 4)",
+)
+@app.get(
+    "/api/v1/.well-known/jwks.json",
+    tags=["Authentication & Identity"],
+    summary="JSON Web Key Set (Prompt P01B Item 4)",
+)
+def get_jwks() -> dict[str, Any]:
+    """Publishes platform public keys for token signature verification (Prompt P01B Item 4)."""
+    return get_default_key_manager().get_jwks()
 
 # CORS configuration (Prompt P01 Item 8)
 cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000")

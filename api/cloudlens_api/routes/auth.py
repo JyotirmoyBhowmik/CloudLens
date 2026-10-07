@@ -17,7 +17,7 @@ Enforces:
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.tenant_context import require_auth
@@ -51,46 +51,15 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication & Identity"])
 # ==============================================================================
 
 
-class OIDCLoginRequest(BaseModel):
-    """Payload for OIDC identity provider callback / authentication assertion."""
-
-    tenant_id: str = Field(..., description="Tenant identifier")
-    id_token_claims: dict[str, Any] = Field(
-        default_factory=dict, description="Raw validated OIDC ID token claims"
-    )
-    idp_sub: str = Field(..., description="Subject identifier in identity provider")
-    email: str = Field(..., description="User corporate email address")
-    display_name: str | None = Field(default=None, description="User full display name")
-    groups: list[str] = Field(
-        default_factory=list, description="Enterprise IdP security groups asserted for user"
-    )
-
-
-class SAMLLoginRequest(BaseModel):
-    """Payload for SAML 2.0 identity provider assertion."""
-
-    tenant_id: str = Field(..., description="Tenant identifier")
-    assertion_claims: dict[str, Any] = Field(
-        default_factory=dict, description="Raw validated SAML attribute statements"
-    )
-    name_id: str = Field(..., description="SAML NameID identifier")
-    email: str = Field(..., description="User corporate email address")
-    display_name: str | None = Field(default=None, description="User full display name")
-    groups: list[str] = Field(
-        default_factory=list, description="Enterprise IdP groups asserted in attribute statement"
-    )
-
-
 class BreakGlassLoginRequest(BaseModel):
     """Payload for emergency break-glass account authentication (Prompt 49B superuser only)."""
 
-    tenant_id: str = Field(..., description="Tenant identifier")
     account_name: str = Field(..., description="Break-glass username")
-    password: str | None = Field(default=None, description="Local password (strictly rejected)")
     idp_assertion: dict[str, Any] | None = Field(
-        default=None, description="IdP verified identity assertion claims"
+        default=None, description="Mandatory IdP verified identity assertion claims"
     )
     mfa_code: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP MFA passcode")
+    password: str | None = Field(default=None, description="Local password (strictly rejected)")
 
 
 class TokenRefreshRequest(BaseModel):
@@ -200,104 +169,58 @@ def _enforce_lockout_check(principal_id: str) -> None:
 # ==============================================================================
 
 
-@router.post("/oidc/login", response_model=TokenPair, summary="OIDC Single Sign-On")
-def oidc_login(
-    payload: OIDCLoginRequest,
-    request: Request,
+@router.get("/oidc/authorize", summary="OIDC Authorization Initiation (Prompt P01B Item 1)")
+def oidc_authorize(
+    redirect_uri: str | None = Query(default=None, description="Client redirect URI"),
+    x_correlation_id: str | None = Header(default=None),
+) -> dict[str, str]:
+    """Generates PKCE code challenge and redirects/returns IdP authorization URL (Prompt P01B Item 1)."""
+    service = get_identity_service()
+    return service.initiate_oidc_authorization(
+        redirect_uri=redirect_uri,
+        correlation_id=x_correlation_id,
+    )
+
+
+@router.get("/oidc/callback", response_model=TokenPair, summary="OIDC Authorization Callback (Prompt P01B Item 1)")
+def oidc_callback(
+    code: str = Query(..., description="Authorization code from IdP"),
+    state: str = Query(..., description="OIDC flow state parameter"),
+    request: Request = None,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Authenticates a user via OpenID Connect (Prompt 10 Item 64)."""
-    client_ip = request.client.host if request.client else "unknown"
-    _enforce_lockout_check(payload.email)
-    _enforce_lockout_check(client_ip)
-
+    """Exchanges code using PKCE, verifies IdP signature, and mints tokens (Prompt P01B Item 1)."""
+    client_ip = request.client.host if request and request.client else "unknown"
+    user_agent = request.headers.get("User-Agent") if request else None
     service = get_identity_service()
-    user_agent = request.headers.get("User-Agent")
-    tracker = get_abuse_tracker()
-
-    claims = dict(payload.id_token_claims)
-    claims["sub"] = payload.idp_sub
-    claims["email"] = payload.email
-    if payload.display_name:
-        claims["name"] = payload.display_name
-    claims["groups"] = payload.groups
-
     try:
-        token_pair = service.authenticate_oidc(
-            tenant_id=payload.tenant_id,
-            id_token_claims=claims,
+        return service.complete_oidc_authorization_code_flow(
+            code=code,
+            state=state,
             ip_address=client_ip,
             user_agent=user_agent,
             correlation_id=x_correlation_id,
         )
-        tracker.record_auth_success(payload.email)
-        tracker.record_auth_success(client_ip)
-        return token_pair
-    except NoMappedRoleException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("OIDC login denied: unmapped roles for %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except UserNotProvisionedException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("OIDC login denied: JIT disabled and user not pre-provisioned: %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except UserDisabledException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("OIDC login denied: user account is disabled: %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except Exception:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        raise
+    except IdentityException as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
 
 
-@router.post("/saml/login", response_model=TokenPair, summary="SAML 2.0 Single Sign-On")
-def saml_login(
-    payload: SAMLLoginRequest,
-    request: Request,
-    x_correlation_id: str | None = Header(default=None),
-) -> TokenPair:
-    """Authenticates a user via SAML 2.0 assertion (Prompt 10 Item 64)."""
-    client_ip = request.client.host if request.client else "unknown"
-    _enforce_lockout_check(payload.email)
-    _enforce_lockout_check(client_ip)
+@router.post("/saml/login", summary="SAML 2.0 Single Sign-On (Disabled)")
+def saml_login(tc: TenantContext = Depends(require_auth)) -> None:
+    """SAML 2.0 authentication is disabled pending python3-saml integration (Prompt P01B Item 2)."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="SAML 2.0 authentication is temporarily disabled pending python3-saml integration.",
+    )
 
-    service = get_identity_service()
-    user_agent = request.headers.get("User-Agent")
-    tracker = get_abuse_tracker()
 
-    claims = dict(payload.assertion_claims)
-    claims["name_id"] = payload.name_id
-    claims["email"] = payload.email
-    if payload.display_name:
-        claims["name"] = payload.display_name
-    claims["groups"] = payload.groups
-
-    try:
-        token_pair = service.authenticate_saml(
-            tenant_id=payload.tenant_id,
-            saml_assertion_claims=claims,
-            ip_address=client_ip,
-            user_agent=user_agent,
-            correlation_id=x_correlation_id,
-        )
-        tracker.record_auth_success(payload.email)
-        tracker.record_auth_success(client_ip)
-        return token_pair
-    except NoMappedRoleException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("SAML login denied: unmapped roles for %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except UserNotProvisionedException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("SAML login denied: JIT disabled and user not pre-provisioned: %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except UserDisabledException as e:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        logger.warning("SAML login denied: user account is disabled: %s", payload.email)
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
-    except Exception:
-        tracker.record_auth_failure(payload.email, ip_address=client_ip)
-        raise
+@router.post("/saml/acs", summary="SAML 2.0 Assertion Consumer Service (Disabled)")
+def saml_acs(tc: TenantContext = Depends(require_auth)) -> None:
+    """SAML 2.0 authentication is disabled pending python3-saml integration (Prompt P01B Item 2)."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="SAML 2.0 authentication is temporarily disabled pending python3-saml integration.",
+    )
 
 
 @router.post(
@@ -310,7 +233,18 @@ def break_glass_login(
     request: Request,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B)."""
+    """Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B & P01B Item 3)."""
+    if payload.password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Local passwords are strictly rejected for break-glass. IdP + MFA authentication is required.",
+        )
+    if not payload.idp_assertion:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="IdP identity assertion is mandatory for break-glass login.",
+        )
+
     client_ip = request.client.host if request.client else "unknown"
     _enforce_lockout_check(payload.account_name)
     _enforce_lockout_check(client_ip)
@@ -321,9 +255,9 @@ def break_glass_login(
 
     try:
         token_pair = service.authenticate_break_glass(
-            tenant_id=payload.tenant_id,
+            tenant_id="global",
             account_name=payload.account_name,
-            password=payload.password,
+            password=None,
             mfa_code=payload.mfa_code,
             idp_assertion=payload.idp_assertion,
             ip_address=client_ip,
@@ -729,15 +663,3 @@ def get_session_state(
         created_at=sess.created_at.isoformat() if sess else None,
         expires_at=sess.expires_at.isoformat() if sess else None,
     )
-
-
-@router.post(
-    "/login", response_model=TokenPair, summary="Local superuser break-glass authentication"
-)
-def local_login(
-    payload: BreakGlassLoginRequest,
-    request: Request,
-    x_correlation_id: str | None = Header(default=None),
-) -> TokenPair:
-    """Local superuser break-glass authentication (API-003 / Prompt 10 Item 65)."""
-    return break_glass_login(payload, request, x_correlation_id)

@@ -12,9 +12,11 @@ Enforces:
 
 from typing import Any
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
+from domain.models.enums import SystemRole
 from domain.models.facts import CostFact
 from domain.models.governance import SyncJob
 from domain.synthetic.demo_tenant import (
@@ -23,6 +25,7 @@ from domain.synthetic.demo_tenant import (
     get_demo_tenant_service,
 )
 from domain.synthetic.estate_generator import SyntheticAnomaly, SyntheticAnomalyType
+from domain.tenant.context import TenantContext
 
 router = APIRouter(prefix="/api/v1/system/demo", tags=["Demonstration Estate"])
 
@@ -54,12 +57,27 @@ def seed_demo_tenant_endpoint(
         default=False,
         description="Generate synthetic estate in-memory without persisting to state store",
     ),
+    step_up_token: str | None = Query(default=None, description="Step-up session token"),
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+    tc: TenantContext = Depends(require_auth),
     _x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> DemoTenantSeedResult:
     """Populates the complete demonstration tenant with multi-level hierarchies and anomalies.
 
     Executes in under two minutes, bringing a clean deployment to a fully demonstratable state.
     """
+    if not (tc.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tc.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seeding demonstration estate requires SUPER_ADMIN role.",
+        )
+    step_up = step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required to seed demonstration estate.",
+        )
+
     service = get_demo_tenant_service()
     return service.seed_demo_tenant(
         tenant_id=DEMO_TENANT_ID,

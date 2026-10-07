@@ -254,7 +254,7 @@ class DemoModeService:
         self,
         tenant_id: str,
         scenario: DemoScenario | str = DemoScenario.MONTH_END_REVIEW,
-        actor_id: str = "demo-admin",
+        actor_id: str = "system",
     ) -> DemoModeStatus:
         """Enables Demo Mode on a tenant, enforcing Safety Interlock 1.
 
@@ -311,7 +311,7 @@ class DemoModeService:
         self,
         tenant_id: str,
         confirm_purge: bool = False,
-        actor_id: str = "demo-admin",
+        actor_id: str = "system",
     ) -> DemoModeStatus:
         """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3.
 

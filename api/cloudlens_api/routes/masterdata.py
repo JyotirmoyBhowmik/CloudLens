@@ -13,9 +13,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
 from domain.models.exceptions import (
     CannotDeleteSystemMasterException,
     MasterDataApprovalException,
@@ -23,6 +24,7 @@ from domain.models.exceptions import (
     MasterNotRegisteredException,
     ReferenceIntegrityBlockedException,
 )
+from domain.tenant.context import TenantContext
 from masterdata import (
     BudgetAllocation,
     BudgetAllocationService,
@@ -344,9 +346,11 @@ async def get_master_record(
 async def create_master_record(
     master_type: str,
     payload: CreateRecordRequest,
-    x_tenant_id: str | None = Header(None, alias="X-Tenant-ID"),
+    tc: TenantContext = Depends(require_auth),
 ) -> MasterDataRecord:
     """Creates a new master data record."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
         return get_master_service().create_record(
             master_type=master_type,
@@ -356,8 +360,8 @@ async def create_master_record(
             sort_order=payload.sort_order,
             parent_code=payload.parent_code,
             attributes=payload.attributes,
-            tenant_id=x_tenant_id,
-            created_by="api_user",
+            tenant_id=tc.effective_tenant_id,
+            created_by=caller_id,
         )
     except MasterDataException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
@@ -368,9 +372,11 @@ async def update_master_record(
     master_type: str,
     code: str,
     payload: UpdateRecordRequest,
-    x_tenant_id: str | None = Header(None, alias="X-Tenant-ID"),
+    tc: TenantContext = Depends(require_auth),
 ) -> MasterDataRecord:
     """Updates a master record via effective-dated versioning."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
         return get_master_service().update_record(
             master_type=master_type,
@@ -380,46 +386,70 @@ async def update_master_record(
             sort_order=payload.sort_order,
             parent_code=payload.parent_code,
             attributes=payload.attributes,
-            changed_by="api_user",
+            changed_by=caller_id,
             change_reason=payload.change_reason,
-            tenant_id=x_tenant_id,
+            tenant_id=tc.effective_tenant_id,
         )
     except MasterDataException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
 
 @router.post("/{master_type}/{code}/review", response_model=MasterDataRecord)
-async def submit_record_for_review(master_type: str, code: str) -> MasterDataRecord:
+async def submit_record_for_review(
+    master_type: str,
+    code: str,
+    tc: TenantContext = Depends(require_auth),
+) -> MasterDataRecord:
     """Submits a draft record for review."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
-        return get_master_service().submit_for_review(master_type, code, user_id="api_user")
+        return get_master_service().submit_for_review(master_type, code, user_id=caller_id)
     except MasterDataApprovalException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
 
 @router.post("/{master_type}/{code}/approve", response_model=MasterDataRecord)
-async def approve_record(master_type: str, code: str) -> MasterDataRecord:
+async def approve_record(
+    master_type: str,
+    code: str,
+    tc: TenantContext = Depends(require_auth),
+) -> MasterDataRecord:
     """Approves a review record."""
+    tc.require_capability("masterdata:approve")
+    caller_id = tc.email or tc.user_id
     try:
-        return get_master_service().approve(master_type, code, approver_id="admin_approver")
+        return get_master_service().approve(master_type, code, approver_id=caller_id)
     except MasterDataApprovalException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
 
 @router.post("/{master_type}/{code}/publish", response_model=MasterDataRecord)
-async def publish_record(master_type: str, code: str) -> MasterDataRecord:
+async def publish_record(
+    master_type: str,
+    code: str,
+    tc: TenantContext = Depends(require_auth),
+) -> MasterDataRecord:
     """Publishes an approved record, activating it and closing previous versions."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
-        return get_master_service().publish(master_type, code, publisher_id="admin_approver")
+        return get_master_service().publish(master_type, code, publisher_id=caller_id)
     except MasterDataApprovalException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
 
 @router.post("/{master_type}/{code}/deactivate", response_model=MasterDataRecord)
-async def deactivate_master_record(master_type: str, code: str) -> MasterDataRecord:
+async def deactivate_master_record(
+    master_type: str,
+    code: str,
+    tc: TenantContext = Depends(require_auth),
+) -> MasterDataRecord:
     """Deactivates a master record, blocked if referenced by live records."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
-        return get_master_service().deactivate_record(master_type, code, requested_by="api_user")
+        return get_master_service().deactivate_record(master_type, code, requested_by=caller_id)
     except ReferenceIntegrityBlockedException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e.message) from e
     except MasterDataException as e:
@@ -427,10 +457,16 @@ async def deactivate_master_record(master_type: str, code: str) -> MasterDataRec
 
 
 @router.delete("/{master_type}/{code}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_master_record(master_type: str, code: str) -> Response:
+async def delete_master_record(
+    master_type: str,
+    code: str,
+    tc: TenantContext = Depends(require_auth),
+) -> Response:
     """Deletes a master record, blocked if system record or referenced."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
-        get_master_service().delete_record(master_type, code, requested_by="api_user")
+        get_master_service().delete_record(master_type, code, requested_by=caller_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except CannotDeleteSystemMasterException as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=e.message) from e
@@ -455,9 +491,12 @@ async def get_record_where_used(master_type: str, code: str) -> WhereUsedReport:
 
 @router.post("/{master_type}/import/validate", response_model=DryRunValidationResult)
 async def validate_master_import(
-    master_type: str, payload: ImportPayload
+    master_type: str,
+    payload: ImportPayload,
+    tc: TenantContext = Depends(require_auth),
 ) -> DryRunValidationResult:
     """Dry-run validation reporting what would change before executing import."""
+    tc.require_capability("masterdata:write")
     try:
         return get_master_service().validate_import(
             master_type=master_type,
@@ -469,14 +508,20 @@ async def validate_master_import(
 
 
 @router.post("/{master_type}/import")
-async def execute_master_import(master_type: str, payload: ImportPayload) -> dict[str, int]:
+async def execute_master_import(
+    master_type: str,
+    payload: ImportPayload,
+    tc: TenantContext = Depends(require_auth),
+) -> dict[str, int]:
     """Executes validated import of master records."""
+    tc.require_capability("masterdata:write")
+    caller_id = tc.email or tc.user_id
     try:
         added, updated = get_master_service().import_data(
             master_type=master_type,
             content=payload.content,
             import_format=payload.format,
-            imported_by="api_user",
+            imported_by=caller_id,
         )
         return {"added": added, "updated": updated}
     except Exception as e:

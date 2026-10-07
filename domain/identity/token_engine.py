@@ -128,36 +128,315 @@ class TokenRevocationRegistry:
         self._compromised_families.clear()
 
 
+import logging
+import sys
+import tempfile
+from pathlib import Path
+import httpx
+import jwt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+logger = logging.getLogger("cloudlens.domain.identity.token_engine")
+
+
+class TokenKeyManager:
+    """Manages asymmetric RSA (RS256) signing keys from OpenBao KV with rotation overlap.
+
+    Prompt P01B Item 4:
+    - Signing key from OpenBao (KV) with kid and rotation overlap.
+    - Algorithm: RS256.
+    - Missing key outside dev -> exit non-zero.
+    - Publishes /.well-known/jwks.json public keys.
+    """
+
+    def __init__(self) -> None:
+        self._active_kid: str = ""
+        self._keys: dict[str, dict[str, Any]] = {}
+        self.load_keys()
+
+    @property
+    def active_kid(self) -> str:
+        return self._active_kid
+
+    def has_keys(self) -> bool:
+        return bool(self._keys and self._active_kid)
+
+    def get_private_key_pem(self, kid: str | None = None) -> str:
+        target_kid = kid or self._active_kid
+        key_entry = self._keys.get(target_kid)
+        if not key_entry:
+            self.load_keys()
+            key_entry = self._keys.get(target_kid)
+        if not key_entry:
+            raise TokenInvalidException(f"Signing key '{target_kid}' not found.")
+        return key_entry["private_pem"]
+
+    def get_public_key_pem(self, kid: str) -> str | None:
+        key_entry = self._keys.get(kid)
+        if not key_entry:
+            self.load_keys()
+            key_entry = self._keys.get(kid)
+        if not key_entry:
+            return None
+        return key_entry["public_pem"]
+
+    def get_jwks(self) -> dict[str, Any]:
+        """Returns the public JWKS document."""
+        return {
+            "keys": [
+                entry["public_jwk"]
+                for entry in self._keys.values()
+                if "public_jwk" in entry
+            ]
+        }
+
+    @staticmethod
+    def _generate_rsa_key_pair(kid_prefix: str = "cloudlens-key") -> tuple[str, str, str, dict[str, Any]]:
+        """Generates a 2048-bit RSA key pair, returning (kid, priv_pem, pub_pem, jwk)."""
+        priv = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        priv_pem = priv.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode("utf-8")
+        pub_pem = priv.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).decode("utf-8")
+        nums = priv.public_key().public_numbers()
+
+        def _to_b64u(n: int) -> str:
+            length = (n.bit_length() + 7) // 8
+            b = n.to_bytes(length, byteorder="big")
+            return base64.urlsafe_b64encode(b).decode("utf-8").rstrip("=")
+
+        kid = f"{kid_prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}"
+        jwk = {
+            "kty": "RSA",
+            "use": "sig",
+            "alg": "RS256",
+            "kid": kid,
+            "n": _to_b64u(nums.n),
+            "e": _to_b64u(nums.e),
+        }
+        return kid, priv_pem, pub_pem, jwk
+
+    def rotate_key(self) -> str:
+        """Rotates active signing key while keeping older keys for verification (rotation overlap)."""
+        new_kid, priv_pem, pub_pem, jwk = self._generate_rsa_key_pair()
+        self._keys[new_kid] = {
+            "kid": new_kid,
+            "algorithm": "RS256",
+            "private_pem": priv_pem,
+            "public_pem": pub_pem,
+            "public_jwk": jwk,
+            "created_at": time.time(),
+        }
+        self._active_kid = new_kid
+        self._persist_keys()
+        logger.info("Rotated platform signing key to active_kid '%s'. Total keys: %d", new_kid, len(self._keys))
+        return new_kid
+
+    def _persist_keys(self) -> None:
+        """Persists keys to OpenBao KV or shared fallback."""
+        data_to_store = {
+            "active_kid": self._active_kid,
+            "keys": self._keys,
+        }
+        vault_addr = os.getenv("VAULT_ADDR", "http://localhost:8200").rstrip("/")
+        vault_token = (
+            os.getenv("VAULT_TOKEN")
+            or os.getenv("BAO_DEV_ROOT_TOKEN_ID")
+            or os.getenv("VAULT_DEV_ROOT_TOKEN_ID")
+            or "dev-vault-token-cloudlens"
+        )
+        vault_path = os.getenv("VAULT_SIGNING_KEYS_PATH", "platform/signing-keys")
+        url = f"{vault_addr}/v1/secret/data/{vault_path}"
+
+        try:
+            resp = httpx.post(
+                url,
+                headers={"X-Vault-Token": vault_token},
+                json={"data": data_to_store},
+                timeout=3.0,
+            )
+            if resp.status_code in (200, 204):
+                return
+        except Exception:
+            pass
+
+        # Fallback file persistence for test environments
+        fallback_path = Path(tempfile.gettempdir()) / "cloudlens_signing_keys_shared.json"
+        try:
+            fallback_path.write_text(json.dumps(data_to_store), encoding="utf-8")
+        except Exception:
+            pass
+
+    def load_keys(self) -> None:
+        """Loads keys from OpenBao KV; if missing outside dev, exits non-zero."""
+        env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+        is_prod = env in ("production", "staging")
+
+        vault_addr = os.getenv("VAULT_ADDR", "http://localhost:8200").rstrip("/")
+        vault_token = (
+            os.getenv("VAULT_TOKEN")
+            or os.getenv("BAO_DEV_ROOT_TOKEN_ID")
+            or os.getenv("VAULT_DEV_ROOT_TOKEN_ID")
+            or "dev-vault-token-cloudlens"
+        )
+        vault_path = os.getenv("VAULT_SIGNING_KEYS_PATH", "platform/signing-keys")
+        url = f"{vault_addr}/v1/secret/data/{vault_path}"
+
+        # 1. Attempt read from OpenBao KV
+        try:
+            resp = httpx.get(url, headers={"X-Vault-Token": vault_token}, timeout=2.0)
+            if resp.status_code == 200:
+                body = resp.json()
+                raw_data = body.get("data", {}).get("data", {})
+                if "active_kid" in raw_data and "keys" in raw_data and raw_data["keys"]:
+                    self._active_kid = raw_data["active_kid"]
+                    self._keys = raw_data["keys"]
+                    return
+            elif is_prod:
+                logger.critical(
+                    "CRITICAL STARTUP FAILURE: OpenBao signing keys not found (status %d). Exiting non-zero.",
+                    resp.status_code,
+                )
+                sys.exit(1)
+        except Exception as exc:
+            if is_prod:
+                logger.critical(
+                    "CRITICAL STARTUP FAILURE: Could not connect to OpenBao for platform signing keys: %s. Exiting non-zero.",
+                    exc,
+                )
+                sys.exit(1)
+
+        # 2. In dev/test: Try to generate and write to OpenBao if available
+        try:
+            kid, priv_pem, pub_pem, jwk = self._generate_rsa_key_pair()
+            data_to_store = {
+                "active_kid": kid,
+                "keys": {
+                    kid: {
+                        "kid": kid,
+                        "algorithm": "RS256",
+                        "private_pem": priv_pem,
+                        "public_pem": pub_pem,
+                        "public_jwk": jwk,
+                        "created_at": time.time(),
+                    }
+                },
+            }
+            write_resp = httpx.post(
+                url,
+                headers={"X-Vault-Token": vault_token},
+                json={"data": data_to_store},
+                timeout=2.0,
+            )
+            if write_resp.status_code in (200, 204):
+                self._active_kid = kid
+                self._keys = data_to_store["keys"]
+                return
+        except Exception:
+            pass
+
+        # 3. Fallback to shared file in temporary directory for offline test runs
+        fallback_path = Path(tempfile.gettempdir()) / "cloudlens_signing_keys_shared.json"
+        if fallback_path.exists():
+            try:
+                data = json.loads(fallback_path.read_text(encoding="utf-8"))
+                if "active_kid" in data and "keys" in data and data["keys"]:
+                    self._active_kid = data["active_kid"]
+                    self._keys = data["keys"]
+                    return
+            except Exception:
+                pass
+
+        kid, priv_pem, pub_pem, jwk = self._generate_rsa_key_pair()
+        data_to_store = {
+            "active_kid": kid,
+            "keys": {
+                kid: {
+                    "kid": kid,
+                    "algorithm": "RS256",
+                    "private_pem": priv_pem,
+                    "public_pem": pub_pem,
+                    "public_jwk": jwk,
+                    "created_at": time.time(),
+                }
+            },
+        }
+        try:
+            fallback_path.write_text(json.dumps(data_to_store), encoding="utf-8")
+        except Exception:
+            pass
+        self._active_kid = kid
+        self._keys = data_to_store["keys"]
+
+
+_default_key_manager: TokenKeyManager | None = None
+
+
+def get_default_key_manager() -> TokenKeyManager:
+    global _default_key_manager
+    if _default_key_manager is None:
+        _default_key_manager = TokenKeyManager()
+    return _default_key_manager
+
+
+def reset_default_key_manager() -> None:
+    global _default_key_manager
+    _default_key_manager = None
+
+
+def verify_token_signing_key_startup_guard() -> None:
+    """Startup guard: in staging/production, fail closed if signing key is not in OpenBao."""
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+    if env in ("production", "staging"):
+        km = get_default_key_manager()
+        if not km.has_keys():
+            logger.critical(
+                "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but platform signing key is missing in OpenBao. Exiting non-zero.",
+                env,
+            )
+            sys.exit(1)
+
+
 class CryptographicTokenEngine:
-    """Signs, verifies, and lifecycle-manages authentication tokens."""
+    """Signs, verifies, and lifecycle-manages authentication tokens using RS256."""
 
     def __init__(
         self,
         signing_key: bytes | None = None,
+        key_manager: TokenKeyManager | None = None,
         revocation_registry: TokenRevocationRegistry | None = None,
         issuer: str | None = None,
         audience: str | None = None,
     ) -> None:
-        self._signing_key = signing_key or DEFAULT_SIGNING_SECRET
+        self._key_manager = key_manager or get_default_key_manager()
         self._revocation = revocation_registry or TokenRevocationRegistry()
         self._issuer = issuer or os.getenv("OIDC_ISSUER", "https://auth.cloudlens.internal/oauth2/default")
         self._audience = audience or os.getenv("OIDC_AUDIENCE", "cloudlens-api")
 
     @property
+    def key_manager(self) -> TokenKeyManager:
+        return self._key_manager
+
+    @property
     def revocation_registry(self) -> TokenRevocationRegistry:
         return self._revocation
 
+    def get_jwks(self) -> dict[str, Any]:
+        """Returns published JWKS."""
+        return self._key_manager.get_jwks()
+
     def sign_token(self, payload: dict[str, Any]) -> str:
-        """Creates a signed HMAC-SHA256 token string."""
-        header = {"alg": "HS256", "typ": "JWT"}
-        header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode())
-        payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode())
-        signing_input = f"{header_b64}.{payload_b64}".encode()
-
-        signature = hmac.new(self._signing_key, signing_input, hashlib.sha256).digest()
-        sig_b64 = _b64url_encode(signature)
-
-        return f"{header_b64}.{payload_b64}.{sig_b64}"
+        """Creates an RS256 digitally signed JWT."""
+        active_kid = self._key_manager.active_kid
+        priv_pem = self._key_manager.get_private_key_pem(active_kid)
+        headers = {"alg": "RS256", "typ": "JWT", "kid": active_kid}
+        return jwt.encode(payload, priv_pem, algorithm="RS256", headers=headers)
 
     def verify_token(
         self,
@@ -172,12 +451,10 @@ class CryptographicTokenEngine:
                 "Token format is invalid: expected header.payload.signature"
             )
 
-        header_b64, payload_b64, sig_b64 = parts
-
         try:
-            header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
+            header = jwt.get_unverified_header(token_str)
         except Exception as e:
-            raise TokenInvalidException("Token header decoding failed.") from e
+            raise TokenInvalidException(f"Token header decoding failed: {e}") from e
 
         if not isinstance(header, dict):
             raise TokenInvalidException("Token header must be a JSON object.")
@@ -185,27 +462,28 @@ class CryptographicTokenEngine:
         alg = header.get("alg", "")
         if str(alg).lower() == "none":
             raise TokenInvalidException("Algorithm 'none' is strictly prohibited.")
-        if alg != "HS256":
-            raise TokenInvalidException(f"Unsupported token algorithm: '{alg}'. Expected HS256.")
+        if alg != "RS256":
+            raise TokenInvalidException(f"Unsupported token algorithm: '{alg}'. Expected RS256.")
 
-        signing_input = f"{header_b64}.{payload_b64}".encode()
-        expected_sig = hmac.new(self._signing_key, signing_input, hashlib.sha256).digest()
-        try:
-            provided_sig = _b64url_decode(sig_b64)
-        except Exception as e:
-            raise TokenInvalidException("Token signature decoding failed.") from e
+        kid = header.get("kid")
+        if not kid:
+            raise TokenInvalidException("Token missing required 'kid' header.")
 
-        if not secrets.compare_digest(expected_sig, provided_sig):
-            raise TokenInvalidException("Token cryptographic signature verification failed.")
+        pub_pem = self._key_manager.get_public_key_pem(kid)
+        if not pub_pem:
+            raise TokenInvalidException(f"Unknown or untrusted signing key identifier: '{kid}'.")
 
         try:
-            parsed = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+            payload = jwt.decode(
+                token_str,
+                pub_pem,
+                algorithms=["RS256"],
+                options={"verify_exp": False, "verify_nbf": False, "verify_aud": False, "verify_iss": False},
+            )
+        except jwt.InvalidSignatureError as e:
+            raise TokenInvalidException("Token cryptographic signature verification failed.") from e
         except Exception as e:
-            raise TokenInvalidException("Token payload decoding failed.") from e
-
-        if not isinstance(parsed, dict):
-            raise TokenInvalidException("Token payload must be a JSON object.")
-        payload: dict[str, Any] = cast(dict[str, Any], parsed)
+            raise TokenInvalidException(f"Token signature decoding failed: {e}") from e
 
         now = time.time()
         # Expiration check (exp)

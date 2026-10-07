@@ -11,10 +11,11 @@ Endpoints:
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.tenant_context import require_auth
+from domain.models.enums import SystemRole
 from domain.tenant.context import TenantContext
 
 from domain.demo import (
@@ -37,6 +38,7 @@ class LoadScenarioRequest(BaseModel):
 
     scenario: DemoScenario = Field(..., description="Target demonstration scenario")
     tenant_id: str = Field(default="T-DEMO", description="Target tenant ID")
+    step_up_token: str | None = Field(default=None, description="Step-up session token")
 
 
 class EnableDemoModeRequest(BaseModel):
@@ -46,6 +48,7 @@ class EnableDemoModeRequest(BaseModel):
     scenario: DemoScenario = Field(
         default=DemoScenario.MONTH_END_REVIEW, description="Initial scenario"
     )
+    step_up_token: str | None = Field(default=None, description="Step-up session token")
 
 
 @router.get("/mode/status", response_model=DemoModeStatus)
@@ -60,12 +63,25 @@ def get_demo_mode_status_endpoint(
 @router.post("/mode/enable", response_model=DemoModeStatus)
 def enable_demo_mode_endpoint(
     payload: EnableDemoModeRequest,
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
     tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoModeStatus:
     """Enables Demo Mode on a tenant, enforcing Safety Interlock 1.
 
     Refuses activation if tenant has active live cloud connectors.
     """
+    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Enabling Demo Mode requires SUPER_ADMIN role.",
+        )
+    step_up = payload.step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required to enable Demo Mode.",
+        )
+
     service = get_demo_mode_service()
     try:
         return service.enable_demo_mode(
@@ -87,9 +103,23 @@ def disable_demo_mode_endpoint(
         default=False,
         description="Explicit confirmation to purge simulated estate data (required by Safety Interlock 3)",
     ),
+    step_up_token: str | None = Query(default=None, description="Step-up session token"),
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
     tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoModeStatus:
     """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3."""
+    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Disabling Demo Mode requires SUPER_ADMIN role.",
+        )
+    step_up = step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required to disable Demo Mode.",
+        )
+
     service = get_demo_mode_service()
     try:
         return service.disable_demo_mode(
@@ -112,8 +142,23 @@ def reset_demo_endpoint(
         description="Target demonstration scenario to configure after reset",
     ),
     seed: int = Query(default=42, description="Deterministic pseudorandom seed"),
+    step_up_token: str | None = Query(default=None, description="Step-up session token"),
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+    tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoResetResult:
     """One-command demo reset: purges, reseeds, and reloads in a single action (Prompt 47 Item 31)."""
+    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Resetting Demo estate requires SUPER_ADMIN role.",
+        )
+    step_up = step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required to reset Demo estate.",
+        )
+
     service = get_demo_mode_service()
     return service.reset_demo(tenant_id=tenant_id, scenario=scenario, seed=seed)
 
@@ -126,8 +171,24 @@ def list_demo_scenarios_endpoint() -> list[DemoScenarioInfo]:
 
 
 @router.post("/scenarios/load", response_model=DemoScenarioInfo)
-def load_demo_scenario_endpoint(payload: LoadScenarioRequest) -> DemoScenarioInfo:
+def load_demo_scenario_endpoint(
+    payload: LoadScenarioRequest,
+    x_step_up_token: str | None = Header(default=None, alias="X-Step-Up-Token"),
+    tenant_context: TenantContext = Depends(require_auth),
+) -> DemoScenarioInfo:
     """Loads a named demo scenario in a single action (Prompt 47 Item 32)."""
+    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Loading demo scenario requires SUPER_ADMIN role.",
+        )
+    step_up = payload.step_up_token or x_step_up_token
+    if not step_up or str(step_up).strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Step-up authentication required to load demo scenario.",
+        )
+
     service = get_demo_mode_service()
     try:
         return service.load_scenario(tenant_id=payload.tenant_id, scenario=payload.scenario)

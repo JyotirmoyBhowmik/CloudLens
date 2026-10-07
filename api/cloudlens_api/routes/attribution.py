@@ -9,9 +9,10 @@ Enforces:
 - POST /api/v1/attribution/allocation/aggregate: Aggregates spend with strict UNALLOCATED visibility.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
 from domain.attribution.aggregation import (
     AggregationSummary,
     AllocationAggregationService,
@@ -31,6 +32,7 @@ from domain.models.exceptions import (
 from domain.models.facts import CostFact
 from domain.models.inventory import Application, Resource
 from domain.models.scope import Scope
+from domain.tenant.context import TenantContext
 from normalisation.tags.models import (
     NormalizedTag,
     RawTagInput,
@@ -117,11 +119,15 @@ def resolve_ownership_endpoint(payload: ResolveOwnershipRequest) -> OwnershipRes
 @router.post(
     "/allocation/rules", response_model=AllocationRule, status_code=status.HTTP_201_CREATED
 )
-def create_allocation_rule(rule: AllocationRule) -> AllocationRule:
+def create_allocation_rule(
+    rule: AllocationRule,
+    tc: TenantContext = Depends(require_auth),
+) -> AllocationRule:
     """Registers a new cost allocation rule.
 
     Strictly validates that SPLIT_RULE targets sum to exactly 100%. Rejects invalid splits at save time.
     """
+    tc.require_capability("attribution:write")
     try:
         _allocation_engine.add_rule(rule)
         return rule

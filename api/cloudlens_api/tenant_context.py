@@ -34,12 +34,11 @@ EXEMPT_PATHS = {
     ("GET", "/openapi.json"),
     ("GET", "/ready"),
     ("GET", "/metrics"),
-    ("POST", "/api/v1/auth/oidc/login"),
-    ("POST", "/api/v1/auth/oidc/callback"),
-    ("POST", "/api/v1/auth/saml/login"),
-    ("POST", "/api/v1/auth/saml/acs"),
+    ("GET", "/.well-known/jwks.json"),
+    ("GET", "/api/v1/.well-known/jwks.json"),
+    ("GET", "/api/v1/auth/oidc/authorize"),
+    ("GET", "/api/v1/auth/oidc/callback"),
     ("POST", "/api/v1/auth/break-glass/login"),
-    ("POST", "/api/v1/auth/login"),
     ("POST", "/api/v1/auth/token/refresh"),
     ("POST", "/api/v1/auth/machine-clients/token"),
     ("POST", "/api/v1/auth/step-up/verify"),
@@ -49,8 +48,6 @@ EXEMPT_PATHS = {
     ("POST", "/api/v1/system/bootstrap/pre-identity"),
     ("GET", "/api/v1/system/bootstrap/pre-identity/status"),
     ("GET", "/api/v1/system/bootstrap/identity/report"),
-    ("POST", "/api/v1/system/bootstrap/superuser/delegate"),
-    ("POST", "/api/v1/system/bootstrap/superuser/routine-check"),
 }
 
 
@@ -153,7 +150,7 @@ def require_auth(
         )
 
     query_tenant = request.query_params.get("tenant_id")
-    if query_tenant and query_tenant != authenticated_tenant_id:
+    if query_tenant and query_tenant != authenticated_tenant_id and not is_superuser:
         audit_service.append_event(
             tenant_context=TenantContext(
                 tenant_id=authenticated_tenant_id,
@@ -189,7 +186,8 @@ def require_auth(
     scope_grants = getattr(auth_context, "permissions", []) or getattr(auth_context, "scope_grants", ["*"]) or ["*"]
 
     tc = TenantContext(
-        tenant_id=authenticated_tenant_id,
+        tenant_id=auth_context.tenant_id,
+        act_as_tenant_id=auth_context.act_as_tenant,
         user_id=auth_context.user_id,
         email=auth_context.email,
         roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
@@ -198,7 +196,7 @@ def require_auth(
         is_superuser=is_superuser,
     )
     request.state.tenant_context = tc
-    current_tenant_id.set(tc.tenant_id)
+    current_tenant_id.set(tc.effective_tenant_id)
     return tc
 
 

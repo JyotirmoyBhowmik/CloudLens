@@ -25,7 +25,10 @@ from domain.identity.service import (
 )
 from domain.identity.token_engine import (
     CryptographicTokenEngine,
+    TokenKeyManager,
     TokenRevocationRegistry,
+    get_default_key_manager,
+    verify_token_signing_key_startup_guard,
 )
 
 __all__ = [
@@ -37,6 +40,7 @@ __all__ = [
     "Session",
     "StepUpChallenge",
     "StepUpToken",
+    "TokenKeyManager",
     "TokenPair",
     "TokenRevocationRegistry",
     "User",
@@ -44,8 +48,10 @@ __all__ = [
     "generate_totp_code",
     "generate_totp_secret",
     "generate_totp_uri",
+    "get_default_key_manager",
     "get_identity_service",
     "hash_password",
     "verify_password",
     "verify_totp_code",
+    "verify_token_signing_key_startup_guard",
 ]
