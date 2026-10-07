@@ -34,6 +34,20 @@ class TenantContext(BaseModel):
         """Alias for user_id to support actor_id access across domain layers."""
         return self.user_id
 
+    def has_capability(self, capability: str) -> bool:
+        """Evaluates whether this tenant context holds the specified capability."""
+        if self.is_superuser:
+            return True
+        if "*" in self.scope_grants or capability in self.scope_grants:
+            return True
+        from domain.rbac.catalogue import get_permission_catalogue
+        catalogue = get_permission_catalogue()
+        for role_name in self.roles:
+            role_def = catalogue.get_role(role_name, tenant_id=self.tenant_id)
+            if role_def and (capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions):
+                return True
+        return False
+
     @field_validator("tenant_id")
     @classmethod
     def validate_tenant_id_non_empty(cls, v: str) -> str:
@@ -55,3 +69,11 @@ def require_tenant_context(context: Any) -> TenantContext:
             "TenantContext contains an empty or whitespace tenant_id."
         )
     return context
+
+
+def has_capability(context: Any, capability: str) -> bool:
+    """Convenience helper to evaluate capability on TenantContext, AuthContext, or role collection."""
+    if hasattr(context, "has_capability"):
+        return context.has_capability(capability)
+    return False
+

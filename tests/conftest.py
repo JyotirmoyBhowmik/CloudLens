@@ -44,7 +44,7 @@ from domain.explanation.service import reset_explanation_service
 from domain.forecasting.repository import reset_forecast_repository
 from domain.forecasting.service import reset_forecasting_service
 from domain.hierarchy.service import reset_hierarchy_service
-from domain.identity.service import reset_identity_service
+from domain.identity.service import get_identity_service, reset_identity_service
 from domain.notification.repository import reset_notification_log_repository
 from domain.overrides.service import reset_override_service
 from domain.policy.repository import reset_policy_repository
@@ -146,6 +146,54 @@ def reset_all_singletons():
     reset_master_data_service()
     reset_string_catalogue_service()
     yield
+
+
+@pytest.fixture
+def make_auth_token():
+    """Mints a real cryptographically signed JWT test token for testing (Prompt P01 Item 10)."""
+    def _mint(
+        tenant_id: str = "tenant-test",
+        user_id: str = "usr-test",
+        email: str = "test@cloudlens.internal",
+        roles: list[object] | None = None,
+        permissions: list[str] | None = None,
+        ttl_seconds: int = 3600,
+    ) -> str:
+        identity_svc = get_identity_service()
+        return identity_svc.token_engine.issue_access_token(
+            user_id=user_id,
+            tenant_id=tenant_id,
+            email=email,
+            roles=roles or [],
+            permissions=permissions or [],
+            session_id="test-session-1",
+            token_family_id="test-family-1",
+            ttl_seconds=ttl_seconds,
+        )
+
+    return _mint
+
+
+@pytest.fixture
+def auth_headers(make_auth_token):
+    """Returns headers with a valid Bearer token minted by make_auth_token."""
+    def _headers(
+        tenant_id: str = "tenant-test",
+        user_id: str = "usr-test",
+        email: str = "test@cloudlens.internal",
+        roles: list[object] | None = None,
+        permissions: list[str] | None = None,
+    ) -> dict[str, str]:
+        token = make_auth_token(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            email=email,
+            roles=roles,
+            permissions=permissions,
+        )
+        return {"Authorization": f"Bearer {token}"}
+
+    return _headers
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:

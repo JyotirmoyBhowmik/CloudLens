@@ -378,7 +378,7 @@ def test_api_superuser_lifecycle_endpoints():
     res_prov = client.post("/api/v1/system/bootstrap/superuser/provision")
     assert res_prov.status_code == 201
     prov_data = res_prov.json()
-    assert prov_data["role"] == "GLOBAL_ADMIN"
+    assert prov_data["role"] == "SUPER_ADMIN"
     token = prov_data["activation_token"]["token"]
     email = prov_data["superuser_email"]
 

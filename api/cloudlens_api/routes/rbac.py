@@ -121,27 +121,25 @@ class FilterDemoRequest(BaseModel):
 
 def _extract_caller_context(
     authorization: str | None,
-    x_user_id: str | None,
-    x_tenant_id: str | None,
-    x_roles: str | None,
+    x_user_id: str | None = None,
+    x_tenant_id: str | None = None,
+    x_roles: str | None = None,
 ) -> tuple[str, str, list[str]]:
-    """Resolves caller (user_id, tenant_id, role_codes) from Bearer token or headers."""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[len("Bearer ") :].strip()
-        identity_service = get_identity_service()
-        try:
-            auth_ctx = identity_service.token_engine.extract_auth_context(token)
-            return auth_ctx.user_id, auth_ctx.tenant_id, [r.value for r in auth_ctx.roles]
-        except TokenExpiredException as e:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-        except (TokenRevokedException, TokenInvalidException) as e:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-
-    # Fallback to explicit enterprise request headers for machine / service calls
-    user_id = x_user_id or "system-user"
-    tenant_id = x_tenant_id or "default-tenant"
-    roles = [r.strip() for r in x_roles.split(",")] if x_roles else [SystemRole.GLOBAL_ADMIN.value]
-    return user_id, tenant_id, roles
+    """Resolves caller (user_id, tenant_id, role_codes) strictly from Bearer token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required: missing or invalid Bearer token.",
+        )
+    token = authorization[len("Bearer ") :].strip()
+    identity_service = get_identity_service()
+    try:
+        auth_ctx = identity_service.token_engine.extract_auth_context(token)
+        return auth_ctx.user_id, auth_ctx.tenant_id, [r.value for r in auth_ctx.roles]
+    except TokenExpiredException as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+    except (TokenRevokedException, TokenInvalidException) as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
 
 
 # ==============================================================================

@@ -233,9 +233,19 @@ ALL_TEN_CT_ACTIONS = [
 @pytest.mark.parametrize("action", ALL_TEN_CT_ACTIONS)
 def test_control_tower_action_forbidden_for_auditor(client: TestClient, action: str):
     """AUDITOR has platform.observe but is strictly blocked from all 10 Control Tower operational actions."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-auditor",
+        tenant_id="tenant-primary",
+        email="auditor@enterprise.internal",
+        roles=[SystemRole.AUDITOR],
+        permissions=["platform.observe"],
+        session_id="sess-auditor-ct",
+        token_family_id="fam-ct-1",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-User-Roles": "AUDITOR",
-        "X-Scope-Grants": "platform.observe",
+        "Authorization": f"Bearer {token}",
         "X-Step-Up-Token": "valid-stepup-token-1234",
     }
 
@@ -257,9 +267,19 @@ def test_control_tower_action_forbidden_for_auditor(client: TestClient, action: 
 @pytest.mark.parametrize("action", ALL_TEN_CT_ACTIONS)
 def test_control_tower_action_rejected_without_step_up_mfa(client: TestClient, action: str):
     """Operator role without valid step-up MFA verification is rejected (403 Forbidden)."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-operator",
+        tenant_id="tenant-primary",
+        email="operator@enterprise.internal",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=["platform.observe", "platform.operate"],
+        session_id="sess-operator-ct",
+        token_family_id="fam-ct-2",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-User-Roles": "SUPER_ADMIN",
-        "X-Scope-Grants": "platform.observe,platform.operate",
+        "Authorization": f"Bearer {token}",
     }
 
     res = client.post(
@@ -280,9 +300,19 @@ def test_control_tower_action_rejected_without_step_up_mfa(client: TestClient, a
 @pytest.mark.parametrize("action", ALL_TEN_CT_ACTIONS)
 def test_control_tower_action_rejected_with_short_reason(client: TestClient, action: str):
     """Operator provides reason < 20 characters -> 422 Unprocessable Entity."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-operator",
+        tenant_id="tenant-primary",
+        email="operator@enterprise.internal",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=["platform.observe", "platform.operate"],
+        session_id="sess-operator-ct-short",
+        token_family_id="fam-ct-3",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-User-Roles": "SUPER_ADMIN",
-        "X-Scope-Grants": "platform.observe,platform.operate",
+        "Authorization": f"Bearer {token}",
         "X-Step-Up-Token": "valid-stepup-token-1234",
     }
 
@@ -303,9 +333,19 @@ def test_control_tower_action_rejected_with_short_reason(client: TestClient, act
 @pytest.mark.parametrize("action", ALL_TEN_CT_ACTIONS)
 def test_control_tower_action_requires_explicit_confirmation_stage(client: TestClient, action: str):
     """Action without explicit confirm=True is staged and does not execute, returning blast radius."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-operator",
+        tenant_id="tenant-primary",
+        email="operator@enterprise.internal",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=["platform.observe", "platform.operate"],
+        session_id="sess-operator-ct-stage",
+        token_family_id="fam-ct-4",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-User-Roles": "SUPER_ADMIN",
-        "X-Scope-Grants": "platform.observe,platform.operate",
+        "Authorization": f"Bearer {token}",
         "X-Step-Up-Token": "valid-stepup-token-1234",
     }
 
@@ -326,3 +366,4 @@ def test_control_tower_action_requires_explicit_confirmation_stage(client: TestC
     assert data["requires_confirmation"] is True
     assert "blast_radius" in data
     assert "affected_tenants" in data["blast_radius"]
+

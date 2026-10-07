@@ -11,8 +11,11 @@ Endpoints:
 
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
+
+from api.cloudlens_api.tenant_context import require_auth
+from domain.tenant.context import TenantContext
 
 from domain.demo import (
     EXPORT_WATERMARK,
@@ -57,7 +60,7 @@ def get_demo_mode_status_endpoint(
 @router.post("/mode/enable", response_model=DemoModeStatus)
 def enable_demo_mode_endpoint(
     payload: EnableDemoModeRequest,
-    x_actor_id: str = Header(default="demo-admin", alias="X-Actor-ID"),
+    tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoModeStatus:
     """Enables Demo Mode on a tenant, enforcing Safety Interlock 1.
 
@@ -68,7 +71,7 @@ def enable_demo_mode_endpoint(
         return service.enable_demo_mode(
             tenant_id=payload.tenant_id,
             scenario=payload.scenario,
-            actor_id=x_actor_id,
+            actor_id=tenant_context.user_id,
         )
     except DemoModeSafetyException as exc:
         raise HTTPException(
@@ -84,7 +87,7 @@ def disable_demo_mode_endpoint(
         default=False,
         description="Explicit confirmation to purge simulated estate data (required by Safety Interlock 3)",
     ),
-    x_actor_id: str = Header(default="demo-admin", alias="X-Actor-ID"),
+    tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoModeStatus:
     """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3."""
     service = get_demo_mode_service()
@@ -92,7 +95,7 @@ def disable_demo_mode_endpoint(
         return service.disable_demo_mode(
             tenant_id=tenant_id,
             confirm_purge=confirm_purge,
-            actor_id=x_actor_id,
+            actor_id=tenant_context.user_id,
         )
     except DemoModeSafetyException as exc:
         raise HTTPException(

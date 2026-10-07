@@ -639,7 +639,7 @@ class IdentityService:
             roles = user.roles
             email = user.email
         else:
-            roles = [SystemRole.GLOBAL_ADMIN]
+            roles = [SystemRole.SUPER_ADMIN]
             email = payload.get("sub", "breakglass@internal")
 
         permissions = self.resolve_effective_permissions(roles)
@@ -1217,14 +1217,14 @@ class IdentityService:
 
         permissions = self.resolve_effective_permissions(user.roles)
 
-        if any(r in (SystemRole.SUPER_ADMIN, SystemRole.GLOBAL_ADMIN) for r in user.roles):
+        if any(r == SystemRole.SUPER_ADMIN for r in user.roles):
             try:
                 from domain.observability.metrics import metrics
 
                 metrics.superuser_signins_total.inc()
                 metrics.security_events_total.labels(type="superuser_signin").inc()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Metrics recording suppressed: %s", e)
 
         access_token = self._token_engine.issue_access_token(
             user_id=user.id,

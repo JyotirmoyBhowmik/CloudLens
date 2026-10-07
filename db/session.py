@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import (
 
 logger = logging.getLogger("cloudlens.db.session")
 
-DEFAULT_DATABASE_URL = "postgresql+asyncpg://cloudlens:cloudlens_dev_password@localhost:5432/cloudlens"
+DEFAULT_DATABASE_URL = "postgresql+asyncpg://cloudlens@localhost:5432/cloudlens"
 
 _async_engine: AsyncEngine | None = None
 _async_session_factory: async_sessionmaker[AsyncSession] | None = None
@@ -33,7 +33,16 @@ _async_session_factory: async_sessionmaker[AsyncSession] | None = None
 
 def get_database_url() -> str:
     """Resolves async PostgreSQL URL from environment or configuration."""
-    raw_url = os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
+    raw_url = os.getenv("DATABASE_URL")
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+    if not raw_url:
+        if env in ("staging", "production"):
+            logger.critical(
+                "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but DATABASE_URL is not set. Exiting non-zero.",
+                env,
+            )
+            sys.exit(1)
+        raw_url = DEFAULT_DATABASE_URL
     if raw_url.startswith("postgresql://"):
         return raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     return raw_url
@@ -97,15 +106,19 @@ async def get_tenant_session(tenant_id: str | None = None) -> AsyncGenerator[Asy
 
 
 def verify_persistence_startup_guard(active_repository_type: str = "SQL") -> None:
-    """Enforces Pattern P6 Startup Guard.
-
-    'Startup guard: CLOUDLENS_ENV in (staging, production) with ANY InMemory repository selected -> exit non-zero.'
-    """
+    """Enforces Pattern P6 Startup Guard and database URL availability outside development."""
     env = os.getenv("CLOUDLENS_ENV", "").strip().lower()
-    if env in ("staging", "production") and active_repository_type.upper() == "INMEMORY":
-        logger.critical(
-            "FATAL STARTUP GUARD FAILURE: CLOUDLENS_ENV='%s' refuses InMemory repository configuration. "
-            "Real PostgreSQL database persistence (SqlRepository) is strictly mandatory in production environments.",
-            env,
-        )
-        sys.exit(1)
+    if env in ("staging", "production"):
+        if not os.getenv("DATABASE_URL"):
+            logger.critical(
+                "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but DATABASE_URL is not set. Exiting non-zero.",
+                env,
+            )
+            sys.exit(1)
+        if active_repository_type.upper() == "INMEMORY":
+            logger.critical(
+                "FATAL STARTUP GUARD FAILURE: CLOUDLENS_ENV='%s' refuses InMemory repository configuration. "
+                "Real PostgreSQL database persistence (SqlRepository) is strictly mandatory in production environments.",
+                env,
+            )
+            sys.exit(1)

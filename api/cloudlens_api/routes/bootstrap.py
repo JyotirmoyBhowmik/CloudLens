@@ -144,7 +144,7 @@ def provision_superuser(
     return SuperuserProvisionResponse(
         user_id=user.id,
         superuser_email=user.email,
-        role="GLOBAL_ADMIN",
+        role="SUPER_ADMIN",
         scope="PLATFORM_UNRESTRICTED",
         activation_token=token,
         break_glass_consolidated=True,

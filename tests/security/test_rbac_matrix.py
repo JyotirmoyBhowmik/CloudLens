@@ -16,6 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.cloudlens_api.main import app
+from domain.identity.service import get_identity_service
 from domain.models.enums import FinancialSensitivity, GranteeType, GrantEffect, SystemRole
 from domain.rbac.catalogue import get_permission_catalogue
 from domain.rbac.models import ResourceTarget, ScopeGrant
@@ -227,11 +228,19 @@ def test_auditor_can_observe_but_every_operate_action_returns_403():
 
     # 2. HTTP Endpoint Level checks:
     # Observe endpoint (audit logs read) -> 200 Allowed
+    identity_svc = get_identity_service()
+    auditor_token = identity_svc.token_engine.issue_access_token(
+        user_id="aud-1",
+        tenant_id="t1",
+        email="auditor@enterprise.internal",
+        roles=[auditor_role],
+        permissions=["rbac:permissions:read"],
+        session_id="sess-aud-1",
+        token_family_id="fam-aud-1",
+        ttl_seconds=300,
+    )
     auditor_headers = {
-        "X-Tenant-ID": "t1",
-        "X-Roles": auditor_role,
-        "X-User-Roles": auditor_role,
-        "X-User-ID": "aud-1",
+        "Authorization": f"Bearer {auditor_token}",
     }
     obs_res = client.get("/api/v1/rbac/permissions", headers=auditor_headers)
     assert obs_res.status_code == 200
@@ -356,19 +365,32 @@ def test_representative_multidimensional_scope_combination():
 
 def test_http_endpoint_permissions_and_roles_discovery():
     """Verify discovery of permission catalogue and roles via REST API."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-discovery",
+        tenant_id="tenant-discovery",
+        email="discovery@enterprise.internal",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=["platform.observe"],
+        session_id="sess-disc",
+        token_family_id="fam-disc",
+        ttl_seconds=300,
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
     # List permissions
-    res_perms = client.get("/api/v1/rbac/permissions")
+    res_perms = client.get("/api/v1/rbac/permissions", headers=headers)
     assert res_perms.status_code == 200
     perms_data = res_perms.json()
     assert len(perms_data) >= 40
 
     # Get single permission
-    res_single = client.get("/api/v1/rbac/permissions/billing:read")
+    res_single = client.get("/api/v1/rbac/permissions/billing:read", headers=headers)
     assert res_single.status_code == 200
     assert res_single.json()["code"] == "billing:read"
 
     # List roles
-    res_roles = client.get("/api/v1/rbac/roles")
+    res_roles = client.get("/api/v1/rbac/roles", headers=headers)
     assert res_roles.status_code == 200
     roles_data = res_roles.json()
     assert len(roles_data) >= 9
@@ -382,9 +404,19 @@ def test_http_endpoint_custom_role_lifecycle():
         "description": "Custom viewer for API tests",
         "allowed_permissions": ["billing:read", "inventory:read"],
     }
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-platform-admin",
+        tenant_id="tenant-api-test",
+        email="platformadmin@enterprise.internal",
+        roles=[SystemRole.PLATFORM_ADMIN],
+        permissions=["rbac:roles:write"],
+        session_id="sess-pa-1",
+        token_family_id="fam-pa-1",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-Tenant-ID": "tenant-api-test",
-        "X-Roles": SystemRole.PLATFORM_ADMIN.value,
+        "Authorization": f"Bearer {token}",
     }
 
     # Create custom role
@@ -407,10 +439,19 @@ def test_http_endpoint_custom_role_lifecycle():
 
 def test_http_endpoint_scope_grant_lifecycle_and_evaluation():
     """Verify grant creation, server-side evaluation, and deletion over HTTP API."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-eval-1",
+        tenant_id="tenant-http-eval",
+        email="eval@enterprise.internal",
+        roles=[SystemRole.FINANCE_USER],
+        permissions=["billing:read"],
+        session_id="sess-eval-1",
+        token_family_id="fam-eval-1",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-Tenant-ID": "tenant-http-eval",
-        "X-Roles": SystemRole.FINANCE_USER.value,
-        "X-User-ID": "user-eval-1",
+        "Authorization": f"Bearer {token}",
     }
 
     # Create grant
@@ -451,15 +492,25 @@ def test_http_endpoint_scope_grant_lifecycle_and_evaluation():
     assert eval_res_mismatch.json()["allowed"] is False
 
     # Delete grant
-    del_res = client.delete(f"/api/v1/rbac/grants/{grant_id}")
+    del_res = client.delete(f"/api/v1/rbac/grants/{grant_id}", headers=headers)
     assert del_res.status_code == 204
 
 
 def test_http_endpoint_access_review_export():
     """Verify access review export in JSON and CSV over HTTP API."""
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-super-admin",
+        tenant_id="tenant-review-test",
+        email="superadmin@cloudlens.internal",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=["rbac:review:export"],
+        session_id="sess-review-1",
+        token_family_id="fam-review-1",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-Tenant-ID": "tenant-review-test",
-        "X-Roles": SystemRole.SUPER_ADMIN.value,
+        "Authorization": f"Bearer {token}",
     }
 
     # JSON export
@@ -491,10 +542,19 @@ def test_http_endpoint_filter_demo_with_disclosure():
         )
     )
 
+    identity_svc = get_identity_service()
+    token = identity_svc.token_engine.issue_access_token(
+        user_id="user-demo",
+        tenant_id="tenant-demo",
+        email="itops@enterprise.internal",
+        roles=[SystemRole.IT_OPERATIONS_USER],
+        permissions=["cost:totals:read"],
+        session_id="sess-demo-1",
+        token_family_id="fam-demo-1",
+        ttl_seconds=300,
+    )
     headers = {
-        "X-Tenant-ID": "tenant-demo",
-        "X-Roles": SystemRole.IT_OPERATIONS_USER.value,
-        "X-User-ID": "user-demo",
+        "Authorization": f"Bearer {token}",
     }
 
     items = [
@@ -522,3 +582,4 @@ def test_http_endpoint_filter_demo_with_disclosure():
     assert disc["hidden_count"] == 1
     assert disc["total_unfiltered_count"] == 2
     assert disc["disclosure_notice"] is not None
+

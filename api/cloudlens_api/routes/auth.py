@@ -1,9 +1,8 @@
-"""Authentication, Session Management and Identity REST API Endpoints (Prompt 10).
+"""Authentication, Session Management and Identity REST API Endpoints (Prompt 10 & Prompt P01).
 
 Enforces:
 - POST /api/v1/auth/oidc/login: OIDC Single Sign-On with group-to-role mapping and optional JIT (Item 64).
 - POST /api/v1/auth/saml/login: SAML 2.0 Single Sign-On with group-to-role mapping and optional JIT (Item 64).
-- POST /api/v1/auth/break-glass/provision: Strictly limited emergency break-glass account setup (Item 65).
 - POST /api/v1/auth/break-glass/login: Emergency break-glass sign-in with mandatory MFA and alerting (Item 65).
 - POST /api/v1/auth/token/refresh: Refresh token rotation with reuse detection (Item 66).
 - POST /api/v1/auth/logout: Explicit session termination and token revocation (Item 66).
@@ -18,12 +17,14 @@ Enforces:
 
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.tenant_context import require_auth
+from domain.abuse.tracker import get_abuse_tracker
 from domain.identity.models import AuthContext, StepUpToken, TokenPair
 from domain.identity.service import get_identity_service
-from domain.models.enums import StepUpAction
+from domain.models.enums import StepUpAction, SystemRole
 from domain.models.exceptions import (
     BreakGlassAuthFailedException,
     IdentityException,
@@ -38,6 +39,7 @@ from domain.models.exceptions import (
     UserNotProvisionedException,
 )
 from domain.observability import get_logger
+from domain.tenant.context import TenantContext
 
 logger = get_logger("cloudlens.api.auth")
 
@@ -118,7 +120,6 @@ class MachineClientCreateRequest(BaseModel):
     scoped_permissions: list[str] = Field(
         default_factory=list, description="Granular permission strings strictly granted"
     )
-    # no-hardcode-allow: reason="Default credential validity window in days", reviewer="SecurityArchitect"
     ttl_days: int = Field(default=90, description="Credential validity duration in days")
     step_up_token: str | None = Field(
         default=None, description="Elevated step-up token for CREDENTIAL_CREATION"
@@ -146,7 +147,6 @@ class MachineClientRotateSecretRequest(BaseModel):
     """Payload to rotate machine client secret with grace period."""
 
     tenant_id: str = Field(..., description="Tenant identifier")
-    # no-hardcode-allow: reason="Default rotation grace period in days", reviewer="SecurityArchitect"
     grace_period_days: int = Field(
         default=7, description="Grace period duration for previous secret in days"
     )
@@ -164,10 +164,8 @@ class MachineClientRotateSecretResponse(BaseModel):
 
 
 class StepUpInitiateRequest(BaseModel):
-    """Payload to initiate a high-risk step-up elevation challenge."""
+    """Payload to initiate a high-risk step-up elevation challenge (Prompt P01: tenant/user from token)."""
 
-    tenant_id: str = Field(..., description="Tenant identifier")
-    user_id: str = Field(..., description="Target user identifier")
     action: StepUpAction = Field(..., description="Target high-risk operational action")
 
 
@@ -181,27 +179,20 @@ class StepUpVerifyRequest(BaseModel):
 
 
 # ==============================================================================
-# Helper Authorization Context Extractor
+# Helper Lockout Enforcement
 # ==============================================================================
 
 
-def _extract_auth_context(authorization_header: str | None) -> AuthContext:
-    """Extracts and verifies Bearer token from Authorization HTTP header."""
-    if not authorization_header or not authorization_header.startswith("Bearer "):
+def _enforce_lockout_check(principal_id: str) -> None:
+    """Enforces progressive account lockout based on master data abuse policies."""
+    tracker = get_abuse_tracker()
+    is_locked, remaining_seconds = tracker.is_locked_out(principal_id)
+    if is_locked:
+        logger.warning("Authentication rejected: principal '%s' locked out (%ds remaining)", principal_id, remaining_seconds)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or malformed Authorization Bearer header.",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Account or client is locked out due to excessive failed attempts. Please retry after {remaining_seconds} seconds.",
         )
-    token = authorization_header[len("Bearer ") :].strip()
-    service = get_identity_service()
-    try:
-        return service.token_engine.extract_auth_context(token)
-    except TokenExpiredException as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-    except TokenRevokedException as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
-    except TokenInvalidException as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
 
 
 # ==============================================================================
@@ -215,14 +206,14 @@ def oidc_login(
     request: Request,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Authenticates a user via OpenID Connect (Prompt 10 Item 64).
+    """Authenticates a user via OpenID Connect (Prompt 10 Item 64)."""
+    client_ip = request.client.host if request.client else "unknown"
+    _enforce_lockout_check(payload.email)
+    _enforce_lockout_check(client_ip)
 
-    Resolves group-to-role mappings. If IdP groups map to NO platform role, access is
-    strictly denied (Item 69) and an administrator alert is fired.
-    """
     service = get_identity_service()
-    client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("User-Agent")
+    tracker = get_abuse_tracker()
 
     claims = dict(payload.id_token_claims)
     claims["sub"] = payload.idp_sub
@@ -232,24 +223,31 @@ def oidc_login(
     claims["groups"] = payload.groups
 
     try:
-        return service.authenticate_oidc(
+        token_pair = service.authenticate_oidc(
             tenant_id=payload.tenant_id,
             id_token_claims=claims,
             ip_address=client_ip,
             user_agent=user_agent,
             correlation_id=x_correlation_id,
         )
+        tracker.record_auth_success(payload.email)
+        tracker.record_auth_success(client_ip)
+        return token_pair
     except NoMappedRoleException as e:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
         logger.warning("OIDC login denied: unmapped roles for %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except UserNotProvisionedException as e:
-        logger.warning(
-            "OIDC login denied: JIT disabled and user not pre-provisioned: %s", payload.email
-        )
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
+        logger.warning("OIDC login denied: JIT disabled and user not pre-provisioned: %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except UserDisabledException as e:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
         logger.warning("OIDC login denied: user account is disabled: %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
+    except Exception:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
+        raise
 
 
 @router.post("/saml/login", response_model=TokenPair, summary="SAML 2.0 Single Sign-On")
@@ -259,9 +257,13 @@ def saml_login(
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
     """Authenticates a user via SAML 2.0 assertion (Prompt 10 Item 64)."""
+    client_ip = request.client.host if request.client else "unknown"
+    _enforce_lockout_check(payload.email)
+    _enforce_lockout_check(client_ip)
+
     service = get_identity_service()
-    client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("User-Agent")
+    tracker = get_abuse_tracker()
 
     claims = dict(payload.assertion_claims)
     claims["name_id"] = payload.name_id
@@ -271,24 +273,31 @@ def saml_login(
     claims["groups"] = payload.groups
 
     try:
-        return service.authenticate_saml(
+        token_pair = service.authenticate_saml(
             tenant_id=payload.tenant_id,
             saml_assertion_claims=claims,
             ip_address=client_ip,
             user_agent=user_agent,
             correlation_id=x_correlation_id,
         )
+        tracker.record_auth_success(payload.email)
+        tracker.record_auth_success(client_ip)
+        return token_pair
     except NoMappedRoleException as e:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
         logger.warning("SAML login denied: unmapped roles for %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except UserNotProvisionedException as e:
-        logger.warning(
-            "SAML login denied: JIT disabled and user not pre-provisioned: %s", payload.email
-        )
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
+        logger.warning("SAML login denied: JIT disabled and user not pre-provisioned: %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except UserDisabledException as e:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
         logger.warning("SAML login denied: user account is disabled: %s", payload.email)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
+    except Exception:
+        tracker.record_auth_failure(payload.email, ip_address=client_ip)
+        raise
 
 
 @router.post(
@@ -301,17 +310,17 @@ def break_glass_login(
     request: Request,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B).
+    """Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B)."""
+    client_ip = request.client.host if request.client else "unknown"
+    _enforce_lockout_check(payload.account_name)
+    _enforce_lockout_check(client_ip)
 
-    Requires IdP + MFA. Local passwords are strictly prohibited.
-    Fires an immediate CRITICAL administrator alert and logs a distinct audit event.
-    """
     service = get_identity_service()
-    client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("User-Agent")
+    tracker = get_abuse_tracker()
 
     try:
-        return service.authenticate_break_glass(
+        token_pair = service.authenticate_break_glass(
             tenant_id=payload.tenant_id,
             account_name=payload.account_name,
             password=payload.password,
@@ -321,9 +330,16 @@ def break_glass_login(
             user_agent=user_agent,
             correlation_id=x_correlation_id,
         )
+        tracker.record_auth_success(payload.account_name)
+        tracker.record_auth_success(client_ip)
+        return token_pair
     except BreakGlassAuthFailedException as e:
+        tracker.record_auth_failure(payload.account_name, ip_address=client_ip)
         logger.error("Break-glass authentication failed for %s", payload.account_name)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+    except Exception:
+        tracker.record_auth_failure(payload.account_name, ip_address=client_ip)
+        raise
 
 
 @router.post("/token/refresh", response_model=TokenPair, summary="Rotate refresh token")
@@ -331,10 +347,7 @@ def refresh_token(
     payload: TokenRefreshRequest,
     x_correlation_id: str | None = Header(default=None),
 ) -> TokenPair:
-    """Rotates refresh token and issues new short-lived access token (Prompt 10 Item 66).
-
-    Detects token reuse; compromised token families are revoked immediately.
-    """
+    """Rotates refresh token and issues new short-lived access token (Prompt 10 Item 66)."""
     service = get_identity_service()
     try:
         return service.refresh_tokens(
@@ -356,22 +369,13 @@ def refresh_token(
 @router.post("/logout", summary="Terminate session and revoke tokens")
 def logout(
     payload: LogoutRequest,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, str]:
     """Explicitly terminates user session and revokes access and refresh tokens (Item 66)."""
     service = get_identity_service()
-    session_id = payload.session_id
-
-    actor_id = "anonymous"
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[len("Bearer ") :].strip()
-        try:
-            ctx = service.token_engine.extract_auth_context(token)
-            session_id = session_id or ctx.session_id
-            actor_id = ctx.email
-        except Exception:
-            pass
+    session_id = payload.session_id or getattr(tenant_context, "session_id", None)
+    actor_id = tenant_context.email or tenant_context.user_id
 
     if session_id:
         service.terminate_session(
@@ -384,15 +388,23 @@ def logout(
 @router.get("/sessions", summary="List active sessions (IMP-02)")
 def list_sessions(
     user_id: str | None = None,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
 ) -> dict[str, Any]:
     """Lists active user sessions with idle and absolute expiry metadata (IMP-02)."""
-    ctx = _extract_auth_context(authorization)
     service = get_identity_service()
-    target_user_id = user_id if "SUPER_ADMIN" in [str(r) for r in ctx.roles] else ctx.user_id
-    sessions = service.list_active_sessions(tenant_id=ctx.tenant_id, user_id=target_user_id)
+    if user_id and user_id != tenant_context.user_id:
+        if not tenant_context.is_superuser and not tenant_context.has_capability("users:read"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: caller lacks capability to view sessions for other users.",
+            )
+        target_user_id = user_id
+    else:
+        target_user_id = tenant_context.user_id
+
+    sessions = service.list_active_sessions(tenant_id=tenant_context.tenant_id, user_id=target_user_id)
     return {
-        "tenant_id": ctx.tenant_id,
+        "tenant_id": tenant_context.tenant_id,
         "returned_count": len(sessions),
         "sessions": [
             {
@@ -414,15 +426,23 @@ def list_sessions(
 @router.delete("/sessions/{session_id}", summary="Revoke single session (IMP-02)")
 def revoke_session(
     session_id: str,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Revokes a specific user session and blacklists its token family (IMP-02)."""
-    ctx = _extract_auth_context(authorization)
     service = get_identity_service()
+    sess = service.get_session(session_id)
+    if not sess:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive.")
+    if sess.user_id != tenant_context.user_id and not tenant_context.is_superuser and not tenant_context.has_capability("users:write"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: caller lacks capability to revoke sessions of other users.",
+        )
+
     success = service.revoke_session(
         session_id=session_id,
-        actor_id=ctx.email,
+        actor_id=tenant_context.email or tenant_context.user_id,
         reason="OPERATOR_REVOKED",
         correlation_id=x_correlation_id,
     )
@@ -434,16 +454,21 @@ def revoke_session(
 @router.delete("/sessions/user/{user_id}", summary="Revoke all sessions for user (IMP-02)")
 def revoke_all_user_sessions(
     user_id: str,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Revokes all active sessions for a given user (IMP-02)."""
-    ctx = _extract_auth_context(authorization)
+    if user_id != tenant_context.user_id and not tenant_context.is_superuser and not tenant_context.has_capability("users:write"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: caller lacks capability to revoke sessions of other users.",
+        )
+
     service = get_identity_service()
     count = service.revoke_user_sessions(
-        tenant_id=ctx.tenant_id,
+        tenant_id=tenant_context.tenant_id,
         user_id=user_id,
-        actor_id=ctx.email,
+        actor_id=tenant_context.email or tenant_context.user_id,
         reason="OPERATOR_REVOKED_ALL",
         correlation_id=x_correlation_id,
     )
@@ -454,19 +479,28 @@ def revoke_all_user_sessions(
 def disable_user(
     user_id: str,
     payload: DisableUserRequest,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, str]:
     """Administratively disables a user account (Prompt 10 Item 66).
 
     Terminates all user sessions and revokes all issued tokens immediately.
     """
-    ctx = _extract_auth_context(authorization)
+    if (
+        not tenant_context.is_superuser
+        and not tenant_context.has_capability("users:write")
+        and not tenant_context.has_capability("tenants:settings:write")
+        and tenant_context.user_id != user_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: caller lacks required capability to disable user accounts.",
+        )
     service = get_identity_service()
     service.disable_user(
         tenant_id=payload.tenant_id,
         user_id=user_id,
-        actor_id=ctx.email,
+        actor_id=tenant_context.email or tenant_context.user_id,
         correlation_id=x_correlation_id,
     )
     return {
@@ -482,19 +516,17 @@ def disable_user(
 )
 def create_machine_client(
     payload: MachineClientCreateRequest,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> MachineClientCreateResponse:
     """Registers an automated service principal machine client (Prompt 10 Item 67)."""
+    if not tenant_context.is_superuser and not tenant_context.has_capability("credentials:create"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: caller lacks 'credentials:create' capability to register machine clients.",
+        )
     service = get_identity_service()
-    actor_id = "admin"
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            actor_id = service.token_engine.extract_auth_context(
-                authorization[len("Bearer ") :].strip()
-            ).email
-        except Exception:
-            pass
+    actor_id = tenant_context.email or tenant_context.user_id
 
     try:
         client, secret = service.register_machine_client(
@@ -523,25 +555,36 @@ def create_machine_client(
 )
 def authenticate_machine_client(
     payload: MachineClientTokenRequest,
+    request: Request,
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Authenticates machine client using client_id and client_secret (Item 67)."""
+    client_ip = request.client.host if request.client else "unknown"
+    _enforce_lockout_check(payload.client_id)
+    _enforce_lockout_check(client_ip)
+
     service = get_identity_service()
+    tracker = get_abuse_tracker()
     try:
         token_pair = service.authenticate_machine_client(
             client_id=payload.client_id,
             client_secret=payload.client_secret,
             correlation_id=x_correlation_id,
         )
-        # no-hardcode-allow: reason="Standard OAuth2 token response parameter", reviewer="SecurityArchitect"
+        tracker.record_auth_success(payload.client_id)
+        tracker.record_auth_success(client_ip)
         return {
             "access_token": token_pair.access_token,
             "token_type": "Bearer",
             "expires_in": 3600,
         }
     except MachineClientAuthFailedException as e:
+        tracker.record_auth_failure(payload.client_id, ip_address=client_ip)
         logger.error("Machine client authentication failed for %s", payload.client_id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+    except Exception:
+        tracker.record_auth_failure(payload.client_id, ip_address=client_ip)
+        raise
 
 
 @router.post(
@@ -552,19 +595,17 @@ def authenticate_machine_client(
 def rotate_machine_client_secret(
     client_id: str,
     payload: MachineClientRotateSecretRequest,
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> MachineClientRotateSecretResponse:
     """Rotates machine client secret supporting dual-secret grace periods (Item 67)."""
+    if not tenant_context.is_superuser and not tenant_context.has_capability("credentials:create"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: caller lacks 'credentials:create' capability to rotate machine client secrets.",
+        )
     service = get_identity_service()
-    actor_id = "admin"
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            actor_id = service.token_engine.extract_auth_context(
-                authorization[len("Bearer ") :].strip()
-            ).email
-        except Exception:
-            pass
+    actor_id = tenant_context.email or tenant_context.user_id
 
     try:
         new_secret = service.rotate_machine_client_secret(
@@ -588,13 +629,14 @@ def rotate_machine_client_secret(
 @router.post("/step-up/initiate", summary="Initiate step-up challenge")
 def initiate_step_up(
     payload: StepUpInitiateRequest,
+    tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, str]:
     """Initiates a step-up challenge for a high-risk operation (Item 68)."""
     service = get_identity_service()
     challenge = service.initiate_step_up_challenge(
-        tenant_id=payload.tenant_id,
-        user_id=payload.user_id,
+        tenant_id=tenant_context.tenant_id,
+        user_id=tenant_context.user_id,
         action=payload.action,
         correlation_id=x_correlation_id,
     )
@@ -626,9 +668,19 @@ def verify_step_up(
 
 
 @router.get("/me", response_model=AuthContext, summary="Get current authentication context")
-def get_me(authorization: str | None = Header(default=None)) -> AuthContext:
+def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthContext:
     """Returns caller identity, roles, and effective permissions from Bearer token."""
-    return _extract_auth_context(authorization)
+    roles = [
+        SystemRole(r) for r in tenant_context.roles if r in SystemRole._value2member_map_
+    ]
+    return AuthContext(
+        user_id=tenant_context.user_id,
+        tenant_id=tenant_context.tenant_id,
+        email=tenant_context.email or tenant_context.user_id,
+        roles=roles,
+        permissions=tenant_context.scope_grants,
+        is_break_glass=tenant_context.is_superuser,
+    )
 
 
 class SessionStateResponse(BaseModel):
@@ -648,38 +700,30 @@ class SessionStateResponse(BaseModel):
 
 @router.get("/session", response_model=SessionStateResponse, summary="Get current session state")
 def get_session_state(
-    authorization: str | None = Header(default=None),
+    tenant_context: TenantContext = Depends(require_auth),
 ) -> SessionStateResponse:
     """Current authenticated session state and user identity (API-002)."""
     service = get_identity_service()
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or malformed Bearer authorization token.",
-        )
-    token = authorization[len("Bearer ") :].strip()
-    try:
-        ctx = service.token_engine.extract_auth_context(token)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired token: {e}",
-        ) from e
+    sess = None
+    if hasattr(tenant_context, "session_id") and getattr(tenant_context, "session_id"):
+        sess = service.get_session(getattr(tenant_context, "session_id"))
 
-    sess = service.get_session(ctx.session_id) if ctx.session_id else None
-    user = service.get_user(ctx.user_id) if ctx.user_id else None
+    user = service.get_user(tenant_context.user_id) if tenant_context.user_id else None
     auth_method_str = (
         user.auth_method.value
         if user and hasattr(user, "auth_method") and hasattr(user.auth_method, "value")
         else "OIDC"
     )
+    email = tenant_context.email or tenant_context.user_id
+    display_name = email.split("@")[0].capitalize() if "@" in email else email
+
     return SessionStateResponse(
-        user_id=ctx.user_id,
-        tenant_id=ctx.tenant_id,
-        email=ctx.email,
-        display_name=ctx.email.split("@")[0].capitalize(),
-        roles=[r.value if hasattr(r, "value") else str(r) for r in ctx.roles],
-        session_id=ctx.session_id or "sess-default",
+        user_id=tenant_context.user_id,
+        tenant_id=tenant_context.tenant_id,
+        email=email,
+        display_name=display_name,
+        roles=tenant_context.roles,
+        session_id=sess.id if sess else "sess-active",
         is_active=sess.is_active if sess else True,
         auth_method=auth_method_str,
         created_at=sess.created_at.isoformat() if sess else None,

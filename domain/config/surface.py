@@ -16,7 +16,13 @@ Defines the configuration surface for:
 Every field has a documented default and an explicit is_secret indicator where appropriate.
 """
 
-from pydantic import BaseModel, Field
+import logging
+import os
+import sys
+
+from pydantic import BaseModel, Field, model_validator
+
+logger = logging.getLogger("cloudlens.config")
 
 
 class DatabaseConfig(BaseModel):
@@ -150,7 +156,7 @@ class IdentityProviderConfig(BaseModel):
     )
     client_id: str = Field(default="cloudlens-api", description="OAuth2 client identifier")
     client_secret: str = Field(
-        default="dev-client-secret",
+        default="",
         description="OAuth2 client secret",
         json_schema_extra={"is_secret": True},
     )
@@ -159,6 +165,17 @@ class IdentityProviderConfig(BaseModel):
         default="https://auth.cloudlens.internal/.well-known/jwks.json",
         description="JSON Web Key Set URI for token verification",
     )
+
+    @model_validator(mode="after")
+    def validate_production_secret(self) -> "IdentityProviderConfig":
+        env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+        if env in ("staging", "production") and not self.client_secret:
+            logger.critical(
+                "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but identity_provider.client_secret is missing. Exiting non-zero.",
+                env,
+            )
+            sys.exit(1)
+        return self
 
 
 class NotificationChannelsConfig(BaseModel):

@@ -86,7 +86,6 @@ def create_credential_profile(
     request_data: CredentialCreateRequest,
     request: Request,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Provisions a credential profile.
 
@@ -95,7 +94,7 @@ def create_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.create_profile(
@@ -162,7 +161,6 @@ def rotate_credential_profile(
     rotate_data: CredentialRotateRequest,
     request: Request,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Initiates zero-downtime rotation.
 
@@ -170,7 +168,7 @@ def rotate_credential_profile(
     """
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.rotate_credential(
@@ -203,12 +201,11 @@ def complete_credential_rotation(
         default=False, description="Whether to purge previous secret from SecretStore"
     ),
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Finalizes rotation and returns state to ACTIVE."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.complete_rotation(
@@ -234,12 +231,11 @@ def retire_credential_profile(
     profile_id: str,
     request: Request,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Retires a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.retire_credential(
@@ -265,12 +261,11 @@ def revoke_credential_profile(
     request: Request,
     reason: str = Query(default="Emergency security revocation"),
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Permanently revokes a credential profile and purges secret from store."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.revoke_credential(
@@ -297,12 +292,11 @@ def bind_connector(
     bind_data: ConnectorBindRequest,
     request: Request,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Binds a connector to an existing credential profile within the tenant."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.bind_connector(
@@ -329,12 +323,11 @@ def unbind_connector(
     bind_data: ConnectorBindRequest,
     request: Request,
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
-    x_actor_id: str = Header(default="admin", alias="X-Actor-ID"),
 ) -> CredentialProfileResponse:
     """Unbinds a connector from a credential profile."""
     correlation_id = getattr(request.state, "correlation_id", None)
     service = get_credential_service()
-    actor_id = tenant_context.user_id if tenant_context.user_id != ANONYMOUS_ACTOR else x_actor_id
+    actor_id = tenant_context.user_id
 
     try:
         profile = service.unbind_connector(

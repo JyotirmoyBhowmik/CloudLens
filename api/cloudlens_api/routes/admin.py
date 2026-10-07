@@ -374,7 +374,6 @@ def _check_admin_role(tenant_context: TenantContext) -> None:
     admin_roles = {
         "SUPER_ADMIN",
         "PLATFORM_ADMIN",
-        "GLOBAL_ADMIN",
         "TENANT_ADMIN",
         "SUPERUSER",
         "admin",
@@ -429,9 +428,9 @@ def act_as_tenant(
     Requires step-up MFA, issues a short-lived scoped token carrying act_as_tenant + original subject,
     writes AuditEvent ACT_AS_TENANT_START, and raises a security alert.
     """
-    # 1. Require SUPER_ADMIN role (or legacy GLOBAL_ADMIN)
+    # 1. Require SUPER_ADMIN role
     is_global_admin = any(
-        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN", SystemRole.GLOBAL_ADMIN, "GLOBAL_ADMIN")
+        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN")
         for r in tenant_context.roles
     ) or tenant_context.is_superuser
     if not is_global_admin:
@@ -503,7 +502,7 @@ def act_as_tenant(
         user_id=tenant_context.user_id,
         original_email=actor_id,
         target_tenant_id=req.tenant_id,
-        roles=[SystemRole.GLOBAL_ADMIN],
+        roles=[SystemRole.SUPER_ADMIN],
         ttl_seconds=ttl_seconds,
         reason=req.reason,
     )

@@ -1,11 +1,12 @@
 """CloudLens API - Application Layer."""
 
+import os
 import time
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -66,6 +67,8 @@ from api.cloudlens_api.routes import (
     wizard_router,
     workflows_router,
 )
+from api.cloudlens_api.tenant_context import require_auth
+from db.session import verify_persistence_startup_guard
 from domain.credentials.store import verify_secret_store_startup_guard
 from domain.explanation.exceptions import ExplanationNotFoundException
 from domain.models.exceptions import (
@@ -191,8 +194,9 @@ from domain.observability import (
 setup_tracing(service_name="cloudlens-api", in_memory=True)
 logger = get_logger("cloudlens.api")
 
-# Enforce Prompt R-SEC Part 2.4: Startup guard in staging/production
+# Enforce Prompt R-SEC Part 2.4 & P01: Startup guards in staging/production
 verify_secret_store_startup_guard()
+verify_persistence_startup_guard()
 
 app = FastAPI(
     title="CloudLens API",
@@ -203,14 +207,30 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# CORS configuration
+# CORS configuration (Prompt P01 Item 8)
+cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+cors_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    """Production security headers middleware (Prompt P01 Item 11)."""
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'"
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+    if env == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 
 @app.middleware("http")
@@ -229,9 +249,9 @@ async def correlation_id_and_timing_middleware(request: Request, call_next):
             auth_ctx = get_identity_service().token_engine.extract_auth_context(token_str)
             tenant_id = auth_ctx.tenant_id
         except Exception:
-            tenant_id = request.headers.get("X-Tenant-ID", "global")
+            tenant_id = "global"
     else:
-        tenant_id = request.headers.get("X-Tenant-ID", "global")
+        tenant_id = "global"
 
     request.state.correlation_id = correlation_id
     request.state.tenant_id = tenant_id
@@ -964,54 +984,58 @@ async def explanation_not_found_exception_handler(
     )
 
 
+# Unauthenticated / Exempt Routers (Prompt P01 Item 1 & 7)
 app.include_router(about_router)
-app.include_router(calendar_router)
-app.include_router(alerts_router)
-app.include_router(config_router)
-app.include_router(auth_router)
-app.include_router(users_router)
-app.include_router(roles_router)
-app.include_router(scopes_router)
-app.include_router(inventory_router)
-app.include_router(reports_router)
-app.include_router(analytics_router)
-app.include_router(rbac_router)
 app.include_router(health_router)
-app.include_router(masterdata_router)
+app.include_router(auth_router)
 app.include_router(bootstrap_router)
-app.include_router(attribution_router)
-app.include_router(demo_router)
-app.include_router(demo_mode_router)
-app.include_router(credentials_router)
-app.include_router(connectors_router)
-app.include_router(audit_router)
-app.include_router(overrides_router)
-app.include_router(storage_router)
-app.include_router(sync_router)
-app.include_router(wizard_router)
-app.include_router(diagnostics_router)
-app.include_router(pricing_router)
-app.include_router(cost_router)
-app.include_router(usage_router)
-app.include_router(runtime_router)
-app.include_router(thresholds_router)
-app.include_router(quotas_router)
-app.include_router(budgets_router)
-app.include_router(forecasting_router)
-app.include_router(policies_router)
-app.include_router(workflows_router)
-app.include_router(remediation_router)
-app.include_router(dependency_router)
-app.include_router(topology_router)
-app.include_router(statements_router)
-app.include_router(provisioning_router)
-app.include_router(bulk_import_router)
-app.include_router(dashboards_router)
-app.include_router(hierarchy_router)
-app.include_router(resource_detail_router)
-app.include_router(explanation_router)
-app.include_router(admin_router)
-app.include_router(control_tower_router)
+
+# Authenticated Routers with Router-Level Auth Dependency (Prompt P01 Item 7)
+auth_dep = [Depends(require_auth)]
+app.include_router(calendar_router, dependencies=auth_dep)
+app.include_router(alerts_router, dependencies=auth_dep)
+app.include_router(config_router, dependencies=auth_dep)
+app.include_router(users_router, dependencies=auth_dep)
+app.include_router(roles_router, dependencies=auth_dep)
+app.include_router(scopes_router, dependencies=auth_dep)
+app.include_router(inventory_router, dependencies=auth_dep)
+app.include_router(reports_router, dependencies=auth_dep)
+app.include_router(analytics_router, dependencies=auth_dep)
+app.include_router(rbac_router, dependencies=auth_dep)
+app.include_router(masterdata_router, dependencies=auth_dep)
+app.include_router(attribution_router, dependencies=auth_dep)
+app.include_router(demo_router, dependencies=auth_dep)
+app.include_router(demo_mode_router, dependencies=auth_dep)
+app.include_router(credentials_router, dependencies=auth_dep)
+app.include_router(connectors_router, dependencies=auth_dep)
+app.include_router(audit_router, dependencies=auth_dep)
+app.include_router(overrides_router, dependencies=auth_dep)
+app.include_router(storage_router, dependencies=auth_dep)
+app.include_router(sync_router, dependencies=auth_dep)
+app.include_router(wizard_router, dependencies=auth_dep)
+app.include_router(diagnostics_router, dependencies=auth_dep)
+app.include_router(pricing_router, dependencies=auth_dep)
+app.include_router(cost_router, dependencies=auth_dep)
+app.include_router(usage_router, dependencies=auth_dep)
+app.include_router(runtime_router, dependencies=auth_dep)
+app.include_router(thresholds_router, dependencies=auth_dep)
+app.include_router(quotas_router, dependencies=auth_dep)
+app.include_router(budgets_router, dependencies=auth_dep)
+app.include_router(forecasting_router, dependencies=auth_dep)
+app.include_router(policies_router, dependencies=auth_dep)
+app.include_router(workflows_router, dependencies=auth_dep)
+app.include_router(remediation_router, dependencies=auth_dep)
+app.include_router(dependency_router, dependencies=auth_dep)
+app.include_router(topology_router, dependencies=auth_dep)
+app.include_router(statements_router, dependencies=auth_dep)
+app.include_router(provisioning_router, dependencies=auth_dep)
+app.include_router(bulk_import_router, dependencies=auth_dep)
+app.include_router(dashboards_router, dependencies=auth_dep)
+app.include_router(hierarchy_router, dependencies=auth_dep)
+app.include_router(resource_detail_router, dependencies=auth_dep)
+app.include_router(explanation_router, dependencies=auth_dep)
+app.include_router(admin_router, dependencies=auth_dep)
+app.include_router(control_tower_router, dependencies=auth_dep)
 
 
 

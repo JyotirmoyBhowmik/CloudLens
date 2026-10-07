@@ -170,3 +170,19 @@ class AuthContext(BaseModel):
     original_subject: str | None = Field(
         default=None, description="Original subject who assumed the act-as identity"
     )
+
+    def has_capability(self, capability: str) -> bool:
+        """Evaluates whether this auth context holds the specified capability."""
+        if any(r == SystemRole.SUPER_ADMIN for r in self.roles):
+            return True
+        if "*" in self.permissions or capability in self.permissions:
+            return True
+        from domain.rbac.catalogue import get_permission_catalogue
+        catalogue = get_permission_catalogue()
+        for r in self.roles:
+            role_code = r.value if hasattr(r, "value") else str(r)
+            role_def = catalogue.get_role(role_code, tenant_id=self.tenant_id)
+            if role_def and (capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions):
+                return True
+        return False
+

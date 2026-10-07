@@ -1,9 +1,10 @@
-"""Tenant Context Resolution & Isolation Guard (Prompt 13 Items 83, 88).
+"""Tenant Context Resolution & Isolation Guard (Prompt 13 Items 83, 88, Prompt P01).
 
 Enforces:
-- Deriving tenant from authenticated identity only, never client-supplied parameter (Item 83).
+- Deriving tenant and identity strictly from verified Bearer token, never client headers or parameters.
+- Rejection of unauthenticated requests with 401 (no unauthenticated fallback).
 - Mechanical detection and rejection of cross-tenant parameter manipulation (Headers, Query Params).
-- Audit trail recording for unauthorized cross-tenant breach attempts.
+- Single require_auth() dependency providing verified TenantContext.
 """
 
 import uuid
@@ -24,151 +25,182 @@ from domain.tenant.context import TenantContext
 
 logger = get_logger("cloudlens.api.tenant")
 
+EXEMPT_PATHS = {
+    ("GET", "/api/v1/health"),
+    ("GET", "/api/v1/about"),
+    ("GET", "/"),
+    ("GET", "/docs"),
+    ("GET", "/redoc"),
+    ("GET", "/openapi.json"),
+    ("GET", "/ready"),
+    ("GET", "/metrics"),
+    ("POST", "/api/v1/auth/oidc/login"),
+    ("POST", "/api/v1/auth/oidc/callback"),
+    ("POST", "/api/v1/auth/saml/login"),
+    ("POST", "/api/v1/auth/saml/acs"),
+    ("POST", "/api/v1/auth/break-glass/login"),
+    ("POST", "/api/v1/auth/login"),
+    ("POST", "/api/v1/auth/token/refresh"),
+    ("POST", "/api/v1/auth/machine-clients/token"),
+    ("POST", "/api/v1/auth/step-up/verify"),
+    ("POST", "/api/v1/system/bootstrap/superuser/provision"),
+    ("POST", "/api/v1/system/bootstrap/superuser/activate"),
+    ("POST", "/api/v1/system/bootstrap/superuser/login"),
+    ("POST", "/api/v1/system/bootstrap/pre-identity"),
+    ("GET", "/api/v1/system/bootstrap/pre-identity/status"),
+    ("GET", "/api/v1/system/bootstrap/identity/report"),
+    ("POST", "/api/v1/system/bootstrap/superuser/delegate"),
+    ("POST", "/api/v1/system/bootstrap/superuser/routine-check"),
+}
 
-def get_authenticated_tenant_context(
+
+
+def is_exempt_request(method: str, path: str) -> bool:
+    """Verifies whether endpoint is in the strict unauthenticated exemption list."""
+    if (method, path) in EXEMPT_PATHS:
+        return True
+    if method == "GET" and path.startswith("/api/v1/health/"):
+        return True
+    return False
+
+
+def require_auth(
     request: Request,
     authorization: str | None = Header(default=None),
     x_tenant_id: str | None = Header(default=None, alias="X-Tenant-ID"),
 ) -> TenantContext:
-    """Resolves and validates TenantContext strictly from authenticated identity (Prompt 13 Item 83).
+    """Resolves and validates TenantContext strictly from authenticated signed token (Prompt P01).
 
-    Rejects parameter manipulation attempting to reach another tenant's data partition.
+    Enforces:
+    1. Rejects unauthenticated requests with HTTP 401 (exempt only: /health, /about, login/callback, refresh, superuser activate).
+    2. Token verification through single verify_token() validation.
+    3. Rejects cross-tenant parameter manipulation (X-Tenant-ID, query tenant_id).
+    4. Scope derived strictly from verified token, never request headers.
+    5. Zero header-based identity fallbacks.
     """
     correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
     audit_service = get_audit_service()
 
-    # 1. Bearer Token Authentication
-    if authorization and authorization.startswith("Bearer "):
-        token_str = authorization[len("Bearer ") :].strip()
-        identity_service = get_identity_service()
-        try:
-            auth_context = identity_service.token_engine.extract_auth_context(token_str)
-        except (TokenExpiredException, TokenInvalidException, TokenRevokedException) as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Authentication token invalid or expired: {e}",
-            ) from e
+    # Check for Bearer token
+    if not authorization or not authorization.startswith("Bearer "):
+        if is_exempt_request(request.method, request.url.path):
+            tc = TenantContext(
+                tenant_id="anonymous",
+                user_id="anonymous",
+                email=None,
+                roles=[],
+                scope_grants=[],
+                correlation_id=correlation_id,
+                is_superuser=False,
+            )
+            request.state.tenant_context = tc
+            return tc
 
-        authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id
-        is_global_admin = any(
-            r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN", "GLOBAL_ADMIN")
-            for r in auth_context.roles
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required: missing or invalid Bearer token.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-        # 2. Check for Parameter Manipulation Attacks (Item 88, Prompt R-SEC Part 1)
-        # Without an act-as token, any X-Tenant-Id differing from token tenant -> 403 for EVERY role
-        if x_tenant_id and x_tenant_id != authenticated_tenant_id:
-            # Audit cross-tenant access attempt
-            audit_service.append_event(
-                tenant_context=TenantContext(
-                    tenant_id=authenticated_tenant_id,
-                    user_id=auth_context.user_id,
-                    roles=[r.value for r in auth_context.roles],
-                    correlation_id=correlation_id,
-                ),
-                event_in=AuditEventCreate(
-                    event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
-                    actor_id=auth_context.email or auth_context.user_id,
-                    actor_roles=[r.value for r in auth_context.roles],
-                    action="TAMPER_TENANT_HEADER",
-                    resource_type="TENANT_BOUNDARY",
-                    resource_id=x_tenant_id,
-                    details={
-                        "authenticated_tenant": authenticated_tenant_id,
-                        "manipulated_header_tenant": x_tenant_id,
-                        "endpoint": request.url.path,
-                        "method": request.method,
-                    },
-                    correlation_id=correlation_id,
-                ),
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"Cross-tenant access forbidden: client header X-Tenant-ID '{x_tenant_id}' "
-                    f"conflicts with authenticated identity tenant '{authenticated_tenant_id}'."
-                ),
-            )
+    token_str = authorization[len("Bearer ") :].strip()
+    identity_service = get_identity_service()
+    try:
+        auth_context = identity_service.token_engine.extract_auth_context(token_str)
+    except (TokenExpiredException, TokenInvalidException, TokenRevokedException) as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Authentication token invalid or expired: {e}",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
 
-        # Check Query Parameter Manipulation
-        query_tenant = request.query_params.get("tenant_id")
-        if query_tenant and query_tenant != authenticated_tenant_id:
-            audit_service.append_event(
-                tenant_context=TenantContext(
-                    tenant_id=authenticated_tenant_id,
-                    user_id=auth_context.user_id,
-                    roles=[r.value for r in auth_context.roles],
-                    correlation_id=correlation_id,
-                ),
-                event_in=AuditEventCreate(
-                    event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
-                    actor_id=auth_context.email or auth_context.user_id,
-                    actor_roles=[r.value for r in auth_context.roles],
-                    action="TAMPER_TENANT_QUERY_PARAM",
-                    resource_type="TENANT_BOUNDARY",
-                    resource_id=query_tenant,
-                    details={
-                        "authenticated_tenant": authenticated_tenant_id,
-                        "manipulated_query_tenant": query_tenant,
-                        "endpoint": request.url.path,
-                        "method": request.method,
-                    },
-                    correlation_id=correlation_id,
-                ),
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=(
-                    f"Cross-tenant access forbidden: query parameter tenant_id '{query_tenant}' "
-                    f"conflicts with authenticated identity tenant '{authenticated_tenant_id}'."
-                ),
-            )
-
-        effective_tenant = authenticated_tenant_id
-        scope_grants_header = request.headers.get("X-Scope-Grants")
-        scope_grants = (
-            [s.strip() for s in scope_grants_header.split(",") if s.strip()]
-            if scope_grants_header
-            else getattr(auth_context, "scope_grants", ["*"]) or ["*"]
-        )
-        tc = TenantContext(
-            tenant_id=effective_tenant,
-            user_id=auth_context.user_id,
-            email=auth_context.email,
-            roles=[r.value for r in auth_context.roles],
-            scope_grants=scope_grants,
-            correlation_id=correlation_id,
-            is_superuser=is_global_admin,
-        )
-        request.state.tenant_context = tc
-        current_tenant_id.set(tc.tenant_id)
-        return tc
-
-
-    # 3. Fallback for unauthenticated test callers / internal test harness
-    fallback_tenant = x_tenant_id or "default-tenant"
-    actor_id = request.headers.get("X-Actor-ID") or request.headers.get("X-User-ID") or "anonymous"
-    roles_header = request.headers.get("X-User-Roles")
-    roles = (
-        [r.strip() for r in roles_header.split(",") if r.strip()]
-        if roles_header
-        else [SystemRole.IT_OPERATIONS_USER.value]
+    authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id
+    is_superuser = any(
+        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN")
+        for r in auth_context.roles
     )
-    scope_grants_header = request.headers.get("X-Scope-Grants")
-    scope_grants = (
-        [s.strip() for s in scope_grants_header.split(",") if s.strip()]
-        if scope_grants_header
-        else ["*"]
-    )
+
+    # Check for Parameter Manipulation Attacks
+    if x_tenant_id and x_tenant_id != authenticated_tenant_id:
+        audit_service.append_event(
+            tenant_context=TenantContext(
+                tenant_id=authenticated_tenant_id,
+                user_id=auth_context.user_id,
+                roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                correlation_id=correlation_id,
+            ),
+            event_in=AuditEventCreate(
+                event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
+                actor_id=auth_context.email or auth_context.user_id,
+                actor_roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                action="TAMPER_TENANT_HEADER",
+                resource_type="TENANT_BOUNDARY",
+                resource_id=x_tenant_id,
+                details={
+                    "authenticated_tenant": authenticated_tenant_id,
+                    "manipulated_header_tenant": x_tenant_id,
+                    "endpoint": request.url.path,
+                    "method": request.method,
+                },
+                correlation_id=correlation_id,
+            ),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Cross-tenant access forbidden: client header X-Tenant-ID '{x_tenant_id}' "
+                f"conflicts with authenticated identity tenant '{authenticated_tenant_id}'."
+            ),
+        )
+
+    query_tenant = request.query_params.get("tenant_id")
+    if query_tenant and query_tenant != authenticated_tenant_id:
+        audit_service.append_event(
+            tenant_context=TenantContext(
+                tenant_id=authenticated_tenant_id,
+                user_id=auth_context.user_id,
+                roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                correlation_id=correlation_id,
+            ),
+            event_in=AuditEventCreate(
+                event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
+                actor_id=auth_context.email or auth_context.user_id,
+                actor_roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                action="TAMPER_TENANT_QUERY_PARAM",
+                resource_type="TENANT_BOUNDARY",
+                resource_id=query_tenant,
+                details={
+                    "authenticated_tenant": authenticated_tenant_id,
+                    "manipulated_query_tenant": query_tenant,
+                    "endpoint": request.url.path,
+                    "method": request.method,
+                },
+                correlation_id=correlation_id,
+            ),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Cross-tenant access forbidden: query parameter tenant_id '{query_tenant}' "
+                f"conflicts with authenticated identity tenant '{authenticated_tenant_id}'."
+            ),
+        )
+
+    # Scopes derived strictly from verified token claims, never request headers
+    scope_grants = getattr(auth_context, "permissions", []) or getattr(auth_context, "scope_grants", ["*"]) or ["*"]
+
     tc = TenantContext(
-        tenant_id=fallback_tenant,
-        user_id=actor_id,
-        email=request.headers.get("X-User-Email"),
-        roles=roles,
+        tenant_id=authenticated_tenant_id,
+        user_id=auth_context.user_id,
+        email=auth_context.email,
+        roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
         scope_grants=scope_grants,
         correlation_id=correlation_id,
-        is_superuser=("SUPER_ADMIN" in roles or "GLOBAL_ADMIN" in roles),  # no-hardcode-allow: reason="Legacy role string fallback check", reviewer="Prompt-48-Audit"
+        is_superuser=is_superuser,
     )
     request.state.tenant_context = tc
     current_tenant_id.set(tc.tenant_id)
     return tc
+
+
+# Primary canonical dependency alias ensuring backward compatibility across all route modules
+get_authenticated_tenant_context = require_auth

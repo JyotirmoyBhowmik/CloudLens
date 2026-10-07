@@ -191,7 +191,7 @@ class ScopeGrantEvaluator:
             )
 
         # STEP 3: Role-Level Scope Authority for Super & Platform Admins
-        if SystemRole.SUPER_ADMIN.value in role_codes or "GLOBAL_ADMIN" in role_codes:
+        if SystemRole.SUPER_ADMIN.value in role_codes:
             return AuthorizationDecision(
                 allowed=True,
                 effect=GrantEffect.ALLOW,
@@ -201,7 +201,7 @@ class ScopeGrantEvaluator:
                 can_view_rates=True,
             )
 
-        if SystemRole.PLATFORM_ADMIN.value in role_codes or "TENANT_ADMIN" in role_codes:
+        if SystemRole.PLATFORM_ADMIN.value in role_codes:
             return AuthorizationDecision(
                 allowed=True,
                 effect=GrantEffect.ALLOW,

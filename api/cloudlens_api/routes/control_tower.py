@@ -48,7 +48,6 @@ OBSERVE_ROLES = {
     "SUPER_ADMIN",
     "PLATFORM_ADMIN",
     "AUDITOR",
-    "GLOBAL_ADMIN",
 }
 
 OPERATE_ROLES = {
@@ -56,7 +55,6 @@ OPERATE_ROLES = {
     SystemRole.PLATFORM_ADMIN.value,
     "SUPER_ADMIN",
     "PLATFORM_ADMIN",
-    "GLOBAL_ADMIN",
 }
 
 

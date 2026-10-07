@@ -11,6 +11,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import time
 import uuid
@@ -134,9 +135,13 @@ class CryptographicTokenEngine:
         self,
         signing_key: bytes | None = None,
         revocation_registry: TokenRevocationRegistry | None = None,
+        issuer: str | None = None,
+        audience: str | None = None,
     ) -> None:
         self._signing_key = signing_key or DEFAULT_SIGNING_SECRET
         self._revocation = revocation_registry or TokenRevocationRegistry()
+        self._issuer = issuer or os.getenv("OIDC_ISSUER", "https://auth.cloudlens.internal/oauth2/default")
+        self._audience = audience or os.getenv("OIDC_AUDIENCE", "cloudlens-api")
 
     @property
     def revocation_registry(self) -> TokenRevocationRegistry:
@@ -154,8 +159,13 @@ class CryptographicTokenEngine:
 
         return f"{header_b64}.{payload_b64}.{sig_b64}"
 
-    def verify_token(self, token_str: str) -> dict[str, Any]:
-        """Validates token signature, expiration, and revocation status."""
+    def verify_token(
+        self,
+        token_str: str,
+        expected_issuer: str | None = None,
+        expected_audience: str | None = None,
+    ) -> dict[str, Any]:
+        """Validates token signature, expiration, algorithm, claims, and revocation status."""
         parts = token_str.strip().split(".")
         if len(parts) != 3:
             raise TokenInvalidException(
@@ -163,8 +173,22 @@ class CryptographicTokenEngine:
             )
 
         header_b64, payload_b64, sig_b64 = parts
-        signing_input = f"{header_b64}.{payload_b64}".encode()
 
+        try:
+            header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
+        except Exception as e:
+            raise TokenInvalidException("Token header decoding failed.") from e
+
+        if not isinstance(header, dict):
+            raise TokenInvalidException("Token header must be a JSON object.")
+
+        alg = header.get("alg", "")
+        if str(alg).lower() == "none":
+            raise TokenInvalidException("Algorithm 'none' is strictly prohibited.")
+        if alg != "HS256":
+            raise TokenInvalidException(f"Unsupported token algorithm: '{alg}'. Expected HS256.")
+
+        signing_input = f"{header_b64}.{payload_b64}".encode()
         expected_sig = hmac.new(self._signing_key, signing_input, hashlib.sha256).digest()
         try:
             provided_sig = _b64url_decode(sig_b64)
@@ -184,10 +208,26 @@ class CryptographicTokenEngine:
         payload: dict[str, Any] = cast(dict[str, Any], parsed)
 
         now = time.time()
-        # Expiration check
+        # Expiration check (exp)
         exp = payload.get("exp")
         if exp is not None and now > float(exp):
             raise TokenExpiredException("Authentication token has expired.")
+
+        # Not Before check (nbf)
+        nbf = payload.get("nbf")
+        if nbf is not None and now < float(nbf):
+            raise TokenInvalidException("Token not valid yet (nbf).")
+
+        # Issuer check (iss)
+        iss = payload.get("iss")
+        check_iss = expected_issuer or (self._issuer if (expected_issuer is not None or (iss and iss == self._issuer)) else None)
+        if iss and expected_issuer and iss != expected_issuer:
+            raise TokenInvalidException(f"Token issuer '{iss}' does not match expected '{expected_issuer}'.")
+
+        # Audience check (aud)
+        aud = payload.get("aud")
+        if aud and expected_audience and aud != expected_audience:
+            raise TokenInvalidException(f"Token audience '{aud}' does not match expected '{expected_audience}'.")
 
         # Revocation check
         jti = payload.get("jti", "")
@@ -228,12 +268,15 @@ class CryptographicTokenEngine:
             "uid": user_id,
             "tid": tenant_id,
             "sub": email,
-            "roles": [r.value for r in roles],
+            "iss": self._issuer,
+            "aud": self._audience,
+            "roles": [r.value if hasattr(r, "value") else str(r) for r in roles],
             "perms": permissions,
             "sid": session_id,
             "fid": token_family_id,
             "bg": is_break_glass,
             "iat": int(now),
+            "nbf": int(now),
             "exp": int(now + ttl_seconds),
         }
         return self.sign_token(payload)
