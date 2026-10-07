@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../api/client';
 import {
   AlertTriangle,
   CheckCircle,
@@ -77,16 +78,7 @@ export const ControlTowerPage: React.FC = () => {
   // Fetch overview
   const fetchOverview = async () => {
     try {
-      const res = await fetch('/api/v1/control-tower/overview', {
-        headers: {
-          'X-User-Roles': 'SUPER_ADMIN',
-          'X-Scope-Grants': 'platform.observe,platform.operate',
-        },
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to load Control Tower overview (HTTP ${res.status})`);
-      }
-      const data: OverviewData = await res.json();
+      const data = await apiFetch<OverviewData>('/api/v1/control-tower/overview');
       setOverview(data);
       setError(null);
     } catch (err: any) {
@@ -99,14 +91,8 @@ export const ControlTowerPage: React.FC = () => {
   // Fetch audit tail
   const fetchAuditTail = async () => {
     try {
-      const res = await fetch('/api/v1/control-tower/audit/tail?limit=50', {
-        headers: {
-          'X-User-Roles': 'SUPER_ADMIN',
-          'X-Scope-Grants': 'platform.observe',
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await apiFetch<any>('/api/v1/control-tower/audit/tail?limit=50');
+      if (data && data.events) {
         setAuditTail(data.events || []);
       }
     } catch {
@@ -157,13 +143,8 @@ export const ControlTowerPage: React.FC = () => {
     setActionLoading(true);
 
     try {
-      const res = await fetch(`/api/v1/control-tower/actions/${actionName}`, {
+      const data = await apiFetch<any>(`/api/v1/control-tower/actions/${actionName}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Roles': 'SUPER_ADMIN',
-          'X-Scope-Grants': 'platform.operate',
-        },
         body: JSON.stringify({
           action: actionName,
           params: defaultParams,
@@ -171,8 +152,7 @@ export const ControlTowerPage: React.FC = () => {
           confirm: false,
         }),
       });
-      const data = await res.json();
-      if (data.blast_radius) {
+      if (data && data.blast_radius) {
         setBlastRadius(data.blast_radius);
       }
     } catch (err: any) {
@@ -194,13 +174,10 @@ export const ControlTowerPage: React.FC = () => {
     setActionFeedback(null);
 
     try {
-      const res = await fetch(`/api/v1/control-tower/actions/${actionModal}`, {
+      const data = await apiFetch<any>(`/api/v1/control-tower/actions/${actionModal}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-Step-Up-Token': stepUpToken,
-          'X-User-Roles': 'SUPER_ADMIN',
-          'X-Scope-Grants': 'platform.operate',
         },
         body: JSON.stringify({
           action: actionModal,
@@ -210,11 +187,6 @@ export const ControlTowerPage: React.FC = () => {
           confirm: true,
         }),
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `Action failed with status ${res.status}`);
-      }
 
       setActionFeedback(`Action '${actionModal}' executed successfully! AuditEvent: ${data.audit_event_id}`);
       fetchOverview();

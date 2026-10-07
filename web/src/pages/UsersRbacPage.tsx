@@ -233,8 +233,8 @@ export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true })
                           borderRadius: '4px',
                           fontSize: '0.75rem',
                           fontWeight: 600,
-                          backgroundColor: u.role === 'SUPER_ADMIN' ? '#7f1d1d' : '#0369a1',
-                          color: u.role === 'SUPER_ADMIN' ? '#fca5a5' : '#e0f2fe',
+                          backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                          color: '#38bdf8',
                         }}
                       >
                         {u.role}

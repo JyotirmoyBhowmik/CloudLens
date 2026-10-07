@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Lock } from 'lucide-react';
 
-export const LoginPage: React.FC<{ onLoginSuccess?: (role: string) => void }> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<{ onLoginSuccess?: () => void }> = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCode, setMfaCode] = useState('');
@@ -9,25 +9,15 @@ export const LoginPage: React.FC<{ onLoginSuccess?: (role: string) => void }> = 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOidcRedirect = () => {
-    window.location.href = '/api/v1/auth/oidc/login';
+    window.location.href = '/api/v1/auth/oidc/authorize?redirect=true';
   };
 
   const handleLocalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
-    // Simulate authentication call
-    setTimeout(() => {
-      if (email.includes('admin') || email.includes('jyotirmoyb')) {
-        if (onLoginSuccess) onLoginSuccess('SUPER_ADMIN');
-        window.location.href = '/';
-      } else {
-        if (onLoginSuccess) onLoginSuccess('TENANT_ADMIN');
-        window.location.href = '/';
-      }
-      setIsLoading(false);
-    }, 400);
+    // Real identity: redirect to IdP OIDC authorization code flow
+    handleOidcRedirect();
   };
 
   return (

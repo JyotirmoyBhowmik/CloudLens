@@ -20,12 +20,32 @@
         "description": "Platform Operations Administrator"
       },
       {
-        "name": "AUDITOR",
-        "description": "Read-Only Security and Compliance Auditor"
+        "name": "CLOUD_ADMINISTRATOR",
+        "description": "Cloud Infrastructure Administrator"
       },
       {
         "name": "FINOPS_ADMINISTRATOR",
         "description": "FinOps Financial Governance Lead"
+      },
+      {
+        "name": "FINANCE_USER",
+        "description": "Financial Analyst and Budget Planner"
+      },
+      {
+        "name": "IT_OPERATIONS_USER",
+        "description": "IT Operations and Infrastructure Engineer"
+      },
+      {
+        "name": "APPLICATION_OWNER",
+        "description": "Service and Application Owner"
+      },
+      {
+        "name": "READ_ONLY_USER",
+        "description": "Read-Only Stakeholder and Observer"
+      },
+      {
+        "name": "AUDITOR",
+        "description": "Security, Compliance and Audit Inspector"
       }
     ]
   },
@@ -64,7 +84,12 @@
       "redirectUris": [
         "http://localhost:8000/*",
         "http://localhost:3000/*",
-        "http://127.0.0.1:8000/*"
+        "http://127.0.0.1:8000/*",
+        "http://127.0.0.1:4173/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "webOrigins": [
+        "+"
       ],
       "defaultClientScopes": [
         "web-origins",
@@ -86,13 +111,118 @@
       "realmRoles": [
         "SUPER_ADMIN"
       ],
-      "credentials": [
-        {
-          "type": "password",
-          "value": "InitialDevAdminPassword123!",
-          "temporary": false
-        }
-      ]
+      "requiredActions": [
+        "CONFIGURE_TOTP"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "superadmin@cloudlens.local",
+      "email": "superadmin@cloudlens.local",
+      "firstName": "Super",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "SUPER_ADMIN"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "platformadmin@cloudlens.local",
+      "email": "platformadmin@cloudlens.local",
+      "firstName": "Platform",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "PLATFORM_ADMIN"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "cloudadmin@cloudlens.local",
+      "email": "cloudadmin@cloudlens.local",
+      "firstName": "Cloud",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "CLOUD_ADMINISTRATOR"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "finopsadmin@cloudlens.local",
+      "email": "finopsadmin@cloudlens.local",
+      "firstName": "FinOps",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "FINOPS_ADMINISTRATOR"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "financeuser@cloudlens.local",
+      "email": "financeuser@cloudlens.local",
+      "firstName": "Finance",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "FINANCE_USER"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "itopsuser@cloudlens.local",
+      "email": "itopsuser@cloudlens.local",
+      "firstName": "IT",
+      "lastName": "Operations",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "IT_OPERATIONS_USER"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "appowner@cloudlens.local",
+      "email": "appowner@cloudlens.local",
+      "firstName": "Application",
+      "lastName": "Owner",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "APPLICATION_OWNER"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "readonly@cloudlens.local",
+      "email": "readonly@cloudlens.local",
+      "firstName": "Read",
+      "lastName": "Only",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "READ_ONLY_USER"
+      ],
+      "credentials": []
+    },
+    {
+      "username": "auditor@cloudlens.local",
+      "email": "auditor@cloudlens.local",
+      "firstName": "Security",
+      "lastName": "Auditor",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "AUDITOR"
+      ],
+      "credentials": []
     }
   ]
 }

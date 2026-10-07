@@ -9,13 +9,7 @@ import {
   Shield,
 } from 'lucide-react';
 
-export type UserRole =
-  | 'EXECUTIVE'
-  | 'FINANCE'
-  | 'FINOPS'
-  | 'ENGINEERING'
-  | 'AUDITOR'
-  | 'TENANT_ADMIN';
+export type UserRole = string;
 
 export interface NavItem {
   id: string;
@@ -26,7 +20,7 @@ export interface NavItem {
 }
 
 export const ROLE_NAVIGATION_SECTIONS: Record<
-  UserRole,
+  string,
   { roleTitle: string; description: string; scopeGrant: string; items: NavItem[] }
 > = {
   EXECUTIVE: {
@@ -188,12 +182,11 @@ export const RoleShapedNav: React.FC<RoleShapedNavProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                <option value="EXECUTIVE">Executive</option>
-                <option value="FINANCE">Finance</option>
-                <option value="FINOPS">FinOps</option>
-                <option value="ENGINEERING">Engineering</option>
-                <option value="AUDITOR">Auditor</option>
-                <option value="TENANT_ADMIN">Tenant Admin</option>
+                {Object.keys(ROLE_NAVIGATION_SECTIONS).map((roleKey) => (
+                  <option key={roleKey} value={roleKey}>
+                    {ROLE_NAVIGATION_SECTIONS[roleKey]?.roleTitle || roleKey}
+                  </option>
+                ))}
               </select>
             </div>
           )}

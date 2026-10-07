@@ -50,11 +50,31 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
       });
     });
 
+    // Mock /api/v1/auth/me to provide valid identity with full capabilities for route sweep
+    await page.route('/api/v1/auth/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: 'usr-e2e-admin',
+            email: 'admin@cloudlens.local',
+            display_name: 'E2E Administrator',
+          },
+          roles: ['SUPER_ADMIN'],
+          capabilities: ['*'],
+          tenants: [
+            { id: 't-demo', name: 'Demo Enterprise' },
+          ],
+          current_tenant: { id: 't-demo', name: 'Demo Enterprise' },
+        }),
+      });
+    });
+
     // Reset localStorage for deterministic test isolation
     await page.addInitScript(() => {
       localStorage.clear();
       localStorage.setItem('cloudlens_is_demo', 'true');
-      localStorage.setItem('cloudlens_user_role', 'SUPER_ADMIN');
     });
   });
 
@@ -79,11 +99,11 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
   });
 
   test('All 28 routes render properly in Non-Demo Mode (Empty States)', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('cloudlens_is_demo', 'false');
+    });
     await page.goto('/');
-    // Switch to Live Mode (Empty)
-    const toggleBtn = page.getByRole('button', { name: 'Toggle demo mode' });
-    await toggleBtn.click();
-    await expect(toggleBtn).toHaveText('Live Mode (Empty)');
+    await page.waitForLoadState('domcontentloaded');
 
     // Now test a representative sample of Addendum B screens and core screens for null states
     const sampleRoutes = [
@@ -98,6 +118,7 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
 
     for (const path of sampleRoutes) {
       await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
       // Ensure null states or empty indicators are visible
       const bodyText = await page.textContent('body');
       expect(
@@ -110,9 +131,23 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
   });
 
   test('Role-Shaped Navigation & 403 Forbidden Redirection', async ({ page }) => {
-    // Set non-admin role in localStorage
-    await page.addInitScript(() => {
-      localStorage.setItem('cloudlens_user_role', 'DEVELOPER');
+    // Override /api/v1/auth/me to return non-platform role and limited capabilities
+    await page.route('/api/v1/auth/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: 'usr-analyst-01',
+            email: 'analyst@cloudlens.local',
+            display_name: 'Financial Analyst',
+          },
+          roles: ['FINANCE_USER'],
+          capabilities: ['reports:read', 'cost:read'],
+          tenants: [{ id: 't-demo', name: 'Demo Enterprise' }],
+          current_tenant: { id: 't-demo', name: 'Demo Enterprise' },
+        }),
+      });
     });
 
     // Attempt to access Control Tower directly
@@ -156,6 +191,7 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
 
     for (const p of auditScreens) {
       await page.goto(p);
+      await page.waitForLoadState('networkidle');
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();

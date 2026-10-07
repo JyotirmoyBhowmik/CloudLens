@@ -47,6 +47,7 @@ This document consolidates every Report Back block across the 62 build prompts o
 | **ADR-025** | Software Bill of Materials (SBOM) CycloneDX Standard | Prompt 43, 44 | ACCEPTED | Supply Chain Security |
 | **ADR-026** | BBP Nine Roles, Platform Observer Capability & RBAC Matrix | Prompt R-ROLES | ACCEPTED | Security & RBAC |
 | **ADR-027** | Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager | Prompt R-OBS | ACCEPTED | Observability & SRE |
+| **ADR-028** | Backend-for-Frontend (BFF) Auth with HttpOnly Secure Cookies & Double-Submit CSRF | Prompt P02 | ACCEPTED | Web App Security |
 
 ---
 
@@ -124,6 +125,15 @@ This document consolidates every Report Back block across the 62 build prompts o
   5. Provisioned 10 Grafana dashboards (Operations, Security, Pipeline, Capacity, Cost of Collection, etc.) with Keycloak OIDC SSO role mapping (`SUPER_ADMIN`/`PLATFORM_ADMIN` -> Admin/Editor, `AUDITOR` -> Viewer) and zero local passwords in files.
   6. Configured versioned Alertmanager threshold rules with automated routing to `admin@jyotirmoyb.com` via Mailpit SMTP relay, and a `Watchdog` dead-man's switch heartbeat.
 - **Consequences**: Complete visibility into platform health, security events, and performance with zero plain-text credential leaks and proven alert lifecycle delivery.
+
+### ADR-028: Backend-for-Frontend (BFF) Auth with HttpOnly Secure Cookies & Double-Submit CSRF (Prompt P02)
+- **Context**: The web application requires robust authentication and session handling across 28 screens without exposing raw JWTs to client-side storage (`localStorage` / `sessionStorage`), which are vulnerable to Cross-Site Scripting (XSS) exfiltration. Single Page App (SPA) token storage with `oidc-client-ts` was evaluated against the Backend-for-Frontend (BFF) cookie architecture.
+- **Decision**: Implemented the **Backend-for-Frontend (BFF)** pattern:
+  1. **Zero Client Storage of Tokens**: Tokens (`cloudlens_access_token`) are strictly set as `httpOnly`, `Secure`, `SameSite=Lax` cookies by the API backend during OIDC authorization code exchange (`/auth/oidc/callback`), login, or tenant switching (`/auth/switch-tenant`). Client JavaScript never has access to the raw cryptographic signature or token secret.
+  2. **Double-Submit CSRF Defense**: Mutating operations (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `X-CSRF-Token` header derived from the non-httpOnly `cloudlens_csrf_token` cookie. Bearer token requests (used by machine clients and automated API integration tests) bypass CSRF checks as browsers do not attach `Authorization` headers cross-origin.
+  3. **Unified API Client**: A single `apiClient` / `apiFetch` abstraction wraps browser requests with `credentials: 'include'`, automatically handling `401 Unauthorized` (re-authenticating to `/login`) and `403 Forbidden` (routing to the `/403` page).
+  4. **Dynamic Context Surface**: Calling `GET /api/v1/auth/me` populates the user profile, active roles, granted capabilities, and authorized tenants. Menus and route guards adapt strictly to the API response rather than client-side hardcoded role literals.
+- **Consequences**: Complete defense-in-depth against XSS token exfiltration and CSRF attacks. Full compliance with the Prompt P02 constraint forbidding token storage in `localStorage` or `sessionStorage`.
 
 ---
 

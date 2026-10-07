@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   Breadcrumb,
 } from '../design-system';
@@ -20,7 +21,6 @@ import {
 } from 'lucide-react';
 
 export interface AdminConsoleProps {
-  userRole?: string;
   onNavigateHome?: () => void;
 }
 
@@ -179,11 +179,11 @@ const RBAC_PERMISSIONS_MATRIX = [
 ];
 
 export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
-  userRole = 'TENANT_ADMIN',
   onNavigateHome,
 }) => {
-  // Acceptance 4: A non-administrative user sees no administration surface at all
-  const isAdmin = userRole === 'TENANT_ADMIN';
+  const auth = useAuth();
+  // Administrative check driven by verified API capability
+  const isAdmin = auth ? auth.hasCapability('admin:access') : false;
 
   // Step-up authentication state
   const [isStepUpAuthenticated, setIsStepUpAuthenticated] = useState(false);
@@ -244,7 +244,7 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
           403 Forbidden — Access Restricted
         </h1>
         <p style={{ maxWidth: '540px', color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: '1.5', margin: '0 0 1.5rem 0' }}>
-          Administrative console surfaces are strictly reserved for <code>TENANT_ADMIN</code> credentials. Daily-use operational roles (Executive, FinOps Analyst, Cloud Architect) have no access to control plane administrative functions.
+          Administrative console surfaces are strictly reserved for administrative credentials. Non-administrative users have no access to control plane administrative functions.
         </p>
         <div style={{ display: 'flex', gap: '1rem' }}>
           {onNavigateHome && (

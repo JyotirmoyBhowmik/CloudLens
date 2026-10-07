@@ -78,8 +78,17 @@ def require_auth(
     correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
     audit_service = get_audit_service()
 
-    # Check for Bearer token
-    if not authorization or not authorization.startswith("Bearer "):
+    # Check for Bearer token or session cookie (BFF pattern - Prompt P02)
+    token_str: str | None = None
+    is_cookie_auth = False
+
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization[len("Bearer ") :].strip()
+    elif "cloudlens_access_token" in request.cookies:
+        token_str = request.cookies.get("cloudlens_access_token")
+        is_cookie_auth = True
+
+    if not token_str:
         if is_exempt_request(request.method, request.url.path):
             tc = TenantContext(
                 tenant_id="anonymous",
@@ -95,11 +104,20 @@ def require_auth(
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required: missing or invalid Bearer token.",
+            detail="Authentication required: missing or invalid Bearer token or session cookie.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token_str = authorization[len("Bearer ") :].strip()
+    # Enforce Double-Submit CSRF check for cookie-authenticated mutating requests (BFF)
+    if is_cookie_auth and request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        if request.url.path not in ("/api/v1/auth/logout",):
+            csrf_header = request.headers.get("X-CSRF-Token")
+            csrf_cookie = request.cookies.get("cloudlens_csrf_token")
+            if not csrf_header or not csrf_cookie or csrf_header != csrf_cookie:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="CSRF token validation failed for cookie-authenticated request.",
+                )
     identity_service = get_identity_service()
     try:
         auth_context = identity_service.token_engine.extract_auth_context(token_str)

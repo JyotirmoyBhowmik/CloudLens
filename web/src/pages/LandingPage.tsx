@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   Breadcrumb,
   CostValue,
@@ -22,10 +23,12 @@ export interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
-  userRole = 'TENANT_ADMIN',
+  userRole,
   isDemo = true,
 }) => {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const activeRoleDisplay = userRole || (auth.roles.length > 0 ? auth.roles.join(', ') : 'Authenticated User');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
@@ -57,7 +60,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               fontWeight: 600,
             }}
           >
-            Role Landing: {userRole}
+            Role Landing: {activeRoleDisplay}
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

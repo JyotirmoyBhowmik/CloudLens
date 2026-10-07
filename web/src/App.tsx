@@ -1,4 +1,5 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import {
   BrowserRouter,
   Routes,
@@ -68,17 +69,6 @@ const DesignSystemShowcase = isDevelopment
     )
   : null;
 
-export type CanonicalRole =
-  | 'SUPER_ADMIN'
-  | 'PLATFORM_ADMIN'
-  | 'TENANT_ADMIN'
-  | 'FINOPS_LEAD'
-  | 'FINOPS_ANALYST'
-  | 'ENGINEERING_LEAD'
-  | 'DEVELOPER'
-  | 'FINANCE_CONTROLLER'
-  | 'AUDITOR';
-
 interface HealthStatus {
   status: string;
   service: string;
@@ -87,21 +77,36 @@ interface HealthStatus {
   correlation_id: string;
 }
 
-// Role-Shaped Route Authorization Guard
+// Capability-Driven Route Authorization Guard (Prompt P02 Items 4, 7)
 interface ProtectedRouteProps {
-  allowedRoles: CanonicalRole[];
-  currentRole: CanonicalRole;
+  requiredCapability?: string;
+  requiredCapabilities?: string[];
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  allowedRoles,
-  currentRole,
+  requiredCapability,
+  requiredCapabilities,
   children,
 }) => {
-  if (!allowedRoles.includes(currentRole)) {
+  const { hasCapability, isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Verifying authorization...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredCapability && !hasCapability(requiredCapability)) {
     return <Navigate to="/403" replace />;
   }
+
+  if (requiredCapabilities && !requiredCapabilities.some((cap) => hasCapability(cap))) {
+    return <Navigate to="/403" replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -128,27 +133,11 @@ const AppLayout: React.FC = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<CanonicalRole>(() => {
-    return (localStorage.getItem('cloudlens_user_role') as CanonicalRole) || 'SUPER_ADMIN';
-  });
-  const [isDemo, setIsDemo] = useState<boolean>(() => {
-    const saved = localStorage.getItem('cloudlens_is_demo');
-    return saved !== null ? saved === 'true' : true;
-  });
+  const auth = useAuth();
+  const [isDemo] = useState<boolean>(true);
 
   const [isMaintenanceMode, setIsMaintenanceMode] = useState<boolean>(false);
   const [maintMessage, setMaintMessage] = useState<string>('CloudLens is currently undergoing scheduled platform maintenance. Mutating operations are paused.');
-
-  const handleRoleChange = (role: CanonicalRole) => {
-    setUserRole(role);
-    localStorage.setItem('cloudlens_user_role', role);
-  };
-
-  const handleToggleDemo = () => {
-    const next = !isDemo;
-    setIsDemo(next);
-    localStorage.setItem('cloudlens_is_demo', String(next));
-  };
 
   useEffect(() => {
     fetch('/api/v1/health')
@@ -241,56 +230,59 @@ const AppLayout: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Tenant Mode:</span>
-              <button
-                type="button"
-                onClick={handleToggleDemo}
-                aria-label="Toggle demo mode"
-                style={{
-                  padding: '0.2rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border: isDemo ? '1px solid #38bdf8' : '1px solid var(--border-color)',
-                  backgroundColor: isDemo ? 'rgba(56, 189, 248, 0.2)' : 'var(--bg-primary)',
-                  color: isDemo ? '#38bdf8' : 'var(--text-secondary)',
-                }}
-              >
-                {isDemo ? 'Demo Mode (M3)' : 'Live Mode (Empty)'}
-              </button>
-            </div>
+            {auth.isAuthenticated && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8125rem' }}>
+                <span id="header-user-display" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                  {auth.user?.display_name || auth.user?.email}
+                </span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem' }}>
-              <label htmlFor="user-role-select" style={{ color: 'var(--text-secondary)' }}>
-                Role:
-              </label>
-              <select
-                id="user-role-select"
-                value={userRole}
-                onChange={(e) => handleRoleChange(e.target.value as CanonicalRole)}
-                style={{
-                  backgroundColor: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '6px',
-                  padding: '0.2rem 0.5rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                }}
-              >
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                <option value="PLATFORM_ADMIN">PLATFORM_ADMIN</option>
-                <option value="TENANT_ADMIN">TENANT_ADMIN</option>
-                <option value="FINOPS_LEAD">FINOPS_LEAD</option>
-                <option value="FINOPS_ANALYST">FINOPS_ANALYST</option>
-                <option value="ENGINEERING_LEAD">ENGINEERING_LEAD</option>
-                <option value="DEVELOPER">DEVELOPER</option>
-                <option value="FINANCE_CONTROLLER">FINANCE_CONTROLLER</option>
-                <option value="AUDITOR">AUDITOR</option>
-              </select>
-            </div>
+                {auth.tenants && auth.tenants.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <label htmlFor="tenant-switcher" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                      Tenant:
+                    </label>
+                    <select
+                      id="tenant-switcher"
+                      value={auth.currentTenant?.id || ''}
+                      onChange={(e) => auth.switchTenant(e.target.value)}
+                      style={{
+                        backgroundColor: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '6px',
+                        padding: '0.2rem 0.5rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {auth.tenants.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  id="header-signout-btn"
+                  onClick={() => auth.signOut()}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    padding: '0.2rem 0.6rem',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
 
             <div
               style={{
@@ -327,8 +319,8 @@ const AppLayout: React.FC = () => {
             paddingBottom: '0.2rem',
           }}
         >
-          {/* Platform Control Tower (SUPER_ADMIN / PLATFORM_ADMIN) */}
-          {(userRole === 'SUPER_ADMIN' || userRole === 'PLATFORM_ADMIN') && (
+          {/* Platform Control Tower */}
+          {auth.hasCapability('platform.observe') && (
             <NavLink
               to="/control-tower"
               style={({ isActive }) => ({
@@ -340,6 +332,22 @@ const AppLayout: React.FC = () => {
               })}
             >
               Control Tower
+            </NavLink>
+          )}
+
+          {/* Administration Surface */}
+          {auth.hasCapability('admin:access') && (
+            <NavLink
+              to="/admin"
+              style={({ isActive }) => ({
+                ...navLinkStyle({ isActive }),
+                border: '1px solid #a855f7',
+                backgroundColor: isActive ? '#7e22ce' : '#0f172a',
+                color: isActive ? '#ffffff' : '#c084fc',
+                fontWeight: 600,
+              })}
+            >
+              Administration
             </NavLink>
           )}
 
@@ -450,8 +458,8 @@ const AppLayout: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
 
           {/* S-02: Landing */}
-          <Route path="/" element={<LandingPage isDemo={isDemo} userRole={userRole} />} />
-          <Route path="/landing" element={<LandingPage isDemo={isDemo} userRole={userRole} />} />
+          <Route path="/" element={<LandingPage isDemo={isDemo} />} />
+          <Route path="/landing" element={<LandingPage isDemo={isDemo} />} />
 
           {/* S-03: Executive Summary */}
           <Route path="/executive" element={<ExecutiveDashboard />} />
@@ -518,7 +526,7 @@ const AppLayout: React.FC = () => {
           <Route
             path="/users"
             element={
-              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLATFORM_ADMIN', 'TENANT_ADMIN']} currentRole={userRole}>
+              <ProtectedRoute requiredCapability="iam:manage">
                 <UsersRbacPage isDemo={isDemo} />
               </ProtectedRoute>
             }
@@ -528,7 +536,7 @@ const AppLayout: React.FC = () => {
           <Route
             path="/audit"
             element={
-              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLATFORM_ADMIN', 'TENANT_ADMIN', 'AUDITOR']} currentRole={userRole}>
+              <ProtectedRoute requiredCapability="audit:read">
                 <AuditLogPage isDemo={isDemo} />
               </ProtectedRoute>
             }
@@ -541,7 +549,7 @@ const AppLayout: React.FC = () => {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLATFORM_ADMIN', 'TENANT_ADMIN']} currentRole={userRole}>
+              <ProtectedRoute requiredCapability="tenants:settings:read">
                 <SettingsPage isDemo={isDemo} />
               </ProtectedRoute>
             }
@@ -568,11 +576,11 @@ const AppLayout: React.FC = () => {
           {/* S-27: Commitment Portfolio + Renewals */}
           <Route path="/commitments" element={<CommitmentRenewalsPage isDemo={isDemo} />} />
 
-          {/* Control Tower Route (Guarded for SUPER_ADMIN / PLATFORM_ADMIN) */}
+          {/* Control Tower Route (Guarded for platform.observe) */}
           <Route
             path="/control-tower"
             element={
-              <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'PLATFORM_ADMIN']} currentRole={userRole}>
+              <ProtectedRoute requiredCapability="platform.observe">
                 <ControlTowerPage />
               </ProtectedRoute>
             }
@@ -580,7 +588,14 @@ const AppLayout: React.FC = () => {
 
           {/* Auxiliary Routes */}
           <Route path="/connectors" element={<ConnectorManagementPage />} />
-          <Route path="/admin" element={<AdminConsolePage userRole={userRole as any} onNavigateHome={() => {}} />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredCapability="admin:access">
+                <AdminConsolePage onNavigateHome={() => {}} />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/masterdata" element={<MasterDataConsole />} />
           <Route path="/explanation" element={<ExplanationLayerView />} />
           <Route path="/about" element={<AboutPage />} />
@@ -622,7 +637,9 @@ const AppLayout: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AppLayout />
+      <AuthProvider>
+        <AppLayout />
+      </AuthProvider>
     </BrowserRouter>
   );
 };

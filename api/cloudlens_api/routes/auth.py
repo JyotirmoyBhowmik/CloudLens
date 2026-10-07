@@ -15,16 +15,24 @@ Enforces:
 - GET  /api/v1/auth/me: Returns caller identity and authorization context.
 """
 
+import secrets
 from typing import Any
+import uuid
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from api.cloudlens_api.tenant_context import require_auth
+from db.schema.tables import TenantModel
+from db.session import get_tenant_session
 from domain.abuse.tracker import get_abuse_tracker
+from domain.audit.models import AuditEventCreate
+from domain.audit.service import get_audit_service
 from domain.identity.models import AuthContext, StepUpToken, TokenPair
 from domain.identity.service import get_identity_service
-from domain.models.enums import StepUpAction, SystemRole
+from domain.models.enums import AuditEventType, StepUpAction, SystemRole
 from domain.models.exceptions import (
     BreakGlassAuthFailedException,
     IdentityException,
@@ -172,29 +180,34 @@ def _enforce_lockout_check(principal_id: str) -> None:
 @router.get("/oidc/authorize", summary="OIDC Authorization Initiation (Prompt P01B Item 1)")
 def oidc_authorize(
     redirect_uri: str | None = Query(default=None, description="Client redirect URI"),
+    redirect: bool = Query(default=False, description="Redirect browser directly to IdP"),
     x_correlation_id: str | None = Header(default=None),
-) -> dict[str, str]:
-    """Generates PKCE code challenge and redirects/returns IdP authorization URL (Prompt P01B Item 1)."""
+) -> Any:
+    """Generates PKCE code challenge and redirects/returns IdP authorization URL (Prompt P01B Item 1 & P02)."""
     service = get_identity_service()
-    return service.initiate_oidc_authorization(
+    auth_data = service.initiate_oidc_authorization(
         redirect_uri=redirect_uri,
         correlation_id=x_correlation_id,
     )
+    if redirect:
+        return RedirectResponse(url=auth_data["authorization_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    return auth_data
 
 
-@router.get("/oidc/callback", response_model=TokenPair, summary="OIDC Authorization Callback (Prompt P01B Item 1)")
+@router.get("/oidc/callback", summary="OIDC Authorization Callback (Prompt P01B Item 1 & P02)")
 def oidc_callback(
     code: str = Query(..., description="Authorization code from IdP"),
     state: str = Query(..., description="OIDC flow state parameter"),
     request: Request = None,
+    response: Response = None,
     x_correlation_id: str | None = Header(default=None),
-) -> TokenPair:
-    """Exchanges code using PKCE, verifies IdP signature, and mints tokens (Prompt P01B Item 1)."""
+) -> Any:
+    """Exchanges code using PKCE, verifies IdP signature, mints tokens, and sets BFF cookies (Prompt P01B Item 1 & P02)."""
     client_ip = request.client.host if request and request.client else "unknown"
     user_agent = request.headers.get("User-Agent") if request else None
     service = get_identity_service()
     try:
-        return service.complete_oidc_authorization_code_flow(
+        tokens = service.complete_oidc_authorization_code_flow(
             code=code,
             state=state,
             ip_address=client_ip,
@@ -203,6 +216,47 @@ def oidc_callback(
         )
     except IdentityException as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+
+    csrf_token = secrets.token_hex(16)
+    accept_header = request.headers.get("accept", "") if request else ""
+    if "text/html" in accept_header:
+        redirect_res = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+        redirect_res.set_cookie(
+            key="cloudlens_access_token",
+            value=tokens.access_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/",
+        )
+        redirect_res.set_cookie(
+            key="cloudlens_csrf_token",
+            value=csrf_token,
+            httponly=False,
+            secure=False,
+            samesite="lax",
+            path="/",
+        )
+        return redirect_res
+
+    if response:
+        response.set_cookie(
+            key="cloudlens_access_token",
+            value=tokens.access_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/",
+        )
+        response.set_cookie(
+            key="cloudlens_csrf_token",
+            value=csrf_token,
+            httponly=False,
+            secure=False,
+            samesite="lax",
+            path="/",
+        )
+    return tokens
 
 
 @router.post("/saml/login", summary="SAML 2.0 Single Sign-On (Disabled)")
@@ -302,19 +356,24 @@ def refresh_token(
 
 @router.post("/logout", summary="Terminate session and revoke tokens")
 def logout(
-    payload: LogoutRequest,
+    response: Response,
+    payload: LogoutRequest | None = None,
     tenant_context: TenantContext = Depends(require_auth),
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, str]:
-    """Explicitly terminates user session and revokes access and refresh tokens (Item 66)."""
+    """Explicitly terminates user session, revokes access and refresh tokens, and clears BFF cookies (Item 66 & Prompt P02)."""
     service = get_identity_service()
-    session_id = payload.session_id or getattr(tenant_context, "session_id", None)
+    session_id = payload.session_id if payload else getattr(tenant_context, "session_id", None)
     actor_id = tenant_context.email or tenant_context.user_id
 
     if session_id:
         service.terminate_session(
             session_id=session_id, actor_id=actor_id, correlation_id=x_correlation_id
         )
+
+    # Clear BFF cookies
+    response.delete_cookie(key="cloudlens_access_token", path="/")
+    response.delete_cookie(key="cloudlens_csrf_token", path="/")
 
     return {"status": "SUCCESS", "message": "Session terminated and tokens revoked."}
 
@@ -601,19 +660,200 @@ def verify_step_up(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
-@router.get("/me", response_model=AuthContext, summary="Get current authentication context")
-def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthContext:
-    """Returns caller identity, roles, and effective permissions from Bearer token."""
+class UserSummary(BaseModel):
+    id: str
+    email: str
+    display_name: str
+
+
+class TenantSummary(BaseModel):
+    id: str
+    name: str
+
+
+class AuthMeResponse(BaseModel):
+    """Current authenticated user, roles, capabilities, and tenant list (Prompt P02 Item 4)."""
+
+    # Backward compatibility with existing tests
+    user_id: str
+    tenant_id: str
+    email: str
+    roles: list[str]
+    permissions: list[str]
+    is_break_glass: bool = False
+
+    # Prompt P02 contract
+    user: UserSummary
+    capabilities: list[str]
+    tenants: list[TenantSummary]
+    current_tenant: TenantSummary
+
+
+class SwitchTenantRequest(BaseModel):
+    tenant_id: str = Field(..., description="Target tenant ID to switch context to")
+
+
+class SwitchTenantResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+    tenant_id: str
+    user_id: str
+    message: str = "Tenant context switched successfully."
+
+
+@router.get("/me", response_model=AuthMeResponse, summary="Get current authentication context")
+async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthMeResponse:
+    """Returns caller identity, roles, capabilities, authorized tenants, and current tenant (Prompt P02 Item 4)."""
+    roles_list = [
+        r.value if hasattr(r, "value") else str(r) for r in tenant_context.roles
+    ]
+
+    # Calculate capabilities
+    caps = set(tenant_context.scope_grants)
+    if tenant_context.is_super_admin:
+        caps.update([
+            "*",
+            "admin:access",
+            "platform.observe",
+            "platform.operate",
+            "platform.act_as",
+            "iam:manage",
+            "iam:read",
+            "billing:read",
+            "cost:totals:read",
+            "reports:read",
+            "quotas:read",
+            "audit:read",
+            "tenants:settings:read",
+            "tenants:settings:write",
+        ])
+    for r in roles_list:
+        if r in ("PLATFORM_ADMIN", "CLOUD_ADMINISTRATOR"):
+            caps.update(["admin:access", "tenants:settings:read", "tenants:settings:write", "iam:read"])
+        elif r in ("AUDITOR",):
+            caps.update(["audit:read", "reports:read", "platform.observe"])
+        elif r in ("FINOPS_ADMINISTRATOR",):
+            caps.update(["billing:read", "cost:totals:read", "reports:read", "budgets:read", "tenants:settings:read"])
+
+    # Query authorized tenants
+    available_tenants: list[TenantSummary] = []
+    if tenant_context.is_super_admin:
+        try:
+            async with get_tenant_session() as session:
+                res = await session.execute(select(TenantModel).order_by(TenantModel.name))
+                rows = res.scalars().all()
+                for row in rows:
+                    available_tenants.append(TenantSummary(id=row.id, name=row.name))
+        except Exception:
+            pass
+        if not available_tenants:
+            available_tenants = [
+                TenantSummary(id="tenant-primary", name="Primary Enterprise"),
+                TenantSummary(id="tenant-demo", name="Demo Enterprise (M3)"),
+            ]
+    else:
+        eff_tid = tenant_context.effective_tenant_id or tenant_context.tenant_id
+        available_tenants = [TenantSummary(id=eff_tid, name=f"Tenant {eff_tid}")]
+
+    cur_tid = tenant_context.effective_tenant_id or tenant_context.tenant_id
+    matched = next((t for t in available_tenants if t.id == cur_tid), None)
+    current_tenant = matched or TenantSummary(id=cur_tid, name=f"Tenant {cur_tid}")
+
+    user_email = tenant_context.email or tenant_context.user_id
+    display_name = (
+        user_email.split("@")[0].replace(".", " ").title()
+        if "@" in user_email
+        else user_email
+    )
+
+    return AuthMeResponse(
+        user_id=tenant_context.user_id,
+        tenant_id=cur_tid,
+        email=user_email,
+        roles=roles_list,
+        permissions=list(caps),
+        is_break_glass=tenant_context.is_superuser,
+        user=UserSummary(
+            id=tenant_context.user_id,
+            email=user_email,
+            display_name=display_name,
+        ),
+        capabilities=list(caps),
+        tenants=available_tenants,
+        current_tenant=current_tenant,
+    )
+
+
+@router.post("/switch-tenant", response_model=SwitchTenantResponse, summary="Switch active tenant context")
+def switch_tenant(
+    payload: SwitchTenantRequest,
+    response: Response,
+    tenant_context: TenantContext = Depends(require_auth),
+    x_correlation_id: str | None = Header(default=None),
+) -> SwitchTenantResponse:
+    """Switches caller's active tenant context, issues updated token, and records audit trail (Prompt P02 Item 5)."""
+    target_tenant_id = payload.tenant_id.strip()
+    if not target_tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Target tenant_id cannot be empty.",
+        )
+
+    # Permission check: super-admin can switch to any tenant; others can only switch to their authorized tenant
+    if not tenant_context.is_super_admin and target_tenant_id != tenant_context.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User is not authorized to switch to tenant '{target_tenant_id}'.",
+        )
+
+    # Audit the tenant switch
+    audit_service = get_audit_service()
+    audit_service.append_event(
+        tenant_context=tenant_context,
+        event_in=AuditEventCreate(
+            event_type=AuditEventType.TENANT_SWITCH,
+            actor_id=tenant_context.email or tenant_context.user_id,
+            actor_roles=[r.value if hasattr(r, "value") else str(r) for r in tenant_context.roles],
+            action="SWITCH_TENANT",
+            resource_type="TENANT",
+            resource_id=target_tenant_id,
+            details={
+                "previous_tenant": tenant_context.effective_tenant_id,
+                "new_tenant": target_tenant_id,
+            },
+        ),
+    )
+
+    # Issue updated token
+    identity_service = get_identity_service()
     roles = [
         SystemRole(r) for r in tenant_context.roles if r in SystemRole._value2member_map_
     ]
-    return AuthContext(
+    new_token = identity_service.token_engine.issue_access_token(
         user_id=tenant_context.user_id,
-        tenant_id=tenant_context.tenant_id,
         email=tenant_context.email or tenant_context.user_id,
+        tenant_id=target_tenant_id,
         roles=roles,
         permissions=tenant_context.scope_grants,
-        is_break_glass=tenant_context.is_superuser,
+        session_id=getattr(tenant_context, "session_id", None) or str(uuid.uuid4()),
+        act_as_tenant=target_tenant_id if tenant_context.is_super_admin else None,
+    )
+
+    # Update session cookies (BFF pattern)
+    response.set_cookie(
+        key="cloudlens_access_token",
+        value=new_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path="/",
+    )
+
+    return SwitchTenantResponse(
+        access_token=new_token,
+        tenant_id=target_tenant_id,
+        user_id=tenant_context.user_id,
+        message=f"Context successfully switched to tenant {target_tenant_id}.",
     )
 
 

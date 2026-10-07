@@ -97,6 +97,13 @@ if (-not $SkipBootstrap) {
         Write-Error "Prompt 49A bootstrap failed."
         exit $LASTEXITCODE
     }
+
+    Write-Host "`nProvisioning Keycloak users and roles (Prompt P02)..." -ForegroundColor Cyan
+    python scripts/setup_keycloak_users.py
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Keycloak user provisioning failed."
+        exit $LASTEXITCODE
+    }
 }
 
 # 6. Service Endpoints
