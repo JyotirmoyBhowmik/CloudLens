@@ -22,6 +22,7 @@ dependencies = [
     "celery>=5.4.0",
     "redis>=5.0.8",
     "psycopg2-binary>=2.9.9",
+    "asyncpg>=0.29.0",
     "httpx>=0.27.0",
     "opentelemetry-api>=1.26.0",
     "opentelemetry-sdk>=1.26.0",
@@ -130,6 +131,7 @@ markers = [
     "level19: Level 19 Workflow & Approval Engine Suite (role/ownership approver resolution, delegation, atomic apply/reversion)",
     "level20: Level 20 Analytical Extract Suite (full partition restatements, scope manifests with SHA-256)",
     "phase2: Phase 2 / Addendum B (Prompts 57-61 / S-21 to S-27 improvements and integrations)",
+    "realdb: Real PostgreSQL database integration tests (no mocks allowed)",
 ]
 
 

@@ -1,0 +1,76 @@
+{
+  "id": "cloudlens",
+  "realm": "cloudlens",
+  "enabled": true,
+  "displayName": "CloudLens Enterprise Platform",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "SUPER_ADMIN",
+        "description": "Enterprise Super Administrator"
+      },
+      {
+        "name": "PLATFORM_ADMIN",
+        "description": "Platform Operations Administrator"
+      },
+      {
+        "name": "AUDITOR",
+        "description": "Read-Only Security and Compliance Auditor"
+      },
+      {
+        "name": "FINOPS_ADMINISTRATOR",
+        "description": "FinOps Financial Governance Lead"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "grafana",
+      "name": "Grafana Observability Portal",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "grafana-client-secret",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "http://localhost:3001/*",
+        "http://localhost:3000/*",
+        "http://grafana:3000/*"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "role_list",
+        "profile",
+        "roles",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@jyotirmoyb.com",
+      "email": "admin@jyotirmoyb.com",
+      "firstName": "Super",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "SUPER_ADMIN"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "InitialDevAdminPassword123!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

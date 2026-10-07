@@ -12,7 +12,11 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 
+from urllib.parse import urlparse
+
 from domain.config import config_resolver
+
+pytestmark = [pytest.mark.realdb, pytest.mark.level02]
 
 
 def is_postgres_available(host: str, port: int, timeout: float = 1.5) -> bool:
@@ -45,8 +49,19 @@ def get_real_postgres_url() -> str:
 @pytest.fixture(scope="module")
 def real_postgres_engine():
     """Provides a real SQLAlchemy engine connected to PostgreSQL, or skips if unreachable."""
+    db_url = get_real_postgres_url()
     host = os.getenv("POSTGRES_HOST", config_resolver.get_effective_value("database.host"))
     port = int(os.getenv("POSTGRES_PORT", config_resolver.get_effective_value("database.port")))
+
+    if "POSTGRES_HOST" not in os.environ and db_url:
+        try:
+            parsed = urlparse(db_url)
+            if parsed.hostname:
+                host = parsed.hostname
+            if parsed.port:
+                port = parsed.port
+        except Exception:
+            pass
 
     if not is_postgres_available(host, port):
         pytest.skip(

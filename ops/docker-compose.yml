@@ -4,32 +4,34 @@ services:
     container_name: cloudlens-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: cloudlens
-      POSTGRES_USER: cloudlens
-      POSTGRES_PASSWORD: cloudlens_dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-cloudlens}
+      POSTGRES_USER: ${POSTGRES_USER:-cloudlens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudlens_dev_password}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cloudlens -d cloudlens"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cloudlens} -d ${POSTGRES_DB:-cloudlens}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
 
   redis:
     image: redis:7-alpine
     container_name: cloudlens-redis
     restart: unless-stopped
     ports:
-      - "6380:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
 
   minio:
     image: minio/minio:latest
@@ -37,32 +39,83 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: cloudlens_minio
-      MINIO_ROOT_PASSWORD: cloudlens_minio_password
+      MINIO_ROOT_USER: ${OBJECT_STORE_ACCESS_KEY:-cloudlens_minio}
+      MINIO_ROOT_PASSWORD: ${OBJECT_STORE_SECRET_KEY:-cloudlens_minio_password}
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - miniodata:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000; echo -e \"GET /minio/health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; read -r line <&3; case \"$$line\" in *200*) exit 0;; *) exit 1;; esac'"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 5s
 
-  vault:
-    image: hashicorp/vault:latest
-    container_name: cloudlens-vault
+  openbao:
+    image: openbao/openbao:latest
+    container_name: cloudlens-openbao
     restart: unless-stopped
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: dev-vault-token-cloudlens
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-vault-token-cloudlens}
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     ports:
       - "8200:8200"
     cap_add:
       - IPC_LOCK
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8200/v1/sys/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      default:
+        aliases:
+          - vault
+          - openbao
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cloudlens-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: cloudlens-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-DevKeycloakAdmin123!}
+      KC_HTTP_RELATIVE_PATH: /
+    volumes:
+      - ./keycloak/cloudlens-realm.json:/opt/keycloak/data/import/cloudlens-realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e \"GET /realms/cloudlens HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && cat <&3 | grep \"200 OK\"' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+
+  # ==============================================================================
+  # Optional Full-Stack & Observability Profiles
+  # ==============================================================================
 
   api:
+    profiles: ["full"]
     build:
       context: ..
       dockerfile: ops/docker/Dockerfile.api
@@ -76,7 +129,7 @@ services:
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: cloudlens_minio
       S3_SECRET_KEY: cloudlens_minio_password
-      VAULT_ADDR: http://vault:8200
+      VAULT_ADDR: http://openbao:8200
       VAULT_TOKEN: dev-vault-token-cloudlens
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     ports:
@@ -88,6 +141,7 @@ services:
         condition: service_healthy
 
   worker:
+    profiles: ["full"]
     build:
       context: ..
       dockerfile: ops/docker/Dockerfile.worker
@@ -106,6 +160,7 @@ services:
         condition: service_healthy
 
   web:
+    profiles: ["full"]
     build:
       context: ..
       dockerfile: ops/docker/Dockerfile.web
@@ -116,11 +171,8 @@ services:
     depends_on:
       - api
 
-  # ==============================================================================
-  # Observability Stack (Prompt R-OBS)
-  # ==============================================================================
-
   prometheus:
+    profiles: ["full"]
     image: prom/prometheus:v2.51.0
     container_name: cloudlens-prometheus
     restart: unless-stopped
@@ -140,6 +192,7 @@ services:
       - alertmanager
 
   alertmanager:
+    profiles: ["full"]
     image: prom/alertmanager:v0.27.0
     container_name: cloudlens-alertmanager
     restart: unless-stopped
@@ -155,6 +208,7 @@ services:
       - mailpit
 
   grafana:
+    profiles: ["full"]
     image: grafana/grafana:10.4.0
     container_name: cloudlens-grafana
     restart: unless-stopped
@@ -183,6 +237,7 @@ services:
       - tempo
 
   loki:
+    profiles: ["full"]
     image: grafana/loki:2.9.4
     container_name: cloudlens-loki
     restart: unless-stopped
@@ -194,6 +249,7 @@ services:
       - lokidata:/loki
 
   promtail:
+    profiles: ["full"]
     image: grafana/promtail:2.9.4
     container_name: cloudlens-promtail
     restart: unless-stopped
@@ -206,6 +262,7 @@ services:
       - loki
 
   tempo:
+    profiles: ["full"]
     image: grafana/tempo:2.4.1
     container_name: cloudlens-tempo
     restart: unless-stopped
@@ -219,6 +276,7 @@ services:
       - tempodata:/tmp/tempo
 
   otel-collector:
+    profiles: ["full"]
     image: otel/opentelemetry-collector-contrib:0.96.0
     container_name: cloudlens-otel-collector
     restart: unless-stopped
@@ -231,6 +289,7 @@ services:
       - tempo
 
   postgres-exporter:
+    profiles: ["full"]
     image: prometheuscommunity/postgres-exporter:v0.15.0
     container_name: cloudlens-postgres-exporter
     restart: unless-stopped
@@ -243,6 +302,7 @@ services:
         condition: service_healthy
 
   redis-exporter:
+    profiles: ["full"]
     image: oliver006/redis_exporter:v1.58.0
     container_name: cloudlens-redis-exporter
     restart: unless-stopped
@@ -255,6 +315,7 @@ services:
         condition: service_healthy
 
   celery-exporter:
+    profiles: ["full"]
     image: danihodovic/celery-exporter:latest
     container_name: cloudlens-celery-exporter
     restart: unless-stopped
@@ -266,28 +327,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: cloudlens-mailpit
-    restart: unless-stopped
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
-    container_name: cloudlens-keycloak
-    restart: unless-stopped
-    command: start-dev --import-realm
-    ports:
-      - "8081:8080"
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-DevKeycloakAdmin123!}
-      KC_HTTP_RELATIVE_PATH: /
-    volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
 
 volumes:
   pgdata:

@@ -194,6 +194,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         elif "tests/analytics/" in path_str:
             item.add_marker(pytest.mark.level20)
 
+        if "test_database_real" in path_str:
+            item.add_marker(pytest.mark.realdb)
+
         # Phase 2 (Prompts 57-61 / Addendum B / New Improvements)
         if any(
             p in path_str
@@ -208,3 +211,27 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             ]
         ):
             item.add_marker(pytest.mark.phase2)
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
+    """Enforces Guardrail 9 & Prompt P00 realdb test policy.
+
+    When CLOUDLENS_REQUIRE_REALDB=1 (or running in CI), a skipped realdb test FAILS the run.
+    """
+    outcome = yield
+    report = outcome.get_result()
+    if report.skipped:
+        require_realdb = (
+            os.getenv("CLOUDLENS_REQUIRE_REALDB") == "1"
+            or os.getenv("CI", "").strip().lower() in ("true", "1")
+            or os.getenv("GITHUB_ACTIONS", "").strip().lower() in ("true", "1")
+        )
+        if require_realdb and item.get_closest_marker("realdb"):
+            report.outcome = "failed"
+            skip_reason = getattr(report, "wasxfail", None) or str(report.longrepr)
+            report.longrepr = (
+                f"STRICT REALDB REQUIREMENT FAILURE: Test '{item.nodeid}' was skipped: {skip_reason}\n"
+                f"Guardrail 9 & Prompt P00 dictate: When CLOUDLENS_REQUIRE_REALDB=1 or running in CI, "
+                f"skipping realdb tests is strictly forbidden. Real PostgreSQL tests must RUN and PASS."
+            )
