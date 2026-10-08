@@ -188,3 +188,41 @@ def verify_persistence_startup_guard(active_repository: Any = None) -> None:
             )
             sys.exit(1)
 
+
+# -----------------------------------------------------------------------------
+# Synchronous Execution Bridge for Async SQLAlchemy Repositories
+# -----------------------------------------------------------------------------
+import threading
+import asyncio
+
+_sync_bridge_loop: asyncio.AbstractEventLoop | None = None
+_sync_bridge_thread: threading.Thread | None = None
+_sync_bridge_lock = threading.Lock()
+
+
+def get_sync_bridge_loop() -> asyncio.AbstractEventLoop:
+    """Returns a persistent event loop on a dedicated thread for synchronous repository bridges.
+
+    Guarantees that asyncpg connection pool handles in SQLAlchemy are always bound
+    to the same event loop across synchronous calls, preventing Windows ProactorEventLoop teardown
+    crashes ('NoneType' object has no attribute 'send') when multiple sync queries access the pool.
+    """
+    global _sync_bridge_loop, _sync_bridge_thread
+    with _sync_bridge_lock:
+        if _sync_bridge_loop is None or _sync_bridge_loop.is_closed():
+            _sync_bridge_loop = asyncio.new_event_loop()
+            _sync_bridge_thread = threading.Thread(
+                target=_sync_bridge_loop.run_forever,
+                name="CloudLens-SyncBridgeLoop",
+                daemon=True,
+            )
+            _sync_bridge_thread.start()
+        return _sync_bridge_loop
+
+
+def run_async(coro: Any) -> Any:
+    """Executes a coroutine from synchronous code on the persistent bridge event loop."""
+    loop = get_sync_bridge_loop()
+    future = asyncio.run_coroutine_threadsafe(coro, loop)
+    return future.result()
+

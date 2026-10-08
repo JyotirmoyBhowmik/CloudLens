@@ -21,7 +21,9 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from datetime import datetime, timezone
+
+from db.session import get_tenant_session, run_async
 from masterdata.models import LifecycleStatus, MasterDataRecord, MasterRegistryEntry
 
 logger = logging.getLogger("cloudlens.masterdata.repository")
@@ -95,13 +97,7 @@ class SqlMasterDataRepository:
     is_in_memory: bool = False
 
     def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+        return run_async(coro)
 
     def _row_to_record(self, row: Any) -> MasterDataRecord:
         raw_attrs = row[12]
@@ -112,6 +108,13 @@ class SqlMasterDataRepository:
         except Exception:
             status = LifecycleStatus.PUBLISHED
 
+        eff_from = row[8]
+        if eff_from is not None and isinstance(eff_from, datetime) and eff_from.tzinfo is not None:
+            eff_from = eff_from.astimezone(timezone.utc).replace(tzinfo=None)
+        eff_to = row[9]
+        if eff_to is not None and isinstance(eff_to, datetime) and eff_to.tzinfo is not None:
+            eff_to = eff_to.astimezone(timezone.utc).replace(tzinfo=None)
+
         return MasterDataRecord(
             id=row[0],
             master_type=row[1],
@@ -121,8 +124,8 @@ class SqlMasterDataRepository:
             sort_order=row[5] or 0,
             is_system=row[6] or False,
             is_active=row[7] if row[7] is not None else True,
-            effective_from=row[8],
-            effective_to=row[9],
+            effective_from=eff_from,
+            effective_to=eff_to,
             version=row[10] or 1,
             parent_code=row[11],
             attributes=attrs,

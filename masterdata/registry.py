@@ -923,6 +923,20 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         seed_file="masterdata/seeds/improvement_features.json",
         expected_review_period_days=90,
     ),
+    "RECONCILIATION_TOLERANCE": MasterRegistryEntry(
+        code="RECONCILIATION_TOLERANCE",
+        name="Reconciliation Tolerances and Severity Bands",
+        purpose="Defines master tolerances and investigation priority thresholds for cost reconciliation.",
+        schema_def={
+            "attributes": "object",
+        },
+        is_tenant_scoped=False,
+        is_editable=True,
+        requires_approval=True,
+        consuming_modules=["cost", "reconciliation", "governance"],
+        seed_file="masterdata/seeds/reconciliation_tolerance.json",
+        expected_review_period_days=180,
+    ),
 }
 
 

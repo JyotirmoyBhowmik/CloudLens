@@ -1,0 +1,85 @@
+[
+  {
+    "code": "RECONCILIATION_SEVERITY_BANDS",
+    "display_name": "Reconciliation Investigation Severity Bands",
+    "description": "Configurable variance thresholds for reconciliation investigation priority classification.",
+    "sort_order": 1,
+    "parent_code": null,
+    "attributes": {
+      "critical_pct": 5.0,
+      "critical_amount": 1000.0,
+      "high_pct": 1.0,
+      "high_amount": 100.0
+    }
+  },
+  {
+    "code": "PROVIDER_TOLERANCE_AWS",
+    "display_name": "AWS Reconciliation Tolerance",
+    "description": "Authoritative tolerance and finalisation lag for AWS billing reconciliation.",
+    "sort_order": 2,
+    "parent_code": null,
+    "attributes": {
+      "provider": "aws",
+      "absolute_tolerance": 5.0,
+      "percentage_tolerance": 0.5,
+      "currency": "USD",
+      "finalisation_lag_days": 3
+    }
+  },
+  {
+    "code": "PROVIDER_TOLERANCE_AZURE",
+    "display_name": "Azure Reconciliation Tolerance",
+    "description": "Authoritative tolerance and finalisation lag for Azure billing reconciliation.",
+    "sort_order": 3,
+    "parent_code": null,
+    "attributes": {
+      "provider": "azure",
+      "absolute_tolerance": 5.0,
+      "percentage_tolerance": 0.5,
+      "currency": "USD",
+      "finalisation_lag_days": 3
+    }
+  },
+  {
+    "code": "PROVIDER_TOLERANCE_GCP",
+    "display_name": "GCP Reconciliation Tolerance",
+    "description": "Authoritative tolerance and finalisation lag for GCP billing reconciliation.",
+    "sort_order": 4,
+    "parent_code": null,
+    "attributes": {
+      "provider": "gcp",
+      "absolute_tolerance": 5.0,
+      "percentage_tolerance": 0.5,
+      "currency": "USD",
+      "finalisation_lag_days": 4
+    }
+  },
+  {
+    "code": "PROVIDER_TOLERANCE_OCI",
+    "display_name": "OCI Reconciliation Tolerance",
+    "description": "Authoritative tolerance and finalisation lag for OCI billing reconciliation.",
+    "sort_order": 5,
+    "parent_code": null,
+    "attributes": {
+      "provider": "oci",
+      "absolute_tolerance": 5.0,
+      "percentage_tolerance": 0.5,
+      "currency": "USD",
+      "finalisation_lag_days": 2
+    }
+  },
+  {
+    "code": "PROVIDER_TOLERANCE_DEFAULT",
+    "display_name": "Default Reconciliation Tolerance",
+    "description": "Fallback tolerance and finalisation lag for unmapped providers.",
+    "sort_order": 6,
+    "parent_code": null,
+    "attributes": {
+      "provider": "default",
+      "absolute_tolerance": 5.0,
+      "percentage_tolerance": 0.5,
+      "currency": "USD",
+      "finalisation_lag_days": 3
+    }
+  }
+]

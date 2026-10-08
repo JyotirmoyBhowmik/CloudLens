@@ -879,8 +879,8 @@ def get_session_state(
     """Current authenticated session state and user identity (API-002)."""
     service = get_identity_service()
     sess = None
-    if hasattr(tenant_context, "session_id") and getattr(tenant_context, "session_id"):
-        sess = service.get_session(getattr(tenant_context, "session_id"))
+    if hasattr(tenant_context, "session_id") and tenant_context.session_id:
+        sess = service.get_session(tenant_context.session_id)
 
     user = service.get_user(tenant_context.user_id) if tenant_context.user_id else None
     auth_method_str = (

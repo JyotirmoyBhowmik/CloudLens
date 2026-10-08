@@ -3,20 +3,17 @@
 Enforces **Mandate M2** and **Prompt 48 Item 35**.
 Every allow-listed literal in application code must be approved with a named reason and reviewer.
 
-**Last Updated:** 2026-10-06 06:10:42Z | **Total Exceptions:** 84
+**Last Updated:** 2026-10-08 19:58:16Z | **Total Exceptions:** 80
 
 | File Path | Line | Literal | Business Rationale | Approving Reviewer |
 | :--- | :--- | :--- | :--- | :--- |
-| `api/cloudlens_api/tenant_context.py` | 170 | `SUPER_ADMIN` | Legacy role string fallback check | **Prompt-48-Audit** |
-| `api/cloudlens_api/tenant_context.py` | 170 | `GLOBAL_ADMIN` | Legacy role string fallback check | **Prompt-48-Audit** |
 | `domain/alerting/engine.py` | 78 | `engine:` | Internal background engine identity check | **Prompt-48-Audit** |
 | `domain/alerting/engine.py` | 78 | `system` | Internal background engine identity check | **Prompt-48-Audit** |
 | `domain/attribution/governance_resolver.py` | 26 | `BUSINESS_OWNER` | Master data OWNER_TEAM role attribute matching | **Prompt-48-Audit** |
 | `domain/bootstrap/superuser.py` | 57 | `2555` | Statutory 7-year audit retention requirement (365 * 7) | **Prompt-48-Audit** |
-| `domain/cost/reconciliation/engine.py` | 323 | `Decimal('99.50')` | Executive trust score tier thresholds (99.5% and 98.0%) | **Prompt-48-Audit** |
-| `domain/cost/reconciliation/engine.py` | 325 | `Decimal('98.00')` | Executive trust score tier thresholds (99.5% and 98.0%) | **Prompt-48-Audit** |
-| `domain/cost/reconciliation/engine.py` | 494 | `2` | Minimum sample size for half-split trend comparison | **Prompt-48-Audit** |
-| `domain/cost/reconciliation/engine.py` | 701 | `Decimal('5.00')` | Investigation severity variance threshold | **Prompt-48-Audit** |
+| `domain/cost/reconciliation/engine.py` | 368 | `Decimal('99.50')` | Executive trust score tier thresholds (99.5% and 98.0%) | **Prompt-48-Audit** |
+| `domain/cost/reconciliation/engine.py` | 370 | `Decimal('98.00')` | Executive trust score tier thresholds (99.5% and 98.0%) | **Prompt-48-Audit** |
+| `domain/cost/reconciliation/engine.py` | 539 | `2` | Minimum sample size for half-split trend comparison | **Prompt-48-Audit** |
 | `domain/forecasting/accuracy.py` | 40 | `0.75` | Standard quarterly milestone thresholds (25%, 50%, 75%) | **Prompt-48-Audit** |
 | `domain/forecasting/accuracy.py` | 42 | `0.5` | Standard quarterly milestone thresholds (25%, 50%, 75%) | **Prompt-48-Audit** |
 | `domain/forecasting/accuracy.py` | 44 | `0.25` | Standard quarterly milestone thresholds (25%, 50%, 75%) | **Prompt-48-Audit** |
@@ -30,7 +27,6 @@ Every allow-listed literal in application code must be approved with a named rea
 | `domain/hierarchy/service.py` | 2128 | `0.9` | Search ranking score weight | **Prompt-48-Audit** |
 | `domain/identity/password_hasher.py` | 22 | `30` | RFC 6238 TOTP standard interval of 30 seconds | **security-arch** |
 | `domain/observability/health.py` | 65 | `0.9` | Simulated probe latency metric | **Prompt-48-Audit** |
-| `domain/pricing/repository.py` | 103 | `1e-09` | Floating point pricing comparison epsilon | **Prompt-48-Audit** |
 | `domain/provisioning/service.py` | 135 | `@` | Check if user identifier contains email domain delimiter | **Prompt-48-Audit** |
 | `domain/resource_detail/service.py` | 1355 | `0.9` | Derivation multiplier for estimated cost | **Prompt-48-Audit** |
 | `domain/resource_detail/service.py` | 1771 | `RESTRICTED_VIEWER` | Restricted viewer role permission boundary check | **Prompt-48-Audit** |

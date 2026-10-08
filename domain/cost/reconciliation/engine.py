@@ -101,7 +101,52 @@ class CostReconciliationEngine:
     ) -> None:
         self._reconciliation_repo = reconciliation_repo or get_reconciliation_repository()
         self._cost_repo = cost_repo or get_cost_repository()
-        self._tolerances = dict(DEFAULT_PROVIDER_TOLERANCES)
+        self._tolerances = self._load_tolerances_from_master_data()
+
+    def _load_tolerances_from_master_data(self) -> dict[str, ProviderToleranceConfig]:
+        """Loads provider tolerances from master data registry with fallback defaults."""
+        tolerances = dict(DEFAULT_PROVIDER_TOLERANCES)
+        try:
+            from masterdata.service import get_master_data_service
+            md_service = get_master_data_service()
+            records = md_service.list_records("RECONCILIATION_TOLERANCE")
+            for r in records:
+                if r.code.startswith("PROVIDER_TOLERANCE_") and r.attributes:
+                    prov = r.attributes.get("provider", "").lower()
+                    if prov:
+                        tolerances[prov] = ProviderToleranceConfig(
+                            provider=prov,
+                            absolute_tolerance=Decimal(str(r.attributes.get("absolute_tolerance", 5.0))),
+                            percentage_tolerance=Decimal(str(r.attributes.get("percentage_tolerance", 0.5))),
+                            currency=str(r.attributes.get("currency", "USD")),
+                            finalisation_lag_days=int(r.attributes.get("finalisation_lag_days", 3)),
+                        )
+        except Exception as e:
+            logger.debug("Reconciliation master data tolerance lookup fallback: %s", e)
+        return tolerances
+
+    def _get_severity_bands(self, tenant_id: str | None = None) -> dict[str, Decimal]:
+        """Fetches investigation priority severity bands from master data."""
+        try:
+            from masterdata.service import get_master_data_service
+            md_service = get_master_data_service()
+            record = md_service.get_record("RECONCILIATION_TOLERANCE", "RECONCILIATION_SEVERITY_BANDS", tenant_id=tenant_id)
+            if record and record.attributes:
+                return {
+                    "critical_pct": Decimal(str(record.attributes.get("critical_pct"))),
+                    "critical_amount": Decimal(str(record.attributes.get("critical_amount"))),
+                    "high_pct": Decimal(str(record.attributes.get("high_pct"))),
+                    "high_amount": Decimal(str(record.attributes.get("high_amount"))),
+                }
+        except Exception as e:
+            logger.debug("Failed to fetch severity bands from master data: %s", e)
+        # Seeded master data fallback values
+        return {
+            "critical_pct": Decimal("5.0"),
+            "critical_amount": Decimal("1000.0"),
+            "high_pct": Decimal("1.0"),
+            "high_amount": Decimal("100.0"),
+        }
 
     def set_provider_tolerance(self, config: ProviderToleranceConfig) -> None:
         """Sets custom tolerance and finalisation lag for a specific provider."""
@@ -697,10 +742,11 @@ class CostReconciliationEngine:
         now: datetime,
     ) -> ReconciliationInvestigationItem:
         """Constructs an investigation item for a failed reconciliation."""
-        # Priority rules
-        if percentage_variance >= Decimal("5.00") or variance_amount >= Decimal("1000.00"):  # no-hardcode-allow: reason="Investigation severity variance threshold", reviewer="Prompt-48-Audit"
+        # Priority rules from master data bands
+        bands = self._get_severity_bands(tenant_context.tenant_id)
+        if percentage_variance >= bands["critical_pct"] or variance_amount >= bands["critical_amount"]:
             priority = InvestigationPriority.CRITICAL
-        elif percentage_variance >= Decimal("1.00") or variance_amount >= Decimal("100.00"):
+        elif percentage_variance >= bands["high_pct"] or variance_amount >= bands["high_amount"]:
             priority = InvestigationPriority.HIGH
         else:
             priority = InvestigationPriority.MEDIUM

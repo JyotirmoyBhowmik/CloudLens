@@ -12,6 +12,14 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
+def get_python_exe() -> str:
+    if sys.platform == "win32":
+        venv_py = ROOT_DIR / ".venv" / "Scripts" / "python.exe"
+    else:
+        venv_py = ROOT_DIR / ".venv" / "bin" / "python"
+    return str(venv_py) if venv_py.is_file() else sys.executable
+
+
 def run_stage(title: str, cmd: list[str]) -> bool:
     print(f"\n>>> Running [Commit Gate]: {title}")
     res = subprocess.run(cmd, cwd=str(ROOT_DIR))
@@ -27,24 +35,25 @@ def main() -> None:
     print("CLOUDLENS QUALITY GATE 1: COMMIT GATE")
     print("=" * 80)
 
+    py_exe = get_python_exe()
     stages = [
-        ("Layering Rule Verification", [sys.executable, "scripts/check_layering.py"]),
+        ("Layering Rule Verification", [py_exe, "scripts/check_layering.py"]),
         (
             "No Hard-coded Constants Audit",
-            [sys.executable, "scripts/check_no_hardcoded_constants.py", "--mode", "report"],
+            [py_exe, "scripts/check_no_hardcoded_constants.py", "--mode", "report"],
         ),
         (
             "Enumeration Bridge Verification",
-            [sys.executable, "scripts/check_enum_bridge.py"],
+            [py_exe, "scripts/check_enum_bridge.py"],
         ),
         (
             "Tenant Repository Context Enforcement",
-            [sys.executable, "scripts/check_tenant_repository_enforcement.py"],
+            [py_exe, "scripts/check_tenant_repository_enforcement.py"],
         ),
-        ("Ruff Linter", [sys.executable, "scripts/run.py", "ruff", "check", "."]),
-        ("Ruff Format Check", [sys.executable, "scripts/run.py", "ruff", "format", "--check", "."]),
-        ("Mypy Static Type Checking", [sys.executable, "scripts/run.py", "mypy", "."]),
-        ("Unit Test Suite", [sys.executable, "scripts/run.py", "pytest", "tests/unit"]),
+        ("Ruff Linter", [py_exe, "scripts/run.py", "ruff", "check", "."]),
+        ("Ruff Format Check", [py_exe, "scripts/run.py", "ruff", "format", "--check", "."]),
+        ("Mypy Static Type Checking", [py_exe, "scripts/run.py", "mypy", "."]),
+        ("Unit Test Suite", [py_exe, "scripts/run.py", "pytest", "tests/unit"]),
     ]
 
     for title, cmd in stages:

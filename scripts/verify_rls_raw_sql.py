@@ -23,7 +23,7 @@ async def main():
         await s.execute(
             text("""
                 INSERT INTO tenant_settings (tenant_id, settings, updated_at)
-                VALUES 
+                VALUES
                     ('tenant-A', '{"name": "Tenant A"}'::jsonb, NOW()),
                     ('tenant-B', '{"name": "Tenant B"}'::jsonb, NOW());
             """)

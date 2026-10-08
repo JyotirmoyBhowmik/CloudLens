@@ -13,7 +13,7 @@ Enforces Prompt 45:
 import json
 import uuid
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from domain.models.exceptions import (
@@ -41,6 +41,16 @@ from masterdata.registry import (
     list_registered_masters,
 )
 from masterdata.seeder import MasterDataSeeder, SeedExecutionReport
+
+
+def _is_record_effective(r: MasterDataRecord, target_time: datetime) -> bool:
+    eff_from = r.effective_from
+    if hasattr(eff_from, "tzinfo") and eff_from.tzinfo is not None:
+        eff_from = eff_from.astimezone(timezone.utc).replace(tzinfo=None)
+    eff_to = r.effective_to
+    if eff_to is not None and hasattr(eff_to, "tzinfo") and eff_to.tzinfo is not None:
+        eff_to = eff_to.astimezone(timezone.utc).replace(tzinfo=None)
+    return eff_from <= target_time and (eff_to is None or eff_to > target_time)
 
 
 class MasterDataService:
@@ -144,8 +154,7 @@ class MasterDataService:
             r
             for r in records
             if r.code.upper() == code.strip().upper()
-            and r.effective_from <= target_time
-            and (r.effective_to is None or r.effective_to > target_time)
+            and _is_record_effective(r, target_time)
             and (include_inactive or r.lifecycle_status == LifecycleStatus.PUBLISHED)
         ]
 
@@ -183,8 +192,7 @@ class MasterDataService:
         by_code: dict[str, MasterDataRecord] = {}
         for r in records:
             if (
-                r.effective_from <= target_time
-                and (r.effective_to is None or r.effective_to > target_time)
+                _is_record_effective(r, target_time)
                 and (include_inactive or r.lifecycle_status == LifecycleStatus.PUBLISHED)
             ):
                 if tenant_id and r.tenant_id == tenant_id:

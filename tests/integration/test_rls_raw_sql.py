@@ -33,7 +33,7 @@ async def test_rls_raw_sql_tenant_a_cannot_read_b():
         await session.execute(
             text("""
                 INSERT INTO tenant_settings (tenant_id, settings, updated_at)
-                VALUES 
+                VALUES
                     (:ta, CAST(:settings_a AS jsonb), NOW()),
                     (:tb, CAST(:settings_b AS jsonb), NOW());
             """),

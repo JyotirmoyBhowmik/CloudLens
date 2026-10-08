@@ -16,6 +16,14 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
+def get_python_exe() -> str:
+    if sys.platform == "win32":
+        venv_py = ROOT_DIR / ".venv" / "Scripts" / "python.exe"
+    else:
+        venv_py = ROOT_DIR / ".venv" / "bin" / "python"
+    return str(venv_py) if venv_py.is_file() else sys.executable
+
+
 def run_stage(title: str, cmd: list[str]) -> bool:
     print(f"\n>>> Running [PR Gate]: {title}")
     res = subprocess.run(cmd, cwd=str(ROOT_DIR))
@@ -31,31 +39,32 @@ def main() -> None:
     print("CLOUDLENS QUALITY GATE 2: PULL-REQUEST GATE")
     print("=" * 80)
 
+    py_exe = get_python_exe()
     stages = [
         (
             "API Contract Tests (OpenAPI 3.1 & Distributed Tracing Headers)",
-            [sys.executable, "scripts/run.py", "pytest", "tests/integration/test_api_contract.py"],
+            [py_exe, "scripts/run.py", "pytest", "tests/integration/test_api_contract.py"],
         ),
         (
             "Real PostgreSQL Integration Tests (No Mocks)",
-            [sys.executable, "scripts/run.py", "pytest", "tests/integration/test_database_real.py"],
+            [py_exe, "scripts/run.py", "pytest", "tests/integration/test_database_real.py"],
         ),
         (
             "Zero Hard-Coding & Exception Register Audit",
-            [sys.executable, "scripts/check_no_hardcoded_constants.py", "--mode", "report"],
+            [py_exe, "scripts/check_no_hardcoded_constants.py", "--mode", "report"],
         ),
         (
             "Enumeration Bridge Verification",
-            [sys.executable, "scripts/check_enum_bridge.py"],
+            [py_exe, "scripts/check_enum_bridge.py"],
         ),
         (
             "Tenant Repository Context Enforcement",
-            [sys.executable, "scripts/check_tenant_repository_enforcement.py"],
+            [py_exe, "scripts/check_tenant_repository_enforcement.py"],
         ),
         (
             "Domain Logic Coverage Policy (>= 85%)",
             [
-                sys.executable,
+                py_exe,
                 "scripts/run.py",
                 "pytest",
                 "tests/unit",

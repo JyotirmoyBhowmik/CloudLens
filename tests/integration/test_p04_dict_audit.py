@@ -45,15 +45,15 @@ def test_identity_service_not_in_dict_holder():
 
     # Assert _users is a proxy, not a standard raw dict singleton
     users_proxy = service._users
-    assert not (type(users_proxy) is dict), "service._users must be a dynamic DB proxy class, not a raw dict"
+    assert type(users_proxy) is not dict, "service._users must be a dynamic DB proxy class, not a raw dict"
 
     # Assert _users_by_email is a proxy
     email_proxy = service._users_by_email
-    assert not (type(email_proxy) is dict), "service._users_by_email must be a dynamic DB proxy class, not a raw dict"
+    assert type(email_proxy) is not dict, "service._users_by_email must be a dynamic DB proxy class, not a raw dict"
 
     # Assert _sessions is a proxy
     sess_proxy = service._sessions
-    assert not (type(sess_proxy) is dict), "service._sessions must be a dynamic DB proxy class, not a raw dict"
+    assert type(sess_proxy) is not dict, "service._sessions must be a dynamic DB proxy class, not a raw dict"
 
 
 def test_rbac_services_not_in_dict_holder():

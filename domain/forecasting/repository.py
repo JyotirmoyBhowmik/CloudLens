@@ -1,46 +1,45 @@
-"""Tenant-Scoped Repository for Forecast Entities and Milestone Snapshots (Prompt 29).
+"""Tenant-Scoped Repository for Forecast Entities and Milestone Snapshots (Prompt P06).
 
 Enforces:
 - Prompt 13 Item 84: 100% TenantContext validation across all repository operations.
-- Tenant isolation per BBP Section 41 and SEC-015.
-- Prompt 29: Stored forecasts with method, input window, generation timestamp, and confidence label.
-- Prompt 29: Forecast accuracy milestones recorded at 25%, 50%, 75%, and period close.
+- Pattern P1: Protocol + SqlForecastRepository (SQLAlchemy 2.0 async + asyncpg).
+- Pattern P3: Injected dependency, zero mutable dict singletons in production.
+- Pattern P4: Transactional RLS isolation via get_tenant_session().
+- Pattern P6: Startup guard preventing InMemory repository outside development.
+- Stored forecasts with method, input window, generation timestamp, and confidence label surviving restarts.
+- Forecast accuracy milestones recorded and retrievable across restarts.
 """
 
 from __future__ import annotations
 
-import builtins
+import asyncio
+import concurrent.futures
+import json
 import logging
-from datetime import date
-from typing import Any
+import os
+import sys
+from datetime import date, datetime
+from typing import Any, Protocol, runtime_checkable
 
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db.session import get_tenant_session
 from domain.forecasting.models import (
     ForecastEntity,
     ForecastMilestoneSnapshot,
 )
 from domain.tenant.context import TenantContext
-from domain.tenant.repository import TenantAwareRepository
 
 logger = logging.getLogger(__name__)
 
 
-class ForecastRepository(TenantAwareRepository[ForecastEntity]):
-    """In-memory tenant-isolated repository for forecast records and milestone evaluations."""
-
-    def __init__(self) -> None:
-        # Key: (tenant_id, forecast_id) -> ForecastEntity
-        self._forecasts: dict[tuple[str, str], ForecastEntity] = {}
-        # Key: (tenant_id, snapshot_id) -> ForecastMilestoneSnapshot
-        self._milestones: dict[tuple[str, str], ForecastMilestoneSnapshot] = {}
-
-    # ==========================================================================
-    # 1. Base TenantAwareRepository Implementation
-    # ==========================================================================
+@runtime_checkable
+class ForecastRepository(Protocol):
+    """Authoritative protocol for Forecast and Milestone persistence."""
 
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> ForecastEntity | None:
-        """Retrieves a single forecast by ID within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        return self._forecasts.get((tenant_context.tenant_id, entity_id))
+        ...
 
     def list(
         self,
@@ -49,72 +48,20 @@ class ForecastRepository(TenantAwareRepository[ForecastEntity]):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> builtins.list[ForecastEntity]:
-        """Lists forecasts belonging strictly to the tenant with optional pagination."""
-        self._validate_tenant_context(tenant_context)
-        tenant_id = tenant_context.tenant_id
-
-        results = [f for (t_id, _), f in self._forecasts.items() if t_id == tenant_id]
-
-        if filter_params and isinstance(filter_params, dict):
-            if "scope_id" in filter_params and filter_params["scope_id"]:
-                sid = filter_params["scope_id"]
-                results = [f for f in results if f.scope_id == sid]
-            if "budget_id" in filter_params and filter_params["budget_id"]:
-                bid = filter_params["budget_id"]
-                results = [f for f in results if f.budget_id == bid]
-            if "period" in filter_params and filter_params["period"]:
-                p = filter_params["period"]
-                results = [f for f in results if f.period == p or f.period.value == str(p)]
-            if "effective_method" in filter_params and filter_params["effective_method"]:
-                m = filter_params["effective_method"]
-                results = [
-                    f
-                    for f in results
-                    if f.effective_method == m or f.effective_method.value == str(m)
-                ]
-            if "confidence" in filter_params and filter_params["confidence"]:
-                c = filter_params["confidence"]
-                results = [f for f in results if f.confidence == c or f.confidence.value == str(c)]
-            if "is_active" in filter_params and filter_params["is_active"] is not None:
-                is_act = bool(filter_params["is_active"])
-                results = [f for f in results if f.is_active == is_act]
-
-        # Sort descending by generation timestamp
-        results.sort(key=lambda x: x.generation_timestamp, reverse=True)
-        return results[offset : offset + limit]
+    ) -> list[ForecastEntity]:
+        ...
 
     def save(self, entity: ForecastEntity, *, tenant_context: TenantContext) -> ForecastEntity:
-        """Persists or updates a forecast within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, entity.id)
-        self._forecasts[key] = entity
-        return entity
+        ...
 
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        """Deletes a forecast within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, entity_id)
-        if key in self._forecasts:
-            del self._forecasts[key]
-            return True
-        return False
+        ...
 
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        """Checks if a forecast exists within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        return (tenant_context.tenant_id, entity_id) in self._forecasts
+        ...
 
     def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int:
-        """Returns total forecast count matching filter within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        return len(
-            self.list(tenant_context=tenant_context, filter_params=filter_params, limit=10000)
-        )
-
-    # ==========================================================================
-    # 2. Specialized Forecast Domain Queries
-    # ==========================================================================
+        ...
 
     def find_active_by_scope(
         self,
@@ -124,20 +71,7 @@ class ForecastRepository(TenantAwareRepository[ForecastEntity]):
         *,
         tenant_context: TenantContext,
     ) -> ForecastEntity | None:
-        """Retrieves active forecast matching scope and period boundaries."""
-        self._validate_tenant_context(tenant_context)
-        tenant_id = tenant_context.tenant_id
-
-        for (t_id, _), f in self._forecasts.items():
-            if (
-                t_id == tenant_id
-                and f.is_active
-                and f.scope_id == scope_id
-                and f.period_start == period_start
-                and f.period_end == period_end
-            ):
-                return f
-        return None
+        ...
 
     def find_by_period_overlap(
         self,
@@ -145,26 +79,8 @@ class ForecastRepository(TenantAwareRepository[ForecastEntity]):
         end_date: date,
         *,
         tenant_context: TenantContext,
-    ) -> builtins.list[ForecastEntity]:
-        """Finds all active forecasts whose input window or target period overlaps specified range."""
-        self._validate_tenant_context(tenant_context)
-        tenant_id = tenant_context.tenant_id
-
-        results: builtins.list[ForecastEntity] = []
-        for (t_id, _), f in self._forecasts.items():
-            if t_id == tenant_id and f.is_active:
-                # Check period overlap or input window overlap
-                period_overlaps = not (f.period_end < start_date or f.period_start > end_date)
-                window_overlaps = not (
-                    f.input_window.end_date < start_date or f.input_window.start_date > end_date
-                )
-                if period_overlaps or window_overlaps:
-                    results.append(f)
-        return results
-
-    # ==========================================================================
-    # 3. Milestone Snapshot Persistence
-    # ==========================================================================
+    ) -> list[ForecastEntity]:
+        ...
 
     def save_milestone(
         self,
@@ -172,11 +88,7 @@ class ForecastRepository(TenantAwareRepository[ForecastEntity]):
         *,
         tenant_context: TenantContext,
     ) -> ForecastMilestoneSnapshot:
-        """Persists a milestone evaluation snapshot."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, snapshot.id)
-        self._milestones[key] = snapshot
-        return snapshot
+        ...
 
     def list_milestones(
         self,
@@ -184,53 +96,380 @@ class ForecastRepository(TenantAwareRepository[ForecastEntity]):
         period_identifier: str | None = None,
         scope_id: str | None = None,
         tenant_context: TenantContext,
-    ) -> builtins.list[ForecastMilestoneSnapshot]:
-        """Lists milestone snapshots matching filters within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        tenant_id = tenant_context.tenant_id
-
-        results = [m for (t_id, _), m in self._milestones.items() if t_id == tenant_id]
-        if period_identifier:
-            results = [m for m in results if m.period_identifier == period_identifier]
-        if scope_id:
-            results = [m for m in results if m.scope_id == scope_id]
-
-        results.sort(key=lambda x: (x.period_start, x.checkpoint_date))
-        return results
+    ) -> list[ForecastMilestoneSnapshot]:
+        ...
 
     def clear_tenant_data(self, *, tenant_context: TenantContext) -> None:
-        """Clears all stored forecasts and milestones for the authenticated tenant."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        for k in [k for k in self._forecasts if k[0] == t_id]:
-            del self._forecasts[k]
-        for k in [k for k in self._milestones if k[0] == t_id]:
-            del self._milestones[k]
-
-    def _clear_all_for_testing(self) -> None:
-        """Clears all stored data across tenants (internal test isolation only)."""
-        self._forecasts.clear()
-        self._milestones.clear()
+        ...
 
 
-# ==============================================================================
-# Repository Singleton Factory
-# ==============================================================================
+class SqlForecastRepository:
+    """PostgreSQL implementation of ForecastRepository using SQLAlchemy async."""
 
-_forecast_repo_instance: ForecastRepository | None = None
+    is_in_memory: bool = False
+
+    def _run_async(self, coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(coro)).result()
+
+    def _row_to_forecast(self, row: Any) -> ForecastEntity:
+        m = dict(row._mapping)
+        raw = m.get("forecast_payload")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "id" in raw:
+            return ForecastEntity.model_validate(raw)
+
+        from domain.forecasting.models import (
+            ConfidenceLabel,
+            DateWindow,
+            ForecastMethod,
+            ForecastMethodResult,
+            ForecastPeriod,
+        )
+        return ForecastEntity(
+            id=m["id"],
+            tenant_id=m["tenant_id"],
+            scope_id=m["scope_id"],
+            period=ForecastPeriod.MONTHLY,
+            period_start=m["period_start"],
+            period_end=m["period_end"],
+            input_window=DateWindow(start_date=m["period_start"], end_date=m["period_end"]),
+            primary_method=ForecastMethod(m["method"]),
+            effective_method=ForecastMethod(m["method"]),
+            method_results=[
+                ForecastMethodResult(
+                    method=ForecastMethod(m["method"]),
+                    predicted_cost=float(m["predicted_cost"]),
+                    lower_bound=float(m["lower_bound"]) if m.get("lower_bound") is not None else float(m["predicted_cost"]),
+                    upper_bound=float(m["upper_bound"]) if m.get("upper_bound") is not None else float(m["predicted_cost"]),
+                    confidence=ConfidenceLabel(m["confidence_label"]),
+                )
+            ],
+            confidence=ConfidenceLabel(m["confidence_label"]),
+            generation_timestamp=m.get("generated_at") or datetime.now(),
+        )
+
+    def _row_to_milestone(self, row: Any) -> ForecastMilestoneSnapshot:
+        m = dict(row._mapping)
+        raw = m.get("milestone_payload")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "id" in raw:
+            return ForecastMilestoneSnapshot.model_validate(raw)
+
+        from domain.forecasting.models import AccuracyMilestone, BiasDirection
+        return ForecastMilestoneSnapshot(
+            id=m["id"],
+            forecast_id=m["forecast_id"],
+            tenant_id=m["tenant_id"],
+            scope_id=m["scope_id"],
+            period_identifier="period",
+            milestone=AccuracyMilestone.FIFTY_PERCENT,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 1, 31),
+            checkpoint_date=date(2026, 1, 15),
+            actual_spend_to_date=float(m["actual_spend_to_date"]),
+            projected_period_close=float(m["projected_period_close"]),
+            variance_amount=float(m["variance_amount"]),
+            percentage_error=float(m["variance_pct"]),
+            bias_direction=BiasDirection(m["bias_direction"]),
+            recorded_at=m.get("evaluated_at") or datetime.now(),
+        )
+
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> ForecastEntity | None:
+        async def _get():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                res = await session.execute(
+                    text("SELECT * FROM forecasts WHERE id = :id AND tenant_id = :tid;"),
+                    {"id": entity_id, "tid": tid},
+                )
+                row = res.first()
+                return self._row_to_forecast(row) if row else None
+
+        return self._run_async(_get())
+
+    def list(
+        self,
+        *,
+        tenant_context: TenantContext,
+        filter_params: Any = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[ForecastEntity]:
+        async def _list():
+            tid = tenant_context.tenant_id
+            sql = "SELECT * FROM forecasts WHERE tenant_id = :tid"
+            params: dict[str, Any] = {"tid": tid}
+            if filter_params and isinstance(filter_params, dict):
+                if "scope_id" in filter_params and filter_params["scope_id"]:
+                    sql += " AND scope_id = :sid"
+                    params["sid"] = filter_params["scope_id"]
+                if "effective_method" in filter_params and filter_params["effective_method"]:
+                    m = filter_params["effective_method"]
+                    sql += " AND method = :method"
+                    params["method"] = m.value if hasattr(m, "value") else str(m)
+                if "confidence" in filter_params and filter_params["confidence"]:
+                    c = filter_params["confidence"]
+                    sql += " AND confidence_label = :conf"
+                    params["conf"] = c.value if hasattr(c, "value") else str(c)
+
+            sql += " ORDER BY generated_at DESC LIMIT :limit OFFSET :offset;"
+            params["limit"] = limit
+            params["offset"] = offset
+
+            async with get_tenant_session(tid) as session:
+                res = await session.execute(text(sql), params)
+                return [self._row_to_forecast(r) for r in res.fetchall()]
+
+        return self._run_async(_list())
+
+    def save(self, entity: ForecastEntity, *, tenant_context: TenantContext) -> ForecastEntity:
+        async def _save():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                query = text("""
+                    INSERT INTO forecasts (
+                        id, tenant_id, scope_id, period_start, period_end,
+                        method, predicted_cost, lower_bound, upper_bound,
+                        confidence_label, forecast_payload, generated_at
+                    ) VALUES (
+                        :id, :tid, :sid, :p_start, :p_end,
+                        :method, :pred, :lower, :upper,
+                        :conf, CAST(:payload AS jsonb), :gen_at
+                    )
+                    ON CONFLICT (id) DO UPDATE SET
+                        scope_id = EXCLUDED.scope_id,
+                        period_start = EXCLUDED.period_start,
+                        period_end = EXCLUDED.period_end,
+                        method = EXCLUDED.method,
+                        predicted_cost = EXCLUDED.predicted_cost,
+                        lower_bound = EXCLUDED.lower_bound,
+                        upper_bound = EXCLUDED.upper_bound,
+                        confidence_label = EXCLUDED.confidence_label,
+                        forecast_payload = EXCLUDED.forecast_payload,
+                        generated_at = EXCLUDED.generated_at;
+                """)
+                lower = entity.lower_bound
+                upper = entity.upper_bound
+                await session.execute(
+                    query,
+                    {
+                        "id": entity.id,
+                        "tid": tid,
+                        "sid": entity.scope_id,
+                        "p_start": entity.period_start,
+                        "p_end": entity.period_end,
+                        "method": entity.effective_method.value,
+                        "pred": entity.predicted_cost,
+                        "lower": lower,
+                        "upper": upper,
+                        "conf": entity.confidence.value,
+                        "payload": json.dumps(entity.model_dump(mode="json")),
+                        "gen_at": entity.generation_timestamp,
+                    },
+                )
+                await session.commit()
+                return entity
+
+        return self._run_async(_save())
+
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        async def _del():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                res = await session.execute(
+                    text("DELETE FROM forecasts WHERE id = :id AND tenant_id = :tid;"),
+                    {"id": entity_id, "tid": tid},
+                )
+                await session.commit()
+                return (res.rowcount or 0) > 0
+
+        return self._run_async(_del())
+
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        return self.get(entity_id, tenant_context=tenant_context) is not None
+
+    def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int:
+        async def _cnt():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                res = await session.execute(
+                    text("SELECT COUNT(*) FROM forecasts WHERE tenant_id = :tid;"),
+                    {"tid": tid},
+                )
+                return res.scalar() or 0
+
+        return self._run_async(_cnt())
+
+    def find_active_by_scope(
+        self,
+        scope_id: str,
+        period_start: date,
+        period_end: date,
+        *,
+        tenant_context: TenantContext,
+    ) -> ForecastEntity | None:
+        async def _find():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                query = text("""
+                    SELECT * FROM forecasts
+                    WHERE tenant_id = :tid AND scope_id = :sid AND period_start = :p_start AND period_end = :p_end
+                    ORDER BY generated_at DESC LIMIT 1;
+                """)
+                res = await session.execute(
+                    query,
+                    {"tid": tid, "sid": scope_id, "p_start": period_start, "p_end": period_end},
+                )
+                row = res.first()
+                return self._row_to_forecast(row) if row else None
+
+        return self._run_async(_find())
+
+    def find_by_period_overlap(
+        self,
+        start_date: date,
+        end_date: date,
+        *,
+        tenant_context: TenantContext,
+    ) -> list[ForecastEntity]:
+        async def _find_overlap():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                query = text("""
+                    SELECT * FROM forecasts
+                    WHERE tenant_id = :tid AND NOT (period_end < :start_date OR period_start > :end_date)
+                    ORDER BY generated_at DESC;
+                """)
+                res = await session.execute(
+                    query,
+                    {"tid": tid, "start_date": start_date, "end_date": end_date},
+                )
+                return [self._row_to_forecast(r) for r in res.fetchall()]
+
+        return self._run_async(_find_overlap())
+
+    def save_milestone(
+        self,
+        snapshot: ForecastMilestoneSnapshot,
+        *,
+        tenant_context: TenantContext,
+    ) -> ForecastMilestoneSnapshot:
+        async def _save():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                query = text("""
+                    INSERT INTO forecast_milestones (
+                        id, tenant_id, forecast_id, scope_id, milestone_pct,
+                        actual_spend_to_date, projected_period_close, variance_amount,
+                        variance_pct, bias_direction, milestone_payload, evaluated_at
+                    ) VALUES (
+                        :id, :tid, :fid, :sid, :pct,
+                        :actual, :proj, :var_amt,
+                        :var_pct, :bias, CAST(:payload AS jsonb), :eval_at
+                    )
+                    ON CONFLICT (id) DO UPDATE SET
+                        actual_spend_to_date = EXCLUDED.actual_spend_to_date,
+                        projected_period_close = EXCLUDED.projected_period_close,
+                        variance_amount = EXCLUDED.variance_amount,
+                        variance_pct = EXCLUDED.variance_pct,
+                        bias_direction = EXCLUDED.bias_direction,
+                        milestone_payload = EXCLUDED.milestone_payload,
+                        evaluated_at = EXCLUDED.evaluated_at;
+                """)
+                await session.execute(
+                    query,
+                    {
+                        "id": snapshot.id,
+                        "tid": tid,
+                        "fid": snapshot.forecast_id,
+                        "sid": snapshot.scope_id,
+                        "pct": snapshot.milestone.percentage,
+                        "actual": snapshot.actual_spend_to_date,
+                        "proj": snapshot.projected_period_close,
+                        "var_amt": snapshot.variance_amount,
+                        "var_pct": snapshot.percentage_error,
+                        "bias": snapshot.bias_direction.value,
+                        "payload": json.dumps(snapshot.model_dump(mode="json")),
+                        "eval_at": snapshot.recorded_at,
+                    },
+                )
+                await session.commit()
+                return snapshot
+
+        return self._run_async(_save())
+
+    def list_milestones(
+        self,
+        *,
+        period_identifier: str | None = None,
+        scope_id: str | None = None,
+        tenant_context: TenantContext,
+    ) -> list[ForecastMilestoneSnapshot]:
+        async def _list_m():
+            tid = tenant_context.tenant_id
+            sql = "SELECT * FROM forecast_milestones WHERE tenant_id = :tid"
+            params: dict[str, Any] = {"tid": tid}
+            if scope_id:
+                sql += " AND scope_id = :sid"
+                params["sid"] = scope_id
+            sql += " ORDER BY evaluated_at ASC;"
+
+            async with get_tenant_session(tid) as session:
+                res = await session.execute(text(sql), params)
+                return [self._row_to_milestone(r) for r in res.fetchall()]
+
+        return self._run_async(_list_m())
+
+    def clear_tenant_data(self, *, tenant_context: TenantContext) -> None:
+        async def _clear():
+            tid = tenant_context.tenant_id
+            async with get_tenant_session(tid) as session:
+                await session.execute(text("DELETE FROM forecast_milestones WHERE tenant_id = :tid;"), {"tid": tid})
+                await session.execute(text("DELETE FROM forecasts WHERE tenant_id = :tid;"), {"tid": tid})
+                await session.commit()
+
+        self._run_async(_clear())
 
 
-def get_forecast_repository() -> ForecastRepository:
-    """Returns singleton ForecastRepository instance."""
+_forecast_repo_instance: Any = None
+
+
+def get_forecast_repository() -> Any:
+    """Returns singleton ForecastRepository instance with production startup guard."""
     global _forecast_repo_instance
+    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+
+    if mode == "inmemory":
+        if env in ("staging", "production"):
+            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory forecast repository.")
+            sys.exit(1)
+        from tests.fakes.forecasting import InMemoryForecastRepository
+        return InMemoryForecastRepository()
+
     if _forecast_repo_instance is None:
-        _forecast_repo_instance = ForecastRepository()
+        _forecast_repo_instance = SqlForecastRepository()
     return _forecast_repo_instance
 
 
-def reset_forecast_repository() -> None:
+def reset_forecast_repository() -> Any:
     """Resets singleton ForecastRepository (for test teardown)."""
     global _forecast_repo_instance
-    if _forecast_repo_instance is not None:
-        _forecast_repo_instance._clear_all_for_testing()
     _forecast_repo_instance = None
+    return get_forecast_repository()
+
+
+__all__ = [
+    "ForecastRepository",
+    "SqlForecastRepository",
+    "get_forecast_repository",
+    "reset_forecast_repository",
+]
