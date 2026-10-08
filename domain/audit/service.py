@@ -35,7 +35,11 @@ class AuditService:
     """Enterprise append-only audit stream management service."""
 
     def __init__(self, repository: AuditRepository | None = None) -> None:
-        self.repository = repository or AuditRepository()
+        if repository is not None:
+            self.repository = repository
+        else:
+            from domain.audit.repository import get_audit_repository
+            self.repository = get_audit_repository()
         self._lock = threading.Lock()
 
     def _compute_hash(

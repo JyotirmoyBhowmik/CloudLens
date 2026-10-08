@@ -43,13 +43,64 @@ class FlagAuditEvent(BaseModel):
 class FeatureFlagService:
     """Evaluates and manages feature flags globally and per-tenant."""
 
-    def __init__(self) -> None:
-        # (tenant_id, flag_key) -> bool
-        self._tenant_overrides: dict[tuple[str, str], bool] = {}
-        # flag_key -> bool
-        self._global_overrides: dict[str, bool] = {}
-        # Audit log history
-        self._audit_log: list[FlagAuditEvent] = []
+    def __init__(self, repository: Any = None) -> None:
+        if repository is not None:
+            self._repo = repository
+        else:
+            from domain.config.feature_flags_repository import get_feature_flag_repository
+            self._repo = get_feature_flag_repository()
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _tenant_overrides(self):
+        service = self
+        class _TenantOverridesProxy(dict):
+            def get(self, key, default=None):
+                tid, fkey = key
+                val = service._repo.get_override_sync(fkey, tenant_id=tid)
+                return val if val is not None else default
+            def __getitem__(self, key):
+                tid, fkey = key
+                val = service._repo.get_override_sync(fkey, tenant_id=tid)
+                if val is None:
+                    raise KeyError(key)
+                return val
+            def __setitem__(self, key, enabled):
+                tid, fkey = key
+                service._repo.set_override_sync(fkey, enabled, tenant_id=tid)
+            def __contains__(self, key):
+                tid, fkey = key
+                return service._repo.get_override_sync(fkey, tenant_id=tid) is not None
+            def clear(self):
+                pass
+        return _TenantOverridesProxy()
+
+    @property
+    def _global_overrides(self):
+        service = self
+        class _GlobalOverridesProxy(dict):
+            def get(self, fkey, default=None):
+                val = service._repo.get_override_sync(fkey, tenant_id=None)
+                return val if val is not None else default
+            def __getitem__(self, fkey):
+                val = service._repo.get_override_sync(fkey, tenant_id=None)
+                if val is None:
+                    raise KeyError(fkey)
+                return val
+            def __setitem__(self, fkey, enabled):
+                service._repo.set_override_sync(fkey, enabled, tenant_id=None)
+            def __contains__(self, fkey):
+                return service._repo.get_override_sync(fkey, tenant_id=None) is not None
+            def clear(self):
+                pass
+        return _GlobalOverridesProxy()
+
+    @property
+    def _audit_log(self):
+        return self._repo.get_audit_log_sync()
 
     def is_registered(self, flag_key: str) -> bool:
         """Check whether a flag is in the canonical registry."""
@@ -73,12 +124,15 @@ class FeatureFlagService:
         definition = self.get_definition(flag_key)
 
         # 1. Tenant override
-        if tenant_id is not None and (tenant_id, flag_key) in self._tenant_overrides:
-            return self._tenant_overrides[(tenant_id, flag_key)]
+        if tenant_id is not None:
+            t_val = self._repo.get_override_sync(flag_key, tenant_id=tenant_id)
+            if t_val is not None:
+                return t_val
 
         # 2. Global runtime override
-        if flag_key in self._global_overrides:
-            return self._global_overrides[flag_key]
+        g_val = self._repo.get_override_sync(flag_key, tenant_id=None)
+        if g_val is not None:
+            return g_val
 
         # 3. Environment variable
         env_var_name = f"CLOUDLENS_FLAG_{flag_key.upper()}"
@@ -103,10 +157,9 @@ class FeatureFlagService:
 
         current_val = self.evaluate(flag_key, tenant_id=tenant_id)
 
-        if tenant_id is not None:
-            self._tenant_overrides[(tenant_id, flag_key)] = enabled
-        else:
-            self._global_overrides[flag_key] = enabled
+        self._repo.set_override_sync(
+            flag_key, enabled, tenant_id=tenant_id, updated_by=changed_by, reason=reason
+        )
 
         audit_event = FlagAuditEvent(
             flag_key=flag_key,
@@ -116,7 +169,7 @@ class FeatureFlagService:
             changed_by=changed_by,
             reason=reason,
         )
-        self._audit_log.append(audit_event)
+        self._repo.record_audit_sync(audit_event)
         return audit_event
 
     def get_audit_log(
@@ -125,12 +178,7 @@ class FeatureFlagService:
         tenant_id: str | None = None,
     ) -> list[FlagAuditEvent]:
         """Query feature flag audit log with optional filtering."""
-        results = self._audit_log
-        if flag_key:
-            results = [e for e in results if e.flag_key == flag_key]
-        if tenant_id:
-            results = [e for e in results if e.tenant_id == tenant_id]
-        return list(reversed(results))
+        return self._repo.get_audit_log_sync(flag_key=flag_key, tenant_id=tenant_id)
 
     def list_flags(self, tenant_id: str | None = None) -> list[dict[str, Any]]:
         """List all canonical flags with effective values."""

@@ -47,13 +47,48 @@ EXPIRY_THRESHOLDS = [30, 14, 3, 0]
 class CredentialService:
     """Manages the end-to-end credential lifecycle and secret store reference mapping."""
 
-    def __init__(self, secret_store: SecretStore | None = None) -> None:
+    def __init__(
+        self,
+        secret_store: SecretStore | None = None,
+        repository: Any = None,
+    ) -> None:
         self._secret_store: SecretStore = secret_store or get_secret_store()
-        self._profiles: dict[str, CredentialProfile] = {}
+        if repository is not None:
+            self._repo = repository
+        else:
+            from domain.credentials.repository import get_credential_repository
+            self._repo = get_credential_repository()
+
         self._alerts: list[Alert] = []
         self._audit_events: list[AuditEvent] = []
         # Deduplication tracker: (profile_id, threshold_days) -> timestamp
         self._alerted_thresholds: dict[tuple[str, int], datetime] = {}
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _profiles(self):
+        service = self
+        class _ProfilesProxy(dict):
+            def get(self, pid, default=None):
+                p = service._repo.get_sync(pid)
+                return p if p is not None else default
+            def __getitem__(self, pid):
+                p = service._repo.get_sync(pid)
+                if p is None:
+                    raise KeyError(pid)
+                return p
+            def __setitem__(self, pid, profile):
+                service._repo.save_sync(profile)
+            def __contains__(self, pid):
+                return service._repo.get_sync(pid) is not None
+            def values(self):
+                return service._repo.list_for_tenant_sync("tenant-primary")
+            def clear(self):
+                pass
+        return _ProfilesProxy()
 
     # ----------------------------------------------------------------------
     # Item 78: Credential Lifecycle - Create with Pre-Flight Validation
@@ -125,7 +160,7 @@ class CredentialService:
             metadata=safe_meta,
         )
 
-        self._profiles[profile_id] = profile
+        self._repo.save_sync(profile)
 
         # 4. Record audit event (Sanitized metadata only - zero secrets)
         self._record_audit_event(
@@ -163,7 +198,7 @@ class CredentialService:
 
     def get_profile(self, tenant_id: str, profile_id: str) -> CredentialProfile:
         """Retrieves credential profile enforcing strict tenant isolation (SEC-014)."""
-        profile = self._profiles.get(profile_id)
+        profile = self._repo.get_sync(profile_id)
         if not profile:
             raise CredentialNotFoundException(profile_id=profile_id, tenant_id=tenant_id)
 
@@ -191,11 +226,7 @@ class CredentialService:
         provider: ProviderType | None = None,
     ) -> list[CredentialProfile]:
         """Lists all credential profiles belonging strictly to the specified tenant."""
-        return [
-            p
-            for p in self._profiles.values()
-            if p.tenant_id == tenant_id and (provider is None or p.provider == provider)
-        ]
+        return self._repo.list_for_tenant_sync(tenant_id, provider)
 
     def bind_connector(
         self,
@@ -406,6 +437,7 @@ class CredentialService:
             },
         )
 
+        self._repo.save_sync(profile)
         return profile
 
     def complete_rotation(
@@ -429,6 +461,7 @@ class CredentialService:
 
         profile.rotation_state = RotationState.ACTIVE
         profile.updated_at = datetime.now(UTC)
+        self._repo.save_sync(profile)
 
         self._record_audit_event(
             tenant_id=tenant_id,
@@ -454,6 +487,7 @@ class CredentialService:
 
         profile.rotation_state = RotationState.RETIRED
         profile.updated_at = datetime.now(UTC)
+        self._repo.save_sync(profile)
 
         self._record_audit_event(
             tenant_id=tenant_id,
@@ -486,6 +520,7 @@ class CredentialService:
         now = datetime.now(UTC)
         profile.rotation_state = RotationState.REVOKED
         profile.updated_at = now
+        self._repo.save_sync(profile)
 
         # 2. Raise critical security alert
         alert_msg = (
@@ -533,11 +568,15 @@ class CredentialService:
         now = current_time or datetime.now(UTC)
         expiry_alerts: list[ExpiryAlert] = []
 
+        if tenant_id:
+            all_profiles = self._repo.list_for_tenant_sync(tenant_id)
+        else:
+            all_profiles = self._repo.list_for_tenant_sync("tenant-primary") + self._repo.list_for_tenant_sync("global")
+
         target_profiles = [
             p
-            for p in self._profiles.values()
-            if (tenant_id is None or p.tenant_id == tenant_id)
-            and p.rotation_state in (RotationState.ACTIVE, RotationState.ROTATING)
+            for p in all_profiles
+            if p.rotation_state in (RotationState.ACTIVE, RotationState.ROTATING)
             and p.expires_at is not None
         ]
 
@@ -550,6 +589,7 @@ class CredentialService:
                 # Expired! Transition state and fire CRITICAL alert
                 profile.rotation_state = RotationState.EXPIRED
                 profile.updated_at = now
+                self._repo.save_sync(profile)
                 msg = (
                     f"CRITICAL: Credential profile '{profile.name}' ({profile.id}) for provider "
                     f"'{profile.provider.value}' has EXPIRED as of {profile.expires_at.isoformat()}. "

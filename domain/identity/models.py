@@ -10,6 +10,7 @@ Defines core platform entities for:
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -68,6 +69,15 @@ class Session(CanonicalEntity):
     revocation_reason: str | None = Field(default=None, description="Reason for session revocation")
     ip_address: str | None = Field(default=None, description="Originating client IP address")
     user_agent: str | None = Field(default=None, description="Originating client User-Agent")
+
+    def __init__(self, **data: Any):
+        if "session_id" in data and "id" not in data:
+            data["id"] = data["session_id"]
+        super().__init__(**data)
+
+    @property
+    def session_id(self) -> str:
+        return self.id
 
 
 class BreakGlassAccount(CanonicalEntity):

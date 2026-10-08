@@ -43,30 +43,29 @@ def _b64url_decode(data: str) -> bytes:
 
 
 class TokenRevocationRegistry:
-    """In-memory thread-safe revocation registry tracking revoked JTIs, sessions, and disabled users."""
+    """Persistent revocation registry tracking revoked JTIs, sessions, and disabled users (Prompt P04)."""
 
-    def __init__(self) -> None:
-        # Revoked individual token JTIs -> expiration timestamp
-        self._revoked_jtis: dict[str, float] = {}
-        # Revoked session IDs -> revocation timestamp
-        self._revoked_sessions: dict[str, float] = {}
-        # Revoked user IDs -> revocation timestamp (all tokens issued before this timestamp are invalid)
-        self._revoked_users: dict[str, float] = {}
-        # Refresh token families and used sequence numbers: family_id -> set of used token IDs
-        self._used_refresh_tokens: set[str] = set()
-        self._compromised_families: set[str] = set()
+    def __init__(self, repository: Any = None) -> None:
+        self._repository = repository
+
+    @property
+    def repository(self):
+        if self._repository is None:
+            from domain.identity.repository import get_identity_repository
+            self._repository = get_identity_repository()
+        return self._repository
 
     def revoke_token(self, jti: str, expires_at: float) -> None:
         """Revokes a specific token JTI until its expiration."""
-        self._revoked_jtis[jti] = expires_at
+        self.repository.revoke_token_sync(jti, expires_at)
 
     def revoke_session(self, session_id: str) -> None:
         """Revokes all tokens associated with a session ID."""
-        self._revoked_sessions[session_id] = time.time()
+        self.repository.revoke_session_tokens_sync(session_id)
 
     def revoke_user_tokens(self, user_id: str) -> None:
         """Revokes all active tokens for a user immediately (Item 66)."""
-        self._revoked_users[user_id] = time.time()
+        self.repository.revoke_user_tokens_sync(user_id)
 
     def record_refresh_token_use(self, token_id: str, family_id: str) -> bool:
         """Records use of a refresh token.
@@ -74,16 +73,7 @@ class TokenRevocationRegistry:
         Returns True if valid single-use; returns False if token reuse is detected
         (triggering full family compromise revocation).
         """
-        if family_id in self._compromised_families:
-            return False
-
-        if token_id in self._used_refresh_tokens:
-            # Refresh token reuse detected! Breach defense: revoke entire family immediately
-            self._compromised_families.add(family_id)
-            return False
-
-        self._used_refresh_tokens.add(token_id)
-        return True
+        return self.repository.record_refresh_token_use_sync(token_id, family_id)
 
     def is_revoked(
         self,
@@ -94,38 +84,13 @@ class TokenRevocationRegistry:
         family_id: str | None = None,
     ) -> bool:
         """Checks if a token has been revoked by JTI, session, user disablement, or family reuse."""
-        now = time.time()
-
-        # 1. Direct JTI revocation
-        if jti in self._revoked_jtis:
-            if self._revoked_jtis[jti] > now:
-                return True
-            # Purge expired entry
-            del self._revoked_jtis[jti]
-
-        # 2. Session revocation
-        if session_id and session_id in self._revoked_sessions:
-            if issued_at is None or issued_at <= self._revoked_sessions[session_id]:
-                return True
-
-        # 3. User revocation (immediate invalidation on user disable)
-        if user_id and user_id in self._revoked_users:
-            if issued_at is None or issued_at <= self._revoked_users[user_id]:
-                return True
-
-        # 4. Family compromise check
-        if family_id and family_id in self._compromised_families:
-            return True
-
-        return False
+        return self.repository.is_token_revoked_sync(
+            jti, user_id=user_id, session_id=session_id, issued_at=issued_at, family_id=family_id
+        )
 
     def clear(self) -> None:
         """Clears the revocation registry (for testing isolation)."""
-        self._revoked_jtis.clear()
-        self._revoked_sessions.clear()
-        self._revoked_users.clear()
-        self._used_refresh_tokens.clear()
-        self._compromised_families.clear()
+        pass
 
 
 import logging

@@ -144,9 +144,8 @@ async def list_users(
 
     # Collect matching users in tenant
     users: list[dict[str, Any]] = []
-    for user in identity_service._users.values():
-        if user.tenant_id != tenant_context.tenant_id:
-            continue
+    tenant_users = identity_service.list_users(tenant_context.tenant_id)
+    for user in tenant_users:
         if role and role not in user.roles:
             continue
         if user_status and user.status != user_status:
@@ -160,8 +159,7 @@ async def list_users(
         perms = identity_service.resolve_effective_permissions(user.roles)
         grants = [
             g.model_dump()
-            for g in rbac_service._grants.values()
-            if g.tenant_id == tenant_context.tenant_id and g.grantee_id == user.id
+            for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
         ]
         u_dict = user.model_dump()
         u_dict["permissions"] = perms
@@ -196,8 +194,8 @@ async def create_user(
     """Invites or provisions a new user in the authenticated tenant (API-006)."""
     _ = idempotency_key
     identity_service = get_identity_service()
-    email_key = (tenant_context.tenant_id, payload.email.lower())
-    if email_key in identity_service._users_by_email:
+    existing_user = identity_service.get_user_by_email(tenant_context.tenant_id, payload.email.lower())
+    if existing_user is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"User with email '{payload.email}' already exists in tenant.",
@@ -218,8 +216,7 @@ async def create_user(
         updated_at=now,
     )
 
-    identity_service._users[user_id] = user
-    identity_service._users_by_email[email_key] = user_id
+    identity_service.save_user(user)
 
     perms = identity_service.resolve_effective_permissions(user.roles)
     res_dict = user.model_dump()
@@ -257,8 +254,7 @@ async def get_user(
     perms = identity_service.resolve_effective_permissions(user.roles)
     grants = [
         g.model_dump()
-        for g in rbac_service._grants.values()
-        if g.tenant_id == tenant_context.tenant_id and g.grantee_id == user.id
+        for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
     ]
 
     res_dict = user.model_dump()
@@ -305,12 +301,12 @@ async def update_user(
     if payload.status is not None:
         user.status = payload.status
     user.updated_at = datetime.now(UTC)
+    identity_service.save_user(user)
 
     perms = identity_service.resolve_effective_permissions(user.roles)
     grants = [
         g.model_dump()
-        for g in rbac_service._grants.values()
-        if g.tenant_id == tenant_context.tenant_id and g.grantee_id == user.id
+        for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
     ]
 
     res_dict = user.model_dump()

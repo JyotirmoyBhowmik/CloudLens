@@ -38,7 +38,11 @@ class OverrideService:
         repository: OverrideRepository | None = None,
         audit_service: AuditService | None = None,
     ) -> None:
-        self.repository = repository or OverrideRepository()
+        if repository is not None:
+            self.repository = repository
+        else:
+            from domain.overrides.repository import get_override_repository
+            self.repository = get_override_repository()
         self.audit_service = audit_service or get_audit_service()
         self._lock = threading.Lock()
 

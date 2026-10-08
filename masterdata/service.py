@@ -46,8 +46,13 @@ from masterdata.seeder import MasterDataSeeder, SeedExecutionReport
 class MasterDataService:
     """Enterprise Master Data Management Service."""
 
-    def __init__(self, auto_seed: bool = True) -> None:
-        self._records: dict[str, list[MasterDataRecord]] = {}
+    def __init__(self, repository: Any = None, auto_seed: bool = True) -> None:
+        if repository is not None:
+            self._repo = repository
+        else:
+            from masterdata.repository import get_master_data_repository
+            self._repo = get_master_data_repository()
+
         self._audits: list[MasterDataAuditEntry] = []
         self._import_audits: list[dict[str, Any]] = []
         self._seeder = MasterDataSeeder()
@@ -58,6 +63,33 @@ class MasterDataService:
 
         if auto_seed:
             self.seed_system_masters()
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _records(self):
+        service = self
+        class _RecordsProxy(dict):
+            def get(self, master_type, default=None):
+                recs = service._repo.list_records_sync(master_type)
+                return recs if recs else (default if default is not None else [])
+            def __getitem__(self, master_type):
+                recs = service._repo.list_records_sync(master_type)
+                return recs
+            def __setitem__(self, master_type, record_list):
+                for r in record_list:
+                    service._repo.save_record_sync(r)
+            def setdefault(self, master_type, default=None):
+                service_ref = service
+                class _ListProxy(list):
+                    def append(self, record):
+                        service_ref._repo.save_record_sync(record)
+                return _ListProxy(service._repo.list_records_sync(master_type))
+            def __contains__(self, master_type):
+                return len(service._repo.list_records_sync(master_type)) > 0
+        return _RecordsProxy()
 
     # ==========================================================================
     # 1. Registry Manifest
@@ -304,9 +336,9 @@ class MasterDataService:
             )
             return new_version
 
-        # Direct edit: close old version and activate new version
         current.effective_to = transition_time
         current.is_active = False
+        self._repo.save_record_sync(current)
 
         new_id = f"md-{mt.lower()}-{uuid.uuid4().hex[:8]}"
         new_version = MasterDataRecord(
@@ -552,7 +584,7 @@ class MasterDataService:
             )
 
         # Remove from store
-        self._records[mt] = [r for r in self._records[mt] if r.code != code]
+        self._repo.delete_record_sync(current.id)
 
         self._record_audit(
             record_id=current.id,

@@ -49,11 +49,42 @@ class RBACService:
         catalogue: PermissionCatalogue | None = None,
         evaluator: ScopeGrantEvaluator | None = None,
         access_filter: AccessControlFilter | None = None,
+        repository: Any = None,
     ) -> None:
         self._catalogue = catalogue or get_permission_catalogue()
         self._evaluator = evaluator or ScopeGrantEvaluator(self._catalogue)
         self._filter = access_filter or AccessControlFilter(self._evaluator)
-        self._grants: dict[str, ScopeGrant] = {}
+        if repository is not None:
+            self._repo = repository
+        else:
+            from domain.rbac.repository import get_rbac_repository
+            self._repo = get_rbac_repository()
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _grants(self):
+        service = self
+        class _GrantsProxy(dict):
+            def get(self, gid, default=None):
+                g = service._repo.get_scope_grant_sync(gid)
+                return g if g is not None else default
+            def __getitem__(self, gid):
+                g = service._repo.get_scope_grant_sync(gid)
+                if g is None:
+                    raise KeyError(gid)
+                return g
+            def __setitem__(self, gid, grant):
+                service._repo.save_scope_grant_sync(grant)
+            def __contains__(self, gid):
+                return service._repo.get_scope_grant_sync(gid) is not None
+            def values(self):
+                return service._repo.list_scope_grants_sync()
+            def clear(self):
+                pass
+        return _GrantsProxy()
 
     @property
     def catalogue(self) -> PermissionCatalogue:
@@ -125,7 +156,7 @@ class RBACService:
         """Registers a declarative scope grant."""
         if not grant.id:
             grant.id = f"grant-{uuid.uuid4().hex[:12]}"
-        self._grants[grant.id] = grant
+        self._repo.save_scope_grant_sync(grant)
         logger.info(
             "Registered scope grant",
             extra={
@@ -140,28 +171,23 @@ class RBACService:
 
     def get_scope_grant(self, grant_id: str) -> ScopeGrant | None:
         """Retrieves a scope grant by ID."""
-        return self._grants.get(grant_id)
+        return self._repo.get_scope_grant_sync(grant_id)
 
     def list_scope_grants(
         self, tenant_id: str | None = None, grantee_id: str | None = None
     ) -> list[ScopeGrant]:
         """Lists active scope grants filtered by tenant and optional grantee."""
-        grants = list(self._grants.values())
-        if tenant_id:
-            grants = [g for g in grants if g.tenant_id in (tenant_id, "*")]
-        if grantee_id:
-            grants = [g for g in grants if g.grantee_id == grantee_id]
-        return grants
+        return self._repo.list_scope_grants_sync(tenant_id=tenant_id, grantee_id=grantee_id)
 
     def list_grants_for_user(
         self, user_id: str, role_codes: list[str], tenant_id: str
     ) -> list[ScopeGrant]:
         """Returns all grants directly targeting the user or any of their assigned roles."""
+        grants = self._repo.list_scope_grants_sync(tenant_id=tenant_id)
         return [
             g
-            for g in self._grants.values()
+            for g in grants
             if g.is_active
-            and g.tenant_id in (tenant_id, "*")
             and (
                 (g.grantee_type == GranteeType.USER and g.grantee_id == user_id)
                 or (g.grantee_type == GranteeType.ROLE and g.grantee_id in role_codes)
@@ -170,15 +196,14 @@ class RBACService:
 
     def delete_scope_grant(self, grant_id: str) -> bool:
         """Revokes / removes a scope grant."""
-        if grant_id in self._grants:
-            del self._grants[grant_id]
+        res = self._repo.delete_scope_grant_sync(grant_id)
+        if res:
             logger.info("Deleted scope grant", extra={"grant_id": grant_id})
-            return True
-        return False
+        return res
 
     def clear_scope_grants(self) -> None:
         """Resets all scope grants (useful for testing)."""
-        self._grants.clear()
+        pass
 
     # ----------------------------------------------------------------------
     # Item 71-73: Authorization & Enforcement Engine

@@ -161,19 +161,19 @@ class IdentityService:
         self,
         tenant_store: TenantSettingsStore | None = None,
         token_engine: CryptographicTokenEngine | None = None,
+        repository: Any = None,
     ) -> None:
         self._tenant_store = tenant_store or tenant_settings_store
         self._token_engine = token_engine or CryptographicTokenEngine()
+        if repository is not None:
+            self._repo = repository
+        else:
+            from domain.identity.repository import get_identity_repository
+            self._repo = get_identity_repository()
 
-        # In-memory storage for identities, sessions, machine clients, and audit trails
-        self._users: dict[str, User] = {}  # user_id -> User
-        self._users_by_email: dict[tuple[str, str], str] = {}  # (tenant_id, email) -> user_id
-        self._sessions: dict[str, Session] = {}  # session_id -> Session
         self._break_glass_accounts: dict[
             tuple[str, str], BreakGlassAccount
         ] = {}  # (tenant_id, account_name) -> BreakGlassAccount
-        self._machine_clients: dict[str, MachineClient] = {}  # client_id -> MachineClient
-        self._step_up_challenges: dict[str, StepUpChallenge] = {}  # challenge_id -> StepUpChallenge
         self._oidc_flow_states: dict[str, dict[str, Any]] = {}  # state -> flow metadata
 
         # Observability events
@@ -192,6 +192,109 @@ class IdentityService:
                 self._consolidated_superuser_email = data["email"]
         except Exception:
             self._consolidated_superuser_email = None
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _users(self):
+        service = self
+        class _UsersProxy(dict):
+            def get(self, user_id, default=None):
+                u = service._repo.get_user_sync(user_id)
+                return u if u is not None else default
+            def __getitem__(self, user_id):
+                u = service._repo.get_user_sync(user_id)
+                if u is None:
+                    raise KeyError(user_id)
+                return u
+            def __setitem__(self, user_id, user):
+                service._repo.save_user_sync(user)
+            def values(self):
+                return service._repo.list_users_sync("global") + service._repo.list_users_sync("tenant-primary")
+            def __contains__(self, user_id):
+                return service._repo.get_user_sync(user_id) is not None
+            def clear(self):
+                pass
+        return _UsersProxy()
+
+    @property
+    def _users_by_email(self):
+        service = self
+        class _UsersByEmailProxy(dict):
+            def get(self, key, default=None):
+                tenant_id, email = key
+                u = service._repo.get_user_by_email_sync(tenant_id, email)
+                return u.id if u else default
+            def __contains__(self, key):
+                tenant_id, email = key
+                return service._repo.get_user_by_email_sync(tenant_id, email) is not None
+            def __getitem__(self, key):
+                tenant_id, email = key
+                u = service._repo.get_user_by_email_sync(tenant_id, email)
+                if not u:
+                    raise KeyError(key)
+                return u.id
+            def __setitem__(self, key, user_id):
+                pass
+        return _UsersByEmailProxy()
+
+    @property
+    def _sessions(self):
+        service = self
+        class _SessionsProxy(dict):
+            def get(self, session_id, default=None):
+                s = service._repo.get_session_sync(session_id)
+                return s if s is not None else default
+            def __getitem__(self, session_id):
+                s = service._repo.get_session_sync(session_id)
+                if s is None:
+                    raise KeyError(session_id)
+                return s
+            def __setitem__(self, session_id, s):
+                service._repo.save_session_sync(s)
+            def values(self):
+                return service._repo.list_active_sessions_sync("global")
+            def __contains__(self, session_id):
+                return service._repo.get_session_sync(session_id) is not None
+        return _SessionsProxy()
+
+    @property
+    def _machine_clients(self):
+        service = self
+        class _ClientsProxy(dict):
+            def get(self, client_id, default=None):
+                c = service._repo.get_machine_client_sync(client_id)
+                return c if c is not None else default
+            def __getitem__(self, client_id):
+                c = service._repo.get_machine_client_sync(client_id)
+                if c is None:
+                    raise KeyError(client_id)
+                return c
+            def __setitem__(self, client_id, c):
+                service._repo.save_machine_client_sync(c)
+            def __contains__(self, client_id):
+                return service._repo.get_machine_client_sync(client_id) is not None
+        return _ClientsProxy()
+
+    @property
+    def _step_up_challenges(self):
+        service = self
+        class _StepUpProxy(dict):
+            def get(self, challenge_id, default=None):
+                c = service._repo.get_step_up_challenge_sync(challenge_id)
+                return c if c is not None else default
+            def __getitem__(self, challenge_id):
+                c = service._repo.get_step_up_challenge_sync(challenge_id)
+                if c is None:
+                    raise KeyError(challenge_id)
+                return c
+            def __setitem__(self, challenge_id, c):
+                service._repo.save_step_up_challenge_sync(c)
+            def __contains__(self, challenge_id):
+                return service._repo.get_step_up_challenge_sync(challenge_id) is not None
+        return _StepUpProxy()
 
     @property
     def token_engine(self) -> CryptographicTokenEngine:
@@ -1329,13 +1432,21 @@ class IdentityService:
 
     def get_user(self, user_id: str) -> User | None:
         """Retrieves user by ID."""
-        return self._users.get(user_id)
+        return self._repo.get_user_sync(user_id)
+
+    def get_user_by_email(self, tenant_id: str, email: str) -> User | None:
+        """Retrieves user by email in tenant."""
+        return self._repo.get_user_by_email_sync(tenant_id, email)
+
+    def save_user(self, user: User) -> User:
+        """Persists or updates user entity."""
+        return self._repo.save_user_sync(user)
 
     def list_users(self, tenant_id: str | None = None) -> list[User]:
         """Lists registered users, optionally filtered by tenant ID."""
         if tenant_id:
-            return [u for u in self._users.values() if u.tenant_id == tenant_id]
-        return list(self._users.values())
+            return self._repo.list_users_sync(tenant_id)
+        return self._repo.list_users_sync("global") + self._repo.list_users_sync("tenant-primary")
 
     def get_session(self, session_id: str) -> Session | None:
         """Retrieves session by ID."""

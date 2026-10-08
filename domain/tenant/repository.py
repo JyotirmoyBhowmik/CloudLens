@@ -1,18 +1,30 @@
-"""Tenant-Aware Repository Interface and Base Abstraction (Prompt 13 Item 84).
+"""Tenant-Aware Repository Interface, Base Abstraction & Real SQL Implementation (Prompt P04).
 
 Enforces:
-- Mandatory TenantContext in every repository method signature.
-- Fails queries without tenant context at test/build time rather than silent runtime leakage.
-- Strict mechanical partitioning per BBP Section 41 and SEC-015.
+- Mandatory TenantContext in every repository method signature for tenant-scoped repos.
+- TenantRepository protocol and SqlTenantRepository for managing tenant entities.
+- Direct PostgreSQL integration with SQLAlchemy 2.0 async.
 """
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
+import logging
+import os
+import sys
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db.session import get_tenant_session
 from domain.models.base import CanonicalEntity
 from domain.tenant.context import TenantContext, require_tenant_context
+from domain.tenant.models import Tenant
+
+logger = logging.getLogger("cloudlens.domain.tenant.repository")
 
 T = TypeVar("T", bound=CanonicalEntity)
 
@@ -60,3 +72,175 @@ class TenantAwareRepository(ABC, Generic[T]):
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         """Checks if an entity exists within the tenant scope."""
         raise NotImplementedError
+
+
+@runtime_checkable
+class TenantRepository(Protocol):
+    """Protocol for tenant organization entity persistence."""
+
+    async def get(self, tenant_id: str, session: AsyncSession | None = None) -> Tenant | None:
+        """Retrieves tenant record by ID."""
+        ...
+
+    async def list(self, session: AsyncSession | None = None) -> list[Tenant]:
+        """Lists all tenant records."""
+        ...
+
+    async def save(self, tenant: Tenant, session: AsyncSession | None = None) -> Tenant:
+        """Persists or updates a tenant record."""
+        ...
+
+    async def delete(self, tenant_id: str, session: AsyncSession | None = None) -> bool:
+        """Deletes a tenant record."""
+        ...
+
+    def get_sync(self, tenant_id: str) -> Tenant | None:
+        ...
+
+    def list_sync(self) -> list[Tenant]:
+        ...
+
+    def save_sync(self, tenant: Tenant) -> Tenant:
+        ...
+
+    def delete_sync(self, tenant_id: str) -> bool:
+        ...
+
+
+class SqlTenantRepository:
+    """PostgreSQL production implementation for Tenant entities."""
+
+    is_in_memory: bool = False
+
+    def _run_async(self, coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(coro)).result()
+
+    async def get(self, tenant_id: str, session: AsyncSession | None = None) -> Tenant | None:
+        if session is not None:
+            return await self._get_with_session(tenant_id, session)
+        async with get_tenant_session() as sess:
+            return await self._get_with_session(tenant_id, sess)
+
+    async def _get_with_session(self, tenant_id: str, session: AsyncSession) -> Tenant | None:
+        query = text("""
+            SELECT id, name, reporting_currency, created_at, updated_at
+            FROM tenants
+            WHERE id = :tid
+            LIMIT 1;
+        """)
+        result = await session.execute(query, {"tid": tenant_id})
+        row = result.fetchone()
+        if not row:
+            return None
+        return Tenant(
+            id=row[0],
+            name=row[1],
+            reporting_currency=row[2],
+            created_at=row[3],
+            updated_at=row[4],
+        )
+
+    async def list(self, session: AsyncSession | None = None) -> list[Tenant]:
+        if session is not None:
+            return await self._list_with_session(session)
+        async with get_tenant_session() as sess:
+            return await self._list_with_session(sess)
+
+    async def _list_with_session(self, session: AsyncSession) -> list[Tenant]:
+        query = text("""
+            SELECT id, name, reporting_currency, created_at, updated_at
+            FROM tenants
+            ORDER BY name;
+        """)
+        result = await session.execute(query)
+        rows = result.fetchall()
+        return [
+            Tenant(
+                id=r[0],
+                name=r[1],
+                reporting_currency=r[2],
+                created_at=r[3],
+                updated_at=r[4],
+            )
+            for r in rows
+        ]
+
+    async def save(self, tenant: Tenant, session: AsyncSession | None = None) -> Tenant:
+        if session is not None:
+            return await self._save_with_session(tenant, session)
+        async with get_tenant_session() as sess:
+            res = await self._save_with_session(tenant, sess)
+            await sess.commit()
+            return res
+
+    async def _save_with_session(self, tenant: Tenant, session: AsyncSession) -> Tenant:
+        query = text("""
+            INSERT INTO tenants (id, name, reporting_currency, created_at, updated_at)
+            VALUES (:id, :name, :currency, NOW(), NOW())
+            ON CONFLICT (id)
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                reporting_currency = EXCLUDED.reporting_currency,
+                updated_at = NOW();
+        """)
+        await session.execute(
+            query,
+            {
+                "id": tenant.id,
+                "name": tenant.name,
+                "currency": tenant.reporting_currency,
+            },
+        )
+        return tenant
+
+    async def delete(self, tenant_id: str, session: AsyncSession | None = None) -> bool:
+        if session is not None:
+            return await self._delete_with_session(tenant_id, session)
+        async with get_tenant_session() as sess:
+            res = await self._delete_with_session(tenant_id, sess)
+            await sess.commit()
+            return res
+
+    async def _delete_with_session(self, tenant_id: str, session: AsyncSession) -> bool:
+        query = text("DELETE FROM tenants WHERE id = :tid;")
+        res = await session.execute(query, {"tid": tenant_id})
+        return res.rowcount > 0
+
+    def get_sync(self, tenant_id: str) -> Tenant | None:
+        return self._run_async(self.get(tenant_id))
+
+    def list_sync(self) -> list[Tenant]:
+        return self._run_async(self.list())
+
+    def save_sync(self, tenant: Tenant) -> Tenant:
+        return self._run_async(self.save(tenant))
+
+    def delete_sync(self, tenant_id: str) -> bool:
+        return self._run_async(self.delete(tenant_id))
+
+
+_tenant_repo_instance: TenantRepository | None = None
+
+
+def get_tenant_repository() -> TenantRepository:
+    """Dependency provider for TenantRepository."""
+    global _tenant_repo_instance
+    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+
+    if mode == "inmemory":
+        if env in ("staging", "production"):
+            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
+            sys.exit(1)
+        from tests.fakes.tenant import InMemoryTenantRepository
+        return InMemoryTenantRepository()
+
+    if _tenant_repo_instance is None:
+        _tenant_repo_instance = SqlTenantRepository()
+    return _tenant_repo_instance

@@ -649,12 +649,42 @@ ROLE_SYNONYMS: dict[str, str] = {
 class PermissionCatalogue:
     """In-memory and master-data-driven registry of platform permissions and roles."""
 
-    def __init__(self) -> None:
+    def __init__(self, repository: Any = None) -> None:
         self._permissions: dict[str, Permission] = {}
         self._roles: dict[str, RoleDefinition] = {}
-        self._custom_roles: dict[
-            tuple[str, str], RoleDefinition
-        ] = {}  # (tenant_id, role_code) -> RoleDefinition
+        if repository is not None:
+            self._repo = repository
+        else:
+            from domain.rbac.repository import get_rbac_repository
+            self._repo = get_rbac_repository()
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _custom_roles(self):
+        cat = self
+        class _CustomRolesProxy(dict):
+            def get(self, key, default=None):
+                tenant_id, role_code = key
+                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
+                return r if r is not None else default
+            def __getitem__(self, key):
+                tenant_id, role_code = key
+                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
+                if r is None:
+                    raise KeyError(key)
+                return r
+            def __setitem__(self, key, role_def):
+                cat._repo.save_custom_role_sync(role_def)
+            def __contains__(self, key):
+                tenant_id, role_code = key
+                return cat._repo.get_custom_role_sync(tenant_id, role_code) is not None
+            def items(self):
+                roles = cat._repo.list_custom_roles_sync("tenant-primary") + cat._repo.list_custom_roles_sync("global")
+                return [((r.tenant_id or "global", r.code), r) for r in roles]
+        return _CustomRolesProxy()
 
         # Populate permissions catalogue
         for p_data in CANONICAL_PERMISSIONS:
@@ -717,9 +747,10 @@ class PermissionCatalogue:
             return self._roles[canonical_code]
 
         if tenant_id:
-            custom_key = (tenant_id, role_code_or_name)
-            if custom_key in self._custom_roles:
-                return self._custom_roles[custom_key]
+            role_code = role_code_or_name.upper().strip()
+            custom_role = self._repo.get_custom_role_sync(tenant_id, role_code)
+            if custom_role:
+                return custom_role
 
         return None
 
@@ -743,7 +774,6 @@ class PermissionCatalogue:
             )
 
         role_code = code.upper().strip()
-        custom_key = (tenant_id, role_code)
 
         custom_role = RoleDefinition(
             id=f"crole-{tenant_id}-{role_code.lower()}",
@@ -756,15 +786,13 @@ class PermissionCatalogue:
             max_scope="SCOPE",
             requires_mfa=False,
         )
-        self._custom_roles[custom_key] = custom_role
+        self._repo.save_custom_role_sync(custom_role)
         return custom_role
 
     def list_roles_for_tenant(self, tenant_id: str) -> list[RoleDefinition]:
         """Returns built-in roles plus all custom roles defined on the specified tenant."""
         roles = list(self._roles.values())
-        for (tid, _), crole in self._custom_roles.items():
-            if tid == tenant_id:
-                roles.append(crole)
+        roles.extend(self._repo.list_custom_roles_sync(tenant_id))
         return roles
 
 
