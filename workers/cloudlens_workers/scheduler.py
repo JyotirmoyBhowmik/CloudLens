@@ -99,30 +99,29 @@ class DatabaseBeatScheduler(Scheduler):
         except Exception as exc:
             logger.warning("Error loading master schedules: %s", exc)
 
-        # 2. Load custom per-connector schedules from ConnectorScheduleRepository
+        # 2. Load custom per-connector schedules from PostgreSQL connector_schedules table
         try:
             sched_repo = get_connector_schedule_repository()
-            # In-memory or database query across active tenant schedules
-            with sched_repo._lock:
-                for (tid, _), sched in sched_repo._schedules.items():
-                    if not sched.is_enabled:
-                        continue
-                    cap_val = sched.capability.value if hasattr(sched.capability, "value") else str(sched.capability)
-                    task_name = CAPABILITY_TASK_MAP.get(cap_val, "cloudlens.tasks.ingest_cost")
-                    entry_name = f"connector_{sched.connector_id}_{cap_val}"
-                    entries[entry_name] = {
-                        "task": task_name,
-                        "schedule": timedelta(minutes=sched.interval_minutes),
-                        "args": [
-                            {
-                                "tenant_id": tid,
-                                "user_id": "system-scheduler",
-                                "roles": ["SUPER_ADMIN"],
-                                "is_system": True,
-                            },
-                            sched.connector_id,
-                        ],
-                    }
+            active_schedules = sched_repo.list_all_enabled()
+            for sched in active_schedules:
+                if not sched.is_enabled:
+                    continue
+                cap_val = sched.capability.value if hasattr(sched.capability, "value") else str(sched.capability)
+                task_name = CAPABILITY_TASK_MAP.get(cap_val, "cloudlens.tasks.ingest_cost")
+                entry_name = f"connector_{sched.connector_id}_{cap_val}"
+                entries[entry_name] = {
+                    "task": task_name,
+                    "schedule": timedelta(minutes=sched.interval_minutes),
+                    "args": [
+                        {
+                            "tenant_id": sched.tenant_id,
+                            "user_id": "system-scheduler",
+                            "roles": ["SUPER_ADMIN"],
+                            "is_system": True,
+                        },
+                        sched.connector_id,
+                    ],
+                }
         except Exception as exc:
             logger.warning("Error loading connector schedules: %s", exc)
 

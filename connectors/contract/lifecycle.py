@@ -104,7 +104,23 @@ class ConnectorLifecycleManager:
     def get_state(self, tenant_id: str, connector_id: str) -> ConnectorLifecycleState:
         """Returns the current lifecycle state of the connector, defaulting to REGISTERED."""
         with self._lock:
-            return self._states.get((tenant_id, connector_id), ConnectorLifecycleState.REGISTERED)
+            cached = self._states.get((tenant_id, connector_id))
+            if cached is not None:
+                return cached
+
+        try:
+            from domain.connectors.repository import get_connector_repository
+            conn = get_connector_repository().get(
+                connector_id, tenant_context=TenantContext(tenant_id=tenant_id)
+            )
+            if conn:
+                with self._lock:
+                    self._states[(tenant_id, connector_id)] = conn.lifecycle_state
+                return conn.lifecycle_state
+        except Exception as exc:
+            logger.debug("Failed to load connector state from database: %s", exc)
+
+        return ConnectorLifecycleState.REGISTERED
 
     def get_declared_capabilities(
         self, tenant_id: str, connector_id: str
@@ -140,7 +156,9 @@ class ConnectorLifecycleManager:
         key = (tenant_id, connector_id)
 
         with self._lock:
-            current_state = self._states.get(key, ConnectorLifecycleState.REGISTERED)
+            current_state = self._states.get(key, None)
+            if current_state is None:
+                current_state = self.get_state(tenant_id, connector_id)
 
             if current_state == target_state:
                 return current_state
@@ -153,6 +171,14 @@ class ConnectorLifecycleManager:
                 )
 
             self._states[key] = target_state
+
+        try:
+            from domain.connectors.repository import get_connector_repository
+            get_connector_repository().update_lifecycle_state(
+                connector_id, target_state, tenant_context=tenant_context
+            )
+        except Exception as exc:
+            logger.debug("Failed to persist state transition to database: %s", exc)
 
         logger.info(
             "Connector %s transitioned: %s -> %s (reason: %s)",

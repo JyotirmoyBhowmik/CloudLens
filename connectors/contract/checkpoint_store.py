@@ -1,35 +1,217 @@
-"""CloudLens Pagination Checkpoint Repository and Resumption Engine (Prompt 14 Item 93).
+"""CloudLens Pagination Checkpoint Repository and Resumption Engine (Prompt P05).
 
 Enforces:
-- Persistence of pagination continuation tokens after every single page landing.
+- Pattern P1: Real PostgreSQL database persistence in connector_checkpoints table.
+- Pattern P3: Injected dependency, zero mutable dict singletons in production.
+- Pattern P4: Transactional RLS isolation via get_tenant_session().
+- Pattern P6: Startup guard preventing InMemory repository outside development.
 - Guaranteed resumption of interrupted/killed sync jobs without restarting from page 1.
-- Zero duplicate record processing and zero lost records.
-- Strict tenant context validation (SEC-015).
 """
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
 import logging
-import threading
+import os
+import sys
 import uuid
 from datetime import UTC, datetime
+from typing import Any
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from connectors.contract.models import JobCheckpoint
+from db.session import get_tenant_session
 from domain.models.enums import ConnectorCapability
 from domain.models.exceptions import MissingTenantContextException, PaginationCheckpointException
 from domain.tenant.context import TenantContext
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cloudlens.connectors.checkpoint_store")
 
 
-class CheckpointStore:
-    """Manages pagination checkpoints for connector operations across tenants."""
+class SqlCheckpointStore:
+    """PostgreSQL production implementation for pagination checkpoints with RLS."""
 
-    def __init__(self) -> None:
-        # Key: (tenant_id, job_id, capability) -> JobCheckpoint
-        self._checkpoints: dict[tuple[str, str, str], JobCheckpoint] = {}
-        self._lock = threading.Lock()
+    is_in_memory: bool = False
 
+    def _run_async(self, coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(coro)).result()
+
+    def _row_to_checkpoint(self, row: Any) -> JobCheckpoint:
+        cap_val = row[4]
+        try:
+            cap = ConnectorCapability(cap_val)
+        except ValueError:
+            cap = cap_val
+
+        return JobCheckpoint(
+            checkpoint_id=row[0],
+            tenant_id=row[1],
+            job_id=row[2],
+            connector_id=row[3],
+            capability=cap,
+            continuation_token=row[5],
+            page_number=row[6],
+            records_ingested=row[7],
+            last_record_id=row[8],
+            status=row[9],
+            created_at=row[10],
+            updated_at=row[11],
+        )
+
+    async def save_checkpoint_async(
+        self,
+        tenant_context: TenantContext,
+        job_id: str,
+        connector_id: str,
+        capability: ConnectorCapability,
+        continuation_token: str | None,
+        page_number: int,
+        records_ingested: int,
+        last_record_id: str | None = None,
+        status: str = "IN_PROGRESS",
+        session: AsyncSession | None = None,
+    ) -> JobCheckpoint:
+        if not tenant_context or not tenant_context.tenant_id:
+            raise MissingTenantContextException(
+                "Cannot save checkpoint without authenticated TenantContext."
+            )
+        if page_number < 1:
+            raise PaginationCheckpointException(
+                f"Invalid page_number {page_number}. Page numbers must be >= 1."
+            )
+
+        cap_val = capability.value if hasattr(capability, "value") else str(capability)
+        now = datetime.now(UTC)
+
+        if session is not None:
+            return await self._save_with_session(
+                tenant_context, job_id, connector_id, capability, cap_val,
+                continuation_token, page_number, records_ingested, last_record_id, status, now, session
+            )
+
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await self._save_with_session(
+                tenant_context, job_id, connector_id, capability, cap_val,
+                continuation_token, page_number, records_ingested, last_record_id, status, now, sess
+            )
+            await sess.commit()
+            return res
+
+    async def _save_with_session(
+        self,
+        tenant_context: TenantContext,
+        job_id: str,
+        connector_id: str,
+        capability: ConnectorCapability,
+        cap_val: str,
+        continuation_token: str | None,
+        page_number: int,
+        records_ingested: int,
+        last_record_id: str | None,
+        status: str,
+        now: datetime,
+        session: AsyncSession,
+    ) -> JobCheckpoint:
+        # Check existing checkpoint
+        sel_q = text("""
+            SELECT id, created_at
+            FROM connector_checkpoints
+            WHERE tenant_id = :tid AND job_id = :jid AND capability = :cap
+            LIMIT 1;
+        """)
+        res = await session.execute(sel_q, {"tid": tenant_context.tenant_id, "jid": job_id, "cap": cap_val})
+        row = res.fetchone()
+        chk_id = row[0] if row else f"chk-{uuid.uuid4().hex[:12]}"
+        created_at = row[1] if row else now
+
+        upsert_q = text("""
+            INSERT INTO connector_checkpoints (
+                id, tenant_id, job_id, connector_id, capability, continuation_token,
+                page_number, records_ingested, last_record_id, status, created_at, updated_at
+            )
+            VALUES (
+                :id, :tenant_id, :job_id, :connector_id, :capability, :continuation_token,
+                :page_number, :records_ingested, :last_record_id, :status, :created_at, :updated_at
+            )
+            ON CONFLICT (id) DO UPDATE SET
+                continuation_token = EXCLUDED.continuation_token,
+                page_number = EXCLUDED.page_number,
+                records_ingested = EXCLUDED.records_ingested,
+                last_record_id = EXCLUDED.last_record_id,
+                status = EXCLUDED.status,
+                updated_at = EXCLUDED.updated_at;
+        """)
+        await session.execute(
+            upsert_q,
+            {
+                "id": chk_id,
+                "tenant_id": tenant_context.tenant_id,
+                "job_id": job_id,
+                "connector_id": connector_id,
+                "capability": cap_val,
+                "continuation_token": continuation_token,
+                "page_number": page_number,
+                "records_ingested": records_ingested,
+                "last_record_id": last_record_id,
+                "status": status,
+                "created_at": created_at,
+                "updated_at": now,
+            },
+        )
+        return JobCheckpoint(
+            checkpoint_id=chk_id,
+            tenant_id=tenant_context.tenant_id,
+            job_id=job_id,
+            connector_id=connector_id,
+            capability=capability,
+            continuation_token=continuation_token,
+            page_number=page_number,
+            records_ingested=records_ingested,
+            last_record_id=last_record_id,
+            status=status,
+            created_at=created_at,
+            updated_at=now,
+        )
+
+    async def get_checkpoint_async(
+        self,
+        tenant_id: str,
+        job_id: str,
+        capability: str | ConnectorCapability,
+        session: AsyncSession | None = None,
+    ) -> JobCheckpoint | None:
+        cap_val = capability.value if hasattr(capability, "value") else str(capability)
+        if session is not None:
+            return await self._get_with_session(tenant_id, job_id, cap_val, session)
+        async with get_tenant_session(tenant_id) as sess:
+            return await self._get_with_session(tenant_id, job_id, cap_val, sess)
+
+    async def _get_with_session(
+        self, tenant_id: str, job_id: str, cap_val: str, session: AsyncSession
+    ) -> JobCheckpoint | None:
+        query = text("""
+            SELECT id, tenant_id, job_id, connector_id, capability, continuation_token,
+                   page_number, records_ingested, last_record_id, status, created_at, updated_at
+            FROM connector_checkpoints
+            WHERE tenant_id = :tid AND job_id = :jid AND capability = :cap
+            LIMIT 1;
+        """)
+        result = await session.execute(query, {"tid": tenant_id, "jid": job_id, "cap": cap_val})
+        row = result.fetchone()
+        if not row:
+            return None
+        return self._row_to_checkpoint(row)
+
+    # Sync interfaces
     def save_checkpoint(
         self,
         tenant_context: TenantContext,
@@ -42,31 +224,9 @@ class CheckpointStore:
         last_record_id: str | None = None,
         status: str = "IN_PROGRESS",
     ) -> JobCheckpoint:
-        """Persists or updates the checkpoint for a running job capability.
-
-        Strictly enforces tenant context.
-        """
-        if not tenant_context or not tenant_context.tenant_id:
-            raise MissingTenantContextException(
-                "Cannot save checkpoint without authenticated TenantContext."
-            )
-
-        if page_number < 1:
-            raise PaginationCheckpointException(
-                f"Invalid page_number {page_number}. Page numbers must be >= 1."
-            )
-
-        key = (tenant_context.tenant_id, job_id, capability.value)
-        now = datetime.now(UTC)
-
-        with self._lock:
-            existing = self._checkpoints.get(key)
-            checkpoint_id = existing.checkpoint_id if existing else f"chk-{uuid.uuid4().hex[:12]}"
-            created_at = existing.created_at if existing else now
-
-            checkpoint = JobCheckpoint(
-                checkpoint_id=checkpoint_id,
-                tenant_id=tenant_context.tenant_id,
+        return self._run_async(
+            self.save_checkpoint_async(
+                tenant_context=tenant_context,
                 job_id=job_id,
                 connector_id=connector_id,
                 capability=capability,
@@ -75,21 +235,8 @@ class CheckpointStore:
                 records_ingested=records_ingested,
                 last_record_id=last_record_id,
                 status=status,
-                created_at=created_at,
-                updated_at=now,
             )
-            self._checkpoints[key] = checkpoint
-
-            logger.info(
-                "Checkpoint persisted: job=%s, connector=%s, cap=%s, page=%d, token=%s, records=%d",
-                job_id,
-                connector_id,
-                capability.value,
-                page_number,
-                continuation_token is not None,
-                records_ingested,
-            )
-            return checkpoint
+        )
 
     def get_checkpoint(
         self,
@@ -97,13 +244,7 @@ class CheckpointStore:
         job_id: str,
         capability: str | ConnectorCapability,
     ) -> JobCheckpoint | None:
-        """Retrieves a checkpoint by tenant_id, job_id, and capability string or enum."""
-        cap_val = (
-            capability.value if isinstance(capability, ConnectorCapability) else str(capability)
-        )
-        key = (tenant_id, job_id, cap_val)
-        with self._lock:
-            return self._checkpoints.get(key)
+        return self._run_async(self.get_checkpoint_async(tenant_id, job_id, capability))
 
     def get_latest_checkpoint(
         self,
@@ -111,7 +252,6 @@ class CheckpointStore:
         job_id: str,
         capability: ConnectorCapability,
     ) -> JobCheckpoint | None:
-        """Retrieves the latest checkpoint for an interrupted job to enable clean resumption."""
         if not tenant_context or not tenant_context.tenant_id:
             raise MissingTenantContextException(
                 "Cannot retrieve checkpoint without authenticated TenantContext."
@@ -129,7 +269,6 @@ class CheckpointStore:
         capability: ConnectorCapability,
         total_records: int,
     ) -> JobCheckpoint:
-        """Marks a paginated job execution as COMPLETED with continuation token cleared."""
         existing = self.get_latest_checkpoint(tenant_context, job_id, capability)
         page_num = existing.page_number if existing else 1
         connector_id = existing.connector_id if existing else "unknown"
@@ -146,10 +285,35 @@ class CheckpointStore:
         )
 
     def reset_for_test(self) -> None:
-        """Clears in-memory checkpoint store for tests."""
-        with self._lock:
-            self._checkpoints.clear()
+        pass
 
 
-# Global checkpoint store singleton
-checkpoint_store = CheckpointStore()
+CheckpointStore = SqlCheckpointStore
+_checkpoint_store_instance: Any = None
+
+
+def get_checkpoint_store() -> Any:
+    global _checkpoint_store_instance
+    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
+    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
+
+    if mode == "inmemory":
+        if env in ("staging", "production"):
+            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory checkpoint store.")
+            sys.exit(1)
+        from tests.fakes.checkpoints import InMemoryCheckpointStore
+        return InMemoryCheckpointStore()
+
+    if _checkpoint_store_instance is None:
+        _checkpoint_store_instance = SqlCheckpointStore()
+    return _checkpoint_store_instance
+
+
+checkpoint_store = get_checkpoint_store()
+
+__all__ = [
+    "CheckpointStore",
+    "SqlCheckpointStore",
+    "get_checkpoint_store",
+    "checkpoint_store",
+]

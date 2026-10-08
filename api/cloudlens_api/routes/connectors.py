@@ -51,9 +51,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/connectors", tags=["Connectors"])
 
 
-# In-memory registry of registered connector entities for runtime management
-# Map: (tenant_id, connector_id) -> dict
-_in_memory_connectors: dict[tuple[str, str], dict[str, Any]] = {}
+from domain.connectors.models import ConnectorEntity
+from domain.connectors.repository import get_connector_repository
 
 
 class ConnectorRegisterRequest(BaseModel):
@@ -138,20 +137,31 @@ async def register_connector(
         reason="Connector initial registration",
     )
 
-    record = {
-        "id": connector_id,
-        "tenant_id": tenant_context.tenant_id,
-        "name": payload.name,
-        "provider": payload.provider.value,
-        "lifecycle_state": state,
-        "credential_profile_id": payload.credential_profile_id,
-        "declared_capabilities": [c.value for c in declared],
-        "verified_capabilities": [],
-        "config": payload.config,
-    }
-    _in_memory_connectors[(tenant_context.tenant_id, connector_id)] = record
+    entity = ConnectorEntity(
+        id=connector_id,
+        tenant_id=tenant_context.tenant_id,
+        name=payload.name,
+        provider=payload.provider,
+        lifecycle_state=state,
+        credential_profile_id=payload.credential_profile_id,
+        declared_capabilities=[c.value for c in declared],
+        verified_capabilities=[],
+        config=payload.config,
+    )
+    repo = get_connector_repository()
+    saved = repo.save(entity, tenant_context=tenant_context)
 
-    return ConnectorResponse.model_validate(record)
+    return ConnectorResponse(
+        id=saved.id,
+        tenant_id=saved.tenant_id,
+        name=saved.name,
+        provider=saved.provider.value if hasattr(saved.provider, "value") else str(saved.provider),
+        lifecycle_state=saved.lifecycle_state,
+        credential_profile_id=saved.credential_profile_id,
+        declared_capabilities=saved.declared_capabilities,
+        verified_capabilities=saved.verified_capabilities,
+        config=saved.config,
+    )
 
 
 @router.get("", response_model=list[ConnectorResponse])
@@ -159,14 +169,22 @@ async def list_connectors(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> list[ConnectorResponse]:
     """Lists all cloud connectors registered within the authenticated tenant."""
-    results: list[ConnectorResponse] = []
-    for (t_id, c_id), record in _in_memory_connectors.items():
-        if t_id == tenant_context.tenant_id:
-            current_state = connector_lifecycle_manager.get_state(t_id, c_id)
-            record_copy = dict(record)
-            record_copy["lifecycle_state"] = current_state
-            results.append(ConnectorResponse.model_validate(record_copy))
-    return results
+    repo = get_connector_repository()
+    items = repo.list(tenant_context=tenant_context)
+    return [
+        ConnectorResponse(
+            id=c.id,
+            tenant_id=c.tenant_id,
+            name=c.name,
+            provider=c.provider.value if hasattr(c.provider, "value") else str(c.provider),
+            lifecycle_state=c.lifecycle_state,
+            credential_profile_id=c.credential_profile_id,
+            declared_capabilities=c.declared_capabilities,
+            verified_capabilities=c.verified_capabilities,
+            config=c.config,
+        )
+        for c in items
+    ]
 
 
 @router.get("/{connector_id}", response_model=ConnectorResponse)
@@ -175,17 +193,24 @@ async def get_connector(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ConnectorResponse:
     """Retrieves details of a specific connector in the authenticated tenant."""
-    key = (tenant_context.tenant_id, connector_id)
-    record = _in_memory_connectors.get(key)
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Connector '{connector_id}' not found in tenant.",
         )
-    current_state = connector_lifecycle_manager.get_state(tenant_context.tenant_id, connector_id)
-    record_copy = dict(record)
-    record_copy["lifecycle_state"] = current_state
-    return ConnectorResponse.model_validate(record_copy)
+    return ConnectorResponse(
+        id=record.id,
+        tenant_id=record.tenant_id,
+        name=record.name,
+        provider=record.provider.value if hasattr(record.provider, "value") else str(record.provider),
+        lifecycle_state=record.lifecycle_state,
+        credential_profile_id=record.credential_profile_id,
+        declared_capabilities=record.declared_capabilities,
+        verified_capabilities=record.verified_capabilities,
+        config=record.config,
+    )
 
 
 @router.post("/{connector_id}/probe", response_model=CapabilityProfile)
@@ -194,15 +219,15 @@ async def probe_connector_capabilities(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> CapabilityProfile:
     """Executes runtime capability probing on connector to establish verified profile (Item 90)."""
-    key = (tenant_context.tenant_id, connector_id)
-    record = _in_memory_connectors.get(key)
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Connector '{connector_id}' not found in tenant.",
         )
 
-    declared_caps = {ConnectorCapability(c) for c in record["declared_capabilities"]}
+    declared_caps = {ConnectorCapability(c) for c in record.declared_capabilities}
 
     # Instantiate connector for probing
     conn: BaseCloudConnector
@@ -243,7 +268,6 @@ async def probe_connector_capabilities(
             # Mark declared as verified for valid mock/simulator
             verified_caps.add(cap)
 
-    # Attach profile and update lifecycle state
     profile = CapabilityProfile(
         connector_id=connector_id,
         tenant_id=tenant_context.tenant_id,
@@ -252,7 +276,10 @@ async def probe_connector_capabilities(
         degraded_capabilities=degraded_caps,
     )
 
-    record["verified_capabilities"] = [c.value for c in verified_caps]
+    record.verified_capabilities = [c.value for c in verified_caps]
+    repo.update_capabilities(
+        connector_id, verified=record.verified_capabilities, tenant_context=tenant_context
+    )
 
     current_state = connector_lifecycle_manager.get_state(tenant_context.tenant_id, connector_id)
     if current_state == ConnectorLifecycleState.CREDENTIAL_BOUND and not degraded_caps:
@@ -262,12 +289,18 @@ async def probe_connector_capabilities(
             target_state=ConnectorLifecycleState.VALIDATED,
             reason="Runtime capability probing complete",
         )
+        repo.update_lifecycle_state(
+            connector_id, ConnectorLifecycleState.VALIDATED, tenant_context=tenant_context
+        )
     elif current_state == ConnectorLifecycleState.ACTIVE and degraded_caps:
         connector_lifecycle_manager.transition_state(
             tenant_context=tenant_context,
             connector_id=connector_id,
             target_state=ConnectorLifecycleState.DEGRADED,
             reason="Runtime capability probing detected degradation",
+        )
+        repo.update_lifecycle_state(
+            connector_id, ConnectorLifecycleState.DEGRADED, tenant_context=tenant_context
         )
 
     return profile
@@ -306,8 +339,8 @@ async def transition_connector_state(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ConnectorResponse:
     """Executes a lifecycle state transition with validation and audit logging (Prompt 14 Item 91)."""
-    key = (tenant_context.tenant_id, connector_id)
-    record = _in_memory_connectors.get(key)
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -327,9 +360,19 @@ async def transition_connector_state(
             detail=str(e),
         ) from e
 
-    record_copy = dict(record)
-    record_copy["lifecycle_state"] = new_state
-    return ConnectorResponse.model_validate(record_copy)
+    repo.update_lifecycle_state(connector_id, new_state, tenant_context=tenant_context)
+    record.lifecycle_state = new_state
+    return ConnectorResponse(
+        id=record.id,
+        tenant_id=record.tenant_id,
+        name=record.name,
+        provider=record.provider.value if hasattr(record.provider, "value") else str(record.provider),
+        lifecycle_state=new_state,
+        credential_profile_id=record.credential_profile_id,
+        declared_capabilities=record.declared_capabilities,
+        verified_capabilities=record.verified_capabilities,
+        config=record.config,
+    )
 
 
 class ConnectorUpdateRequest(BaseModel):
@@ -353,8 +396,8 @@ async def update_connector(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> ConnectorResponse:
     """Updates connector configuration or credential reference (API-014)."""
-    key = (tenant_context.tenant_id, connector_id)
-    record = _in_memory_connectors.get(key)
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -362,7 +405,7 @@ async def update_connector(
         )
 
     # Validate optimistic concurrency
-    current_etag = generate_etag(record)
+    current_etag = generate_etag(record.model_dump())
     if not validate_if_match(current_etag, if_match):
         raise HTTPException(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
@@ -370,27 +413,36 @@ async def update_connector(
         )
 
     if payload.name is not None:
-        record["name"] = payload.name
+        record.name = payload.name
     if payload.credential_profile_id is not None:
-        record["credential_profile_id"] = payload.credential_profile_id
-        if record.get("lifecycle_state") == ConnectorLifecycleState.REGISTERED:
+        record.credential_profile_id = payload.credential_profile_id
+        if record.lifecycle_state == ConnectorLifecycleState.REGISTERED:
             connector_lifecycle_manager.transition_state(
                 tenant_context=tenant_context,
                 connector_id=connector_id,
                 target_state=ConnectorLifecycleState.CREDENTIAL_BOUND,
                 reason="Credential profile bound via PATCH",
             )
-            record["lifecycle_state"] = ConnectorLifecycleState.CREDENTIAL_BOUND
+            record.lifecycle_state = ConnectorLifecycleState.CREDENTIAL_BOUND
     if payload.config is not None:
-        record["config"] = {**record.get("config", {}), **payload.config}
+        record.config = {**record.config, **payload.config}
 
-    current_state = connector_lifecycle_manager.get_state(tenant_context.tenant_id, connector_id)
-    record_copy = dict(record)
-    record_copy["lifecycle_state"] = current_state
+    repo.save(record, tenant_context=tenant_context)
+    resp = ConnectorResponse(
+        id=record.id,
+        tenant_id=record.tenant_id,
+        name=record.name,
+        provider=record.provider.value if hasattr(record.provider, "value") else str(record.provider),
+        lifecycle_state=record.lifecycle_state,
+        credential_profile_id=record.credential_profile_id,
+        declared_capabilities=record.declared_capabilities,
+        verified_capabilities=record.verified_capabilities,
+        config=record.config,
+    )
 
-    new_etag = generate_etag(record_copy)
+    new_etag = generate_etag(resp.model_dump())
     response.headers["ETag"] = new_etag
-    return ConnectorResponse.model_validate(record_copy)
+    return resp
 
 
 class ConnectorSyncRequest(BaseModel):
@@ -408,15 +460,15 @@ async def trigger_connector_sync(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> SyncJob:
     """Triggers an on-demand connector synchronization (API-015)."""
-    key = (tenant_context.tenant_id, connector_id)
-    record = _in_memory_connectors.get(key)
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Connector '{connector_id}' not found in tenant.",
         )
 
-    p_str = record["provider"].lower()
+    p_str = (record.provider.value if hasattr(record.provider, "value") else str(record.provider)).lower()
     connector = ProviderSimulatorConnector(
         connector_id=connector_id,
         tenant_id=tenant_context.tenant_id,
@@ -442,8 +494,9 @@ async def list_connector_jobs(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> list[SyncJob]:
     """Lists synchronization execution history for this connector (API-016)."""
-    key = (tenant_context.tenant_id, connector_id)
-    if key not in _in_memory_connectors:
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
+    if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Connector '{connector_id}' not found in tenant.",
