@@ -90,9 +90,9 @@ class OverrideApplier(WorkflowApplier):
 
     def apply(self, request: Any, *, tenant_context: TenantContext) -> None:
         from domain.overrides.models import OverrideApproval, OverrideRecord
-        from domain.overrides.repository import OverrideRepository
+        from domain.overrides.repository import get_override_repository
 
-        repo = OverrideRepository()
+        repo = get_override_repository()
         override_id = request.subject_entity.entity_id
         override = repo.get(override_id, tenant_context=tenant_context)
 

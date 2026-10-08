@@ -490,6 +490,15 @@ class PolicyService:
             entity_id=entity_id,
         )
 
+    def count_findings(
+        self,
+        *,
+        tenant_context: TenantContext,
+        status: FindingLifecycleStatus | None = None,
+    ) -> int:
+        """Counts stored findings using direct SQL SELECT COUNT(*) on policy_findings (Prompt P07)."""
+        return self.repo.count_findings(tenant_context=tenant_context, status=status)
+
     # ==========================================================================
     # 6. Governance Exception Trending (FR-745)
     # ==========================================================================

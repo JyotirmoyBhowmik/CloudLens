@@ -54,7 +54,7 @@ from domain.usage.registry import (
     get_default_monitoring_type_for_resource,
     list_monitoring_types,
 )
-from domain.usage.repository import UsageRepository
+from domain.usage.repository import UsageRepository, get_usage_repository
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class UsageService:
     """Unified service providing usage ingestion, expectation resolution, and estimation."""
 
     def __init__(self, repository: UsageRepository | None = None) -> None:
-        self.repository = repository or UsageRepository()
+        self.repository = repository or get_usage_repository()
         self.collector = UsageCollector(self.repository)
         self.expectation_engine = ExpectationEngine(self.repository)
         self.estimator = CallVolumeEstimator()

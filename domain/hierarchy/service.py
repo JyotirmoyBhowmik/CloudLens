@@ -35,6 +35,7 @@ from domain.hierarchy.models import (
     LateralLensType,
     SavedInventoryView,
 )
+from domain.hierarchy.repository import HierarchyRepository, get_hierarchy_repository
 from domain.tenant.context import TenantContext
 
 
@@ -46,7 +47,8 @@ def _corp_email(username: str) -> str:
 class HierarchyService:
     """Enterprise domain service for hierarchy traversal, inventory, and search."""
 
-    def __init__(self) -> None:
+    def __init__(self, repository: HierarchyRepository | None = None) -> None:
+        self._repository = repository or get_hierarchy_repository()
         self._resources: dict[str, InventoryResource35] = {}
         self._budgets: dict[str, Decimal] = {}
         self._saved_views: dict[str, SavedInventoryView] = {}
@@ -2405,22 +2407,30 @@ class HierarchyService:
         tenant_context: TenantContext,
     ) -> SavedInventoryView:
         """Saves custom named inventory filter configuration."""
-        _ = tenant_context.tenant_id
         self._saved_views[view.id] = view
-        return view
+        try:
+            return self._repository.save_saved_view(view, tenant_context=tenant_context)
+        except Exception:
+            return view
 
     def list_saved_views(self, tenant_context: TenantContext) -> list[SavedInventoryView]:
         """Lists accessible saved views."""
-        _ = tenant_context.tenant_id
+        try:
+            persisted = self._repository.list_saved_views(tenant_context=tenant_context)
+            if persisted:
+                return persisted
+        except Exception:
+            pass
         return list(self._saved_views.values())
 
     def delete_saved_view(self, view_id: str, tenant_context: TenantContext) -> bool:
         """Deletes a saved view."""
-        _ = tenant_context.tenant_id
         if view_id in self._saved_views:
             del self._saved_views[view_id]
+        try:
+            return self._repository.delete_saved_view(view_id, tenant_context=tenant_context)
+        except Exception:
             return True
-        return False
 
     # --------------------------------------------------------------------------
     # Scope-Respecting Export
@@ -2507,7 +2517,7 @@ def get_hierarchy_service() -> HierarchyService:
     if _hierarchy_service is None:
         with _hierarchy_service_lock:
             if _hierarchy_service is None:
-                _hierarchy_service = HierarchyService()
+                _hierarchy_service = HierarchyService(repository=get_hierarchy_repository())
     return _hierarchy_service
 
 

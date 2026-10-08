@@ -1,20 +1,20 @@
-"""Tenant-Scoped Repository for Workflows, Definitions, and Delegations (Prompt 50).
+"""Tenant-Scoped Repository for Workflows, Definitions, and Delegations (Prompt 50, Prompt P07).
 
 Enforces:
 - Prompt 13 Item 84: 100% TenantContext validation across all repository operations.
-- Tenant isolation per BBP Section 41 and SEC-015.
-- Mechanical scoping and audit integrity.
+- Pattern P1 & P4: Protocol contract and PostgreSQL RLS persistence via SqlWorkflowRepository.
+- Production startup guard verifying no in-memory repositories in staging/production.
 """
 
 from __future__ import annotations
 
-import builtins
-import logging
-import threading
-from typing import Any
+import json
+from typing import Any, Protocol, runtime_checkable
 
+from sqlalchemy import text
+
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.tenant.context import TenantContext
-from domain.tenant.repository import TenantAwareRepository
 from domain.workflows.definitions import get_default_workflow_definitions
 from domain.workflows.models import (
     DelegationRule,
@@ -22,36 +22,174 @@ from domain.workflows.models import (
     WorkflowRequest,
 )
 
-logger = logging.getLogger(__name__)
+
+@runtime_checkable
+class WorkflowRepository(Protocol):
+    """Authoritative repository protocol for workflow requests, definitions, and delegations."""
+
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None: ...
+    def list(
+        self,
+        *,
+        tenant_context: TenantContext,
+        filter_params: Any = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[WorkflowRequest]: ...
+    def save(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest: ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
+    def save_request(self, req: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest: ...
+    def get_request(self, req_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None: ...
+    def list_requests(
+        self,
+        *,
+        tenant_context: TenantContext,
+        state: Any = None,
+        request_type: Any = None,
+        requester_id: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[WorkflowRequest]: ...
+    def save_definition(
+        self, definition: WorkflowDefinition, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition: ...
+    def get_definition(
+        self, def_id: str, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition | None: ...
+    def list_definitions(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]: ...
+    def save_delegation(
+        self, delegation: DelegationRule, *, tenant_context: TenantContext
+    ) -> DelegationRule: ...
+    def get_delegation(
+        self, delegation_id: str, *, tenant_context: TenantContext
+    ) -> DelegationRule | None: ...
+    def list_delegations(
+        self,
+        *,
+        tenant_context: TenantContext,
+        delegator_id: str | None = None,
+        delegatee_id: str | None = None,
+    ) -> list[DelegationRule]: ...
+    def delete_delegation(self, delegation_id: str, *, tenant_context: TenantContext) -> bool: ...
 
 
-class WorkflowRepository(TenantAwareRepository[WorkflowRequest]):
-    """Thread-safe, tenant-isolated repository for workflow requests, definitions, and delegations."""
+class SqlWorkflowRepository:
+    """PostgreSQL production implementation with Row-Level Security."""
 
-    def __init__(self) -> None:
-        self._lock = threading.RLock()
-        # Key: (tenant_id, request_id) -> WorkflowRequest
-        self._requests: dict[tuple[str, str], WorkflowRequest] = {}
-        # Key: (tenant_id or "SYSTEM", def_id) -> WorkflowDefinition
-        self._definitions: dict[tuple[str, str], WorkflowDefinition] = {}
-        # Key: (tenant_id, delegation_id) -> DelegationRule
-        self._delegations: dict[tuple[str, str], DelegationRule] = {}
+    is_in_memory: bool = False
 
-        # Seed system definitions
-        for d in get_default_workflow_definitions():
-            self._definitions[("SYSTEM", d.id)] = d
-            self._definitions[("SYSTEM", d.request_type.upper())] = d
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
-    # ==========================================================================
-    # 1. WorkflowRequest CRUD (TenantAwareRepository Implementation)
-    # ==========================================================================
+    def _row_to_request(self, row: Any) -> WorkflowRequest:
+        m = dict(row._mapping)
+        raw = m.get("request_payload")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "id" in raw:
+            return WorkflowRequest.model_validate(raw)
+        return WorkflowRequest.model_validate(m)
+
+    def _row_to_definition(self, row: Any) -> WorkflowDefinition:
+        m = dict(row._mapping)
+        raw = m.get("definition_payload")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "id" in raw:
+            return WorkflowDefinition.model_validate(raw)
+        return WorkflowDefinition.model_validate(m)
+
+    def _row_to_delegation(self, row: Any) -> DelegationRule:
+        m = dict(row._mapping)
+        raw = m.get("delegation_payload")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if isinstance(raw, dict) and "id" in raw:
+            return DelegationRule.model_validate(raw)
+        return DelegationRule.model_validate(m)
+
+    # --------------------------------------------------------------------------
+    # Requests
+    # --------------------------------------------------------------------------
+
+    async def get_async(self, entity_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("SELECT * FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                {"id": entity_id, "tid": tenant_context.tenant_id},
+            )
+            row = res.first()
+            return self._row_to_request(row) if row else None
 
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
-        """Retrieves a single workflow request by ID within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        with self._lock:
-            req = self._requests.get((tenant_context.tenant_id, entity_id))
-            return req.model_copy(deep=True) if req else None
+        return self._run_async(self.get_async(entity_id, tenant_context=tenant_context))
+
+    def get_request(self, req_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
+        return self.get(req_id, tenant_context=tenant_context)
+
+    async def save_async(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            entity.tenant_id = tenant_context.tenant_id
+            query = text("""
+                INSERT INTO workflow_requests (
+                    id, tenant_id, request_type, state, requester_id, request_payload, created_at, updated_at
+                ) VALUES (
+                    :id, :tid, :rtype, :state, :req_id, CAST(:payload AS jsonb), :created_at, NOW()
+                )
+                ON CONFLICT (id) DO UPDATE SET
+                    state = EXCLUDED.state,
+                    request_payload = EXCLUDED.request_payload,
+                    updated_at = NOW();
+            """)
+            await sess.execute(
+                query,
+                {
+                    "id": entity.id,
+                    "tid": tenant_context.tenant_id,
+                    "rtype": entity.request_type,
+                    "state": entity.state.value if hasattr(entity.state, "value") else str(entity.state),
+                    "req_id": entity.requester.requester_id,
+                    "payload": json.dumps(entity.model_dump(mode="json")),
+                    "created_at": entity.created_at,
+                },
+            )
+            await sess.commit()
+            return entity
+
+    def save(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+        return self._run_async(self.save_async(entity, tenant_context=tenant_context))
+
+    def save_request(self, req: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+        return self.save(req, tenant_context=tenant_context)
+
+    async def list_async(
+        self,
+        *,
+        tenant_context: TenantContext,
+        filter_params: Any = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[WorkflowRequest]:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            sql = "SELECT * FROM workflow_requests WHERE tenant_id = :tid"
+            params: dict[str, Any] = {"tid": tenant_context.tenant_id, "lim": limit, "off": offset}
+            if filter_params and isinstance(filter_params, dict):
+                if "state" in filter_params and filter_params["state"]:
+                    sql += " AND state = :st"
+                    st = filter_params["state"]
+                    params["st"] = st.value if hasattr(st, "value") else str(st)
+                if "request_type" in filter_params and filter_params["request_type"]:
+                    sql += " AND request_type = :rt"
+                    params["rt"] = str(filter_params["request_type"])
+                if "requester_id" in filter_params and filter_params["requester_id"]:
+                    sql += " AND requester_id = :req"
+                    params["req"] = str(filter_params["requester_id"])
+
+            sql += " ORDER BY created_at DESC LIMIT :lim OFFSET :off;"
+            res = await sess.execute(text(sql), params)
+            rows = res.fetchall()
+            return [self._row_to_request(r) for r in rows]
 
     def list(
         self,
@@ -61,191 +199,230 @@ class WorkflowRepository(TenantAwareRepository[WorkflowRequest]):
         limit: int = 50,
         offset: int = 0,
     ) -> list[WorkflowRequest]:
-        """Lists workflow requests belonging strictly to the tenant with optional pagination."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
+        return self._run_async(self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset))
 
-        with self._lock:
-            items = [r for (tid, _), r in self._requests.items() if tid == t_id]
+    def list_requests(
+        self,
+        *,
+        tenant_context: TenantContext,
+        state: Any = None,
+        request_type: Any = None,
+        requester_id: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[WorkflowRequest]:
+        fp = {}
+        if state:
+            fp["state"] = state
+        if request_type:
+            fp["request_type"] = request_type
+        if requester_id:
+            fp["requester_id"] = requester_id
+        return self.list(tenant_context=tenant_context, filter_params=fp, limit=limit, offset=offset)
 
-            if filter_params and isinstance(filter_params, dict):
-                if "state" in filter_params and filter_params["state"]:
-                    st = filter_params["state"]
-                    items = [r for r in items if r.state == st or r.state.value == str(st)]
-                if "request_type" in filter_params and filter_params["request_type"]:
-                    rt = filter_params["request_type"]
-                    items = [
-                        r
-                        for r in items
-                        if r.request_type == rt or r.request_type.upper() == str(rt).upper()
-                    ]
-                if "requester_id" in filter_params and filter_params["requester_id"]:
-                    items = [
-                        r
-                        for r in items
-                        if r.requester.requester_id == filter_params["requester_id"]
-                    ]
-
-            # Sort latest first
-            items.sort(key=lambda r: r.created_at, reverse=True)
-            page = items[offset : offset + limit]
-            return [r.model_copy(deep=True) for r in page]
-
-    def save(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
-        """Saves or updates a workflow request, enforcing tenant ownership."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-
-        entity.tenant_id = t_id
-        with self._lock:
-            self._requests[(t_id, entity.id)] = entity.model_copy(deep=True)
-            return entity.model_copy(deep=True)
+    async def delete_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("DELETE FROM workflow_requests WHERE id = :id AND tenant_id = :tid;"),
+                {"id": entity_id, "tid": tenant_context.tenant_id},
+            )
+            await sess.commit()
+            return res.rowcount > 0
 
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        """Deletes a workflow request within tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, entity_id)
-        with self._lock:
-            if key in self._requests:
-                del self._requests[key]
-                return True
-            return False
+        return self._run_async(self.delete_async(entity_id, tenant_context=tenant_context))
+
+    async def exists_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("SELECT 1 FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                {"id": entity_id, "tid": tenant_context.tenant_id},
+            )
+            return res.first() is not None
 
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        """Checks if a workflow request exists in the tenant scope."""
-        self._validate_tenant_context(tenant_context)
-        with self._lock:
-            return (tenant_context.tenant_id, entity_id) in self._requests
+        return self._run_async(self.exists_async(entity_id, tenant_context=tenant_context))
 
-    # ==========================================================================
-    # 2. Master Data Workflow Definitions
-    # ==========================================================================
+    # --------------------------------------------------------------------------
+    # Definitions
+    # --------------------------------------------------------------------------
+
+    async def save_definition_async(
+        self, definition: WorkflowDefinition, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition:
+        tid = tenant_context.tenant_id if tenant_context else "SYSTEM"
+        async with get_tenant_session(tid) as sess:
+            query = text("""
+                INSERT INTO workflow_definitions (id, tenant_id, request_type, name, definition_payload, created_at)
+                VALUES (:id, :tid, :rtype, :name, CAST(:payload AS jsonb), NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    definition_payload = EXCLUDED.definition_payload;
+            """)
+            await sess.execute(
+                query,
+                {
+                    "id": definition.id,
+                    "tid": tid,
+                    "rtype": definition.request_type,
+                    "name": definition.name,
+                    "payload": json.dumps(definition.model_dump(mode="json")),
+                },
+            )
+            await sess.commit()
+            return definition
 
     def save_definition(
         self, definition: WorkflowDefinition, *, tenant_context: TenantContext
     ) -> WorkflowDefinition:
-        """Stores a tenant-scoped or global master workflow definition."""
-        self._validate_tenant_context(tenant_context)
-        scope = definition.tenant_id or tenant_context.tenant_id
-        with self._lock:
-            self._definitions[(scope, definition.id)] = definition.model_copy(deep=True)
-            self._definitions[(scope, definition.request_type.upper())] = definition.model_copy(
-                deep=True
+        return self._run_async(self.save_definition_async(definition, tenant_context=tenant_context))
+
+    async def get_definition_async(
+        self, def_id: str, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition | None:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("SELECT * FROM workflow_definitions WHERE (id = :id OR UPPER(request_type) = UPPER(:id)) AND (tenant_id = :tid OR tenant_id = 'SYSTEM') LIMIT 1;"),
+                {"id": def_id, "tid": tenant_context.tenant_id},
             )
-            return definition.model_copy(deep=True)
+            row = res.first()
+            if row:
+                return self._row_to_definition(row)
+        for d in get_default_workflow_definitions():
+            if d.id == def_id or d.request_type.upper() == def_id.upper():
+                return d
+        return None
 
     def get_definition(
-        self, definition_id: str, *, tenant_context: TenantContext
+        self, def_id: str, *, tenant_context: TenantContext
     ) -> WorkflowDefinition | None:
-        """Retrieves a workflow definition by ID, resolving tenant override over global master."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        with self._lock:
-            # 1. Tenant override
-            if (t_id, definition_id) in self._definitions:
-                return self._definitions[(t_id, definition_id)].model_copy(deep=True)
-            # 2. System global master
-            if ("SYSTEM", definition_id) in self._definitions:
-                return self._definitions[("SYSTEM", definition_id)].model_copy(deep=True)
-            return None
+        return self._run_async(self.get_definition_async(def_id, tenant_context=tenant_context))
 
-    def get_definition_by_type(
-        self, request_type: str, *, tenant_context: TenantContext
-    ) -> WorkflowDefinition | None:
-        """Retrieves a workflow definition by request type code."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        rt = request_type.strip().upper()
-        with self._lock:
-            if (t_id, rt) in self._definitions:
-                return self._definitions[(t_id, rt)].model_copy(deep=True)
-            if ("SYSTEM", rt) in self._definitions:
-                return self._definitions[("SYSTEM", rt)].model_copy(deep=True)
-            return None
+    async def list_definitions_async(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]:
+        defaults_map = {d.id: d for d in get_default_workflow_definitions()}
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("SELECT * FROM workflow_definitions WHERE tenant_id = :tid OR tenant_id = 'SYSTEM';"),
+                {"tid": tenant_context.tenant_id},
+            )
+            rows = res.fetchall()
+            for r in rows:
+                d = self._row_to_definition(r)
+                defaults_map[d.id] = d
+        return list(defaults_map.values())
 
-    def list_definitions(
-        self, *, tenant_context: TenantContext
-    ) -> builtins.list[WorkflowDefinition]:
-        """Lists active workflow definitions for the tenant, merging global and overrides."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        with self._lock:
-            defs_by_type: dict[str, WorkflowDefinition] = {}
-            # Global first
-            for (scope, _), d in self._definitions.items():
-                if scope == "SYSTEM" and d.is_active:
-                    defs_by_type[d.request_type.upper()] = d.model_copy(deep=True)
-            # Tenant override second
-            for (scope, _), d in self._definitions.items():
-                if scope == t_id and d.is_active:
-                    defs_by_type[d.request_type.upper()] = d.model_copy(deep=True)
+    def list_definitions(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]:
+        return self._run_async(self.list_definitions_async(tenant_context=tenant_context))
 
-            return builtins.list(defs_by_type.values())
+    # --------------------------------------------------------------------------
+    # Delegations
+    # --------------------------------------------------------------------------
 
-    # ==========================================================================
-    # 3. Delegations & Out-of-Office Rules
-    # ==========================================================================
+    async def save_delegation_async(
+        self, delegation: DelegationRule, *, tenant_context: TenantContext
+    ) -> DelegationRule:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            query = text("""
+                INSERT INTO workflow_delegations (id, tenant_id, delegator_id, delegatee_id, delegation_payload, created_at)
+                VALUES (:id, :tid, :del_id, :dee_id, CAST(:payload AS jsonb), NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                    delegation_payload = EXCLUDED.delegation_payload;
+            """)
+            await sess.execute(
+                query,
+                {
+                    "id": delegation.id,
+                    "tid": tenant_context.tenant_id,
+                    "del_id": delegation.delegator_id,
+                    "dee_id": delegation.delegatee_id,
+                    "payload": json.dumps(delegation.model_dump(mode="json")),
+                },
+            )
+            await sess.commit()
+            return delegation
 
     def save_delegation(
-        self, rule: DelegationRule, *, tenant_context: TenantContext
+        self, delegation: DelegationRule, *, tenant_context: TenantContext
     ) -> DelegationRule:
-        """Persists a delegation rule within tenant scope."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        rule.tenant_id = t_id
-        with self._lock:
-            self._delegations[(t_id, rule.id)] = rule.model_copy(deep=True)
-            return rule.model_copy(deep=True)
+        return self._run_async(self.save_delegation_async(delegation, tenant_context=tenant_context))
 
-    def list_delegations(
-        self, *, tenant_context: TenantContext, user_id: str | None = None
-    ) -> builtins.list[DelegationRule]:
-        """Lists active delegation rules in the tenant boundary."""
-        self._validate_tenant_context(tenant_context)
-        t_id = tenant_context.tenant_id
-        with self._lock:
-            rules = [r for (tid, _), r in self._delegations.items() if tid == t_id]
-            if user_id:
-                rules = [
-                    r
-                    for r in rules
-                    if r.original_approver_id == user_id or r.delegate_approver_id == user_id
-                ]
-            return [r.model_copy(deep=True) for r in rules]
+    async def get_delegation_async(
+        self, delegation_id: str, *, tenant_context: TenantContext
+    ) -> DelegationRule | None:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("SELECT * FROM workflow_delegations WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                {"id": delegation_id, "tid": tenant_context.tenant_id},
+            )
+            row = res.first()
+            return self._row_to_delegation(row) if row else None
 
     def get_delegation(
         self, delegation_id: str, *, tenant_context: TenantContext
     ) -> DelegationRule | None:
-        """Retrieves a delegation rule by ID."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, delegation_id)
-        with self._lock:
-            rule = self._delegations.get(key)
-            return rule.model_copy(deep=True) if rule else None
+        return self._run_async(self.get_delegation_async(delegation_id, tenant_context=tenant_context))
+
+    async def list_delegations_async(
+        self,
+        *,
+        tenant_context: TenantContext,
+        delegator_id: str | None = None,
+        delegatee_id: str | None = None,
+    ) -> list[DelegationRule]:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            sql = "SELECT * FROM workflow_delegations WHERE tenant_id = :tid"
+            params: dict[str, Any] = {"tid": tenant_context.tenant_id}
+            if delegator_id:
+                sql += " AND delegator_id = :del"
+                params["del"] = delegator_id
+            if delegatee_id:
+                sql += " AND delegatee_id = :dee"
+                params["dee"] = delegatee_id
+            sql += " ORDER BY created_at DESC;"
+            res = await sess.execute(text(sql), params)
+            rows = res.fetchall()
+            return [self._row_to_delegation(r) for r in rows]
+
+    def list_delegations(
+        self,
+        *,
+        tenant_context: TenantContext,
+        delegator_id: str | None = None,
+        delegatee_id: str | None = None,
+    ) -> list[DelegationRule]:
+        return self._run_async(
+            self.list_delegations_async(
+                tenant_context=tenant_context, delegator_id=delegator_id, delegatee_id=delegatee_id
+            )
+        )
+
+    async def delete_delegation_async(self, delegation_id: str, *, tenant_context: TenantContext) -> bool:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text("DELETE FROM workflow_delegations WHERE id = :id AND tenant_id = :tid;"),
+                {"id": delegation_id, "tid": tenant_context.tenant_id},
+            )
+            await sess.commit()
+            return res.rowcount > 0
 
     def delete_delegation(self, delegation_id: str, *, tenant_context: TenantContext) -> bool:
-        """Deletes a delegation rule."""
-        self._validate_tenant_context(tenant_context)
-        key = (tenant_context.tenant_id, delegation_id)
-        with self._lock:
-            if key in self._delegations:
-                del self._delegations[key]
-                return True
-            return False
+        return self._run_async(self.delete_delegation_async(delegation_id, tenant_context=tenant_context))
 
 
+# Singleton instance & factory
 _workflow_repository_instance: WorkflowRepository | None = None
 
 
 def get_workflow_repository() -> WorkflowRepository:
-    """Returns singleton WorkflowRepository instance."""
+    """Returns singleton WorkflowRepository with production startup guard."""
     global _workflow_repository_instance
     if _workflow_repository_instance is None:
-        _workflow_repository_instance = WorkflowRepository()
+        _workflow_repository_instance = SqlWorkflowRepository()
+        verify_persistence_startup_guard(_workflow_repository_instance)
     return _workflow_repository_instance
 
 
-def reset_workflow_repository() -> None:
-    """Resets repository singleton for test isolation."""
+def reset_workflow_repository(repo: WorkflowRepository | None = None) -> None:
+    """Resets singleton WorkflowRepository for testing."""
     global _workflow_repository_instance
-    _workflow_repository_instance = None
+    _workflow_repository_instance = repo

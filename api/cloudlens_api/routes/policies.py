@@ -172,7 +172,8 @@ async def list_findings(
         policy_id=policy_id,
         entity_id=entity_id,
     )
-    return FindingListResponse(items=findings, total=len(findings))
+    total_count = service.count_findings(tenant_context=tenant_ctx, status=status)
+    return FindingListResponse(items=findings, total=total_count)
 
 
 # ==============================================================================

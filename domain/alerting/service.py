@@ -18,7 +18,7 @@ from domain.alerting.models import (
     ContextualAlert,
     RecipientSubscription,
 )
-from domain.alerting.repository import AlertRepository
+from domain.alerting.repository import AlertRepository, get_alert_repository
 from domain.alerting.router import RecipientRouter
 from domain.audit.service import AuditService, get_audit_service
 from domain.models.enums import (
@@ -41,7 +41,7 @@ class AlertService:
         contextual_manager: ContextualAlertManager | None = None,
         scope_storm_threshold: int = 10,
     ) -> None:
-        self.repository = repository or AlertRepository()
+        self.repository = repository or get_alert_repository()
         self.router = router or RecipientRouter()
         self.registry = registry or ChannelAdapterRegistry()
         self.audit_service = audit_service or get_audit_service()
