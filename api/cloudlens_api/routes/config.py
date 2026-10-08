@@ -4,8 +4,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.cloudlens_api.tenant_context import require_auth
+from db.session import get_db_session
 from domain.config import (
     ConfigProvenance,
     ConfigurationAuditEngine,
@@ -15,7 +17,10 @@ from domain.config import (
     UnregisteredFeatureFlagError,
     config_resolver,
     feature_flag_service,
-    tenant_settings_store,
+)
+from domain.config.repository import (
+    TenantSettingsRepository,
+    get_tenant_settings_repository,
 )
 from domain.config.tenant_settings import TenantSettings
 from domain.tenant.context import TenantContext
@@ -136,6 +141,8 @@ async def get_configuration_drift(
 async def get_tenant_settings(
     tenant_id: str,
     tc: TenantContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_db_session),
+    repo: TenantSettingsRepository = Depends(get_tenant_settings_repository),
 ) -> TenantSettings:
     """Retrieve effective tenant settings profile."""
     if tenant_id != tc.effective_tenant_id and not (tc.is_superuser or tc.has_capability("platform.operate")):
@@ -143,7 +150,7 @@ async def get_tenant_settings(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot access settings of another tenant without super administrator privileges.",
         )
-    return tenant_settings_store.get(tenant_id)
+    return await repo.get(tenant_id, session=session)
 
 
 @router.put(
@@ -153,6 +160,8 @@ async def update_tenant_settings(
     tenant_id: str,
     payload: TenantSettingsUpdateRequest,
     tc: TenantContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_db_session),
+    repo: TenantSettingsRepository = Depends(get_tenant_settings_repository),
 ) -> TenantSettings:
     """Dynamically update tenant configuration (e.g. threshold defaults)."""
     if tenant_id != tc.effective_tenant_id and not (tc.is_superuser or tc.has_capability("platform.operate")):
@@ -162,7 +171,7 @@ async def update_tenant_settings(
         )
     tc.require_capability("tenants:settings:write")
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
-    return tenant_settings_store.update(tenant_id, update_data)
+    return await repo.update(tenant_id, update_data, session=session)
 
 
 # --- Feature Flag Endpoints ---

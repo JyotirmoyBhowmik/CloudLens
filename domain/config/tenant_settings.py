@@ -303,55 +303,38 @@ class TenantSettings(BaseModel):
 
 
 class TenantSettingsStore:
-    """In-memory and persistent accessor for dynamic tenant settings.
+    """Delegating accessor for dynamic tenant settings (Prompt P03).
 
-    Guarantees hot-reloading: changes take effect immediately without code change or restart.
+    Backed by PostgreSQL via TenantSettingsRepository; eliminates in-memory dicts.
     """
 
-    def __init__(self) -> None:
-        self._tenants: dict[str, TenantSettings] = {}
-
     def get(self, tenant_id: str) -> TenantSettings:
-        """Retrieve effective tenant settings, initializing with defaults if not present."""
-        if tenant_id not in self._tenants:
-            self._tenants[tenant_id] = TenantSettings(tenant_id=tenant_id)
-        return self._tenants[tenant_id]
+        """Retrieve effective tenant settings from repository."""
+        from domain.config.repository import get_tenant_settings_repository
+        return get_tenant_settings_repository().get_sync(tenant_id)
 
     def update(self, tenant_id: str, new_settings: dict) -> TenantSettings:
-        """Update tenant settings dynamically in-place."""
-        current = self.get(tenant_id)
-        current_data = current.model_dump()
-
-        # Deep merge updates
-        for key, value in new_settings.items():
-            if (
-                key in current_data
-                and isinstance(current_data[key], dict)
-                and isinstance(value, dict)
-            ):
-                current_data[key].update(value)
-            else:
-                current_data[key] = value
-
-        updated = TenantSettings.model_validate(current_data)
-        self._tenants[tenant_id] = updated
-        return updated
+        """Update tenant settings dynamically in repository."""
+        from domain.config.repository import get_tenant_settings_repository
+        return get_tenant_settings_repository().update_sync(tenant_id, new_settings)
 
     def update_settings(self, tenant_id: str, settings: TenantSettings) -> None:
-        """Sets or replaces tenant settings with a TenantSettings instance."""
-        self._tenants[tenant_id] = settings
+        """Sets or replaces tenant settings in repository."""
+        from domain.config.repository import get_tenant_settings_repository
+        get_tenant_settings_repository().save_sync(settings)
 
     def set(self, tenant_id: str, settings: TenantSettings) -> None:
         """Alias for update_settings."""
-        self._tenants[tenant_id] = settings
+        self.update_settings(tenant_id, settings)
 
     def reset(self, tenant_id: str | None = None) -> None:
         """Reset settings for testing."""
-        if tenant_id:
-            self._tenants.pop(tenant_id, None)
-        else:
-            self._tenants.clear()
+        from domain.config.repository import get_tenant_settings_repository
+        repo = get_tenant_settings_repository()
+        if hasattr(repo, "reset"):
+            repo.reset(tenant_id)
 
 
-# Global singleton tenant settings store
+# Backward-compatible delegator (internal dict singleton removed)
 tenant_settings_store = TenantSettingsStore()
+

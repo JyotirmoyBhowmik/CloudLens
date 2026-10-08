@@ -156,7 +156,7 @@ class IdentityProviderConfig(BaseModel):
     )
     client_id: str = Field(default="cloudlens-api", description="OAuth2 client identifier")
     client_secret: str = Field(
-        default="",
+        default_factory=lambda: os.getenv("OIDC_CLIENT_SECRET", ""),
         description="OAuth2 client secret",
         json_schema_extra={"is_secret": True},
     )
