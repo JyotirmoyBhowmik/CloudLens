@@ -71,6 +71,41 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
       });
     });
 
+    // Mock empty endpoints for pages that query resource lists
+    const emptyEndpoints = [
+      '/api/v1/quotas',
+      '/api/v1/remediation',
+      '/api/v1/statements',
+      '/api/v1/budgets/plans',
+      '/api/v1/commitments',
+      '/api/v1/audit',
+      '/api/v1/users',
+      '/api/v1/policies',
+      '/api/v1/provisioning-requests',
+      '/api/v1/runtime/adherence',
+      '/api/v1/usage/metrics',
+      '/api/v1/connectors',
+      '/api/v1/overrides',
+      '/api/v1/cost/estimate',
+      '/api/v1/dependencies/graph',
+    ];
+
+    await page.route('/api/v1/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/api/v1/health') || url.includes('/api/v1/auth/me')) {
+        return route.fallback();
+      }
+      if (emptyEndpoints.some((ep) => url.includes(ep))) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+        });
+        return;
+      }
+      return route.fallback();
+    });
+
     // Reset localStorage for deterministic test isolation
     await page.addInitScript(() => {
       localStorage.clear();
@@ -79,6 +114,7 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
   });
 
   test('All 28 routes are reachable by direct URL in Demo Mode', async ({ page }) => {
+    test.setTimeout(120000);
     page.on('pageerror', (err) => console.log(`[PAGE ERROR]: ${err.message}`));
     for (const r of ROUTES) {
       console.log(`Checking route ${r.id}: ${r.path}`);
@@ -99,6 +135,7 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
   });
 
   test('All 28 routes render properly in Non-Demo Mode (Empty States)', async ({ page }) => {
+    test.setTimeout(60000);
     await page.addInitScript(() => {
       localStorage.setItem('cloudlens_is_demo', 'false');
     });

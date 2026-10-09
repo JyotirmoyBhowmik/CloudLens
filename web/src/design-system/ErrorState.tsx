@@ -162,7 +162,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               padding: '0.35rem 0.85rem',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: '#ef4444',
+              backgroundColor: '#b91c1c',
               color: '#ffffff',
               fontSize: '0.8125rem',
               fontWeight: 600,

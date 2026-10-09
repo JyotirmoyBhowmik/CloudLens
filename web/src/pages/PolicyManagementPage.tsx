@@ -1,7 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Breadcrumb,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import {
   Shield,
   ShieldAlert,
@@ -61,211 +65,71 @@ export interface ExemptionItem {
   createdAt: string;
 }
 
-const INITIAL_POLICIES: PolicyItem[] = [
-  {
-    id: 'POL-01',
-    name: 'Mandatory Resource Tagging Standard',
-    category: 'TAGGING',
-    severity: 'HIGH',
-    mode: 'ENFORCE',
-    enabled: true,
-    description: 'All cloud resources must possess Environment, Owner, and CostCentre tags.',
-    targetEntityType: 'RESOURCE',
-    ruleExpression: "has_tag('Environment') AND has_tag('Owner') AND has_tag('CostCentre')",
-    remediationAction: 'Flag non-compliant resource in daily FinOps report; alert technical owner.',
-    findingCount: 14,
-    version: '1.4.0',
-  },
-  {
-    id: 'POL-02',
-    name: 'Idle Database Instance Elimination',
-    category: 'FINOPS',
-    severity: 'MEDIUM',
-    mode: 'ENFORCE',
-    enabled: true,
-    description: 'Relational databases running with < 2% average CPU for 14 continuous days must be flagged for downsizing or decommissioning.',
-    targetEntityType: 'DATABASE',
-    ruleExpression: 'cpu_utilization_14d_avg < 0.02 AND runtime_state == "RUNNING"',
-    remediationAction: 'Generate right-sizing recommendation and schedule automated snapshot prior to pause.',
-    findingCount: 3,
-    version: '2.1.0',
-  },
-  {
-    id: 'POL-03',
-    name: 'Legacy Generation Virtual Machine Deprecation',
-    category: 'ARCHITECTURE',
-    severity: 'MEDIUM',
-    mode: 'SIMULATE',
-    enabled: true,
-    description: 'Disallow provisioning or long-term runtime of legacy compute families (AWS m4, Azure Dv2, GCP n1).',
-    targetEntityType: 'VIRTUAL_MACHINE',
-    ruleExpression: "instance_family in ['m4', 'dv2', 'n1']",
-    remediationAction: 'Plan rolling upgrade to modern Graviton/ARM or current-generation x86 instances.',
-    findingCount: 8,
-    version: '1.0.2',
-  },
-  {
-    id: 'POL-04',
-    name: 'Orphaned Block Storage Volumes & Snapshots',
-    category: 'FINOPS',
-    severity: 'HIGH',
-    mode: 'ENFORCE',
-    enabled: true,
-    description: 'Unattached EBS/Managed Disks unattached to any virtual instance for > 7 days must be archived.',
-    targetEntityType: 'STORAGE_VOLUME',
-    ruleExpression: 'attachment_state == "DETACHED" AND detached_days > 7',
-    remediationAction: 'Take final recovery snapshot and remove unattached volume.',
-    findingCount: 19,
-    version: '1.2.0',
-  },
-  {
-    id: 'POL-05',
-    name: 'Connector Health & Sync Freshness Verification',
-    category: 'RUNTIME',
-    severity: 'CRITICAL',
-    mode: 'ENFORCE',
-    enabled: true,
-    description: 'Ingestion connectors must complete a successful discovery sync within the last 60 minutes.',
-    targetEntityType: 'CONNECTOR',
-    ruleExpression: 'last_successful_sync_minutes_ago <= 60 AND health_status == "HEALTHY"',
-    remediationAction: 'Dispatch high-priority alert to Platform Engineering and trigger diagnostic probe.',
-    findingCount: 0,
-    version: '3.0.0',
-  },
-  {
-    id: 'POL-06',
-    name: 'Public Bucket Access Restriction',
-    category: 'SECURITY',
-    severity: 'CRITICAL',
-    mode: 'ENFORCE',
-    enabled: true,
-    description: 'Object storage buckets must have public read/write ACLs and public policies completely blocked.',
-    targetEntityType: 'STORAGE_BUCKET',
-    ruleExpression: 'public_access_block == true AND acl_is_private == true',
-    remediationAction: 'Immediately apply restrictive bucket policy and notify security officer.',
-    findingCount: 1,
-    version: '2.0.1',
-  },
-  {
-    id: 'POL-07',
-    name: 'Cross-Region Data Egress Quota Guard',
-    category: 'FINOPS',
-    severity: 'HIGH',
-    mode: 'SIMULATE',
-    enabled: false,
-    description: 'Single-service outbound network egress exceeding $1,000/day requires architectural review.',
-    targetEntityType: 'NETWORK_GATEWAY',
-    ruleExpression: 'daily_egress_cost_usd > 1000.0',
-    remediationAction: 'Evaluate deployment of local Private Link endpoints or VPC peering.',
-    findingCount: 2,
-    version: '1.1.0',
-  },
-];
-
-const INITIAL_FINDINGS: FindingItem[] = [
-  {
-    id: 'fnd-101',
-    policyId: 'POL-01',
-    policyName: 'Mandatory Resource Tagging Standard',
-    entityId: 'res-aws-rds-analytics-02',
-    entityType: 'AWS RDS MySQL',
-    provider: 'AWS',
-    severity: 'HIGH',
-    status: 'OPEN',
-    detail: "Missing mandatory tag 'CostCentre'. Present tags: Environment=Production, Owner=DataTeam.",
-    detectedAt: '2026-10-03 18:22 UTC',
-  },
-  {
-    id: 'fnd-102',
-    policyId: 'POL-01',
-    policyName: 'Mandatory Resource Tagging Standard',
-    entityId: 'res-az-vm-jumpbox-stage',
-    entityType: 'Azure Virtual Machine',
-    provider: 'AZURE',
-    severity: 'HIGH',
-    status: 'OPEN',
-    detail: "Missing mandatory tags 'Environment' and 'Owner'.",
-    detectedAt: '2026-10-03 14:10 UTC',
-  },
-  {
-    id: 'fnd-103',
-    policyId: 'POL-02',
-    policyName: 'Idle Database Instance Elimination',
-    entityId: 'res-gcp-sql-staging-db',
-    entityType: 'GCP Cloud SQL',
-    provider: 'GCP',
-    severity: 'MEDIUM',
-    status: 'OPEN',
-    detail: 'Average CPU utilization over past 14 days is 0.8% (< 2.0% threshold). Daily spend: $24.80.',
-    detectedAt: '2026-10-02 09:45 UTC',
-  },
-  {
-    id: 'fnd-104',
-    policyId: 'POL-04',
-    policyName: 'Orphaned Block Storage Volumes & Snapshots',
-    entityId: 'vol-0a89c201e7e45b1',
-    entityType: 'AWS EBS Volume (gp3 500GB)',
-    provider: 'AWS',
-    severity: 'HIGH',
-    status: 'OPEN',
-    detail: 'Volume has been in detached state for 21 consecutive days. Accumulating $40.00/mo unattached cost.',
-    detectedAt: '2026-10-01 12:00 UTC',
-  },
-  {
-    id: 'fnd-105',
-    policyId: 'POL-06',
-    policyName: 'Public Bucket Access Restriction',
-    entityId: 'gcp-bkt-public-assets-tmp',
-    entityType: 'GCP Cloud Storage',
-    provider: 'GCP',
-    severity: 'CRITICAL',
-    status: 'EXEMPTED',
-    detail: 'Public read ACL enabled. Covered by temporary exemption EX-2026-004 for CDN migration test.',
-    detectedAt: '2026-09-28 11:15 UTC',
-  },
-];
-
-const INITIAL_EXEMPTIONS: ExemptionItem[] = [
-  {
-    id: 'EX-2026-001',
-    policyId: 'POL-02',
-    policyName: 'Idle Database Instance Elimination',
-    entityId: 'res-aws-rds-dr-standby-01',
-    justification: 'Cold standby database configured for warm disaster recovery failover scenario. CPU is intentionally near zero until DR activation.',
-    approvedBy: 'security.lead@cloudlens.internal',
-    expiresAt: '2026-12-31 23:59 UTC',
-    status: 'ACTIVE',
-    createdAt: '2026-09-15 10:00 UTC',
-  },
-  {
-    id: 'EX-2026-002',
-    policyId: 'POL-03',
-    policyName: 'Legacy Generation Virtual Machine Deprecation',
-    entityId: 'res-az-vm-legacy-payroll',
-    justification: 'Vendor kernel constraint requires Windows Server 2012 on Dv2 hardware. Full replacement targeted for Q1 2027.',
-    approvedBy: 'compliance.officer@cloudlens.internal',
-    expiresAt: '2027-01-31 23:59 UTC',
-    status: 'ACTIVE',
-    createdAt: '2026-08-01 14:30 UTC',
-  },
-  {
-    id: 'EX-2026-004',
-    policyId: 'POL-06',
-    policyName: 'Public Bucket Access Restriction',
-    entityId: 'gcp-bkt-public-assets-tmp',
-    justification: 'Static asset public caching verification for upcoming marketing launch. Verified no sensitive data stored.',
-    approvedBy: 'ciso@cloudlens.internal',
-    expiresAt: '2026-10-15 18:00 UTC',
-    status: 'ACTIVE',
-    createdAt: '2026-09-28 12:00 UTC',
-  },
-];
-
 export const PolicyManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'policies' | 'builder' | 'findings' | 'simulate' | 'exemptions'>('policies');
-  const [policies, setPolicies] = useState<PolicyItem[]>(INITIAL_POLICIES);
-  const [findings, setFindings] = useState<FindingItem[]>(INITIAL_FINDINGS);
-  const [exemptions, setExemptions] = useState<ExemptionItem[]>(INITIAL_EXEMPTIONS);
+  const { data: apiPolicies, loading: loadingPolicies, error: errorPolicies, errorMessage: errorMsgPolicies, refetch: refetchPolicies } = useApiData<any>('/api/v1/policies');
+  const { data: apiFindings, loading: loadingFindings, error: errorFindings, errorMessage: errorMsgFindings, refetch: refetchFindings } = useApiData<any>('/api/v1/policies/findings');
+  const { data: apiExemptions, loading: loadingExemptions, error: errorExemptions, errorMessage: errorMsgExemptions, refetch: refetchExemptions } = useApiData<any>('/api/v1/policies/exemptions');
+
+  const [policies, setPolicies] = useState<PolicyItem[]>([]);
+  const [findings, setFindings] = useState<FindingItem[]>([]);
+  const [exemptions, setExemptions] = useState<ExemptionItem[]>([]);
+
+  useEffect(() => {
+    if (apiPolicies) {
+      const list = Array.isArray(apiPolicies) ? apiPolicies : (apiPolicies.items || []);
+      setPolicies(list.map((p: any) => ({
+        id: p.id || p.policy_id || 'POL-01',
+        name: p.name || 'Policy',
+        category: (p.category || 'FINOPS') as PolicyCategory,
+        severity: (p.severity || 'HIGH') as PolicySeverity,
+        mode: (p.mode || 'ENFORCE') as PolicyMode,
+        enabled: p.enabled !== undefined ? p.enabled : true,
+        description: p.description || '',
+        targetEntityType: p.target_entity_type || p.targetEntityType || 'RESOURCE',
+        ruleExpression: p.rule_expression || p.ruleExpression || '',
+        remediationAction: p.remediation_action || p.remediationAction || '',
+        findingCount: p.finding_count ?? p.findingCount ?? 0,
+        version: p.version || '1.0.0',
+      })));
+    }
+  }, [apiPolicies]);
+
+  useEffect(() => {
+    if (apiFindings) {
+      const list = Array.isArray(apiFindings) ? apiFindings : (apiFindings.items || []);
+      setFindings(list.map((f: any) => ({
+        id: f.id || f.finding_id || 'FND-01',
+        policyId: f.policy_id || f.policyId || '',
+        policyName: f.policy_name || f.policyName || 'Policy Finding',
+        severity: (f.severity || 'HIGH') as PolicySeverity,
+        entityId: f.entity_id || f.entityId || '',
+        entityType: f.entity_type || f.entityType || 'RESOURCE',
+        provider: (f.provider || 'AWS') as FindingItem['provider'],
+        violationReason: f.violation_reason || f.violationReason || '',
+        discoveredAt: f.discovered_at || f.discoveredAt || '',
+        status: (f.status || 'OPEN') as FindingItem['status'],
+        exempted: !!f.exempted,
+      })));
+    }
+  }, [apiFindings]);
+
+  useEffect(() => {
+    if (apiExemptions) {
+      const list = Array.isArray(apiExemptions) ? apiExemptions : (apiExemptions.items || []);
+      setExemptions(list.map((e: any) => ({
+        id: e.id || e.exemption_id || 'EXM-01',
+        policyId: e.policy_id || e.policyId || '',
+        policyName: e.policy_name || e.policyName || 'Policy Exemption',
+        entityId: e.entity_id || e.entityId || '',
+        justification: e.justification || '',
+        approvedBy: e.approved_by || e.approvedBy || '',
+        expiresAt: e.expires_at || e.expiresAt || '',
+        status: (e.status || 'ACTIVE') as ExemptionItem['status'],
+        createdAt: e.created_at || e.createdAt || '',
+      })));
+    }
+  }, [apiExemptions]);
 
   // Search and filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -751,6 +615,18 @@ export const PolicyManagementPage: React.FC = () => {
           </div>
 
           {/* Policy Cards Grid */}
+          {loadingPolicies && <SkeletonLoader variant="table" rows={3} />}
+          {errorPolicies && !loadingPolicies && (
+            <ErrorState
+              title="Failed to Load Policies"
+              message={errorMsgPolicies || 'Error contacting policies API'}
+              onRetry={refetchPolicies}
+            />
+          )}
+          {!loadingPolicies && !errorPolicies && filteredPolicies.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Policies Configured" descriptionOverride="No cloud governance or FinOps policies defined for this tenant." actionTextOverride="Create New Policy" onAction={() => setActiveTab('builder')} />
+          )}
+          {!loadingPolicies && !errorPolicies && filteredPolicies.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {filteredPolicies.map((pol) => {
               const sevBadge = getSeverityBadge(pol.severity);
@@ -860,6 +736,7 @@ export const PolicyManagementPage: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
@@ -1156,6 +1033,18 @@ export const PolicyManagementPage: React.FC = () => {
             </span>
           </div>
 
+          {loadingFindings && <SkeletonLoader variant="table" rows={3} />}
+          {errorFindings && !loadingFindings && (
+            <ErrorState
+              title="Failed to Load Findings"
+              message={errorMsgFindings || 'Error contacting policy findings API'}
+              onRetry={refetchFindings}
+            />
+          )}
+          {!loadingFindings && !errorFindings && findings.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Policy Findings" descriptionOverride="All discovered cloud resources conform cleanly to active governance policies." actionTextOverride="Re-evaluate Policies" onAction={refetchFindings} />
+          )}
+          {!loadingFindings && !errorFindings && findings.length > 0 && (
           <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead>
@@ -1249,6 +1138,7 @@ export const PolicyManagementPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
 
@@ -1429,6 +1319,18 @@ export const PolicyManagementPage: React.FC = () => {
             </button>
           </div>
 
+          {loadingExemptions && <SkeletonLoader variant="table" rows={3} />}
+          {errorExemptions && !loadingExemptions && (
+            <ErrorState
+              title="Failed to Load Exemptions"
+              message={errorMsgExemptions || 'Error contacting policy exemptions API'}
+              onRetry={refetchExemptions}
+            />
+          )}
+          {!loadingExemptions && !errorExemptions && exemptions.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Active Exemptions" descriptionOverride="No time-boxed governance exemptions currently granted." actionTextOverride="Grant Exemption" onAction={() => setIsExemptionModalOpen(true)} />
+          )}
+          {!loadingExemptions && !errorExemptions && exemptions.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {exemptions.map((ex) => (
               <div
@@ -1478,6 +1380,7 @@ export const PolicyManagementPage: React.FC = () => {
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 

@@ -1,7 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Breadcrumb,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
 import {
   ShieldAlert,
@@ -19,6 +22,7 @@ import {
   FileText,
   ArrowRight,
 } from 'lucide-react';
+import { useApiData } from '../api';
 
 export interface AdminConsoleProps {
   onNavigateHome?: () => void;
@@ -83,87 +87,6 @@ const ADMIN_FUNCTIONS: AdminFunction[] = [
   { id: 'fn-24', name: 'Manual Overrides & Exceptions', category: 'Overrides & Exceptions', description: 'Eight-attribute enforced governance overrides with mandatory rationale, expiry, and reversion.', status: 'ACTIVE' },
 ];
 
-const INITIAL_OVERRIDES: OverrideItem[] = [
-  {
-    id: 'ovr-2026-081',
-    overrideClass: 'THRESHOLD',
-    who: 'lead.finops@cloudlens.internal',
-    what: 'bgt-ecommerce-prod/amber_threshold',
-    why: 'Temporary migration spike during peak seasonal product launch. Raised from 80% to 92% to suppress alarm noise.',
-    previousValue: '0.80',
-    newValue: '0.92',
-    expiry: '2026-10-31 23:59 UTC',
-    approvalTicket: 'CHG-98442-PROD',
-    status: 'ACTIVE',
-    createdAt: '2026-10-01 10:14 UTC',
-  },
-  {
-    id: 'ovr-2026-079',
-    overrideClass: 'PRICING',
-    who: 'cfo.office@cloudlens.internal',
-    what: 'pricing/aws/ec2/custom-enterprise-discount',
-    why: 'Direct executive enterprise agreement renegotiation with AWS. Manual EDP discount override applied.',
-    previousValue: '0.12',
-    newValue: '0.185',
-    expiry: '2027-03-31 00:00 UTC',
-    approvalTicket: 'EXEC-AGR-AWS-2026',
-    status: 'ACTIVE',
-    createdAt: '2026-09-20 14:00 UTC',
-  },
-  {
-    id: 'ovr-2026-064',
-    overrideClass: 'ROUTING',
-    who: 'cloud.arch@cloudlens.internal',
-    what: 'egress/oci/cross-region-failover',
-    why: 'Disaster recovery failover simulation drill routing network egress directly to alternate datacenter region.',
-    previousValue: 'us-ashburn-1',
-    newValue: 'us-phoenix-1',
-    expiry: '2026-09-28 18:00 UTC',
-    approvalTicket: 'DR-TEST-Q3-01',
-    status: 'EXPIRED',
-    createdAt: '2026-09-25 08:00 UTC',
-  },
-];
-
-const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
-  {
-    id: 'aud-99120',
-    timestamp: '2026-10-03 21:55:12 UTC',
-    actor: 'sarah.chen@cloudlens.internal',
-    action: 'ADMIN_STEP_UP_AUTHENTICATED',
-    targetEntity: 'admin_console',
-    correlationId: 'req-corr-992-817',
-    status: 'SUCCESS',
-  },
-  {
-    id: 'aud-99119',
-    timestamp: '2026-10-03 21:40:08 UTC',
-    actor: 'sarah.chen@cloudlens.internal',
-    action: 'OVERRIDE_CREATED',
-    targetEntity: 'ovr-2026-081',
-    correlationId: 'req-corr-991-440',
-    status: 'SUCCESS',
-  },
-  {
-    id: 'aud-99118',
-    timestamp: '2026-10-03 20:12:45 UTC',
-    actor: 'marcus.v@cloudlens.internal',
-    action: 'CREDENTIAL_ROTATION_COMPLETED',
-    targetEntity: 'cred-aws-cross-account-prod',
-    correlationId: 'req-corr-990-112',
-    status: 'SUCCESS',
-  },
-  {
-    id: 'aud-99117',
-    timestamp: '2026-10-03 19:05:30 UTC',
-    actor: 'guest.dev@cloudlens.internal',
-    action: 'ADMIN_CONSOLE_ACCESS_ATTEMPT',
-    targetEntity: 'control_plane',
-    correlationId: 'req-corr-989-009',
-    status: 'DENIED',
-  },
-];
-
 const RBAC_PERMISSIONS_MATRIX = [
   { perm: 'read:dashboard:executive', viewer: true, contributor: true, finops: true, arch: true, admin: true },
   { perm: 'read:cost:financial_detail', viewer: false, contributor: false, finops: true, arch: true, admin: true },
@@ -191,8 +114,45 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
   // Active view inside admin console
   const [activeTab, setActiveTab] = useState<'catalogue' | 'overrides' | 'rbac' | 'audit' | 'settings'>('catalogue');
 
-  // Overrides state
-  const [overrides, setOverrides] = useState<OverrideItem[]>(INITIAL_OVERRIDES);
+  // Overrides API state
+  const { data: apiOverrides, loading: loadingOverrides, error: errorOverrides, errorMessage: errorMsgOverrides, refetch: refetchOverrides } = useApiData<any>('/api/v1/overrides');
+  const { data: apiAudit, loading: loadingAudit, error: errorAudit, errorMessage: errorMsgAudit, refetch: refetchAudit } = useApiData<any>('/api/v1/audit/events');
+
+  const [overrides, setOverrides] = useState<OverrideItem[]>([]);
+
+  useEffect(() => {
+    if (apiOverrides) {
+      const list = Array.isArray(apiOverrides) ? apiOverrides : (apiOverrides.items || []);
+      setOverrides(list.map((r: any) => ({
+        id: r.id || 'ovr-001',
+        overrideClass: r.override_class || r.overrideClass || 'THRESHOLD',
+        who: r.who || 'system',
+        what: r.what || '',
+        why: r.why || '',
+        previousValue: String(r.previous_value ?? r.previousValue ?? ''),
+        newValue: String(r.new_value ?? r.newValue ?? ''),
+        expiry: r.expiry || '',
+        approvalTicket: r.approval || r.approvalTicket || '',
+        status: r.status || 'ACTIVE',
+        createdAt: r.when || r.createdAt || '',
+      })));
+    }
+  }, [apiOverrides]);
+
+  const auditLogs: AuditLogItem[] = useMemo(() => {
+    if (!apiAudit) return [];
+    const list = Array.isArray(apiAudit) ? apiAudit : (apiAudit.items || []);
+    return list.map((a: any) => ({
+      id: a.id || a.event_id || 'aud-001',
+      timestamp: a.timestamp || a.created_at || '',
+      actor: a.actor || a.user_id || 'system',
+      action: a.action || a.event_type || 'SYSTEM_EVENT',
+      targetEntity: a.target_entity || a.targetEntity || a.entity_id || 'system',
+      correlationId: a.correlation_id || a.correlationId || 'corr-001',
+      status: a.status || (a.success ? 'SUCCESS' : 'FAILED'),
+    }));
+  }, [apiAudit]);
+
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
 
   // Eight mandatory override form attributes
@@ -670,64 +630,78 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
             </button>
           </div>
 
-          <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '0.75rem 1rem' }}>Class</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Target (What)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Values (Prev &rarr; New)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Rationale (Why &gt;= 20 chars)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Accountable (Who)</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Expiry &amp; Ticket</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {overrides.map((ovr) => (
-                  <tr key={ovr.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <span style={{ backgroundColor: '#1e293b', color: '#93c5fd', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {ovr.overrideClass}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#38bdf8' }}>
-                      {ovr.what}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
-                      <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>{ovr.previousValue}</span>
-                      <span style={{ margin: '0 0.35rem', color: '#64748b' }}>&rarr;</span>
-                      <strong style={{ color: '#34d399' }}>{ovr.newValue}</strong>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', maxWidth: '280px' }}>
-                      {ovr.why}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
-                      {ovr.who}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.75rem' }}>
-                      <div style={{ color: '#fbbf24', fontWeight: 600 }}>{ovr.expiry}</div>
-                      <div style={{ color: '#64748b', fontFamily: 'monospace' }}>{ovr.approvalTicket}</div>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <span
-                        style={{
-                          backgroundColor: ovr.status === 'ACTIVE' ? '#064e3b' : '#334155',
-                          color: ovr.status === 'ACTIVE' ? '#6ee7b7' : '#94a3b8',
-                          padding: '0.15rem 0.4rem',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {ovr.status}
-                      </span>
-                    </td>
+          {loadingOverrides && <SkeletonLoader variant="table" rows={3} />}
+          {errorOverrides && !loadingOverrides && (
+            <ErrorState
+              title="Failed to Load Governance Overrides"
+              message={errorMsgOverrides || 'Error contacting overrides API'}
+              onRetry={refetchOverrides}
+            />
+          )}
+          {!loadingOverrides && !errorOverrides && overrides.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Active Overrides" descriptionOverride="No operational or governance overrides configured for this tenant." actionTextOverride="Create Override" onAction={() => setIsOverrideModalOpen(true)} />
+          )}
+
+          {!loadingOverrides && !errorOverrides && overrides.length > 0 && (
+            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '0.75rem 1rem' }}>Class</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Target (What)</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Values (Prev &rarr; New)</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Rationale (Why &gt;= 20 chars)</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Accountable (Who)</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Expiry &amp; Ticket</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {overrides.map((ovr) => (
+                    <tr key={ovr.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span style={{ backgroundColor: '#1e293b', color: '#93c5fd', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          {ovr.overrideClass}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#38bdf8' }}>
+                        {ovr.what}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
+                        <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>{ovr.previousValue}</span>
+                        <span style={{ margin: '0 0.35rem', color: '#64748b' }}>&rarr;</span>
+                        <strong style={{ color: '#34d399' }}>{ovr.newValue}</strong>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', maxWidth: '280px' }}>
+                        {ovr.why}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
+                        {ovr.who}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.75rem' }}>
+                        <div style={{ color: '#fbbf24', fontWeight: 600 }}>{ovr.expiry}</div>
+                        <div style={{ color: '#64748b', fontFamily: 'monospace' }}>{ovr.approvalTicket}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span
+                          style={{
+                            backgroundColor: ovr.status === 'ACTIVE' ? '#064e3b' : '#334155',
+                            color: ovr.status === 'ACTIVE' ? '#6ee7b7' : '#94a3b8',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ovr.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -809,57 +783,72 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
 
       {/* TAB 4: Audit Log Ledger */}
       {activeTab === 'audit' && (
-        <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 600 }}>
-            Immutable Control-Plane Audit Transactions
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                <th style={{ padding: '0.75rem 1rem' }}>Timestamp</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Actor</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Event Action</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Target Entity</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Correlation ID</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              {INITIAL_AUDIT_LOGS.map((log) => (
-                <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                    {log.timestamp}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-                    {log.actor}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#38bdf8' }}>
-                    {log.action}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
-                    {log.targetEntity}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
-                    {log.correlationId}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem' }}>
-                    <span
-                      style={{
-                        backgroundColor: log.status === 'SUCCESS' ? '#064e3b' : '#450a0a',
-                        color: log.status === 'SUCCESS' ? '#6ee7b7' : '#fca5a5',
-                        padding: '0.15rem 0.4rem',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {log.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div>
+          {loadingAudit && <SkeletonLoader variant="table" rows={3} />}
+          {errorAudit && !loadingAudit && (
+            <ErrorState
+              title="Failed to Load Audit Logs"
+              message={errorMsgAudit || 'Error communicating with audit ledger API'}
+              onRetry={refetchAudit}
+            />
+          )}
+          {!loadingAudit && !errorAudit && auditLogs.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Audit Records" descriptionOverride="No audit events found in this window." actionTextOverride="Refresh Log" onAction={refetchAudit} />
+          )}
+          {!loadingAudit && !errorAudit && auditLogs.length > 0 && (
+            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 600 }}>
+                Immutable Control-Plane Audit Transactions
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '0.75rem 1rem' }}>Timestamp</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Actor</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Event Action</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Target Entity</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Correlation ID</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log) => (
+                    <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                        {log.timestamp}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+                        {log.actor}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#38bdf8' }}>
+                        {log.action}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
+                        {log.targetEntity}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
+                        {log.correlationId}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <span
+                          style={{
+                            backgroundColor: log.status === 'SUCCESS' ? '#064e3b' : '#450a0a',
+                            color: log.status === 'SUCCESS' ? '#6ee7b7' : '#fca5a5',
+                            padding: '0.15rem 0.4rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {log.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

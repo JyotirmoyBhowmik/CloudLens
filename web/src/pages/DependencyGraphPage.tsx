@@ -4,7 +4,11 @@ import {
   BreadcrumbItem,
   CostValue,
   createCostExplanation,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import {
   Network,
   ZoomIn,
@@ -54,215 +58,8 @@ export interface GraphEdge {
   isRestricted?: boolean;
 }
 
-// Canonical enterprise mock topology graph
-const INITIAL_NODES: GraphNode[] = [
-  {
-    id: 'app-ecommerce-core',
-    name: 'E-Commerce Core API Gateway',
-    category: 'compute',
-    provider: 'aws',
-    depth: 0,
-    periodCost: 240.0,
-    chainContributedCost: 1420.5,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 78.5,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Platform Eng Team',
-    isRestricted: false,
-    x: 450,
-    y: 80,
-  },
-  {
-    id: 'srv-order-processing',
-    name: 'Order Processing Microservice',
-    category: 'compute',
-    provider: 'aws',
-    depth: 1,
-    periodCost: 310.2,
-    chainContributedCost: 820.0,
-    thresholdState: 'WARNING',
-    budgetUtilisationPct: 88.0,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Checkout Squad',
-    isRestricted: false,
-    x: 240,
-    y: 220,
-  },
-  {
-    id: 'srv-inventory-sync',
-    name: 'Global Inventory Telemetry',
-    category: 'compute',
-    provider: 'azure',
-    depth: 1,
-    periodCost: 185.5,
-    chainContributedCost: 360.5,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 62.0,
-    runtimeState: 'RUNNING',
-    isUnowned: true,
-    owner: undefined,
-    isRestricted: false,
-    x: 660,
-    y: 220,
-  },
-  {
-    id: 'db-orders-aurora',
-    name: 'Aurora PostgreSQL (Orders Primary)',
-    category: 'database',
-    provider: 'aws',
-    depth: 2,
-    periodCost: 420.0,
-    chainContributedCost: 420.0,
-    thresholdState: 'CRITICAL',
-    budgetUtilisationPct: 96.5,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Data Engineering',
-    isRestricted: false,
-    x: 140,
-    y: 380,
-  },
-  {
-    id: 'msg-payment-sqs',
-    name: 'Payment Settlement Queue',
-    category: 'network',
-    provider: 'aws',
-    depth: 2,
-    periodCost: 89.8,
-    chainContributedCost: 89.8,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 45.0,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Payments Team',
-    isRestricted: false,
-    x: 340,
-    y: 380,
-  },
-  {
-    id: 'cache-redis-inventory',
-    name: 'Redis Distributed Cache Tier',
-    category: 'database',
-    provider: 'azure',
-    depth: 2,
-    periodCost: 175.0,
-    chainContributedCost: 175.0,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 71.0,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Platform Eng Team',
-    isRestricted: false,
-    x: 560,
-    y: 380,
-  },
-  {
-    id: 'res-restricted-fin-ledger',
-    name: '[Restricted Financial Ledger]',
-    category: 'database',
-    provider: 'gcp',
-    depth: 2,
-    periodCost: 0,
-    chainContributedCost: 0,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 0,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Finance Org',
-    isRestricted: true,
-    x: 760,
-    y: 380,
-  },
-  {
-    id: 'shared-sso-auth-gateway',
-    name: 'Shared Platform Auth & IAM',
-    category: 'shared',
-    provider: 'oci',
-    depth: 3,
-    periodCost: 165.2,
-    chainContributedCost: 165.2,
-    thresholdState: 'NORMAL',
-    budgetUtilisationPct: 52.0,
-    runtimeState: 'RUNNING',
-    isUnowned: false,
-    owner: 'Enterprise Security',
-    isRestricted: false,
-    x: 450,
-    y: 520,
-  },
-];
-
-const INITIAL_EDGES: GraphEdge[] = [
-  {
-    id: 'edge-1',
-    source: 'app-ecommerce-core',
-    target: 'srv-order-processing',
-    relationshipType: 'CALLS',
-    discoveryType: 'discovered',
-    criticality: 'CRITICAL',
-  },
-  {
-    id: 'edge-2',
-    source: 'app-ecommerce-core',
-    target: 'srv-inventory-sync',
-    relationshipType: 'CALLS',
-    discoveryType: 'discovered',
-    criticality: 'HIGH',
-  },
-  {
-    id: 'edge-3',
-    source: 'srv-order-processing',
-    target: 'db-orders-aurora',
-    relationshipType: 'WRITES_TO',
-    discoveryType: 'discovered',
-    criticality: 'CRITICAL',
-  },
-  {
-    id: 'edge-4',
-    source: 'srv-order-processing',
-    target: 'msg-payment-sqs',
-    relationshipType: 'CALLS',
-    discoveryType: 'inferred',
-    criticality: 'HIGH',
-  },
-  {
-    id: 'edge-5',
-    source: 'srv-inventory-sync',
-    target: 'cache-redis-inventory',
-    relationshipType: 'READS_FROM',
-    discoveryType: 'discovered',
-    criticality: 'MEDIUM',
-  },
-  {
-    id: 'edge-6',
-    source: 'srv-inventory-sync',
-    target: 'res-restricted-fin-ledger',
-    relationshipType: 'BILLING_DEPENDENCY',
-    discoveryType: 'manual',
-    criticality: 'MEDIUM',
-    isRestricted: true,
-  },
-  {
-    id: 'edge-7',
-    source: 'srv-order-processing',
-    target: 'shared-sso-auth-gateway',
-    relationshipType: 'CALLS',
-    discoveryType: 'discovered',
-    criticality: 'HIGH',
-  },
-  {
-    id: 'edge-8',
-    source: 'srv-inventory-sync',
-    target: 'shared-sso-auth-gateway',
-    relationshipType: 'CALLS',
-    discoveryType: 'discovered',
-    criticality: 'HIGH',
-  },
-];
-
 export const DependencyGraphPage: React.FC = () => {
+  const { data: apiGraph, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/dependencies/graph');
   const [maxDepth, setMaxDepth] = useState<number>(3);
   const [costOverlayEnabled, setCostOverlayEnabled] = useState<boolean>(true);
   const [impactViewEnabled, setImpactViewEnabled] = useState<boolean>(false);
@@ -278,16 +75,45 @@ export const DependencyGraphPage: React.FC = () => {
     { label: 'Topology & Dependency Graph', isCurrent: true },
   ];
 
-  // 500-Node Synthetic Scale Graph Generation (Prompt 41 Acceptance Test)
+  // Graph Generation from API
   const { nodes, edges } = useMemo(() => {
-    if (!benchmark500Enabled) {
-      return { nodes: INITIAL_NODES, edges: INITIAL_EDGES };
+    const rawNodes: any[] = apiGraph?.nodes || [];
+    const rawEdges: any[] = apiGraph?.edges || [];
+
+    const baseNodes: GraphNode[] = rawNodes.map((n: any, idx: number) => ({
+      id: n.key || n.id || `node-${idx}`,
+      name: n.name || n.key || `Node ${idx}`,
+      category: (n.category || 'compute') as GraphNode['category'],
+      provider: (n.provider || 'aws') as GraphNode['provider'],
+      depth: n.depth ?? (idx % 4),
+      periodCost: n.period_cost ?? n.periodCost ?? 0,
+      chainContributedCost: n.chain_contributed_cost ?? n.chainContributedCost ?? 0,
+      thresholdState: (n.threshold_state || n.thresholdState || 'NORMAL') as GraphNode['thresholdState'],
+      budgetUtilisationPct: n.budget_utilisation_pct ?? n.budgetUtilisationPct ?? 0,
+      runtimeState: (n.runtime_state || n.runtimeState || 'RUNNING') as GraphNode['runtimeState'],
+      isUnowned: !!(n.is_unowned ?? n.isUnowned),
+      owner: n.owner,
+      isRestricted: !!(n.is_restricted ?? n.isRestricted),
+      x: n.x ?? (200 + (idx * 90) % 600),
+      y: n.y ?? (150 + (idx * 70) % 400),
+    }));
+
+    const baseEdges: GraphEdge[] = rawEdges.map((e: any, idx: number) => ({
+      id: e.id || `edge-${idx}`,
+      source: e.source_ref?.key || e.source || '',
+      target: e.target_ref?.key || e.target || '',
+      relationshipType: (e.relationship_type || e.relationshipType || 'CALLS') as GraphEdge['relationshipType'],
+      discoveryType: (e.discovery_type || e.discoveryType || 'discovered') as GraphEdge['discoveryType'],
+      criticality: (e.criticality || 'MEDIUM') as GraphEdge['criticality'],
+      isRestricted: !!(e.is_restricted ?? e.isRestricted),
+    }));
+
+    if (!benchmark500Enabled || baseNodes.length === 0) {
+      return { nodes: baseNodes, edges: baseEdges };
     }
 
-    const synthNodes: GraphNode[] = [...INITIAL_NODES];
-    const synthEdges: GraphEdge[] = [...INITIAL_EDGES];
-
-    // Generate remaining nodes up to 500
+    const synthNodes: GraphNode[] = [...baseNodes];
+    const synthEdges: GraphEdge[] = [...baseEdges];
     const totalToGenerate = 492;
     const categories: Array<'compute' | 'database' | 'storage' | 'network' | 'shared'> = [
       'compute',
@@ -299,7 +125,7 @@ export const DependencyGraphPage: React.FC = () => {
     const providers: Array<'aws' | 'azure' | 'gcp' | 'oci'> = ['aws', 'azure', 'gcp', 'oci'];
 
     for (let i = 1; i <= totalToGenerate; i++) {
-      const parentId = synthNodes[i % 8].id;
+      const parentId = synthNodes[i % Math.max(1, synthNodes.length)].id;
       const depth = Math.min(5, Math.floor(i / 100) + 1);
       const angle = (i % 36) * (Math.PI / 18);
       const radius = 180 + (depth * 90) + ((i % 5) * 20);
@@ -336,7 +162,7 @@ export const DependencyGraphPage: React.FC = () => {
     }
 
     return { nodes: synthNodes, edges: synthEdges };
-  }, [benchmark500Enabled]);
+  }, [apiGraph, benchmark500Enabled]);
 
   // Compute Downstream Impact Set (Blast Radius)
   const downstreamImpactSet = useMemo(() => {
@@ -388,10 +214,10 @@ export const DependencyGraphPage: React.FC = () => {
 
   // Chain Cost Summary (Agreement with Cost Explorer)
   const chainCostSummary = useMemo(() => {
-    const totalChain = 1420.5;
-    const directRoot = 240.0;
-    const downstream = totalChain - directRoot;
-    const shared = 165.2;
+    const directRoot = selectedNode ? selectedNode.periodCost : 0;
+    const totalChain = selectedNode ? selectedNode.chainContributedCost : directRoot;
+    const downstream = Math.max(0, totalChain - directRoot);
+    const shared = Number((downstream * 0.15).toFixed(2));
 
     return {
       totalChain,
@@ -400,7 +226,7 @@ export const DependencyGraphPage: React.FC = () => {
       shared,
       currency: 'USD',
     };
-  }, []);
+  }, [selectedNode]);
 
   // Export Graph as JSON
   const handleExportJSON = () => {
@@ -882,6 +708,22 @@ export const DependencyGraphPage: React.FC = () => {
             position: 'relative',
           }}
         >
+          {loading && (
+            <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+              <SkeletonLoader variant="table" rows={3} />
+            </div>
+          )}
+          {error && !loading && (
+            <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <ErrorState title="Failed to Load Topology Graph" message={errorMessage || 'Error fetching dependency topology'} onRetry={refetch} />
+            </div>
+          )}
+          {!loading && !error && nodes.length === 0 && (
+            <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <EmptyState type="NO_DATA" titleOverride="No Dependencies Discovered" descriptionOverride="No dependency graph topology or resource relationships discovered for this tenant." actionTextOverride="Refresh Topology" onAction={refetch} />
+            </div>
+          )}
+          {!loading && !error && nodes.length > 0 && (<>
           {/* Canvas Background Grid */}
           <svg
             ref={svgRef}
@@ -1121,6 +963,7 @@ export const DependencyGraphPage: React.FC = () => {
               <span style={{ width: '12px', borderTop: '2px dashed #94a3b8' }} /> Manual
             </span>
           </div>
+          </>)}
         </div>
 
         {/* Node Detail Slide-Over Panel (Without Leaving Canvas) */}

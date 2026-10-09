@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Breadcrumb,
 } from '../design-system';
@@ -47,6 +47,9 @@ export interface SyncJobItem {
   errorMessage?: string;
 }
 
+import { useApiData } from '../api';
+import { EmptyState, ErrorState, SkeletonLoader } from '../design-system';
+
 export interface CredentialProfileItem {
   id: string;
   name: string;
@@ -57,160 +60,6 @@ export interface CredentialProfileItem {
   expiresAt: string;
   rotationState: 'HEALTHY' | 'ROTATING' | 'RETIRED';
 }
-
-const INITIAL_CONNECTORS: ConnectorItem[] = [
-  {
-    id: 'conn-aws-org-prod',
-    name: 'AWS Primary Organization Master',
-    provider: 'AWS',
-    lifecycleState: 'ACTIVE',
-    credentialProfileId: 'cred-aws-cross-account-prod',
-    lastSyncAt: '12 minutes ago',
-    nextSyncAt: 'in 48 minutes',
-    lastHealthPingMs: 42,
-    hourlyQuotaUsed: 4200,
-    hourlyQuotaLimit: 10000,
-    declaredCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING', 'INGEST_METRICS'],
-    verifiedCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING', 'INGEST_METRICS'],
-    discoveredResourceCount: 1420,
-    monthlySpendIngested: 84320.5,
-  },
-  {
-    id: 'conn-az-mgmt-prod',
-    name: 'Azure Enterprise Tenant & EA',
-    provider: 'AZURE',
-    lifecycleState: 'ACTIVE',
-    credentialProfileId: 'cred-az-service-principal-prod',
-    lastSyncAt: '25 minutes ago',
-    nextSyncAt: 'in 35 minutes',
-    lastHealthPingMs: 68,
-    hourlyQuotaUsed: 2900,
-    hourlyQuotaLimit: 12000,
-    declaredCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING'],
-    verifiedCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING'],
-    discoveredResourceCount: 890,
-    monthlySpendIngested: 46150.0,
-  },
-  {
-    id: 'conn-gcp-org-prod',
-    name: 'GCP Enterprise Org & BigQuery Exporter',
-    provider: 'GCP',
-    lifecycleState: 'ACTIVE',
-    credentialProfileId: 'cred-gcp-workload-id-prod',
-    lastSyncAt: '8 minutes ago',
-    nextSyncAt: 'in 52 minutes',
-    lastHealthPingMs: 51,
-    hourlyQuotaUsed: 3100,
-    hourlyQuotaLimit: 8000,
-    declaredCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING', 'INGEST_METRICS'],
-    verifiedCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING', 'INGEST_METRICS'],
-    discoveredResourceCount: 640,
-    monthlySpendIngested: 28400.0,
-  },
-  {
-    id: 'conn-oci-prod',
-    name: 'OCI Production Root Compartment',
-    provider: 'OCI',
-    lifecycleState: 'DEGRADED',
-    credentialProfileId: 'cred-oci-api-key-prod',
-    lastSyncAt: '45 minutes ago',
-    nextSyncAt: 'in 15 minutes',
-    lastHealthPingMs: 145,
-    hourlyQuotaUsed: 1850,
-    hourlyQuotaLimit: 5000,
-    declaredCapabilities: ['AUTHENTICATE', 'VALIDATE_PERMISSIONS', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES', 'INGEST_BILLING'],
-    verifiedCapabilities: ['AUTHENTICATE', 'HEALTH_STATUS', 'DISCOVER_HIERARCHY', 'DISCOVER_RESOURCES'],
-    discoveredResourceCount: 310,
-    monthlySpendIngested: 12100.0,
-  },
-];
-
-const INITIAL_SYNC_JOBS: SyncJobItem[] = [
-  {
-    id: 'job-sync-1082',
-    connectorId: 'conn-aws-org-prod',
-    connectorName: 'AWS Primary Organization Master',
-    syncType: 'BILLING_DELTA',
-    startedAt: '2026-10-03 21:48 UTC',
-    durationSeconds: 38,
-    recordsIngested: 4890,
-    status: 'COMPLETED',
-  },
-  {
-    id: 'job-sync-1081',
-    connectorId: 'conn-gcp-org-prod',
-    connectorName: 'GCP Enterprise Org & BigQuery Exporter',
-    syncType: 'FULL_DISCOVERY',
-    startedAt: '2026-10-03 21:52 UTC',
-    durationSeconds: 62,
-    recordsIngested: 640,
-    status: 'COMPLETED',
-  },
-  {
-    id: 'job-sync-1080',
-    connectorId: 'conn-az-mgmt-prod',
-    connectorName: 'Azure Enterprise Tenant & EA',
-    syncType: 'METRICS_SAMPLE',
-    startedAt: '2026-10-03 21:35 UTC',
-    durationSeconds: 45,
-    recordsIngested: 12400,
-    status: 'COMPLETED',
-  },
-  {
-    id: 'job-sync-1079',
-    connectorId: 'conn-oci-prod',
-    connectorName: 'OCI Production Root Compartment',
-    syncType: 'BILLING_DELTA',
-    startedAt: '2026-10-03 21:15 UTC',
-    durationSeconds: 22,
-    recordsIngested: 0,
-    status: 'FAILED',
-    errorMessage: 'OCI Cost and Usage Reports (CUR) bucket read permission degraded (HTTP 403 Forbidden).',
-  },
-];
-
-const INITIAL_CREDENTIAL_PROFILES: CredentialProfileItem[] = [
-  {
-    id: 'cred-aws-cross-account-prod',
-    name: 'AWS STS Cross-Account Role Assume',
-    provider: 'AWS',
-    authType: 'IAM AssumeRole ARN with ExternalID',
-    fingerprint: 'sha256:4a8b...19c2',
-    boundConnectors: ['conn-aws-org-prod'],
-    expiresAt: '2027-04-15 00:00 UTC',
-    rotationState: 'HEALTHY',
-  },
-  {
-    id: 'cred-az-service-principal-prod',
-    name: 'Azure Entra ID App Registration',
-    provider: 'AZURE',
-    authType: 'Client Secret with Azure KeyVault Ref',
-    fingerprint: 'sha256:7f3e...88ab',
-    boundConnectors: ['conn-az-mgmt-prod'],
-    expiresAt: '2026-11-20 00:00 UTC',
-    rotationState: 'HEALTHY',
-  },
-  {
-    id: 'cred-gcp-workload-id-prod',
-    name: 'GCP Workload Identity Federation',
-    provider: 'GCP',
-    authType: 'OIDC Federated Service Account',
-    fingerprint: 'sha256:22bc...49ef',
-    boundConnectors: ['conn-gcp-org-prod'],
-    expiresAt: '2027-09-01 00:00 UTC',
-    rotationState: 'HEALTHY',
-  },
-  {
-    id: 'cred-oci-api-key-prod',
-    name: 'OCI OCI-Key RSA Authentication',
-    provider: 'OCI',
-    authType: 'User Fingerprint & Private Key PEM',
-    fingerprint: 'sha256:99df...011a',
-    boundConnectors: ['conn-oci-prod'],
-    expiresAt: '2026-10-28 00:00 UTC',
-    rotationState: 'HEALTHY',
-  },
-];
 
 const CAPABILITY_LIST = [
   'AUTHENTICATE',
@@ -224,9 +73,69 @@ const CAPABILITY_LIST = [
 
 export const ConnectorManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'connectors' | 'capabilities' | 'sync' | 'diagnostics' | 'credentials'>('connectors');
-  const [connectors] = useState<ConnectorItem[]>(INITIAL_CONNECTORS);
-  const [syncJobs, setSyncJobs] = useState<SyncJobItem[]>(INITIAL_SYNC_JOBS);
-  const [credProfiles, setCredProfiles] = useState<CredentialProfileItem[]>(INITIAL_CREDENTIAL_PROFILES);
+
+  const { data: apiConnectors, loading: loadingConnectors, error: errorConnectors, errorMessage: errorMsgConnectors, refetch: refetchConnectors } = useApiData<any>('/api/v1/connectors');
+  const { data: apiSyncJobs, loading: loadingSync, error: errorSync, errorMessage: errorMsgSync, refetch: refetchSync } = useApiData<any>('/api/v1/sync/jobs');
+  const { data: apiCreds, loading: loadingCreds, error: errorCreds, errorMessage: errorMsgCreds, refetch: refetchCreds } = useApiData<any>('/api/v1/credentials/profiles');
+
+  const [connectors, setConnectors] = useState<ConnectorItem[]>([]);
+  const [syncJobs, setSyncJobs] = useState<SyncJobItem[]>([]);
+  const [credProfiles, setCredProfiles] = useState<CredentialProfileItem[]>([]);
+
+  useEffect(() => {
+    if (apiConnectors) {
+      const list = Array.isArray(apiConnectors) ? apiConnectors : (apiConnectors.items || []);
+      setConnectors(list.map((c: any) => ({
+        id: c.id || c.connector_id || 'conn-default',
+        name: c.name || 'Cloud Connector',
+        provider: (c.provider || 'AWS') as ConnectorItem['provider'],
+        lifecycleState: (c.lifecycle_state || c.lifecycleState || 'ACTIVE') as ConnectorItem['lifecycleState'],
+        credentialProfileId: c.credential_profile_id || c.credentialProfileId || '',
+        lastSyncAt: c.last_sync_at || c.lastSyncAt || 'Never synced',
+        nextSyncAt: c.next_sync_at || c.nextSyncAt || 'Pending schedule',
+        lastHealthPingMs: c.last_health_ping_ms ?? c.lastHealthPingMs ?? 0,
+        hourlyQuotaUsed: c.hourly_quota_used ?? c.hourlyQuotaUsed ?? 0,
+        hourlyQuotaLimit: c.hourly_quota_limit ?? c.hourlyQuotaLimit ?? 10000,
+        declaredCapabilities: c.declared_capabilities || c.declaredCapabilities || [],
+        verifiedCapabilities: c.verified_capabilities || c.verifiedCapabilities || [],
+        discoveredResourceCount: c.discovered_resource_count ?? c.discoveredResourceCount ?? 0,
+        monthlySpendIngested: c.monthly_spend_ingested ?? c.monthlySpendIngested ?? 0,
+      })));
+    }
+  }, [apiConnectors]);
+
+  useEffect(() => {
+    if (apiSyncJobs) {
+      const list = Array.isArray(apiSyncJobs) ? apiSyncJobs : (apiSyncJobs.items || []);
+      setSyncJobs(list.map((j: any) => ({
+        id: j.id || j.job_id || 'job-sync-01',
+        connectorId: j.connector_id || j.connectorId || '',
+        connectorName: j.connector_name || j.connectorName || 'Sync Job',
+        syncType: (j.sync_type || j.syncType || 'FULL_DISCOVERY') as SyncJobItem['syncType'],
+        startedAt: j.started_at || j.startedAt || '',
+        durationSeconds: j.duration_seconds ?? j.durationSeconds ?? 0,
+        recordsIngested: j.records_ingested ?? j.recordsIngested ?? 0,
+        status: (j.status || 'COMPLETED') as SyncJobItem['status'],
+        errorMessage: j.error_message || j.errorMessage,
+      })));
+    }
+  }, [apiSyncJobs]);
+
+  useEffect(() => {
+    if (apiCreds) {
+      const list = Array.isArray(apiCreds) ? apiCreds : (apiCreds.items || []);
+      setCredProfiles(list.map((p: any) => ({
+        id: p.id || p.profile_id || 'cred-01',
+        name: p.name || 'Credential Profile',
+        provider: (p.provider || 'AWS') as CredentialProfileItem['provider'],
+        authType: p.auth_type || p.authType || 'IAM',
+        fingerprint: p.fingerprint || '',
+        boundConnectors: p.bound_connectors || p.boundConnectors || [],
+        expiresAt: p.expires_at || p.expiresAt || '',
+        rotationState: (p.rotation_state || p.rotationState || 'HEALTHY') as CredentialProfileItem['rotationState'],
+      })));
+    }
+  }, [apiCreds]);
 
   // Diagnostic Probe State
   const [probingConnectorId, setProbingConnectorId] = useState<string | null>(null);
@@ -234,7 +143,7 @@ export const ConnectorManagementPage: React.FC = () => {
 
   // Sync Trigger State
   const [isTriggeringSync, setIsTriggeringSync] = useState(false);
-  const [selectedSyncConnector, setSelectedSyncConnector] = useState(INITIAL_CONNECTORS[0].id);
+  const [selectedSyncConnector, setSelectedSyncConnector] = useState<string>('');
   const [selectedSyncType, setSelectedSyncType] = useState<'FULL_DISCOVERY' | 'BILLING_DELTA' | 'METRICS_SAMPLE' | 'TAG_REFRESH'>('BILLING_DELTA');
 
   // Credential Rotation Modal
@@ -539,8 +448,21 @@ export const ConnectorManagementPage: React.FC = () => {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: '1rem' }}>
-            {connectors.map((conn) => {
+          {loadingConnectors && <SkeletonLoader variant="table" rows={3} />}
+          {errorConnectors && !loadingConnectors && (
+            <ErrorState
+              title="Failed to Load Connectors"
+              message={errorMsgConnectors || 'Error contacting connectors API'}
+              onRetry={refetchConnectors}
+            />
+          )}
+          {!loadingConnectors && !errorConnectors && connectors.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Connectors Configured" descriptionOverride="No cloud provider connectors configured for this tenant." actionTextOverride="Add Connector" onAction={() => alert('Add connector workflow')} />
+          )}
+
+          {!loadingConnectors && !errorConnectors && connectors.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: '1rem' }}>
+              {connectors.map((conn) => {
               const stateBadge = getStateBadge(conn.lifecycleState);
               const quotaPct = Math.round((conn.hourlyQuotaUsed / conn.hourlyQuotaLimit) * 100);
 
@@ -680,7 +602,8 @@ export const ConnectorManagementPage: React.FC = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -834,62 +757,76 @@ export const ConnectorManagementPage: React.FC = () => {
           </div>
 
           {/* Sync History Table */}
-          <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 600 }}>
-              Recent Ingestion Job Executions
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '0.75rem 1rem' }}>Job ID</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Connector</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Sync Type</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Timestamp</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Duration</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Records</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {syncJobs.map((job) => (
-                  <tr key={job.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#93c5fd' }}>
-                      {job.id}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{job.connectorName}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace' }}>{job.connectorId}</div>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
-                      <span style={{ backgroundColor: '#1e293b', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#e2e8f0' }}>
-                        {job.syncType}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                      {job.startedAt}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                      {job.durationSeconds}s
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {job.recordsIngested.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      {job.status === 'COMPLETED' ? (
-                        <span style={{ backgroundColor: '#064e3b', color: '#6ee7b7', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-                          COMPLETED
-                        </span>
-                      ) : (
-                        <span style={{ backgroundColor: '#450a0a', color: '#fca5a5', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-                          FAILED
-                        </span>
-                      )}
-                    </td>
+          {loadingSync && <SkeletonLoader variant="table" rows={3} />}
+          {errorSync && !loadingSync && (
+            <ErrorState
+              title="Failed to Load Sync Jobs"
+              message={errorMsgSync || 'Error contacting sync jobs API'}
+              onRetry={refetchSync}
+            />
+          )}
+          {!loadingSync && !errorSync && syncJobs.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Ingestion Executions" descriptionOverride="No automated or manual sync jobs have been run." actionTextOverride="Run Discovery Now" onAction={handleTriggerSync} />
+          )}
+
+          {!loadingSync && !errorSync && syncJobs.length > 0 && (
+            <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 600 }}>
+                Recent Ingestion Job Executions
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#0f172a', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '0.75rem 1rem' }}>Job ID</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Connector</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Sync Type</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Timestamp</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Duration</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Records</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {syncJobs.map((job) => (
+                    <tr key={job.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontSize: '0.8125rem', color: '#93c5fd' }}>
+                        {job.id}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{job.connectorName}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace' }}>{job.connectorId}</div>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem' }}>
+                        <span style={{ backgroundColor: '#1e293b', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#e2e8f0' }}>
+                          {job.syncType}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                        {job.startedAt}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                        {job.durationSeconds}s
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {job.recordsIngested.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '0.75rem 1rem' }}>
+                        {job.status === 'COMPLETED' ? (
+                          <span style={{ backgroundColor: '#064e3b', color: '#6ee7b7', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                            COMPLETED
+                          </span>
+                        ) : (
+                          <span style={{ backgroundColor: '#450a0a', color: '#fca5a5', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                            FAILED
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -975,60 +912,74 @@ export const ConnectorManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {credProfiles.map((prof) => (
-              <div
-                key={prof.id}
-                style={{
-                  backgroundColor: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '8px',
-                  padding: '1.25rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                    <span style={{ backgroundColor: '#0f172a', border: '1px solid #334155', padding: '0.1rem 0.4rem', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.75rem', color: '#38bdf8' }}>
-                      {prof.provider}
-                    </span>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{prof.name}</h3>
-                    <span style={{ backgroundColor: '#064e3b', color: '#6ee7b7', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-                      {prof.rotationState}
-                    </span>
-                  </div>
+          {loadingCreds && <SkeletonLoader variant="table" rows={3} />}
+          {errorCreds && !loadingCreds && (
+            <ErrorState
+              title="Failed to Load Credentials"
+              message={errorMsgCreds || 'Error contacting credential profiles API'}
+              onRetry={refetchCreds}
+            />
+          )}
+          {!loadingCreds && !errorCreds && credProfiles.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Credential Profiles" descriptionOverride="No cloud credential profiles registered for zero-downtime rotation." actionTextOverride="Add Credential Profile" onAction={() => setActiveTab('connectors')} />
+          )}
 
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', gap: '1.5rem', marginTop: '0.5rem' }}>
-                    <span>Auth Type: <strong style={{ color: 'var(--text-primary)' }}>{prof.authType}</strong></span>
-                    <span>Fingerprint: <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{prof.fingerprint}</strong></span>
-                    <span>Expires: <strong style={{ color: '#fbbf24' }}>{prof.expiresAt}</strong></span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleStartRotation(prof)}
+          {!loadingCreds && !errorCreds && credProfiles.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {credProfiles.map((prof) => (
+                <div
+                  key={prof.id}
                   style={{
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '1.25rem',
                     display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    backgroundColor: '#0284c7',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '0.5rem 1rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
                   }}
                 >
-                  <RotateCw size={14} />
-                  Rotate Credential
-                </button>
-              </div>
-            ))}
-          </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                      <span style={{ backgroundColor: '#0f172a', border: '1px solid #334155', padding: '0.1rem 0.4rem', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.75rem', color: '#38bdf8' }}>
+                        {prof.provider}
+                      </span>
+                      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{prof.name}</h3>
+                      <span style={{ backgroundColor: '#064e3b', color: '#6ee7b7', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {prof.rotationState}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', gap: '1.5rem', marginTop: '0.5rem' }}>
+                      <span>Auth Type: <strong style={{ color: 'var(--text-primary)' }}>{prof.authType}</strong></span>
+                      <span>Fingerprint: <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{prof.fingerprint}</strong></span>
+                      <span>Expires: <strong style={{ color: '#fbbf24' }}>{prof.expiresAt}</strong></span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleStartRotation(prof)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      backgroundColor: '#0284c7',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '0.5rem 1rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '0.8125rem',
+                    }}
+                  >
+                    <RotateCw size={14} />
+                    Rotate Credential
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

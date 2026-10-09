@@ -5,7 +5,11 @@ import {
   createCostExplanation,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
 
@@ -22,68 +26,28 @@ interface RemediationTaskItem {
   verificationCondition: string;
 }
 
-const DEMO_TASKS: RemediationTaskItem[] = [
-  {
-    id: 'REM-101',
-    title: 'Decommission Orphaned EBS Volumes in us-east-1',
-    category: 'UNATTACHED_STORAGE',
-    assignee: 'infra-storage-team',
-    resourceId: 'vol-08492819482',
-    provider: 'AWS',
-    projectedSavings: 340.00,
-    realisedSavings: 340.00,
-    status: 'RESOLVED',
-    verificationCondition: 'Volume deletion verified by automated inventory reconciliation snapshot.',
-  },
-  {
-    id: 'REM-102',
-    title: 'Downsize Overprovisioned RDS PostgreSQL Instance',
-    category: 'OVERSIZED_DATABASE',
-    assignee: 'backend-squad-3',
-    resourceId: 'rds-prod-catalog-replica',
-    provider: 'AWS',
-    projectedSavings: 780.00,
-    realisedSavings: null,
-    status: 'IN_PROGRESS',
-    verificationCondition: 'Instance SKU resized to db.r6g.xlarge with CPU telemetry <60%.',
-  },
-  {
-    id: 'REM-103',
-    title: 'Stop Idle Staging VM Instances Outside Working Hours',
-    category: 'IDLE_COMPUTE',
-    assignee: 'qa-automation-lead',
-    resourceId: 'vm-staging-runner-04',
-    provider: 'AZURE',
-    projectedSavings: 520.00,
-    realisedSavings: null,
-    status: 'FALSE_RESOLVED',
-    verificationCondition: 'Automated telemetry re-test detected active run-state over weekend. Auto-reopened task.',
-  },
-  {
-    id: 'REM-104',
-    title: 'Purge GCS Analytical Bucket Snapshots Older Than 90 Days',
-    category: 'OLD_SNAPSHOTS',
-    assignee: 'data-engineering',
-    resourceId: 'gs://analytics-backups-archive',
-    provider: 'GCP',
-    projectedSavings: 1150.00,
-    realisedSavings: null,
-    status: 'OPEN',
-    verificationCondition: 'Lifecycle transition policy deletion confirmation.',
-  },
-];
-
 export const RemediationBoardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [tasks, setTasks] = useState<RemediationTaskItem[]>(DEMO_TASKS);
+  const { data: apiTasks, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/remediation/tasks');
+  const [tasks, setTasks] = useState<RemediationTaskItem[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
   useEffect(() => {
-    if (!isDemo) {
-      setTasks([]);
-    } else {
-      setTasks(DEMO_TASKS);
+    if (apiTasks) {
+      const list = Array.isArray(apiTasks) ? apiTasks : (apiTasks.items || []);
+      setTasks(list.map((t: any) => ({
+        id: t.id || t.task_id || 'REM-01',
+        title: t.title || 'Remediation Task',
+        category: (t.category || 'IDLE_COMPUTE') as RemediationTaskItem['category'],
+        assignee: t.assignee || 'Unassigned',
+        resourceId: t.resource_id || t.resourceId || 'res-01',
+        provider: t.provider || 'AWS',
+        projectedSavings: t.projected_savings ?? t.projectedSavings ?? 0,
+        realisedSavings: t.realised_savings ?? t.realisedSavings ?? null,
+        status: (t.status || 'OPEN') as RemediationTaskItem['status'],
+        verificationCondition: t.verification_condition || t.verificationCondition || '',
+      })));
     }
-  }, [isDemo]);
+  }, [apiTasks]);
 
   const filtered = tasks.filter((t) => {
     if (categoryFilter !== 'ALL' && t.category !== categoryFilter) return false;
@@ -220,23 +184,16 @@ export const RemediationBoardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = 
           </select>
         </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No remediation tasks pending in this scope.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Remediation Tasks"
+            message={errorMessage || 'Error contacting remediation tasks API'}
+            onRetry={refetch}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Remediation Tasks" descriptionOverride="No active remediation tasks or unaddressed optimization recommendations found." actionTextOverride="Refresh Tasks" onAction={refetch} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
             {filtered.map((task) => (

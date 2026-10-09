@@ -1,7 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
 import {
   AlertTriangle,
@@ -11,6 +14,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { useApiData } from '../api';
 
 export interface BudgetItem {
   id: string;
@@ -31,115 +35,62 @@ export interface BudgetItem {
   owner: string;
 }
 
-const INITIAL_BUDGETS: BudgetItem[] = [
-  {
-    id: 'bgt-ecommerce-prod',
-    name: 'Production E-Commerce Platform',
-    scopeType: 'APPLICATION',
-    scopeName: 'E-Commerce Core Suite',
-    amount: 15000.0,
-    currency: 'USD',
-    period: 'MONTHLY',
-    currentSpend: 11840.5,
-    forecastSpend: 14920.0,
-    utilisationPct: 78.9,
-    status: 'ACTIVE',
-    owner: 'Platform Lead (sarah.chen)',
-  },
-  {
-    id: 'bgt-checkout-squad',
-    name: 'Checkout & Cart Microservices',
-    scopeType: 'APPLICATION',
-    scopeName: 'Order Processing Squad',
-    amount: 8500.0,
-    currency: 'USD',
-    period: 'MONTHLY',
-    currentSpend: 7820.0,
-    forecastSpend: 9240.0,
-    utilisationPct: 92.0,
-    status: 'ACTIVE',
-    hasOverAllocation: true,
-    overAllocationText: 'Forecast ($9,240.00) projects an 8.7% breach over allocated ceiling before billing cycle concludes.',
-    owner: 'Checkout Squad (alex.m)',
-  },
-  {
-    id: 'bgt-data-lake-analytics',
-    name: 'Enterprise Big Data & Telemetry',
-    scopeType: 'COST_CENTRE',
-    scopeName: 'CC-DATA-ENG-402',
-    amount: 25000.0,
-    currency: 'USD',
-    period: 'MONTHLY',
-    currentSpend: 18450.0,
-    forecastSpend: 24100.0,
-    utilisationPct: 73.8,
-    status: 'ACTIVE',
-    hasOverlapWarning: true,
-    overlapWarningText: 'Scope overlaps with BigData Sandbox budget (bgt-sandbox-09) covering identical S3 analytical buckets.',
-    owner: 'Head of Data (marcus.v)',
-  },
-  {
-    id: 'bgt-q4-cloud-migration',
-    name: 'Q4 AWS to OCI Migration Staging',
-    scopeType: 'ENVIRONMENT',
-    scopeName: 'Staging & Load Testing',
-    amount: 6000.0,
-    currency: 'USD',
-    period: 'MONTHLY',
-    currentSpend: 1200.0,
-    forecastSpend: 5400.0,
-    utilisationPct: 20.0,
-    status: 'IN_REVIEW',
-    owner: 'DevOps Lead (raj.patel)',
-  },
-  {
-    id: 'bgt-dev-sandbox-general',
-    name: 'Corporate Engineering Sandbox Pool',
-    scopeType: 'BUSINESS_UNIT',
-    scopeName: 'Global Engineering BU',
-    amount: 12000.0,
-    currency: 'USD',
-    period: 'MONTHLY',
-    currentSpend: 4320.0,
-    forecastSpend: 9800.0,
-    utilisationPct: 36.0,
-    status: 'ACTIVE',
-    owner: 'VP Engineering (elena.rostova)',
-  },
-];
-
-const BUDGET_TEMPLATES = [
-  {
-    id: 'tpl-prod-baseline',
-    name: 'Production Tier Enterprise Baseline',
-    scopeType: 'APPLICATION',
-    defaultAmount: 20000,
-    thresholds: 'Amber 80% / Red 100% / Breach 110%',
-    description: 'Standard baseline with multi-tier notification routing to FinOps Lead and application owner.',
-  },
-  {
-    id: 'tpl-dev-sandbox',
-    name: 'Development Sandbox Strict Ceiling',
-    scopeType: 'ENVIRONMENT',
-    defaultAmount: 3000,
-    thresholds: 'Amber 75% / Red 90% / Hard Stop 100%',
-    description: 'Enforces strict ceiling with auto-stopping alert triggers for non-production environments.',
-  },
-  {
-    id: 'tpl-microservice',
-    name: 'Single Microservice Allocation',
-    scopeType: 'APPLICATION',
-    defaultAmount: 5000,
-    thresholds: 'Amber 85% / Red 100%',
-    description: 'Lightweight monthly allocation suitable for individual microservice or container task.',
-  },
-];
+export interface BudgetTemplateItem {
+  id: string;
+  name: string;
+  scopeType: string;
+  defaultAmount: number;
+  thresholds: string;
+  description: string;
+}
 
 export const BudgetManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'budgets' | 'approvals' | 'templates'>('budgets');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [budgets, setBudgets] = useState<BudgetItem[]>(INITIAL_BUDGETS);
+
+  const { data: apiData, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/budgets');
+  const { data: apiTemplates } = useApiData<any>('/api/v1/budgets/templates');
+
+  const [budgets, setBudgets] = useState<BudgetItem[]>([]);
+
+  useEffect(() => {
+    if (apiData) {
+      const list = Array.isArray(apiData) ? apiData : (apiData.items || []);
+      setBudgets(list.map((b: any) => ({
+        id: b.id || b.budget_id || 'bgt-default',
+        name: b.name || b.scope_id || 'Budget Allocation',
+        scopeType: (b.scopeType || b.scope_type || 'APPLICATION') as BudgetItem['scopeType'],
+        scopeName: b.scopeName || b.scope_id || 'Scope',
+        amount: b.amount || (0 as number),
+        currency: b.currency || 'USD',
+        period: (b.period || 'MONTHLY') as BudgetItem['period'],
+        currentSpend: b.currentSpend ?? b.current_spend ?? (0 as number),
+        forecastSpend: b.forecastSpend ?? b.forecast_spend ?? (0 as number),
+        utilisationPct: b.utilisationPct ?? b.utilisation_pct ?? (0 as number),
+        status: (b.status || (b.approval_status === 'APPROVED' ? 'ACTIVE' : (b.approval_status || 'ACTIVE'))) as BudgetItem['status'],
+        hasOverlapWarning: b.hasOverlapWarning ?? false,
+        overlapWarningText: b.overlapWarningText,
+        hasOverAllocation: b.hasOverAllocation ?? false,
+        overAllocationText: b.overAllocationText,
+        owner: b.owner || 'FinOps Team',
+      })));
+    }
+  }, [apiData]);
+
+  const budgetTemplates: BudgetTemplateItem[] = useMemo(() => {
+    if (!apiTemplates) return [];
+    const list = Array.isArray(apiTemplates) ? apiTemplates : (apiTemplates.items || []);
+    return list.map((t: any) => ({
+      id: t.id || t.template_id || 'tpl-custom',
+      name: t.name || 'Standard Baseline',
+      scopeType: t.scopeType || t.scope_type || 'APPLICATION',
+      defaultAmount: t.defaultAmount || t.default_amount || 10000,
+      thresholds: t.thresholds || 'Amber 80% / Red 100%',
+      description: t.description || 'Standard allocation template',
+    }));
+  }, [apiTemplates]);
+
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState<number>(1);
   const [approvalDecisionNotes, setApprovalDecisionNotes] = useState<Record<string, string>>({});
@@ -188,7 +139,7 @@ export const BudgetManagementPage: React.FC = () => {
     );
   };
 
-  const handleApplyTemplate = (tpl: typeof BUDGET_TEMPLATES[0]) => {
+  const handleApplyTemplate = (tpl: BudgetTemplateItem) => {
     setNewBudgetName(`${tpl.name} - ${new Date().toLocaleString('default', { month: 'short', year: 'numeric' })}`);
     setNewScopeType(tpl.scopeType as any);
     setNewAmount(tpl.defaultAmount);
@@ -207,9 +158,9 @@ export const BudgetManagementPage: React.FC = () => {
       amount: newAmount,
       currency: 'USD',
       period: newPeriod,
-      currentSpend: 0,
+      currentSpend: (0 as number),
       forecastSpend: Number((newAmount * 0.85).toFixed(2)),
-      utilisationPct: 0,
+      utilisationPct: (0 as number),
       status: 'ACTIVE',
       owner: newOwner || 'Current User (admin)',
     };
@@ -331,7 +282,7 @@ export const BudgetManagementPage: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Enterprise Templates ({BUDGET_TEMPLATES.length})
+          Enterprise Templates ({budgetTemplates.length})
         </button>
       </div>
 
@@ -379,9 +330,23 @@ export const BudgetManagementPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Loading, Error, or Empty State */}
+          {loading && <SkeletonLoader variant="table" rows={3} />}
+          {error && !loading && (
+            <ErrorState
+              title="Failed to Load Budgets"
+              message={errorMessage || 'Error communicating with budgets API'}
+              onRetry={refetch}
+            />
+          )}
+          {!loading && !error && filteredBudgets.length === 0 && (
+            <EmptyState type="NO_DATA" titleOverride="No Budgets Found" descriptionOverride="No budget allocations exist for this tenant." actionTextOverride="Create Budget Allocation" onAction={() => setIsWizardOpen(true)} />
+          )}
+
           {/* Budget Cards Table */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {filteredBudgets.map((budget) => {
+          {!loading && !error && filteredBudgets.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {filteredBudgets.map((budget) => {
               const isOverUtilised = budget.utilisationPct > 90;
               const isWarning = budget.utilisationPct >= 75 && budget.utilisationPct <= 90;
 
@@ -470,7 +435,8 @@ export const BudgetManagementPage: React.FC = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -585,7 +551,7 @@ export const BudgetManagementPage: React.FC = () => {
       {/* TAB 3: Enterprise Templates */}
       {activeTab === 'templates' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
-          {BUDGET_TEMPLATES.map((tpl) => (
+          {budgetTemplates.map((tpl) => (
             <div
               key={tpl.id}
               style={{

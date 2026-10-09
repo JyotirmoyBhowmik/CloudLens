@@ -18,6 +18,10 @@ export interface NumberDerivationDetail {
   dataFreshness?: string;
   notes?: string;
   costSource?: CostSource;
+  sourceConnection?: string;
+  dataset?: string;
+  period?: string;
+  retrievedAt?: string;
 }
 
 export interface ExplainableNumberProps {
@@ -172,6 +176,34 @@ export const ExplainableNumber: React.FC<ExplainableNumberProps> = ({
                 {detail.formattedValue || fullDisplay}
               </strong>
             </div>
+
+            {detail.sourceConnection && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Source Connection:</span>
+                <span style={{ fontFamily: 'monospace' }}>{detail.sourceConnection}</span>
+              </div>
+            )}
+
+            {detail.dataset && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Dataset:</span>
+                <span>{detail.dataset}</span>
+              </div>
+            )}
+
+            {detail.period && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Period:</span>
+                <span>{detail.period}</span>
+              </div>
+            )}
+
+            {detail.retrievedAt && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Retrieved At:</span>
+                <span style={{ fontSize: '0.75rem' }}>{detail.retrievedAt}</span>
+              </div>
+            )}
 
             {detail.costSource && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

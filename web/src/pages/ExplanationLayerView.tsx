@@ -18,8 +18,10 @@ import {
   RefreshCw,
   AlertOctagon,
 } from 'lucide-react';
+import { useApiData } from '../api';
 
 export const ExplanationLayerView: React.FC = () => {
+  const { data: apiAlerts } = useApiData<any>('/api/v1/alerts/contextual');
   const [staleSimulated, setStaleSimulated] = useState(false);
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Record<string, boolean>>({});
 
@@ -291,7 +293,7 @@ export const ExplanationLayerView: React.FC = () => {
       visibility: 'PAGE_INLINE',
       is_acknowledged: acknowledgedAlerts['ctx-alert-01'],
       acknowledged_by: acknowledgedAlerts['ctx-alert-01'] ? 'lead-finops' : null,
-      metadata: { potential_savings_monthly: '$62.05', confidence: 'High' },
+      metadata: { potential_savings_monthly: '62.05 USD', confidence: 'High' },
     },
     {
       id: 'ctx-alert-02',
@@ -302,7 +304,7 @@ export const ExplanationLayerView: React.FC = () => {
       severity: 'WARNING',
       visibility: 'PAGE_INLINE',
       is_acknowledged: acknowledgedAlerts['ctx-alert-02'],
-      metadata: { consumed_gb: '4.2', limit_gb: '5.0', post_rate: '$0.023/GB' },
+      metadata: { consumed_gb: '4.2', limit_gb: '5.0', post_rate: '0.023 USD/GB' },
     },
     {
       id: 'ctx-alert-03',
@@ -313,7 +315,7 @@ export const ExplanationLayerView: React.FC = () => {
       severity: 'WARNING',
       visibility: 'PAGE_INLINE',
       is_acknowledged: acknowledgedAlerts['ctx-alert-03'],
-      metadata: { budget_allocated: '$25,000', current_spend: '$21,340', days_remaining: 12 },
+      metadata: { budget_allocated: '25000 USD', current_spend: '21340 USD', days_remaining: 12 },
     },
     {
       id: 'ctx-alert-04',
@@ -324,7 +326,7 @@ export const ExplanationLayerView: React.FC = () => {
       severity: 'HIGH',
       visibility: 'PAGE_INLINE',
       is_acknowledged: acknowledgedAlerts['ctx-alert-04'],
-      metadata: { projected_overrun: '$2,450', confidence_interval: '95%' },
+      metadata: { projected_overrun: '2450 USD', confidence_interval: '95%' },
     },
     {
       id: 'ctx-alert-05',
@@ -597,14 +599,23 @@ export const ExplanationLayerView: React.FC = () => {
         </p>
 
         <div>
-          {sampleContextualAlerts.map((alert) => (
-            <ContextualAlertBanner
-              key={alert.id}
-              alert={alert}
-              onAcknowledge={handleAcknowledgeAlert}
-              currentUser="finops_analyst"
-            />
-          ))}
+          {apiAlerts && Array.isArray(apiAlerts.items) && apiAlerts.items.length > 0
+            ? apiAlerts.items.map((alert: any) => (
+                <ContextualAlertBanner
+                  key={alert.id}
+                  alert={alert}
+                  onAcknowledge={handleAcknowledgeAlert}
+                  currentUser="finops_analyst"
+                />
+              ))
+            : sampleContextualAlerts.map((alert) => (
+                <ContextualAlertBanner
+                  key={alert.id}
+                  alert={alert}
+                  onAcknowledge={handleAcknowledgeAlert}
+                  currentUser="finops_analyst"
+                />
+              ))}
         </div>
       </section>
 

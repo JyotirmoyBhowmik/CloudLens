@@ -3,7 +3,11 @@ import {
   Breadcrumb,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { CheckCircle2, Search } from 'lucide-react';
 
@@ -18,70 +22,26 @@ interface UserItem {
   lastLogin: string;
 }
 
-const DEMO_USERS: UserItem[] = [
-  {
-    id: 'usr-01',
-    email: 'superadmin@enterprise.internal',
-    name: 'Super Administrator',
-    role: 'SUPER_ADMIN',
-    scopeGrant: 'PLATFORM (Global Root)',
-    mfaEnabled: true,
-    status: 'ACTIVE',
-    lastLogin: '2026-10-05T21:40:00Z',
-  },
-  {
-    id: 'usr-02',
-    email: 'sarah.chen@enterprise.internal',
-    name: 'Sarah Chen',
-    role: 'FINOPS_LEAD',
-    scopeGrant: 'All Scopes (Tenant Wide)',
-    mfaEnabled: true,
-    status: 'ACTIVE',
-    lastLogin: '2026-10-05T19:15:00Z',
-  },
-  {
-    id: 'usr-03',
-    email: 'marcus.v@enterprise.internal',
-    name: 'Marcus Vance',
-    role: 'FINANCE_CONTROLLER',
-    scopeGrant: 'Cost Centres & Business Units',
-    mfaEnabled: true,
-    status: 'ACTIVE',
-    lastLogin: '2026-10-04T14:20:00Z',
-  },
-  {
-    id: 'usr-04',
-    email: 'alex.m@enterprise.internal',
-    name: 'Alex Mercer',
-    role: 'DEVELOPER',
-    scopeGrant: 'APP-CHECKOUT-PROD',
-    mfaEnabled: true,
-    status: 'ACTIVE',
-    lastLogin: '2026-10-05T11:00:00Z',
-  },
-  {
-    id: 'usr-05',
-    email: 'auditor.lead@enterprise.internal',
-    name: 'Compliance Auditor',
-    role: 'AUDITOR',
-    scopeGrant: 'Read-Only Audit Ledger',
-    mfaEnabled: true,
-    status: 'ACTIVE',
-    lastLogin: '2026-10-03T16:00:00Z',
-  },
-];
-
 export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [users, setUsers] = useState<UserItem[]>(DEMO_USERS);
+  const { data: apiUsers, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/users');
+  const [users, setUsers] = useState<UserItem[]>([]);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!isDemo) {
-      setUsers([]);
-    } else {
-      setUsers(DEMO_USERS);
+    if (apiUsers) {
+      const list = Array.isArray(apiUsers) ? apiUsers : (apiUsers.items || []);
+      setUsers(list.map((u: any) => ({
+        id: u.id || u.user_id || 'usr-01',
+        email: u.email || 'user@enterprise.internal',
+        name: u.display_name || u.name || 'Enterprise User',
+        role: (u.role || u.roles?.[0] || 'FINOPS_ANALYST') as UserItem['role'],
+        scopeGrant: u.scope_grant || u.scopeGrant || 'All Scopes (Tenant Wide)',
+        mfaEnabled: u.mfa_enabled !== undefined ? u.mfa_enabled : (u.mfaEnabled ?? false),
+        status: (u.status || 'ACTIVE') as UserItem['status'],
+        lastLogin: u.last_login || u.lastLogin || '',
+      })));
     }
-  }, [isDemo]);
+  }, [apiUsers]);
 
   const filtered = users.filter((u) =>
     `${u.email} ${u.name} ${u.role}`.toLowerCase().includes(search.toLowerCase())
@@ -189,23 +149,16 @@ export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true })
           </div>
         </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No identities recorded in this tenant context.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Identities"
+            message={errorMessage || 'Error contacting users directory API'}
+            onRetry={refetch}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Users Registered" descriptionOverride="No user identities or assigned scope grants registered for this tenant." actionTextOverride="Refresh Users" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>

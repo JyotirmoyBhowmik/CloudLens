@@ -5,7 +5,11 @@ import {
   createCostExplanation,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 
@@ -29,65 +33,30 @@ interface ShowbackStatementItem {
   };
 }
 
-const DEMO_STATEMENTS: ShowbackStatementItem[] = [
-  {
-    id: 'STMT-2026-09-RETAIL',
-    period: '2026-09',
-    scopeCode: 'BU-RETAIL',
-    scopeName: 'Retail & E-Commerce Business Unit',
-    directCost: 142850.00,
-    sharedCostAllocated: 24500.00,
-    unallocatedCost: 6500.00,
-    totalBilledCost: 173850.00,
-    status: 'DISPUTED',
-    version: 1,
-    disputeCount: 1,
-    disputeDetails: {
-      lineId: 'LINE-S3-CROSS-REGION-RETAIL',
-      description: 'Shared cross-region egress from central analytics bucket',
-      amount: 14200.00,
-      reason: 'Egress traffic was driven by Data Engineering batch extraction, not Retail app queries.',
-    },
-  },
-  {
-    id: 'STMT-2026-09-FINTECH',
-    period: '2026-09',
-    scopeCode: 'BU-FINTECH',
-    scopeName: 'Digital Banking & Payments BU',
-    directCost: 89400.00,
-    sharedCostAllocated: 18200.00,
-    unallocatedCost: 0.00,
-    totalBilledCost: 107600.00,
-    status: 'FINALISED',
-    version: 1,
-    disputeCount: 0,
-  },
-  {
-    id: 'STMT-2026-08-RETAIL-V2',
-    period: '2026-08',
-    scopeCode: 'BU-RETAIL',
-    scopeName: 'Retail & E-Commerce Business Unit (Restatement v2)',
-    directCost: 138200.00,
-    sharedCostAllocated: 21000.00,
-    unallocatedCost: 0.00,
-    totalBilledCost: 159200.00,
-    status: 'REVISED_V2',
-    version: 2,
-    disputeCount: 0,
-  },
-];
-
 export const ShowbackStatementsPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [statements, setStatements] = useState<ShowbackStatementItem[]>(DEMO_STATEMENTS);
+  const { data: apiStatements, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/statements');
+  const [statements, setStatements] = useState<ShowbackStatementItem[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL');
 
   useEffect(() => {
-    if (!isDemo) {
-      setStatements([]);
-    } else {
-      setStatements(DEMO_STATEMENTS);
+    if (apiStatements) {
+      const list = Array.isArray(apiStatements) ? apiStatements : (apiStatements.items || []);
+      setStatements(list.map((s: any) => ({
+        id: s.id || s.statement_id || 'STMT-01',
+        period: s.period || '2026-09',
+        scopeCode: s.scope_code || s.scopeCode || 'BU-DEFAULT',
+        scopeName: s.scope_name || s.scopeName || 'Business Unit',
+        directCost: s.direct_cost ?? s.directCost ?? 0,
+        sharedCostAllocated: s.shared_cost_allocated ?? s.sharedCostAllocated ?? 0,
+        unallocatedCost: s.unallocated_cost ?? s.unallocatedCost ?? 0,
+        totalBilledCost: s.total_billed_cost ?? s.totalBilledCost ?? 0,
+        status: (s.status || 'FINALISED') as ShowbackStatementItem['status'],
+        version: s.version ?? 1,
+        disputeCount: s.dispute_count ?? s.disputeCount ?? 0,
+        disputeDetails: s.dispute_details || s.disputeDetails,
+      })));
     }
-  }, [isDemo]);
+  }, [apiStatements]);
 
   const filtered = statements.filter((s) => {
     if (selectedPeriod !== 'ALL' && s.period !== selectedPeriod) return false;
@@ -193,23 +162,16 @@ export const ShowbackStatementsPage: React.FC<{ isDemo?: boolean }> = ({ isDemo 
           </select>
         </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No statements available for this billing period.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Showback Statements"
+            message={errorMessage || 'Error contacting showback statements API'}
+            onRetry={refetch}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Showback Statements" descriptionOverride="No finalized showback statements or allocated invoices available for this tenant." actionTextOverride="Refresh Statements" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
@@ -260,7 +222,7 @@ export const ShowbackStatementsPage: React.FC<{ isDemo?: boolean }> = ({ isDemo 
                           explanation={createCostExplanation('Unallocated Infrastructure')}
                         />
                       ) : (
-                        <NullValue state="ZERO" customZeroValue="$0.00" />
+                        <NullValue state="ZERO" />
                       )}
                     </td>
                     <td style={{ padding: '0.75rem 0.6rem' }}>

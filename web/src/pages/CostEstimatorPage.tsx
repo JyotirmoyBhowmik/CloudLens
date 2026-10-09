@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Breadcrumb,
   CostValue,
   createCostExplanation,
-  NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { Calculator } from 'lucide-react';
+import { useApiData } from '../api';
 
 interface Scenario {
   id: string;
@@ -23,6 +26,7 @@ interface Scenario {
 }
 
 export const CostEstimatorPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
+  const { loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/cost/estimate/supported-services');
   const [provider, setProvider] = useState<string>('aws');
   const [service, setService] = useState<string>('AmazonEC2');
   const [region, setRegion] = useState<string>('us-east-1');
@@ -31,50 +35,7 @@ export const CostEstimatorPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
   const [hoursPerMonth, setHoursPerMonth] = useState<number>(730);
   const [pricingModel] = useState<string>('ON_DEMAND');
 
-  const [scenarios, setScenarios] = useState<Scenario[]>([
-    {
-      id: 'sc-1',
-      name: 'Baseline On-Demand Fleet',
-      provider: 'AWS',
-      service: 'Amazon EC2',
-      region: 'us-east-1',
-      instanceType: 'm5.xlarge (4 vCPU, 16 GiB)',
-      monthlyCost: 560.64,
-      pricingModel: 'ON_DEMAND',
-      source: 'ESTIMATED',
-      notes: 'Standard pay-as-you-go rate without commitment',
-    },
-    {
-      id: 'sc-2',
-      name: '1-Year Compute Savings Plan',
-      provider: 'AWS',
-      service: 'Amazon EC2',
-      region: 'us-east-1',
-      instanceType: 'm5.xlarge (4 vCPU, 16 GiB)',
-      monthlyCost: 381.24,
-      pricingModel: 'SAVINGS_PLAN',
-      source: 'ESTIMATED',
-      notes: '32% discount for 1-year partial upfront commitment',
-    },
-    {
-      id: 'sc-3',
-      name: 'Graviton Architecture (ARM64)',
-      provider: 'AWS',
-      service: 'Amazon EC2',
-      region: 'us-east-1',
-      instanceType: 'm6g.xlarge (4 vCPU, 16 GiB)',
-      monthlyCost: 322.37,
-      pricingModel: 'SAVINGS_PLAN',
-      source: 'ESTIMATED',
-      notes: '20% lower raw cost + 32% commitment discount',
-    },
-  ]);
-
-  useEffect(() => {
-    if (!isDemo) {
-      setScenarios([]);
-    }
-  }, [isDemo]);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
 
   const estimatedUnitPrice = 0.192;
   const calculatedMonthly = quantity * hoursPerMonth * estimatedUnitPrice;
@@ -283,24 +244,16 @@ export const CostEstimatorPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
           Scenario Comparison Matrix
         </h2>
 
-        {scenarios.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: '8px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No scenario estimates configured for this scope.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Empty State Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="card" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Estimator Services"
+            message={errorMessage || 'Error fetching supported estimation services'}
+            onRetry={refetch}
+          />
+        ) : scenarios.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Scenarios Modeled" descriptionOverride="No sizing scenario estimates have been configured. Add the current sizing specification above to benchmark alternatives." actionTextOverride="Add Current Sizing as Baseline" onAction={handleAddScenario} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
             {scenarios.map((sc, index) => {

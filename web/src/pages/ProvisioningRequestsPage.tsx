@@ -5,7 +5,11 @@ import {
   createCostExplanation,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { CheckCircle2, XCircle, Zap, Clock } from 'lucide-react';
 
@@ -26,81 +30,32 @@ interface ProvisioningRequestItem {
   bypassRationale?: string;
 }
 
-const DEMO_REQUESTS: ProvisioningRequestItem[] = [
-  {
-    id: 'PR-2026-101',
-    requester: 'sarah.chen (Engineering Lead)',
-    scope: 'APP-CHECKOUT-PROD',
-    provider: 'AWS',
-    service: 'Amazon EC2',
-    sizingSpec: '8x c6i.2xlarge (16 vCPU, 32 GiB)',
-    estimatedMonthlyCost: 1989.12,
-    status: 'APPROVED',
-    quotaPassed: true,
-    budgetPassed: true,
-    actualSpendMonth1: 1940.50,
-    actualSpendMonth2: 1978.20,
-    actualSpendMonth3: 2012.00,
-  },
-  {
-    id: 'PR-2026-102',
-    requester: 'dev-team-alpha',
-    scope: 'APP-SEARCH-INDEXER',
-    provider: 'GCP',
-    service: 'Cloud Bigtable',
-    sizingSpec: '6x SSD Nodes (us-central1)',
-    estimatedMonthlyCost: 2835.00,
-    status: 'BLOCKED_BUDGET',
-    quotaPassed: true,
-    budgetPassed: false,
-    actualSpendMonth1: null,
-    actualSpendMonth2: null,
-    actualSpendMonth3: null,
-  },
-  {
-    id: 'PR-2026-103',
-    requester: 'ops-oncall (Incident P1-492)',
-    scope: 'APP-AUTH-GATEWAY',
-    provider: 'AWS',
-    service: 'Amazon EC2',
-    sizingSpec: '12x m5.2xlarge failover fleet',
-    estimatedMonthlyCost: 3450.00,
-    status: 'EMERGENCY_BYPASS',
-    quotaPassed: false,
-    budgetPassed: false,
-    actualSpendMonth1: 3410.00,
-    actualSpendMonth2: null,
-    actualSpendMonth3: null,
-    bypassRationale: 'P1 outage mitigating primary auth latency collapse. Post-hoc FinOps review scheduled within 48h.',
-  },
-  {
-    id: 'PR-2026-104',
-    requester: 'alex.m (ML Researcher)',
-    scope: 'DATA-TRAINING-SANDBOX',
-    provider: 'AZURE',
-    service: 'Virtual Machines',
-    sizingSpec: '4x Standard_NC24ads_A100_v4',
-    estimatedMonthlyCost: 11420.00,
-    status: 'PENDING_APPROVAL',
-    quotaPassed: true,
-    budgetPassed: true,
-    actualSpendMonth1: null,
-    actualSpendMonth2: null,
-    actualSpendMonth3: null,
-  },
-];
-
 export const ProvisioningRequestsPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [requests, setRequests] = useState<ProvisioningRequestItem[]>(DEMO_REQUESTS);
+  const { data: apiRequests, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/provisioning-requests');
+  const [requests, setRequests] = useState<ProvisioningRequestItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
   useEffect(() => {
-    if (!isDemo) {
-      setRequests([]);
-    } else {
-      setRequests(DEMO_REQUESTS);
+    if (apiRequests) {
+      const list = Array.isArray(apiRequests) ? apiRequests : (apiRequests.items || []);
+      setRequests(list.map((r: any) => ({
+        id: r.id || r.request_id || 'PR-01',
+        requester: r.owner_email || r.requester || 'user@enterprise.internal',
+        scope: r.target_scope || r.scope || 'APP-PROD',
+        provider: r.provider || 'AWS',
+        service: r.service || 'Amazon EC2',
+        sizingSpec: r.sizing_spec || r.sizingSpec || `${r.intended_application || 'Application'} Workload`,
+        estimatedMonthlyCost: r.monthly_cost !== undefined ? Number(r.monthly_cost) : (r.estimatedMonthlyCost ?? null),
+        status: (r.status || 'PENDING_APPROVAL') as ProvisioningRequestItem['status'],
+        quotaPassed: r.quota_passed !== undefined ? r.quota_passed : true,
+        budgetPassed: r.budget_passed !== undefined ? r.budget_passed : true,
+        actualSpendMonth1: r.actual_spend_month1 ?? null,
+        actualSpendMonth2: r.actual_spend_month2 ?? null,
+        actualSpendMonth3: r.actual_spend_month3 ?? null,
+        bypassRationale: r.bypass_rationale || r.bypassRationale,
+      })));
     }
-  }, [isDemo]);
+  }, [apiRequests]);
 
   const filtered = requests.filter((r) => {
     if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
@@ -212,23 +167,16 @@ export const ProvisioningRequestsPage: React.FC<{ isDemo?: boolean }> = ({ isDem
           </select>
         </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No provisioning requests found for this scope.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Provisioning Requests"
+            message={errorMessage || 'Error contacting provisioning requests API'}
+            onRetry={refetch}
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Provisioning Requests" descriptionOverride="No pre-deployment sizing requests found for this scope or filter." actionTextOverride="Refresh Requests" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>

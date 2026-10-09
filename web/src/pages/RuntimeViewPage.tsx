@@ -5,7 +5,11 @@ import {
   createCostExplanation,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { Play, Pause } from 'lucide-react';
 
@@ -22,67 +26,27 @@ interface RuntimeResourceItem {
   outOfHoursWasteCost: number | null;
 }
 
-const DEMO_RUNTIMES: RuntimeResourceItem[] = [
-  {
-    id: 'rt-01',
-    resourceId: 'res-aws-dev-runner-01',
-    provider: 'AWS',
-    environment: 'DEVELOPMENT',
-    declaredSchedule: 'BUSINESS_HOURS_08_18',
-    currentState: 'RUNNING',
-    runningHoursMonth: 410,
-    scheduledHoursMonth: 220,
-    adherencePct: 53.6,
-    outOfHoursWasteCost: 182.40,
-  },
-  {
-    id: 'rt-02',
-    resourceId: 'res-az-qa-cluster-node',
-    provider: 'AZURE',
-    environment: 'QA',
-    declaredSchedule: 'BUSINESS_HOURS_08_18',
-    currentState: 'STOPPED',
-    runningHoursMonth: 216,
-    scheduledHoursMonth: 220,
-    adherencePct: 98.2,
-    outOfHoursWasteCost: 0.00,
-  },
-  {
-    id: 'rt-03',
-    resourceId: 'res-gcp-prod-fe-lb',
-    provider: 'GCP',
-    environment: 'PRODUCTION',
-    declaredSchedule: 'CONTINUOUS_24X7',
-    currentState: 'RUNNING',
-    runningHoursMonth: 730,
-    scheduledHoursMonth: 730,
-    adherencePct: 100.0,
-    outOfHoursWasteCost: 0.00,
-  },
-  {
-    id: 'rt-04',
-    resourceId: 'res-oci-sandbox-db',
-    provider: 'OCI',
-    environment: 'SANDBOX',
-    declaredSchedule: 'NOT_SCHEDULED',
-    currentState: 'RUNNING',
-    runningHoursMonth: null,
-    scheduledHoursMonth: null,
-    adherencePct: null,
-    outOfHoursWasteCost: null,
-  },
-];
-
 export const RuntimeViewPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [items, setItems] = useState<RuntimeResourceItem[]>(DEMO_RUNTIMES);
+  const { data: apiAdherence, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/runtime/adherence');
+  const [items, setItems] = useState<RuntimeResourceItem[]>([]);
 
   useEffect(() => {
-    if (!isDemo) {
-      setItems([]);
-    } else {
-      setItems(DEMO_RUNTIMES);
+    if (apiAdherence) {
+      const list = Array.isArray(apiAdherence) ? apiAdherence : (apiAdherence.items || []);
+      setItems(list.map((r: any) => ({
+        id: r.id || r.resource_id || 'rt-01',
+        resourceId: r.resource_id || r.resourceId || 'res-01',
+        provider: r.provider || 'AWS',
+        environment: r.environment || 'PRODUCTION',
+        declaredSchedule: r.declared_schedule || r.declaredSchedule || 'CONTINUOUS_24X7',
+        currentState: (r.current_state || r.currentState || 'RUNNING') as RuntimeResourceItem['currentState'],
+        runningHoursMonth: r.running_hours_month ?? r.runningHoursMonth ?? 0,
+        scheduledHoursMonth: r.scheduled_hours_month ?? r.scheduledHoursMonth ?? 0,
+        adherencePct: r.adherence_pct ?? r.adherencePct ?? null,
+        outOfHoursWasteCost: r.out_of_hours_waste_cost ?? r.outOfHoursWasteCost ?? 0,
+      })));
     }
-  }, [isDemo]);
+  }, [apiAdherence]);
 
   const totalWaste = items.reduce((sum, i) => sum + (i.outOfHoursWasteCost || 0), 0);
 
@@ -173,23 +137,16 @@ export const RuntimeViewPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true 
           Runtime State & Schedule Inventory
         </h2>
 
-        {items.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No runtime records recorded in this scope.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Runtime Data"
+            message={errorMessage || 'Error contacting runtime adherence API'}
+            onRetry={refetch}
+          />
+        ) : items.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Runtime Resources" descriptionOverride="No active resource schedules or runtime adherence records recorded for this tenant." actionTextOverride="Refresh Runtime Data" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
@@ -260,7 +217,7 @@ export const RuntimeViewPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true 
                             explanation={createCostExplanation('Out of Hours Energy & Spend Waste')}
                           />
                         ) : (
-                          <NullValue state="ZERO" customZeroValue="$0.00" />
+                          <NullValue state="ZERO" />
                         )
                       ) : (
                         <NullValue state="NOT_APPLICABLE" />

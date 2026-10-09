@@ -3,7 +3,11 @@ import {
   Breadcrumb,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 import { ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search } from 'lucide-react';
 
@@ -22,92 +26,32 @@ interface QuotaItem {
   adjustable: boolean;
 }
 
-const DEMO_QUOTAS: QuotaItem[] = [
-  {
-    id: 'q-aws-ec2-vcpu',
-    provider: 'AWS',
-    service: 'Amazon EC2',
-    quotaName: 'Running On-Demand Standard (A, C, D, M, R, T, Z) vCPUs',
-    region: 'us-east-1',
-    currentUsage: 288,
-    limit: 320,
-    unit: 'vCPU',
-    saturationPct: 90.0,
-    headroomState: 'IMMINENT_BREACH',
-    daysToExhaustion: 6,
-    adjustable: true,
-  },
-  {
-    id: 'q-aws-rds-instances',
-    provider: 'AWS',
-    service: 'Amazon RDS',
-    quotaName: 'DB instances limit per region',
-    region: 'us-east-1',
-    currentUsage: 36,
-    limit: 40,
-    unit: 'instances',
-    saturationPct: 90.0,
-    headroomState: 'WARNING',
-    daysToExhaustion: 12,
-    adjustable: true,
-  },
-  {
-    id: 'q-azure-core-quota',
-    provider: 'AZURE',
-    service: 'Compute',
-    quotaName: 'Total Regional vCPUs',
-    region: 'eastus',
-    currentUsage: 140,
-    limit: 200,
-    unit: 'Cores',
-    saturationPct: 70.0,
-    headroomState: 'NORMAL',
-    daysToExhaustion: null,
-    adjustable: true,
-  },
-  {
-    id: 'q-gcp-gce-cpus',
-    provider: 'GCP',
-    service: 'Compute Engine',
-    quotaName: 'CPUs (all regions)',
-    region: 'global',
-    currentUsage: 64,
-    limit: 100,
-    unit: 'CPUs',
-    saturationPct: 64.0,
-    headroomState: 'NORMAL',
-    daysToExhaustion: null,
-    adjustable: true,
-  },
-  {
-    id: 'q-oci-compute-ocpus',
-    provider: 'OCI',
-    service: 'Compute',
-    quotaName: 'Standard E4 OCPU count',
-    region: 'us-ashburn-1',
-    currentUsage: null,
-    limit: null,
-    unit: 'OCPU',
-    saturationPct: null,
-    headroomState: 'NOT_SUPPORTED',
-    daysToExhaustion: null,
-    adjustable: false,
-  },
-];
-
 export const QuotaHeadroomPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [quotas, setQuotas] = useState<QuotaItem[]>(DEMO_QUOTAS);
+  const { data: apiQuotas, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/quotas');
+  const [quotas, setQuotas] = useState<QuotaItem[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>('ALL');
   const [selectedState, setSelectedState] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
-    if (!isDemo) {
-      setQuotas([]);
-    } else {
-      setQuotas(DEMO_QUOTAS);
+    if (apiQuotas) {
+      const list = Array.isArray(apiQuotas) ? apiQuotas : (apiQuotas.items || []);
+      setQuotas(list.map((q: any) => ({
+        id: q.id || q.quota_id || 'q-default',
+        provider: (q.provider || 'AWS') as QuotaItem['provider'],
+        service: q.service_name || q.service || 'Cloud Service',
+        quotaName: q.quota_name || q.quotaName || 'Resource Limit',
+        region: q.region || 'global',
+        currentUsage: q.current_usage ?? q.currentUsage ?? null,
+        limit: q.quota_limit ?? q.limit ?? null,
+        unit: q.unit || 'units',
+        saturationPct: q.saturation_pct ?? q.saturationPct ?? null,
+        headroomState: (q.headroom_state || q.headroomState || 'NORMAL') as QuotaItem['headroomState'],
+        daysToExhaustion: q.days_to_exhaustion ?? q.daysToExhaustion ?? null,
+        adjustable: q.adjustable !== undefined ? q.adjustable : true,
+      })));
     }
-  }, [isDemo]);
+  }, [apiQuotas]);
 
   const filteredQuotas = quotas.filter((q) => {
     if (selectedProvider !== 'ALL' && q.provider !== selectedProvider) return false;
@@ -264,23 +208,16 @@ export const QuotaHeadroomPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
           </div>
         </div>
 
-        {filteredQuotas.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No quotas found matching filter criteria.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Quotas"
+            message={errorMessage || 'Error contacting service quotas API'}
+            onRetry={refetch}
+          />
+        ) : filteredQuotas.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Quotas Discovered" descriptionOverride="No cloud service quotas or limits tracked for this tenant." actionTextOverride="Refresh Quotas" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>

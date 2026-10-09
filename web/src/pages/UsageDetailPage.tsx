@@ -3,7 +3,11 @@ import {
   Breadcrumb,
   NullValue,
   FreshnessIndicator,
+  EmptyState,
+  ErrorState,
+  SkeletonLoader,
 } from '../design-system';
+import { useApiData } from '../api';
 import { DemoModeBanner } from '../components/DemoModeBanner';
 
 interface UsageMetricItem {
@@ -19,79 +23,27 @@ interface UsageMetricItem {
   status: 'NOMINAL' | 'ELEVATED' | 'IDLE';
 }
 
-const DEMO_USAGE: UsageMetricItem[] = [
-  {
-    id: 'use-01',
-    resourceId: 'res-aws-vm-01',
-    provider: 'AWS',
-    service: 'Amazon EC2',
-    metricCode: 'CPUUtilization',
-    monitoringType: 'RUNTIME_BASED',
-    intervalValue: 42.8,
-    unit: 'Percent',
-    cardinalityTier: 'LOW',
-    status: 'NOMINAL',
-  },
-  {
-    id: 'use-02',
-    resourceId: 'res-aws-rds-01',
-    provider: 'AWS',
-    service: 'Amazon RDS',
-    metricCode: 'DatabaseConnections',
-    monitoringType: 'TRANSACTION_BASED',
-    intervalValue: 128,
-    unit: 'Count',
-    cardinalityTier: 'MEDIUM',
-    status: 'NOMINAL',
-  },
-  {
-    id: 'use-03',
-    resourceId: 'res-az-blob-01',
-    provider: 'AZURE',
-    service: 'Blob Storage',
-    metricCode: 'BlobCapacity',
-    monitoringType: 'STORAGE_BASED',
-    intervalValue: 8420.5,
-    unit: 'GiB',
-    cardinalityTier: 'LOW',
-    status: 'NOMINAL',
-  },
-  {
-    id: 'use-04',
-    resourceId: 'res-gcp-nat-01',
-    provider: 'GCP',
-    service: 'Cloud NAT',
-    metricCode: 'EgressDataTransfer',
-    monitoringType: 'DATA_TRANSFER_BASED',
-    intervalValue: 1420.0,
-    unit: 'GiB',
-    cardinalityTier: 'MEDIUM',
-    status: 'ELEVATED',
-  },
-  {
-    id: 'use-05',
-    resourceId: 'res-oci-dns-01',
-    provider: 'OCI',
-    service: 'DNS Management',
-    metricCode: 'QueryCount',
-    monitoringType: 'NOT_APPLICABLE',
-    intervalValue: null,
-    unit: 'Queries',
-    cardinalityTier: 'LOW',
-    status: 'NOMINAL',
-  },
-];
-
 export const UsageDetailPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true }) => {
-  const [metrics, setMetrics] = useState<UsageMetricItem[]>(DEMO_USAGE);
+  const { data: apiUsage, loading, error, errorMessage, refetch } = useApiData<any>('/api/v1/usage/metrics');
+  const [metrics, setMetrics] = useState<UsageMetricItem[]>([]);
 
   useEffect(() => {
-    if (!isDemo) {
-      setMetrics([]);
-    } else {
-      setMetrics(DEMO_USAGE);
+    if (apiUsage) {
+      const list = Array.isArray(apiUsage) ? apiUsage : (apiUsage.items || []);
+      setMetrics(list.map((u: any) => ({
+        id: u.id || u.metric_id || 'use-01',
+        resourceId: u.resource_id || u.resourceId || 'res-01',
+        provider: u.provider || 'AWS',
+        service: u.service || 'Amazon EC2',
+        metricCode: u.metric_code || u.metricCode || 'CPUUtilization',
+        monitoringType: u.monitoring_type || u.monitoringType || 'RUNTIME_BASED',
+        intervalValue: u.interval_value ?? u.intervalValue ?? null,
+        unit: u.unit || 'Percent',
+        cardinalityTier: (u.cardinality_tier || u.cardinalityTier || 'LOW') as UsageMetricItem['cardinalityTier'],
+        status: (u.status || 'NOMINAL') as UsageMetricItem['status'],
+      })));
     }
-  }, [isDemo]);
+  }, [apiUsage]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
@@ -164,23 +116,16 @@ export const UsageDetailPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true 
           Telemetry Stream Directory
         </h2>
 
-        {metrics.length === 0 ? (
-          <div
-            style={{
-              padding: '2.5rem',
-              borderRadius: '6px',
-              border: '1px dashed var(--border-color)',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              No usage telemetry points found for this scope.
-            </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Status:</span>
-              <NullValue state="NO_DATA" />
-            </div>
-          </div>
+        {loading ? (
+          <SkeletonLoader variant="table" rows={3} />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Usage Telemetry"
+            message={errorMessage || 'Error contacting usage metrics API'}
+            onRetry={refetch}
+          />
+        ) : metrics.length === 0 ? (
+          <EmptyState type="NO_DATA" titleOverride="No Telemetry Streams" descriptionOverride="No active resource usage telemetry or monitoring streams recorded for this tenant." actionTextOverride="Refresh Metrics" onAction={refetch} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>

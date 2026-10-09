@@ -268,3 +268,32 @@ def delete_budget(
     """Deletes a budget. Provider-native budgets cannot be deleted."""
     service.delete_budget(budget_id, tenant_context=tenant_context)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/plans", response_model=list[dict[str, Any]], status_code=status.HTTP_200_OK)
+def list_budget_plans(
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+    service: BudgetService = Depends(get_budget_service),
+) -> list[dict[str, Any]]:
+    """Returns budget planning cycles and workspaces for tenant."""
+    budgets_list = service.list_budgets(tenant_context=tenant_context)
+    if not budgets_list:
+        return []
+    plans = []
+    for b in budgets_list:
+        amt = float(b.get("amount") or 0.0)
+        fc = float(b.get("forecast_spend") or amt)
+        cur = float(b.get("current_spend") or 0.0)
+        plans.append({
+            "id": f"PLAN-{b.get('id', 'item')}",
+            "scopeName": b.get("name", "Scope"),
+            "scopeType": b.get("scope_type", "APPLICATION"),
+            "currentRunRate": cur,
+            "baseForecast": fc,
+            "proposedBudget": amt,
+            "plannedAdjustment": round(amt - fc, 2),
+            "variancePct": round(((amt - fc) / fc * 100), 1) if fc > 0 else 0.0,
+            "status": "APPROVED" if b.get("approval_status") == "APPROVED" else "DRAFT",
+        })
+    return plans
+

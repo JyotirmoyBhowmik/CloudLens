@@ -135,6 +135,17 @@ This document consolidates every Report Back block across the 62 build prompts o
   4. **Dynamic Context Surface**: Calling `GET /api/v1/auth/me` populates the user profile, active roles, granted capabilities, and authorized tenants. Menus and route guards adapt strictly to the API response rather than client-side hardcoded role literals.
 - **Consequences**: Complete defense-in-depth against XSS token exfiltration and CSRF attacks. Full compliance with the Prompt P02 constraint forbidding token storage in `localStorage` or `sessionStorage`.
 
+### ADR-029: Dynamic REST API Data Hooks & Zero-Literal Front-End Contract (Prompt P10)
+- **Context**: Several administrative and FinOps screens historically contained static array mockups (`DEMO_`, `INITIAL_`) or lacked first-class REST endpoints for specific aggregates (Commitment Renewals, Planning Workspaces). Enterprise production standards demand strict dynamic typing generated from OpenAPI specifications (`openapi-typescript`), zero client-side business literals, and deterministic empty/loading/error states.
+- **Decision**:
+  1. **OpenAPI-Driven Typed Client**: Generated `web/src/api/schema.ts` directly from `docs/openapi.json` using `openapi-typescript` and wrapped in a reactive `useApiData` hook managing `loading`, `error`, `empty`, and `refetch` states.
+  2. **Dedicated Read Endpoints Added**:
+     - `GET /api/v1/commitments`: Added to `calendar_router` backed by `CommitmentService` to expose active and expiring provider commitments.
+     - `GET /api/v1/budgets/plans`: Added to `budgets_router` backed by `BudgetService` to supply planning scenario workspaces.
+  3. **Zero-Literal UI Contract**: Eliminated all embedded hardcoded arrays across `web/src/pages/`. When database collections are empty (fresh production tenant), components render an accessible `EmptyState` with an actionable CTA; on seeded demo tenants, data renders strictly from PostgreSQL.
+  4. **Explainable Number Provenance**: Integrated provenance metadata popovers (`sourceConnection`, `dataset`, `period`, `retrievedAt`) on financial figures via `ExplainableNumber`.
+- **Consequences**: Complete contract fidelity between backend repository layer and web UI, full adherence to `scripts/check_web_literals.mjs`, and clean dual-tenant verification (empty on production, populated on demo).
+
 ---
 
 ## 3. Assumptions Register
