@@ -48,6 +48,8 @@ This document consolidates every Report Back block across the 62 build prompts o
 | **ADR-026** | BBP Nine Roles, Platform Observer Capability & RBAC Matrix | Prompt R-ROLES | ACCEPTED | Security & RBAC |
 | **ADR-027** | Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager | Prompt R-OBS | ACCEPTED | Observability & SRE |
 | **ADR-028** | Backend-for-Frontend (BFF) Auth with HttpOnly Secure Cookies & Double-Submit CSRF | Prompt P02 | ACCEPTED | Web App Security |
+| **ADR-029** | Dynamic REST API Data Hooks & Zero-Literal Front-End Contract | Prompt P10 | ACCEPTED | API-UI Contract |
+| **ADR-030** | Fixed Collapsible Navigation Sidebar, Responsive Top Bar & Specification Label Scrubbing | Prompt P11 | ACCEPTED | User Experience & IA |
 
 ---
 
@@ -145,6 +147,25 @@ This document consolidates every Report Back block across the 62 build prompts o
   3. **Zero-Literal UI Contract**: Eliminated all embedded hardcoded arrays across `web/src/pages/`. When database collections are empty (fresh production tenant), components render an accessible `EmptyState` with an actionable CTA; on seeded demo tenants, data renders strictly from PostgreSQL.
   4. **Explainable Number Provenance**: Integrated provenance metadata popovers (`sourceConnection`, `dataset`, `period`, `retrievedAt`) on financial figures via `ExplainableNumber`.
 - **Consequences**: Complete contract fidelity between backend repository layer and web UI, full adherence to `scripts/check_web_literals.mjs`, and clean dual-tenant verification (empty on production, populated on demo).
+
+### ADR-030: Fixed Collapsible Navigation Sidebar, Responsive Top Bar & Specification Label Scrubbing (Prompt P11)
+- **Context**: Prior application headers featured an overloaded single-tier horizontal navigation bar, mixed specification/build identifiers (`S-xx`, `Prompt n`, `BBP Section nn`, `Addendum B`, `Mandate M3`, `IMP-01`), and lacked persistence for compact screen layouts. Navigation must provide standard fixed left sidebar grouping (240px wide, collapsible to 68px with state remembered in `localStorage`), a clean utility top bar (logo, tenant switcher, search with `Ctrl+K`, health badge, user profile, breadcrumbs, drawer below 1024px), and zero user-visible specification/prompt codes.
+- **Decision**:
+  1. **Fixed Left Sidebar (`web/src/components/Sidebar.tsx`)**:
+     - Seven canonical groups: `OVERVIEW`, `CLOUD ESTATE`, `COST`, `USAGE`, `GOVERNANCE`, `FINANCE`, `ADMINISTRATION`.
+     - Items gated by capability permissions (`platform.observe`, `admin:access`, `iam:manage`, `audit:read`, etc.).
+     - Collapsible to 68px icon rail via `#sidebar-collapse-toggle-btn`; state remembered in `localStorage['cloudlens_sidebar_collapsed']`.
+     - Preserves WCAG 2.1 AA 4.5:1 color contrast on group section labels.
+  2. **Responsive Top Bar (`web/src/components/TopBar.tsx`)**:
+     - Includes `CL CloudLens` brand mark, API version pill, dynamic two-tier breadcrumbs (`Section > Page`), global `Ctrl+K` search input, real-time API health status indicator, tenant switcher dropdown (`#tenant-switcher`), user identity pill (`#header-user-display`), and Sign Out button (`#header-signout-btn`).
+     - At viewports below 1024px, the desktop sidebar collapses into an accessible mobile slide-over drawer triggered by a hamburger button.
+  3. **Specification Label Scrubbing**:
+     - Scrubbed all user-visible internal build and specification tokens (`BBP`, `Prompt n`, `Addendum`, `Track [A-Z]`, `S-nn`, `IMP-nn`, `FR-nnn`, `Mandate M3`, `Authoritative`, `PRODUCTION HEAD`, `Enterprise Production Standard`) across 28 screens and UI banners.
+  4. **Dynamic About Screen (`web/src/pages/AboutPage.tsx`)**:
+     - Removed hardcoded build version, commit SHA, and migration heads; now renders strictly from the `/api/v1/about` REST API with full loading, error, and empty state support.
+  5. **Theme Token Boundary**:
+     - Verified zero modification to `web/src/design-system/tokens.ts` (`git diff tokens.ts` empty).
+- **Consequences**: Enterprise production UI appearance with clean information architecture, zero internal spec artifacts visible to end users, responsive support from 800px to 3840px, and zero horizontal scrollbar on standard desktop viewports (1366px and 1920px).
 
 ---
 

@@ -106,8 +106,10 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
       return route.fallback();
     });
 
-    // Reset localStorage for deterministic test isolation
+    // Reset localStorage for deterministic test isolation (preserve across in-test reloads)
     await page.addInitScript(() => {
+      if (sessionStorage.getItem('__test_init')) return;
+      sessionStorage.setItem('__test_init', 'true');
       localStorage.clear();
       localStorage.setItem('cloudlens_is_demo', 'true');
     });
@@ -242,5 +244,100 @@ test.describe('CloudLens Enterprise UI — 28 Routes & Screens (Prompt R-UI)', (
         `Expected 0 serious/critical a11y violations on ${p}, found: ${JSON.stringify(seriousOrCritical, null, 2)}`
       ).toEqual([]);
     }
+  });
+
+  test('Prompt P11 — No horizontal scrollbar at 1366px and 1920px viewports', async ({ page }) => {
+    test.setTimeout(90000);
+    const viewports = [
+      { width: 1366, height: 768 },
+      { width: 1920, height: 1080 },
+    ];
+
+    const testRoutes = [
+      '/',
+      '/executive',
+      '/provider',
+      '/service',
+      '/inventory',
+      '/cost-explorer',
+      '/investigation',
+      '/budgets',
+      '/planning',
+      '/commitments',
+      '/usage',
+      '/runtime',
+      '/quotas',
+      '/policies',
+      '/remediation',
+      '/provisioning',
+      '/statements',
+      '/reports',
+      '/about',
+    ];
+
+    for (const vp of viewports) {
+      await page.setViewportSize(vp);
+      for (const route of testRoutes) {
+        await page.goto(route);
+        await page.waitForLoadState('networkidle');
+        const hasHorizontalScroll = await page.evaluate(() => {
+          return document.documentElement.scrollWidth > window.innerWidth;
+        });
+        expect(
+          hasHorizontalScroll,
+          `Horizontal scrollbar detected at ${vp.width}x${vp.height} on ${route}`
+        ).toBe(false);
+      }
+    }
+  });
+
+  test('Prompt P11 — Left sidebar collapses and remembers state in localStorage', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto('/executive');
+    await page.waitForLoadState('networkidle');
+
+    // Sidebar exists
+    const sidebar = page.locator('#desktop-left-sidebar');
+    await expect(sidebar).toBeVisible();
+
+    // Find collapse button
+    const collapseBtn = page.locator('#sidebar-collapse-toggle-btn');
+    await expect(collapseBtn).toBeVisible();
+    await collapseBtn.click();
+
+    // Verify localStorage updated
+    const isCollapsed = await page.evaluate(() => localStorage.getItem('cloudlens_sidebar_collapsed'));
+    expect(isCollapsed).toBe('true');
+
+    // Reload page and verify state remembered
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await expect(collapseBtn).toHaveAttribute('aria-label', 'Expand sidebar');
+
+    // Expand sidebar back
+    await collapseBtn.click();
+    const isCollapsedAfter = await page.evaluate(() => localStorage.getItem('cloudlens_sidebar_collapsed'));
+    expect(isCollapsedAfter).toBe('false');
+  });
+
+  test('Prompt P11 — Mobile navigation drawer below 1024px', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 900 });
+    await page.goto('/executive');
+    await page.waitForLoadState('networkidle');
+
+    // Drawer toggle button is visible on mobile (< 1024px)
+    const drawerBtn = page.locator('.mobile-drawer-btn');
+    await expect(drawerBtn).toBeVisible();
+
+    // Click to open drawer
+    await drawerBtn.click();
+    const drawer = page.locator('#mobile-nav-drawer');
+    await expect(drawer).toBeVisible();
+
+    // Close drawer
+    const closeBtn = page.locator('button[aria-label="Close navigation drawer"]');
+    await expect(closeBtn).toBeVisible();
+    await closeBtn.click();
+    await expect(drawer).not.toBeVisible();
   });
 });

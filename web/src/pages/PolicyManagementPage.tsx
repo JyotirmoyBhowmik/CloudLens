@@ -341,7 +341,7 @@ export const PolicyManagementPage: React.FC = () => {
             Governance Policy Engine
           </h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Declarative multi-cloud guardrails, non-alerting simulation runners, time-boxed exemptions, and deduplicated findings (FR-740 to FR-746).
+            Declarative multi-cloud guardrails, non-alerting simulation runners, time-boxed exemptions, and deduplicated findings.
           </p>
         </div>
 
@@ -748,7 +748,7 @@ export const PolicyManagementPage: React.FC = () => {
               Declarative Policy Composition Builder
             </h2>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-              Define enterprise governance policies in natural schema syntax. Applied instantaneously across the estate without code deployment (FR-740).
+              Define enterprise governance policies in natural schema syntax. Applied instantaneously across the estate without code deployment.
             </p>
           </div>
 
@@ -848,7 +848,7 @@ export const PolicyManagementPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>Execution Mode (FR-741)</label>
+                <label style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>Execution Mode</label>
                 <select
                   value={builderMode}
                   onChange={(e) => setBuilderMode(e.target.value as PolicyMode)}
@@ -1029,7 +1029,7 @@ export const PolicyManagementPage: React.FC = () => {
               Deduplicated Governance Findings
             </h2>
             <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-              Violations deduplicated against active instances per entity and condition (FR-744).
+              Violations deduplicated against active instances per entity and condition.
             </span>
           </div>
 
@@ -1147,7 +1147,7 @@ export const PolicyManagementPage: React.FC = () => {
         <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1.5rem' }}>
           <div style={{ marginBottom: '1.25rem' }}>
             <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', fontWeight: 600 }}>
-              Dry-Run Simulation Sandbox (FR-741)
+              Dry-Run Simulation Sandbox
             </h2>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
               Evaluate prospective policy impact against current cloud estate telemetry. Strictly produces audit metrics with <strong>ZERO live alerts generated</strong>.
@@ -1292,7 +1292,7 @@ export const PolicyManagementPage: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>
-                Time-Boxed Governance Exemptions (FR-743)
+                Time-Boxed Governance Exemptions
               </h2>
               <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                 All exemptions require explicit justification, designated approver, and strictly enforced UTC expiration timestamps.

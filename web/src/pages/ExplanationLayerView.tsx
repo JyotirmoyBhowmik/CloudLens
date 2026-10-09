@@ -27,7 +27,7 @@ export const ExplanationLayerView: React.FC = () => {
 
   const breadcrumbs: BreadcrumbItem[] = [
     { label: 'CloudLens', href: '/' },
-    { label: 'Explanation Layer & Transparencies (Prompt 40)', isCurrent: true },
+    { label: 'Explanation Layer & Transparencies', isCurrent: true },
   ];
 
   // 17-Field Information Panel Content Model Data
@@ -471,10 +471,10 @@ export const ExplanationLayerView: React.FC = () => {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary, #f8fafc)' }}>
-            Source Traceability Display (Prompt 40 Item 162)
+            Source Traceability Display
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>
-            Mandate: An unsourced financial number is worth nothing
+            Rigorous Financial Attribution
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.8125rem', margin: '0 0 1rem 0' }}>
@@ -591,7 +591,7 @@ export const ExplanationLayerView: React.FC = () => {
             Six Inline Contextual Alerts (Acknowledgement &amp; Audit Trail)
           </h3>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>
-            Prompt 40 Item 165
+            Contextual Alerts
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.8125rem', margin: '0 0 1rem 0' }}>

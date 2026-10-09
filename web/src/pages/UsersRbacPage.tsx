@@ -67,7 +67,7 @@ export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true })
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-17: Users, Roles & RBAC Matrix
+            Users, Roles & RBAC Matrix
           </h1>
           <span
             style={{
@@ -80,7 +80,7 @@ export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true })
               fontWeight: 600,
             }}
           >
-            Prompt R-ROLES / 9 Canonical Roles
+            Role-Based Access Control
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
@@ -110,7 +110,7 @@ export const UsersRbacPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = true })
           <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
             9
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>BBP Section 31 Matrix</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Access Control Matrix</span>
         </div>
       </div>
 

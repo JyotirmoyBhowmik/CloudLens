@@ -34,7 +34,7 @@ export const DemoModeBanner: React.FC<DemoModeBannerProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Sparkles size={16} aria-hidden="true" style={{ color: '#38bdf8', flexShrink: 0 }} />
         <div>
-          <strong style={{ color: '#f0f9ff' }}>Demo Mode Active (Mandate M3):</strong>
+          <strong style={{ color: '#f0f9ff' }}>Demo Mode Active:</strong>
           <span style={{ marginLeft: '0.5rem', color: '#bae6fd' }}>
             Deterministic synthetic estate active for tenant <code>{tenantId}</code> (Seed 42). Zero cloud credentials accessed.
           </span>

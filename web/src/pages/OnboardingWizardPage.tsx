@@ -84,7 +84,7 @@ export const OnboardingWizardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = 
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-14: Thirteen-Step Guided Onboarding Wizard
+            Guided Onboarding Wizard
           </h1>
           <span
             style={{
@@ -97,7 +97,7 @@ export const OnboardingWizardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = 
               fontWeight: 600,
             }}
           >
-            Prompt 15 / 15B
+            Guided Onboarding
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>
@@ -198,7 +198,7 @@ export const OnboardingWizardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = 
         {currentStep === 9 && (
           <div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              Configure alert notification recipients and run an automated delivery probe (Prompt 15B Item 24).
+              Configure alert notification recipients and run an automated delivery probe.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '480px' }}>
               <div>
@@ -248,7 +248,7 @@ export const OnboardingWizardPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = 
         {currentStep === 10 && (
           <div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              Pre-completion ingestion volume sizing and API request estimation (Prompt 15 Item 103).
+              Pre-completion ingestion volume sizing and API request estimation.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{ padding: '1rem', backgroundColor: 'var(--bg-primary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>

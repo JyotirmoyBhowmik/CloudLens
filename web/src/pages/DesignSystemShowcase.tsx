@@ -228,7 +228,7 @@ export const DesignSystemShowcase: React.FC = () => {
                 fontWeight: 600,
               }}
             >
-              Prompt 36 / BBP Section 31
+              Design System
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               WCAG 2.1 Level AA Compliant
@@ -771,7 +771,7 @@ export const DesignSystemShowcase: React.FC = () => {
 
             <ProgressiveDisclosure
               title="Audit & Provenance Details"
-              badgeText="Prompt 35 Provenance"
+              badgeText="Data Provenance"
               defaultOpen={true}
             >
               <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>

@@ -83,7 +83,7 @@ export const QuotaHeadroomPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-22: Service Quotas & Headroom Console
+            Service Quotas & Headroom Console
           </h1>
           <span
             style={{
@@ -96,7 +96,7 @@ export const QuotaHeadroomPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
               fontWeight: 600,
             }}
           >
-            Addendum B / Prompt 54 / API-050
+            Quota Monitoring
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

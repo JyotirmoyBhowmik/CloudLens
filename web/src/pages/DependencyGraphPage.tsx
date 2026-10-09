@@ -364,7 +364,7 @@ export const DependencyGraphPage: React.FC = () => {
               Visual Dependency Graph &amp; Topology Canvas
             </h1>
             <span style={{ fontSize: '0.75rem', backgroundColor: '#0369a1', color: '#e0f2fe', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 600 }}>
-              Prompt 41 / BBP Section 25
+              Topology Visualization
             </span>
           </div>
           <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary, #94a3b8)', fontSize: '0.875rem' }}>
@@ -1011,7 +1011,7 @@ export const DependencyGraphPage: React.FC = () => {
                   <strong style={{ fontSize: '0.875rem' }}>RBAC Scope Masking Active</strong>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                  Per Master Brief &amp; Prompt 41 hard mandate, inaccessible nodes are rendered as Restricted Placeholders rather than omitted. Financial figures and operational metadata are strictly redacted.
+                  Inaccessible nodes are rendered as Restricted Placeholders rather than omitted. Financial figures and operational metadata are strictly redacted.
                 </p>
               </div>
             ) : (

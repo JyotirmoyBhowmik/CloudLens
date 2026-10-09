@@ -79,7 +79,7 @@ export const ProvisioningRequestsPage: React.FC<{ isDemo?: boolean }> = ({ isDem
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-23: Cost-Aware Provisioning Gate & Approvals
+            Cost-Aware Provisioning Gate & Approvals
           </h1>
           <span
             style={{
@@ -92,7 +92,7 @@ export const ProvisioningRequestsPage: React.FC<{ isDemo?: boolean }> = ({ isDem
               fontWeight: 600,
             }}
           >
-            Addendum B / Prompt 55 / API-051
+            Provisioning Governance
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

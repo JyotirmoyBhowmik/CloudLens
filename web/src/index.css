@@ -94,11 +94,23 @@ body {
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   main {
     padding: 1rem !important;
   }
   .cloudlens-search-trigger {
     width: 180px !important;
+  }
+  .mobile-drawer-btn {
+    display: flex !important;
+  }
+  .cloudlens-desktop-sidebar {
+    display: none !important;
+  }
+  .topbar-breadcrumbs {
+    display: none !important;
+  }
+  .topbar-search-container {
+    display: none !important;
   }
 }

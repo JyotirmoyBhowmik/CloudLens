@@ -185,7 +185,7 @@ export const BudgetManagementPage: React.FC = () => {
               Budget Management &amp; Allocation Controls
             </h1>
             <span style={{ fontSize: '0.75rem', backgroundColor: '#0284c7', color: '#e0f2fe', padding: '0.2rem 0.6rem', borderRadius: '9999px', fontWeight: 600 }}>
-              Prompt 41 / Prompts 28, 32
+              Allocation Controls
             </span>
           </div>
           <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary, #94a3b8)', fontSize: '0.875rem' }}>

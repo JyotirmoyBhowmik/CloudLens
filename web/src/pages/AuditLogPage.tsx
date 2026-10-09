@@ -91,7 +91,7 @@ export const AuditLogPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = false })
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-18: Immutable Audit Trail & Cryptographic Provenance
+            Immutable Audit Trail & Cryptographic Provenance
           </h1>
           <span
             style={{
@@ -104,7 +104,7 @@ export const AuditLogPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = false })
               fontWeight: 600,
             }}
           >
-            BBP Sec 36 / Append-Only SHA-256
+            Append-Only SHA-256
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

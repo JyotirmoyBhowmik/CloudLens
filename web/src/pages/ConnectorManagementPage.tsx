@@ -835,7 +835,7 @@ export const ConnectorManagementPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1.25rem' }}>
             <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 600 }}>
-              Hourly Provider API Quota Telemetry (Prompt 14 Item 94)
+              Hourly Provider API Quota Telemetry
             </h2>
             <p style={{ margin: '0 0 1.25rem 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
               Tracks API rate-limit headroom per connector to prevent cloud provider throttling and automated backoff cascades.

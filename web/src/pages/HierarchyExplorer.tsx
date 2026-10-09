@@ -266,7 +266,7 @@ export const HierarchyExplorer: React.FC = () => {
           </p>
         </div>
 
-        {/* Global Scope-Safe Search (FR-580, FR-585) */}
+        {/* Global Scope-Safe Search */}
         <div style={{ position: 'relative', width: '360px' }}>
           <div
             style={{
@@ -365,7 +365,7 @@ export const HierarchyExplorer: React.FC = () => {
         </div>
       </div>
 
-      {/* Lateral Lens Switcher Bar (Prompt 38) */}
+      {/* Lateral Lens Switcher Bar */}
       <div
         style={{
           display: 'flex',

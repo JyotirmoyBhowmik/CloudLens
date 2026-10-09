@@ -47,7 +47,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-02: CloudLens Governance & FinOps Portal
+            CloudLens Governance & FinOps Portal
           </h1>
           <span
             style={{
@@ -143,7 +143,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', marginBottom: '0.5rem' }}>
                 <PieChart size={18} aria-hidden="true" />
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-                  Executive Cost Pulse (S-03)
+                  Executive Cost Pulse
                 </h3>
               </div>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
@@ -173,7 +173,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399', marginBottom: '0.5rem' }}>
                 <Layers size={18} aria-hidden="true" />
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-                  Cloud Inventory Explorer (S-07)
+                  Cloud Inventory Explorer
                 </h3>
               </div>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
@@ -203,7 +203,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbbf24', marginBottom: '0.5rem' }}>
                 <TrendingUp size={18} aria-hidden="true" />
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-                  Remediation Board (S-24)
+                  Remediation Board
                 </h3>
               </div>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>

@@ -73,7 +73,7 @@ export const CostEstimatorPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-21: Cost Estimator & Scenario Compare
+            Cost Estimator & Scenario Compare
           </h1>
           <span
             style={{
@@ -86,7 +86,7 @@ export const CostEstimatorPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = tru
               fontWeight: 600,
             }}
           >
-            Addendum B / Prompt 55
+            Scenario Comparison Engine
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

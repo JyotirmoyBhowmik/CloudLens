@@ -227,7 +227,7 @@ export const StandardExplanationPanels: React.FC<StandardExplanationPanelsProps>
             {/* Key Facts Structured Table */}
             <div>
               <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary, #94a3b8)', textTransform: 'uppercase' }}>
-                Authoritative Key Facts (Zero Unsupported Numbers)
+                Key Facts & Evidence
               </h4>
               <div
                 style={{

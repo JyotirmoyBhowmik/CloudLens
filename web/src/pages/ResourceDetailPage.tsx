@@ -431,10 +431,10 @@ export const ResourceDetailPage: React.FC<ResourceDetailPageProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8' }}>
-              <ShieldCheck size={20} /> Master Brief Section 29 — 15 Core Resource Questions
+              <ShieldCheck size={20} /> 15 Core Resource Questions
             </h2>
             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Mandate M3 requires every screen to answer all fifteen questions definitively for any selected estate resource with zero ambiguity.
+              Answers all fifteen fundamental architectural questions definitively for any selected estate resource.
             </p>
           </div>
 
@@ -567,7 +567,7 @@ export const ResourceDetailPage: React.FC<ResourceDetailPageProps> = ({
                   <DollarSign size={18} color="#10b981" /> Cost Panel (6 Distinct Unblended Figures)
                 </h3>
                 <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                  Mandate M3: Actual, estimated, forecast and budget costs are strictly separated and never blended.
+                  Actual, estimated, forecast and budget costs are strictly separated and never blended.
                 </span>
               </div>
               <span

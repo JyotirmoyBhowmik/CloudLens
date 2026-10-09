@@ -342,7 +342,7 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
             Tenant Administration Console
           </h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Comprehensive 24-function administrative surface, RBAC compliance matrix, and 8-attribute verified governance overrides (Prompt 41 / BBP 32).
+            Comprehensive 24-function administrative surface, RBAC compliance matrix, and 8-attribute verified governance overrides.
           </p>
         </div>
 
@@ -605,7 +605,7 @@ export const AdminConsolePage: React.FC<AdminConsoleProps> = ({
                 Manual Governance Overrides &amp; Exceptions
               </h2>
               <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                Enforces all eight mandatory attributes: who, what, why (min 20 chars), previous, new, future expiry, class, and approval ticket (Prompt 41).
+                Enforces all eight mandatory attributes: who, what, why (min 20 chars), previous, new, future expiry, class, and approval ticket.
               </p>
             </div>
 

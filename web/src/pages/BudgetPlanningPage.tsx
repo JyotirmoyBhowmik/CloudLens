@@ -65,7 +65,7 @@ export const BudgetPlanningPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = fa
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-            S-26: Budget Planning & Forecasting Workspace
+            Budget Planning & Forecasting Workspace
           </h1>
           <span
             style={{
@@ -78,7 +78,7 @@ export const BudgetPlanningPage: React.FC<{ isDemo?: boolean }> = ({ isDemo = fa
               fontWeight: 600,
             }}
           >
-            Addendum B / Prompt 48 / Prompt 56
+            Forecasting Engine
           </span>
         </div>
         <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>

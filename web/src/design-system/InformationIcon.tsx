@@ -120,7 +120,7 @@ export const InformationIcon: React.FC<InformationIconProps> = ({
           >
             <div>
               <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--accent-blue, #38bdf8)', fontWeight: 700 }}>
-                Prompt 21 Content Model (17 Fields)
+                Comprehensive Pricing Model
               </div>
               <strong style={{ fontSize: '1rem', color: 'var(--text-primary, #f8fafc)' }}>
                 {service}

@@ -52,7 +52,7 @@ export const MaintenanceModeBanner: React.FC<MaintenanceModeBannerProps> = ({
         </span>
       </div>
       <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-        Governed by Control Tower (IMP-01)
+        Governed by Control Tower
       </div>
     </div>
   );

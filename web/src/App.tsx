@@ -4,8 +4,6 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Link,
-  NavLink,
   Navigate,
   useNavigate,
   useParams,
@@ -28,7 +26,7 @@ import { MasterDataConsole } from './pages/MasterDataConsole';
 import { ControlTowerPage } from './pages/ControlTowerPage';
 import { ExplanationLayerView } from './pages/ExplanationLayerView';
 
-// Addendum B Screens (S-21 to S-27)
+// Advanced FinOps & Governance Screens
 import { CostEstimatorPage } from './pages/CostEstimatorPage';
 import { QuotaHeadroomPage } from './pages/QuotaHeadroomPage';
 import { ProvisioningRequestsPage } from './pages/ProvisioningRequestsPage';
@@ -52,6 +50,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { AboutPage } from './pages/AboutPage';
 import { DemoModeBanner } from './components/DemoModeBanner';
 import { MaintenanceModeBanner } from './components/MaintenanceModeBanner';
+import { TopBar } from './components/TopBar';
+import { Sidebar } from './components/Sidebar';
 
 // Lazy-load heavy screens (Dependency graph & conditional dev showcase)
 const DependencyGraphPage = lazy(() =>
@@ -77,7 +77,7 @@ interface HealthStatus {
   correlation_id: string;
 }
 
-// Capability-Driven Route Authorization Guard (Prompt P02 Items 4, 7)
+// Capability-Driven Route Authorization Guard
 interface ProtectedRouteProps {
   requiredCapability?: string;
   requiredCapabilities?: string[];
@@ -133,7 +133,6 @@ const AppLayout: React.FC = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const auth = useAuth();
   const [isDemo] = useState<boolean>(true);
 
   const [isMaintenanceMode, setIsMaintenanceMode] = useState<boolean>(false);
@@ -154,7 +153,7 @@ const AppLayout: React.FC = () => {
         setLoading(false);
       });
 
-    // Check maintenance mode (IMP-01)
+    // Check maintenance mode
     fetch('/api/v1/control-tower/overview')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -169,455 +168,241 @@ const AppLayout: React.FC = () => {
   }, []);
 
 
-  const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-    padding: '0.35rem 0.65rem',
-    borderRadius: '6px',
-    textDecoration: 'none',
-    fontSize: '0.8125rem',
-    fontWeight: isActive ? 600 : 500,
-    backgroundColor: isActive ? '#0369a1' : 'transparent',
-    color: isActive ? '#ffffff' : 'var(--text-secondary)',
-    transition: 'all 0.15s ease',
-    whiteSpace: 'nowrap' as const,
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('cloudlens_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
   });
 
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cloudlens_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header
-        style={{
-          borderBottom: '1px solid var(--border-color)',
-          padding: '0.75rem 1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.6rem',
-          backgroundColor: 'var(--bg-secondary)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #0284c7, #06b6d4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  color: '#fff',
-                }}
-              >
-                CL
-              </div>
-              <span style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                CloudLens
-              </span>
-            </Link>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                backgroundColor: '#0369a1',
-                color: '#e0f2fe',
-                padding: '0.15rem 0.5rem',
-                borderRadius: '9999px',
-                fontWeight: 600,
-              }}
-            >
-              {health ? `v${health.version}` : 'v0.1.0-alpha'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {auth.isAuthenticated && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8125rem' }}>
-                <span id="header-user-display" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                  {auth.user?.display_name || auth.user?.email}
-                </span>
-
-                {auth.tenants && auth.tenants.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <label htmlFor="tenant-switcher" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                      Tenant:
-                    </label>
-                    <select
-                      id="tenant-switcher"
-                      value={auth.currentTenant?.id || ''}
-                      onChange={(e) => auth.switchTenant(e.target.value)}
-                      style={{
-                        backgroundColor: 'var(--bg-primary)',
-                        color: 'var(--text-primary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '6px',
-                        padding: '0.2rem 0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {auth.tenants.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  id="header-signout-btn"
-                  onClick={() => auth.signOut()}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    padding: '0.2rem 0.6rem',
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  Sign out
-                </button>
-              </div>
-            )}
-
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                fontSize: '0.8125rem',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '6px',
-                backgroundColor: loading ? '#475569' : error ? '#7f1d1d' : '#064e3b',
-                color: loading ? '#cbd5e1' : error ? '#fca5a5' : '#6ee7b7',
-              }}
-            >
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: loading ? '#94a3b8' : error ? '#ef4444' : '#10b981',
-                }}
-              />
-              {loading ? 'Probing API...' : error ? 'API Offline' : 'API Healthy'}
-            </div>
-          </div>
-        </div>
-
-        {/* Global Navigation Strip */}
-        <nav
-          aria-label="Primary Navigation"
-          style={{
-            display: 'flex',
-            gap: '0.3rem',
-            overflowX: 'auto',
-            paddingBottom: '0.2rem',
-          }}
-        >
-          {/* Platform Control Tower */}
-          {auth.hasCapability('platform.observe') && (
-            <NavLink
-              to="/control-tower"
-              style={({ isActive }) => ({
-                ...navLinkStyle({ isActive }),
-                border: '1px solid #38bdf8',
-                backgroundColor: isActive ? '#0369a1' : '#0f172a',
-                color: isActive ? '#ffffff' : '#38bdf8',
-                fontWeight: 600,
-              })}
-            >
-              Control Tower
-            </NavLink>
-          )}
-
-          {/* Administration Surface */}
-          {auth.hasCapability('admin:access') && (
-            <NavLink
-              to="/admin"
-              style={({ isActive }) => ({
-                ...navLinkStyle({ isActive }),
-                border: '1px solid #a855f7',
-                backgroundColor: isActive ? '#7e22ce' : '#0f172a',
-                color: isActive ? '#ffffff' : '#c084fc',
-                fontWeight: 600,
-              })}
-            >
-              Administration
-            </NavLink>
-          )}
-
-          <NavLink to="/executive" style={navLinkStyle}>
-            Executive (S-03)
-          </NavLink>
-          <NavLink to="/providers" style={navLinkStyle}>
-            Providers (S-04)
-          </NavLink>
-          <NavLink to="/services" style={navLinkStyle}>
-            Services (S-05)
-          </NavLink>
-          <NavLink to="/hierarchy" style={navLinkStyle}>
-            Hierarchy (S-06)
-          </NavLink>
-          <NavLink to="/inventory" style={navLinkStyle}>
-            Inventory (S-07)
-          </NavLink>
-          <NavLink to="/resource-detail" style={navLinkStyle}>
-            Detail (S-08)
-          </NavLink>
-          <NavLink to="/usage" style={navLinkStyle}>
-            Usage (S-09)
-          </NavLink>
-          <NavLink to="/runtime" style={navLinkStyle}>
-            Runtime (S-10)
-          </NavLink>
-          <NavLink to="/cost-explorer" style={navLinkStyle}>
-            Cost (S-11)
-          </NavLink>
-          <NavLink to="/investigation" style={navLinkStyle}>
-            Increases (S-12)
-          </NavLink>
-          <NavLink to="/topology" style={navLinkStyle}>
-            Topology (S-13)
-          </NavLink>
-          <NavLink to="/onboarding" style={navLinkStyle}>
-            Onboarding (S-14)
-          </NavLink>
-          <NavLink to="/budgets" style={navLinkStyle}>
-            Budgets (S-15)
-          </NavLink>
-          <NavLink to="/policies" style={navLinkStyle}>
-            Policies (S-16)
-          </NavLink>
-          <NavLink to="/users" style={navLinkStyle}>
-            Users (S-17)
-          </NavLink>
-          <NavLink to="/audit" style={navLinkStyle}>
-            Audit (S-18)
-          </NavLink>
-          <NavLink to="/reports" style={navLinkStyle}>
-            Reports (S-19)
-          </NavLink>
-          <NavLink to="/settings" style={navLinkStyle}>
-            Settings (S-20)
-          </NavLink>
-
-          {/* Addendum B Screens */}
-          <NavLink to="/estimator" style={navLinkStyle}>
-            Estimator (S-21)
-          </NavLink>
-          <NavLink to="/quotas" style={navLinkStyle}>
-            Quotas (S-22)
-          </NavLink>
-          <NavLink to="/provisioning" style={navLinkStyle}>
-            Provisioning (S-23)
-          </NavLink>
-          <NavLink to="/remediation" style={navLinkStyle}>
-            Remediation (S-24)
-          </NavLink>
-          <NavLink to="/statements" style={navLinkStyle}>
-            Statements (S-25)
-          </NavLink>
-          <NavLink to="/planning" style={navLinkStyle}>
-            Planning (S-26)
-          </NavLink>
-          <NavLink to="/commitments" style={navLinkStyle}>
-            Commitments (S-27)
-          </NavLink>
-
-          <NavLink to="/about" style={navLinkStyle}>
-            About (IMP-06)
-          </NavLink>
-
-          {/* Development Showcase (Only visible in development) */}
-          {isDevelopment && DesignSystemShowcase && (
-            <NavLink
-              to="/dev"
-              style={({ isActive }) => ({
-                ...navLinkStyle({ isActive }),
-                backgroundColor: isActive ? '#f59e0b' : 'rgba(245, 158, 11, 0.1)',
-                color: isActive ? '#ffffff' : '#fbbf24',
-              })}
-            >
-              Dev Showcase
-            </NavLink>
-          )}
-        </nav>
-      </header>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden',
+      }}
+    >
+      <TopBar
+        onToggleMobileMenu={() => setMobileDrawerOpen((prev) => !prev)}
+        health={health}
+        loadingHealth={loading}
+        errorHealth={error}
+      />
 
       <MaintenanceModeBanner active={isMaintenanceMode} message={maintMessage} />
       <DemoModeBanner isDemo={isDemo} />
 
-      <main style={{ flex: 1, padding: '1.5rem', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
-        <Routes>
-          {/* S-01: Login */}
-          <Route path="/login" element={<LoginPage />} />
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          minWidth: 0,
+          boxSizing: 'border-box',
+        }}
+      >
+        <Sidebar
+          collapsed={isSidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+          mobileOpen={mobileDrawerOpen}
+          onCloseMobile={() => setMobileDrawerOpen(false)}
+        />
 
-          {/* S-02: Landing */}
-          <Route path="/" element={<LandingPage isDemo={isDemo} />} />
-          <Route path="/landing" element={<LandingPage isDemo={isDemo} />} />
+        <main
+          style={{
+            flex: 1,
+            minWidth: 0,
+            padding: '1.5rem',
+            width: '100%',
+            boxSizing: 'border-box',
+            overflowY: 'auto',
+          }}
+        >
+          <Routes>
+            {/* Login */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* S-03: Executive Summary */}
-          <Route path="/executive" element={<ExecutiveDashboard />} />
+            {/* Landing */}
+            <Route path="/" element={<LandingPage isDemo={isDemo} />} />
+            <Route path="/landing" element={<LandingPage isDemo={isDemo} />} />
 
-          {/* S-04: Provider Dashboard */}
-          <Route path="/providers" element={<ProviderDashboard />} />
-          <Route path="/provider" element={<ProviderDashboard />} />
+            {/* Executive Summary */}
+            <Route path="/executive" element={<ExecutiveDashboard />} />
 
-          {/* S-05: Service Dashboard */}
-          <Route path="/services" element={<ServiceDashboard />} />
-          <Route path="/service" element={<ServiceDashboard />} />
+            {/* Provider Dashboard */}
+            <Route path="/providers" element={<ProviderDashboard />} />
+            <Route path="/provider" element={<ProviderDashboard />} />
 
-          {/* S-06: Hierarchy Explorer */}
-          <Route path="/hierarchy" element={<HierarchyExplorer />} />
+            {/* Service Dashboard */}
+            <Route path="/services" element={<ServiceDashboard />} />
+            <Route path="/service" element={<ServiceDashboard />} />
 
-          {/* S-07: Cloud Inventory Explorer */}
-          <Route path="/inventory" element={<ServiceInventory />} />
+            {/* Hierarchy Explorer */}
+            <Route path="/hierarchy" element={<HierarchyExplorer />} />
 
-          {/* S-08: Resource Detail 360 */}
-          <Route path="/resources/:id" element={<ResourceDetailWrapper />} />
-          <Route path="/resource/:id" element={<ResourceDetailWrapper />} />
-          <Route path="/resource-detail" element={<ResourceDetailWrapper />} />
+            {/* Cloud Inventory Explorer */}
+            <Route path="/inventory" element={<ServiceInventory />} />
 
-          {/* S-09: Usage Telemetry & Cardinality Detail */}
-          <Route path="/usage" element={<UsageDetailPage isDemo={isDemo} />} />
+            {/* Resource Detail 360 */}
+            <Route path="/resources/:id" element={<ResourceDetailWrapper />} />
+            <Route path="/resource/:id" element={<ResourceDetailWrapper />} />
+            <Route path="/resource-detail" element={<ResourceDetailWrapper />} />
 
-          {/* S-10: Resource Runtime & Schedule Adherence */}
-          <Route path="/runtime" element={<RuntimeViewPage isDemo={isDemo} />} />
+            {/* Usage Telemetry & Cardinality Detail */}
+            <Route path="/usage" element={<UsageDetailPage isDemo={isDemo} />} />
 
-          {/* S-11: Cost Explorer */}
-          <Route path="/cost-explorer" element={<CostExplorerPage />} />
+            {/* Resource Runtime & Schedule Adherence */}
+            <Route path="/runtime" element={<RuntimeViewPage isDemo={isDemo} />} />
 
-          {/* S-12: Investigation View */}
-          <Route path="/investigation" element={<InvestigationViewPage />} />
+            {/* Cost Explorer */}
+            <Route path="/cost-explorer" element={<CostExplorerPage />} />
 
-          {/* S-13: Dependency Topology (Lazy Loaded) */}
-          <Route
-            path="/topology"
-            element={
-              <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Dependency Graph...</div>}>
-                <DependencyGraphPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/graph"
-            element={
-              <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Dependency Graph...</div>}>
-                <DependencyGraphPage />
-              </Suspense>
-            }
-          />
+            {/* Investigation View */}
+            <Route path="/investigation" element={<InvestigationViewPage />} />
 
-          {/* S-14: Onboarding Wizard */}
-          <Route path="/onboarding" element={<OnboardingWizardPage isDemo={isDemo} />} />
-
-          {/* S-15: Budgets & Allocations */}
-          <Route path="/budgets" element={<BudgetManagementPage />} />
-
-          {/* S-16: Governance Policies & Compliance */}
-          <Route path="/policies" element={<PolicyManagementPage />} />
-
-          {/* S-17: Users & RBAC */}
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute requiredCapability="iam:manage">
-                <UsersRbacPage isDemo={isDemo} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* S-18: Immutable Audit Trail */}
-          <Route
-            path="/audit"
-            element={
-              <ProtectedRoute requiredCapability="audit:read">
-                <AuditLogPage isDemo={isDemo} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* S-19: Standard Reports */}
-          <Route path="/reports" element={<ReportsPage isDemo={isDemo} />} />
-
-          {/* S-20: Settings */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute requiredCapability="tenants:settings:read">
-                <SettingsPage isDemo={isDemo} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* S-21: Cost Estimator + Scenario Compare */}
-          <Route path="/estimator" element={<CostEstimatorPage isDemo={isDemo} />} />
-
-          {/* S-22: Quota & Headroom Console */}
-          <Route path="/quotas" element={<QuotaHeadroomPage isDemo={isDemo} />} />
-
-          {/* S-23: Provisioning Requests + Approvals */}
-          <Route path="/provisioning" element={<ProvisioningRequestsPage isDemo={isDemo} />} />
-
-          {/* S-24: Remediation Task Board */}
-          <Route path="/remediation" element={<RemediationBoardPage isDemo={isDemo} />} />
-
-          {/* S-25: Showback Statements + Disputes */}
-          <Route path="/statements" element={<ShowbackStatementsPage isDemo={isDemo} />} />
-
-          {/* S-26: Budget Planning Workspace */}
-          <Route path="/planning" element={<BudgetPlanningPage isDemo={isDemo} />} />
-
-          {/* S-27: Commitment Portfolio + Renewals */}
-          <Route path="/commitments" element={<CommitmentRenewalsPage isDemo={isDemo} />} />
-
-          {/* Control Tower Route (Guarded for platform.observe) */}
-          <Route
-            path="/control-tower"
-            element={
-              <ProtectedRoute requiredCapability="platform.observe">
-                <ControlTowerPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Auxiliary Routes */}
-          <Route path="/connectors" element={<ConnectorManagementPage />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredCapability="admin:access">
-                <AdminConsolePage onNavigateHome={() => {}} />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/masterdata" element={<MasterDataConsole />} />
-          <Route path="/explanation" element={<ExplanationLayerView />} />
-          <Route path="/about" element={<AboutPage />} />
-
-          {/* Development Showcase (Omitted from production builds) */}
-          {isDevelopment && DesignSystemShowcase && (
+            {/* Dependency Topology (Lazy Loaded) */}
             <Route
-              path="/dev"
+              path="/topology"
               element={
-                <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Design System Showcase...</div>}>
-                  <DesignSystemShowcase />
+                <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Dependency Graph...</div>}>
+                  <DependencyGraphPage />
                 </Suspense>
               }
             />
-          )}
+            <Route
+              path="/graph"
+              element={
+                <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Dependency Graph...</div>}>
+                  <DependencyGraphPage />
+                </Suspense>
+              }
+            />
 
-          {/* Error & Fallback Routes */}
-          <Route path="/403" element={<ForbiddenPage />} />
-          <Route path="/404" element={<NotFoundPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </main>
+            {/* Onboarding Wizard */}
+            <Route path="/onboarding" element={<OnboardingWizardPage isDemo={isDemo} />} />
+
+            {/* Budgets & Allocations */}
+            <Route path="/budgets" element={<BudgetManagementPage />} />
+
+            {/* Governance Policies & Compliance */}
+            <Route path="/policies" element={<PolicyManagementPage />} />
+
+            {/* Users & RBAC */}
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute requiredCapability="iam:manage">
+                  <UsersRbacPage isDemo={isDemo} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Immutable Audit Trail */}
+            <Route
+              path="/audit"
+              element={
+                <ProtectedRoute requiredCapability="audit:read">
+                  <AuditLogPage isDemo={isDemo} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Standard Reports */}
+            <Route path="/reports" element={<ReportsPage isDemo={isDemo} />} />
+
+            {/* Settings */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute requiredCapability="tenants:settings:read">
+                  <SettingsPage isDemo={isDemo} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Cost Estimator + Scenario Compare */}
+            <Route path="/estimator" element={<CostEstimatorPage isDemo={isDemo} />} />
+
+            {/* Quota & Headroom Console */}
+            <Route path="/quotas" element={<QuotaHeadroomPage isDemo={isDemo} />} />
+
+            {/* Provisioning Requests + Approvals */}
+            <Route path="/provisioning" element={<ProvisioningRequestsPage isDemo={isDemo} />} />
+
+            {/* Remediation Task Board */}
+            <Route path="/remediation" element={<RemediationBoardPage isDemo={isDemo} />} />
+
+            {/* Showback Statements + Disputes */}
+            <Route path="/statements" element={<ShowbackStatementsPage isDemo={isDemo} />} />
+            <Route path="/reconciliation" element={<ShowbackStatementsPage isDemo={isDemo} />} />
+
+            {/* Budget Planning Workspace */}
+            <Route path="/planning" element={<BudgetPlanningPage isDemo={isDemo} />} />
+
+            {/* Commitment Portfolio + Renewals */}
+            <Route path="/commitments" element={<CommitmentRenewalsPage isDemo={isDemo} />} />
+
+            {/* Control Tower Route (Guarded for platform.observe) */}
+            <Route
+              path="/control-tower"
+              element={
+                <ProtectedRoute requiredCapability="platform.observe">
+                  <ControlTowerPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Auxiliary Routes */}
+            <Route path="/connectors" element={<ConnectorManagementPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredCapability="admin:access">
+                  <AdminConsolePage onNavigateHome={() => {}} />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/masterdata" element={<MasterDataConsole />} />
+            <Route path="/explanation" element={<ExplanationLayerView />} />
+            <Route path="/about" element={<AboutPage />} />
+
+            {/* Development Showcase (Omitted from production builds) */}
+            {isDevelopment && DesignSystemShowcase && (
+              <Route
+                path="/dev"
+                element={
+                  <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Design System Showcase...</div>}>
+                    <DesignSystemShowcase />
+                  </Suspense>
+                }
+              />
+            )}
+
+            {/* Error & Fallback Routes */}
+            <Route path="/403" element={<ForbiddenPage />} />
+            <Route path="/404" element={<NotFoundPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </main>
+      </div>
 
       <footer
         style={{
@@ -626,9 +411,10 @@ const AppLayout: React.FC = () => {
           textAlign: 'center',
           fontSize: '0.8125rem',
           color: 'var(--text-secondary)',
+          backgroundColor: 'var(--bg-secondary)',
         }}
       >
-        CloudLens Platform &copy; 2026. Enterprise Production Standard.
+        CloudLens Platform &copy; 2026.
       </footer>
     </div>
   );
