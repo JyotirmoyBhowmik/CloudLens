@@ -15,7 +15,7 @@ Enforces:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
@@ -239,7 +239,7 @@ class SavedInventoryView(BaseModel):
     filters: dict[str, Any]
     selected_columns: list[str] = Field(default_factory=list)
     is_shared: bool = Field(default=False)
-    created_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # ==============================================================================

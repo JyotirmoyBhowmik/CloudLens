@@ -21,7 +21,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.models.enums import FinancialSensitivity, GrantEffect, GranteeType
 from domain.rbac.models import RoleDefinition, ScopeGrant
 
@@ -101,14 +101,8 @@ class SqlRBACRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     # -------------------------------------------------------------------------
     # Scope Grants

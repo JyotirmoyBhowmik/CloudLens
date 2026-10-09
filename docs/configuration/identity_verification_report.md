@@ -1,6 +1,6 @@
 # CloudLens Authoritative Identity Verification Report (Prompt 49B)
 
-**Generated:** `2026-10-06T06:08:05.723617+00:00`**Status:** `ACTIVATED`**Interactively Usable:** `True`**Trace Correlation ID:** `5c0bd329-29c4-4be8-ba17-93308d6c9561`
+**Generated:** `2026-10-09T19:49:13.314105+00:00`**Status:** `PROVISIONED`**Interactively Usable:** `True`**Trace Correlation ID:** `51f5cf8d-06e7-447c-829e-df96eba6ad4a`
 
 ---
 
@@ -8,7 +8,7 @@
 - **Superuser Email:** `admin@jyotirmoyb.com` (Resolved dynamically from `SUPERUSER_IDENTITY` master data)
 - **Assigned Role:** `SUPER_ADMIN` (Super Admin)
 - **Scope Authority:** `Unrestricted Platform Scope` across all cloud accounts and tenants.
-- **Account Status:** `Activated`
+- **Account Status:** `Pending Activation`
 
 ## 2. Mandatory Security & Invariant Controls
 - **Multi-Factor Authentication:** `Enforced` (Mandatory TOTP, Non-Disableable)

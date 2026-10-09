@@ -18,12 +18,13 @@ import logging
 import os
 import sys
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Protocol, runtime_checkable
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.tenant.context import TenantContext
 from domain.thresholds.defaults import create_tenant_default_budget_rule
 from domain.thresholds.models import (
@@ -32,6 +33,7 @@ from domain.thresholds.models import (
     ThresholdEvaluationResult,
     ThresholdOverride,
     ThresholdRule,
+    ThresholdState,
 )
 
 logger = logging.getLogger(__name__)
@@ -142,14 +144,8 @@ class SqlThresholdRepository:
     def __init__(self) -> None:
         pass
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_result(self, row: Any) -> ThresholdEvaluationResult:
         m = dict(row._mapping)
@@ -181,16 +177,18 @@ class SqlThresholdRepository:
         if isinstance(raw, dict) and "id" in raw:
             return ThresholdRule.model_validate(raw)
 
-        from domain.thresholds.models import ThresholdType
+        from domain.thresholds.defaults import create_configurable_budget_bands
+        bands = create_configurable_budget_bands(
+            warning_upper=Decimal(str(m.get("warning_threshold") or "90.0")),
+            high_upper=Decimal(str(m.get("critical_threshold") or "100.0")),
+        )
         return ThresholdRule(
             id=m["id"],
             tenant_id=m["tenant_id"],
             name=m["name"],
             basis=ThresholdBasis(m["basis"]),
-            threshold_type=ThresholdType(m["threshold_type"]),
-            warning_threshold=float(m["warning_threshold"]) if m.get("warning_threshold") is not None else 80.0,
-            critical_threshold=float(m["critical_threshold"]) if m.get("critical_threshold") is not None else 100.0,
-            is_enabled=bool(m.get("is_enabled", True)),
+            bands=bands,
+            scope_id=m.get("scope_id"),
         )
 
     def _row_to_override(self, row: Any) -> ThresholdOverride:
@@ -224,11 +222,11 @@ class SqlThresholdRepository:
                     default_rule = create_tenant_default_budget_rule(tid)
                     ins = text("""
                         INSERT INTO threshold_rules (
-                            id, tenant_id, name, basis, threshold_type,
+                            id, tenant_id, name, basis, scope_type, scope_id,
                             warning_threshold, critical_threshold, is_enabled,
                             rule_payload, created_at, updated_at
                         ) VALUES (
-                            :id, :tid, :name, :basis, :threshold_type,
+                            :id, :tid, :name, :basis, :scope_type, :scope_id,
                             :warn, :crit, :enabled,
                             CAST(:payload AS jsonb), NOW(), NOW()
                         ) ON CONFLICT (id) DO NOTHING;
@@ -240,10 +238,11 @@ class SqlThresholdRepository:
                             "tid": tid,
                             "name": default_rule.name,
                             "basis": default_rule.basis.value,
-                            "threshold_type": default_rule.threshold_type.value,
-                            "warn": default_rule.warning_threshold,
-                            "crit": default_rule.critical_threshold,
-                            "enabled": default_rule.is_enabled,
+                            "scope_type": "TENANT",
+                            "scope_id": default_rule.scope_id,
+                            "warn": Decimal("90.0"),
+                            "crit": Decimal("100.0"),
+                            "enabled": True,
                             "payload": json.dumps(default_rule.model_dump(mode="json")),
                         },
                     )
@@ -317,9 +316,9 @@ class SqlThresholdRepository:
                         "tid": tid,
                         "rule_id": entity.rule_id,
                         "scope_id": entity.entity_id,
-                        "state": entity.state.value if hasattr(entity.state, "value") else str(entity.state),
-                        "cur": entity.current_value,
-                        "thresh": entity.threshold_percentage,
+                        "state": entity.committed_state.value if hasattr(entity.committed_state, "value") else str(entity.committed_state),
+                        "cur": float(entity.measured_value) if entity.measured_value is not None else 0.0,
+                        "thresh": 0.0,
                         "eval_at": entity.evaluated_at,
                         "payload": json.dumps(entity.model_dump(mode="json")),
                     },
@@ -381,21 +380,30 @@ class SqlThresholdRepository:
     def save_rule(self, rule: ThresholdRule, *, tenant_context: TenantContext) -> ThresholdRule:
         async def _save():
             tid = tenant_context.tenant_id
+            warn = Decimal("90.0")
+            crit = Decimal("100.0")
+            for b in rule.bands:
+                if b.state == ThresholdState.WARNING and b.upper_bound is not None:
+                    warn = b.upper_bound
+                elif b.state == ThresholdState.CRITICAL and b.lower_bound is not None:
+                    crit = b.lower_bound
+
             async with get_tenant_session(tid) as session:
                 query = text("""
                     INSERT INTO threshold_rules (
-                        id, tenant_id, name, basis, threshold_type,
+                        id, tenant_id, name, basis, scope_type, scope_id,
                         warning_threshold, critical_threshold, is_enabled,
                         rule_payload, created_at, updated_at
                     ) VALUES (
-                        :id, :tid, :name, :basis, :threshold_type,
+                        :id, :tid, :name, :basis, :scope_type, :scope_id,
                         :warn, :crit, :enabled,
                         CAST(:payload AS jsonb), NOW(), NOW()
                     )
                     ON CONFLICT (id) DO UPDATE SET
                         name = EXCLUDED.name,
                         basis = EXCLUDED.basis,
-                        threshold_type = EXCLUDED.threshold_type,
+                        scope_type = EXCLUDED.scope_type,
+                        scope_id = EXCLUDED.scope_id,
                         warning_threshold = EXCLUDED.warning_threshold,
                         critical_threshold = EXCLUDED.critical_threshold,
                         is_enabled = EXCLUDED.is_enabled,
@@ -408,11 +416,12 @@ class SqlThresholdRepository:
                         "id": rule.id,
                         "tid": tid,
                         "name": rule.name,
-                        "basis": rule.basis.value,
-                        "threshold_type": rule.threshold_type.value,
-                        "warn": rule.warning_threshold,
-                        "crit": rule.critical_threshold,
-                        "enabled": rule.is_enabled,
+                        "basis": rule.basis.value if hasattr(rule.basis, "value") else str(rule.basis),
+                        "scope_type": "SCOPE" if rule.scope_id else "TENANT",
+                        "scope_id": rule.scope_id,
+                        "warn": warn,
+                        "crit": crit,
+                        "enabled": True,
                         "payload": json.dumps(rule.model_dump(mode="json")),
                     },
                 )
@@ -440,8 +449,6 @@ class SqlThresholdRepository:
         tenant_context: TenantContext,
         basis: ThresholdBasis | None = None,
     ) -> list[ThresholdRule]:
-        self.ensure_tenant_default_rules(tenant_context=tenant_context)
-
         async def _list():
             tid = tenant_context.tenant_id
             sql = "SELECT * FROM threshold_rules WHERE tenant_id = :tid"

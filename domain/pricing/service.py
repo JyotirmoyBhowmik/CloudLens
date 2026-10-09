@@ -25,7 +25,7 @@ from domain.pricing.models import (
     ResolvedPriceQuote,
     UnknownSkuRecord,
 )
-from domain.pricing.repository import PricingRepository
+from domain.pricing.repository import PricingRepository, get_pricing_repository
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class PricingCatalogueService:
         repository: PricingRepository | None = None,
         enable_connector_lookups: bool = True,
     ) -> None:
-        self.repository = repository or PricingRepository(load_seed_data=True)
+        self.repository = repository or get_pricing_repository()
         self.enable_connector_lookups = enable_connector_lookups
         self._change_listeners: list[PricingChangeListener] = []
 

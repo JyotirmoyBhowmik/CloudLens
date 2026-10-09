@@ -130,7 +130,6 @@ class InMemoryThresholdRepository(TenantAwareRepository[ThresholdEvaluationResul
         basis: ThresholdBasis | None = None,
     ) -> builtins.list[ThresholdRule]:
         self._validate_tenant_context(tenant_context)
-        self.ensure_tenant_default_rules(tenant_context=tenant_context)
         rules = [r for (t_id, _), r in self._rules.items() if t_id == tenant_context.tenant_id]
         if basis is not None:
             rules = [r for r in rules if r.basis == basis]

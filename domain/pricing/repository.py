@@ -26,7 +26,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.models.exceptions import PricingSCDConflictException
 from domain.pricing.models import (
     DiscountInfo,
@@ -85,7 +85,7 @@ class PricingRepository(Protocol):
         ...
 
     def list_unknown_skus(
-        self, provider: str | None = None, tenant_id: str | None = None
+        self, provider: str | None = None, tenant_id: str | None = None, status: str | None = None
     ) -> list[UnknownSkuRecord]:
         ...
 
@@ -94,12 +94,29 @@ class PricingRepository(Protocol):
         provider: str | None = None,
         tenant_id: str | None = None,
         since: datetime | None = None,
+        sku: str | None = None,
     ) -> list[PricingChangeRecord]:
         ...
 
     def list_all_active(
         self, provider: str | None = None, tenant_id: str | None = None
     ) -> list[PricingRecord]:
+        ...
+
+    def list_catalog(
+        self,
+        provider: str | None = None,
+        service: str | None = None,
+        sku: str | None = None,
+        region: str | None = None,
+        dimension: str | None = None,
+        rate_type: Any | None = None,
+        effective_date: datetime | None = None,
+        include_historical: bool = False,
+        tenant_id: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[PricingRecord], int]:
         ...
 
 
@@ -111,18 +128,12 @@ class SqlPricingRepository:
     def __init__(self) -> None:
         pass
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_record(self, row: Any) -> PricingRecord:
         m = dict(row._mapping)
-        raw = m.get("record_payload")
+        raw = m.get("attributes") or m.get("record_payload")
         if isinstance(raw, str):
             raw = json.loads(raw)
         if isinstance(raw, dict) and "id" in raw:
@@ -134,18 +145,18 @@ class SqlPricingRepository:
             provider=m["provider"],
             service_sku=m.get("sku") or "default-sku",
             region=m["region"],
-            pricing_dimension=m["dimension"],
-            rate_type=RateType(m["rate_type"]),
-            unit_price=float(m["unit_rate"]),
+            pricing_dimension=m.get("pricing_dimension") or m.get("dimension") or "USAGE",
+            rate_type=RateType(m["rate_type"]) if m.get("rate_type") else RateType.LIST,
+            unit_price=float(m.get("rate") or m.get("unit_rate") or 0.0),
             currency=m.get("currency") or "USD",
-            effective_from=m["effective_start"],
-            effective_to=m.get("effective_end"),
-            is_active=bool(m.get("is_current", True)),
+            effective_from=m.get("effective_from") or m.get("effective_start") or datetime.now(UTC),
+            effective_to=m.get("effective_to") or m.get("effective_end"),
+            is_active=bool(m.get("is_active", m.get("is_current", True))),
         )
 
     def _row_to_change(self, row: Any) -> PricingChangeRecord:
         m = dict(row._mapping)
-        raw = m.get("record_payload")
+        raw = m.get("attributes") or m.get("record_payload")
         if isinstance(raw, str):
             raw = json.loads(raw)
         if isinstance(raw, dict) and "id" in raw:
@@ -155,19 +166,19 @@ class SqlPricingRepository:
             id=m["id"],
             tenant_id=m.get("tenant_id"),
             provider=m["provider"],
-            sku=m["sku"],
-            region=m["region"],
-            dimension="USAGE",
-            rate_type=RateType.LIST,
+            sku=m.get("sku") or "default-sku",
+            region=m.get("region") or "global",
+            dimension=m.get("pricing_dimension") or "USAGE",
+            rate_type=RateType(m["rate_type"]) if m.get("rate_type") else RateType.LIST,
             old_version=1,
             new_version=2,
-            old_unit_price=float(m["old_rate"]),
-            new_unit_price=float(m["new_rate"]),
-            price_delta=round(float(m["new_rate"]) - float(m["old_rate"]), 6),
-            percentage_change=float(m["percentage_change"]),
-            effective_date=m["effective_date"],
-            change_type=m["change_type"],
-            detected_at=m.get("created_at") or datetime.now(UTC),
+            old_unit_price=float(m["old_rate"]) if m.get("old_rate") is not None else 0.0,
+            new_unit_price=float(m["new_rate"]) if m.get("new_rate") is not None else 0.0,
+            price_delta=round(float(m.get("new_rate") or 0.0) - float(m.get("old_rate") or 0.0), 6),
+            percentage_change=float(m["percentage_change"]) if m.get("percentage_change") is not None else 0.0,
+            effective_date=m.get("changed_at") or m.get("effective_date") or datetime.now(UTC),
+            change_type=m.get("change_reason") or m.get("change_type") or "UPDATE",
+            detected_at=m.get("changed_at") or m.get("created_at") or datetime.now(UTC),
         )
 
     def add_or_update(
@@ -189,9 +200,9 @@ class SqlPricingRepository:
                       AND provider = :p
                       AND sku = :sku
                       AND region = :reg
-                      AND dimension = :dim
+                      AND pricing_dimension = :dim
                       AND rate_type = :rt
-                      AND is_current = TRUE
+                      AND is_active = TRUE
                     LIMIT 1;
                 """)
                 res = await session.execute(query, {"tid": tid, "p": p, "sku": sku, "reg": reg, "dim": dim, "rt": rt})
@@ -203,12 +214,12 @@ class SqlPricingRepository:
                     )
                     ins = text("""
                         INSERT INTO pricing_records (
-                            id, tenant_id, provider, sku, region, dimension,
-                            rate_type, currency, effective_start, effective_end,
-                            is_current, unit_rate, record_payload, created_at
+                            id, tenant_id, provider, sku, region, pricing_dimension,
+                            rate_type, currency, unit, effective_from, effective_to,
+                            is_active, rate, attributes, created_at
                         ) VALUES (
                             :id, :tid, :p, :sku, :reg, :dim,
-                            :rt, :cur, :eff_start, :eff_end,
+                            :rt, :cur, :unit, :eff_start, :eff_end,
                             :is_cur, :rate, CAST(:payload AS jsonb), NOW()
                         );
                     """)
@@ -223,6 +234,7 @@ class SqlPricingRepository:
                             "dim": dim,
                             "rt": rt,
                             "cur": stored_record.currency,
+                            "unit": getattr(stored_record, "unit", "Hour") or "Hour",
                             "eff_start": stored_record.effective_from,
                             "eff_end": stored_record.effective_to,
                             "is_cur": True,
@@ -242,7 +254,7 @@ class SqlPricingRepository:
                     refreshed = active_record.model_copy(update={"retrieved_at": record.retrieved_at})
                     upd = text("""
                         UPDATE pricing_records
-                        SET record_payload = CAST(:payload AS jsonb)
+                        SET attributes = CAST(:payload AS jsonb)
                         WHERE id = :id;
                     """)
                     await session.execute(upd, {"id": refreshed.id, "payload": json.dumps(refreshed.model_dump(mode="json"))})
@@ -259,7 +271,7 @@ class SqlPricingRepository:
                 await session.execute(
                     text("""
                         UPDATE pricing_records
-                        SET is_current = FALSE, effective_end = :end_dt
+                        SET is_active = FALSE, effective_to = :end_dt
                         WHERE id = :id;
                     """),
                     {"id": active_record.id, "end_dt": record.effective_from},
@@ -275,12 +287,12 @@ class SqlPricingRepository:
                 )
                 ins = text("""
                     INSERT INTO pricing_records (
-                        id, tenant_id, provider, sku, region, dimension,
-                        rate_type, currency, effective_start, effective_end,
-                        is_current, unit_rate, record_payload, created_at
+                        id, tenant_id, provider, sku, region, pricing_dimension,
+                        rate_type, currency, unit, effective_from, effective_to,
+                        is_active, rate, attributes, created_at
                     ) VALUES (
                         :id, :tid, :p, :sku, :reg, :dim,
-                        :rt, :cur, :eff_start, :eff_end,
+                        :rt, :cur, :unit, :eff_start, :eff_end,
                         :is_cur, :rate, CAST(:payload AS jsonb), NOW()
                     );
                 """)
@@ -295,6 +307,7 @@ class SqlPricingRepository:
                         "dim": dim,
                         "rt": rt,
                         "cur": new_record.currency,
+                        "unit": getattr(new_record, "unit", "Hour") or "Hour",
                         "eff_start": new_record.effective_from,
                         "eff_end": None,
                         "is_cur": True,
@@ -329,13 +342,13 @@ class SqlPricingRepository:
                 )
                 ins_change = text("""
                     INSERT INTO pricing_changes (
-                        id, tenant_id, provider, sku, region, effective_date,
-                        old_rate, new_rate, percentage_change, change_type,
-                        record_payload, created_at
+                        id, tenant_id, provider, sku, region, pricing_dimension,
+                        rate_type, old_rate, new_rate, percentage_change,
+                        changed_at, change_reason
                     ) VALUES (
-                        :id, :tid, :p, :sku, :reg, :eff_date,
-                        :old_r, :new_r, :pct, :ct,
-                        CAST(:payload AS jsonb), NOW()
+                        :id, :tid, :p, :sku, :reg, :dim,
+                        :rt, :old_r, :new_r, :pct,
+                        :changed_at, :reason
                     );
                 """)
                 await session.execute(
@@ -346,12 +359,13 @@ class SqlPricingRepository:
                         "p": p,
                         "sku": sku,
                         "reg": reg,
-                        "eff_date": change_record.effective_date,
+                        "dim": dim,
+                        "rt": rt,
                         "old_r": change_record.old_unit_price,
                         "new_r": change_record.new_unit_price,
                         "pct": change_record.percentage_change,
-                        "ct": change_type,
-                        "payload": json.dumps(change_record.model_dump(mode="json")),
+                        "changed_at": change_record.effective_date,
+                        "reason": change_type,
                     },
                 )
 
@@ -383,9 +397,9 @@ class SqlPricingRepository:
                       AND provider = :p
                       AND sku = :s
                       AND region = :reg
-                      AND dimension = :dim
+                      AND pricing_dimension = :dim
                       AND rate_type = :rt
-                      AND is_current = TRUE
+                      AND is_active = TRUE
                     ORDER BY tenant_id NULLS LAST
                     LIMIT 1;
                 """)
@@ -419,11 +433,11 @@ class SqlPricingRepository:
                       AND provider = :p
                       AND sku = :s
                       AND region = :reg
-                      AND dimension = :dim
+                      AND pricing_dimension = :dim
                       AND rate_type = :rt
-                      AND effective_start <= :ts
-                      AND (effective_end IS NULL OR effective_end > :ts)
-                    ORDER BY tenant_id NULLS LAST, effective_start DESC
+                      AND effective_from <= :ts
+                      AND (effective_to IS NULL OR effective_to > :ts)
+                    ORDER BY tenant_id NULLS LAST, effective_from DESC
                     LIMIT 1;
                 """)
                 res = await session.execute(query, {"tid": tenant_id, "p": p, "s": s, "reg": reg, "dim": dim, "rt": rt, "ts": timestamp})
@@ -469,7 +483,7 @@ class SqlPricingRepository:
         return self._run_async(_record())
 
     def list_unknown_skus(
-        self, provider: str | None = None, tenant_id: str | None = None
+        self, provider: str | None = None, tenant_id: str | None = None, status: str | None = None
     ) -> list[UnknownSkuRecord]:
         async def _list():
             async with get_tenant_session(tenant_id or "system") as session:
@@ -502,6 +516,7 @@ class SqlPricingRepository:
         provider: str | None = None,
         tenant_id: str | None = None,
         since: datetime | None = None,
+        sku: str | None = None,
     ) -> list[PricingChangeRecord]:
         async def _changes():
             sql = "SELECT * FROM pricing_changes WHERE 1=1"
@@ -512,10 +527,13 @@ class SqlPricingRepository:
             if provider:
                 sql += " AND provider = :p"
                 params["p"] = provider.strip().lower()
+            if sku:
+                sql += " AND sku = :sku"
+                params["sku"] = sku.strip()
             if since:
-                sql += " AND created_at >= :since"
+                sql += " AND changed_at >= :since"
                 params["since"] = since
-            sql += " ORDER BY created_at DESC;"
+            sql += " ORDER BY changed_at DESC;"
 
             async with get_tenant_session(tenant_id) as session:
                 res = await session.execute(text(sql), params)
@@ -527,7 +545,7 @@ class SqlPricingRepository:
         self, provider: str | None = None, tenant_id: str | None = None
     ) -> list[PricingRecord]:
         async def _all():
-            sql = "SELECT * FROM pricing_records WHERE is_current = TRUE"
+            sql = "SELECT * FROM pricing_records WHERE is_active = TRUE"
             params: dict[str, Any] = {}
             if tenant_id:
                 sql += " AND (tenant_id = :tid OR tenant_id IS NULL)"
@@ -542,6 +560,59 @@ class SqlPricingRepository:
                 return [self._row_to_record(r) for r in res.fetchall()]
 
         return self._run_async(_all())
+
+    def list_catalog(
+        self,
+        provider: str | None = None,
+        service: str | None = None,
+        sku: str | None = None,
+        region: str | None = None,
+        dimension: str | None = None,
+        rate_type: Any | None = None,
+        effective_date: datetime | None = None,
+        include_historical: bool = False,
+        tenant_id: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[PricingRecord], int]:
+        async def _query():
+            sql = "SELECT * FROM pricing_records WHERE 1=1"
+            params: dict[str, Any] = {}
+            if not include_historical:
+                sql += " AND is_active = TRUE"
+            if tenant_id:
+                sql += " AND (tenant_id = :tid OR tenant_id IS NULL)"
+                params["tid"] = tenant_id
+            if provider:
+                sql += " AND LOWER(provider) = :p"
+                params["p"] = provider.strip().lower()
+            if service:
+                sql += " AND LOWER(attributes->>'service_name') = :s"
+                params["s"] = service.strip().lower()
+            if sku:
+                sql += " AND LOWER(sku) = :sku"
+                params["sku"] = sku.strip().lower()
+            if region:
+                sql += " AND LOWER(region) = :reg"
+                params["reg"] = region.strip().lower()
+            if dimension:
+                sql += " AND LOWER(pricing_dimension) = :dim"
+                params["dim"] = dimension.strip().lower()
+            if rate_type:
+                sql += " AND rate_type = :rt"
+                params["rt"] = rate_type.value if hasattr(rate_type, "value") else str(rate_type)
+
+            sql += " ORDER BY created_at DESC;"
+
+            async with get_tenant_session(tenant_id) as session:
+                res = await session.execute(text(sql), params)
+                all_records = [self._row_to_record(r) for r in res.fetchall()]
+                total = len(all_records)
+                offset = (page - 1) * page_size
+                paginated = all_records[offset : offset + page_size]
+                return paginated, total
+
+        return self._run_async(_query())
 
 
 _pricing_repository: Any = None

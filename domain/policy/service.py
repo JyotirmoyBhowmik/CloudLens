@@ -79,8 +79,7 @@ class PolicyService:
         enabled_only: bool = False,
         category: PolicyCategory | None = None,
     ) -> list[PolicyDefinition]:
-        """Lists policies, seeding defaults if tenant has no policies yet."""
-        self.ensure_default_policies_seeded(tenant_context=tenant_context)
+        """Lists policies for tenant."""
         return self.repo.list_policies(
             tenant_context=tenant_context,
             enabled_only=enabled_only,
@@ -89,7 +88,6 @@ class PolicyService:
 
     def get_policy(self, policy_id: str, *, tenant_context: TenantContext) -> PolicyDefinition:
         """Retrieves a policy by ID, raising PolicyNotFoundException if missing."""
-        self.ensure_default_policies_seeded(tenant_context=tenant_context)
         policy = self.repo.get_policy(policy_id, tenant_context=tenant_context)
         if not policy:
             raise PolicyNotFoundException(policy_id)

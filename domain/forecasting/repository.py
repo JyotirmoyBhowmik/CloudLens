@@ -24,7 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.forecasting.models import (
     ForecastEntity,
     ForecastMilestoneSnapshot,
@@ -108,14 +108,8 @@ class SqlForecastRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_forecast(self, row: Any) -> ForecastEntity:
         m = dict(row._mapping)
@@ -174,12 +168,12 @@ class SqlForecastRepository:
             period_start=date(2026, 1, 1),
             period_end=date(2026, 1, 31),
             checkpoint_date=date(2026, 1, 15),
-            actual_spend_to_date=float(m["actual_spend_to_date"]),
-            projected_period_close=float(m["projected_period_close"]),
-            variance_amount=float(m["variance_amount"]),
-            percentage_error=float(m["variance_pct"]),
-            bias_direction=BiasDirection(m["bias_direction"]),
-            recorded_at=m.get("evaluated_at") or datetime.now(),
+            actual_spend_to_date=float(m.get("actual_spend") or m.get("actual_spend_to_date") or 0.0),
+            projected_period_close=float(m.get("predicted_spend") or m.get("projected_period_close") or 0.0),
+            variance_amount=float(m.get("variance_amount") or 0.0),
+            percentage_error=float(m.get("variance_pct") or 0.0),
+            bias_direction=BiasDirection(m.get("bias_direction") or "BALANCED"),
+            recorded_at=m.get("recorded_at") or m.get("evaluated_at") or datetime.now(),
         )
 
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> ForecastEntity | None:
@@ -420,7 +414,7 @@ class SqlForecastRepository:
             if scope_id:
                 sql += " AND scope_id = :sid"
                 params["sid"] = scope_id
-            sql += " ORDER BY evaluated_at ASC;"
+            sql += " ORDER BY recorded_at ASC;"
 
             async with get_tenant_session(tid) as session:
                 res = await session.execute(text(sql), params)

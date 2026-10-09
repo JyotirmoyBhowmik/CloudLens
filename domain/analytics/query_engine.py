@@ -86,17 +86,25 @@ class AnalyticsQueryEngine:
         # Dimension mappings: e.g. BusinessUnitKey -> BusinessUnitName
         bu_map: dict[str, str] = {}
         for r in dimensions.get("DimBusinessUnit", []):
-            k = getattr(r, "BusinessUnitKey", None) or r.get("BusinessUnitKey")
-            name = getattr(r, "BusinessUnitName", None) or r.get("BusinessUnitName")
+            if isinstance(r, dict):
+                k = r.get("BusinessUnitKey")
+                name = r.get("BusinessUnitName")
+            else:
+                k = getattr(r, "BusinessUnitKey", None)
+                name = getattr(r, "BusinessUnitName", None)
             if k and name:
-                bu_map[k] = name
+                bu_map[str(k)] = str(name)
 
         svc_map: dict[str, str] = {}
         for r in dimensions.get("DimService", []):
-            k = getattr(r, "ServiceKey", None) or r.get("ServiceKey")
-            name = getattr(r, "ServiceName", None) or r.get("ServiceName")
+            if isinstance(r, dict):
+                k = r.get("ServiceKey")
+                name = r.get("ServiceName")
+            else:
+                k = getattr(r, "ServiceKey", None)
+                name = getattr(r, "ServiceName", None)
             if k and name:
-                svc_map[k] = name
+                svc_map[str(k)] = str(name)
 
         # Filter facts
         filtered_facts: list[FactCostAndUsageRecord] = []

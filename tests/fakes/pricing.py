@@ -207,7 +207,7 @@ class InMemoryPricingRepository:
         return new_rec
 
     def list_unknown_skus(
-        self, provider: str | None = None, tenant_id: str | None = None
+        self, provider: str | None = None, tenant_id: str | None = None, status: str | None = None
     ) -> list[UnknownSkuRecord]:
         return [
             rec
@@ -221,6 +221,7 @@ class InMemoryPricingRepository:
         provider: str | None = None,
         tenant_id: str | None = None,
         since: datetime | None = None,
+        sku: str | None = None,
     ) -> list[PricingChangeRecord]:
         return [
             c
@@ -228,6 +229,7 @@ class InMemoryPricingRepository:
             if (provider is None or c.provider == provider.strip().lower())
             and (tenant_id is None or c.tenant_id == tenant_id)
             and (since is None or c.detected_at >= since)
+            and (sku is None or c.sku == sku)
         ]
 
     def list_all_active(
@@ -240,6 +242,33 @@ class InMemoryPricingRepository:
             and (provider is None or r.provider == provider.strip().lower())
             and (tenant_id is None or r.tenant_id == tenant_id)
         ]
+
+    def list_catalog(
+        self,
+        provider: str | None = None,
+        service: str | None = None,
+        sku: str | None = None,
+        region: str | None = None,
+        dimension: str | None = None,
+        rate_type: Any | None = None,
+        effective_date: datetime | None = None,
+        include_historical: bool = False,
+        tenant_id: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[PricingRecord], int]:
+        all_rec = [
+            r for r in self._records.values()
+            if (include_historical or r.is_active)
+            and (provider is None or r.provider.lower() == provider.lower())
+            and (service is None or (r.service_name and r.service_name.lower() == service.lower()))
+            and (sku is None or r.service_sku.lower() == sku.lower())
+            and (region is None or r.region.lower() == region.lower())
+            and (tenant_id is None or r.tenant_id == tenant_id)
+        ]
+        total = len(all_rec)
+        offset = (page - 1) * page_size
+        return all_rec[offset : offset + page_size], total
 
     def _load_seed_catalog(self) -> None:
         pass

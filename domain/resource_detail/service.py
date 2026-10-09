@@ -1570,7 +1570,7 @@ class ResourceDetailService:
     ) -> CostExplorerResponse:
         """Executes multi-dimensional cost exploration with grouping, filtering, and time granularity."""
         # 1. Fetch all inventory resources from hierarchy service
-        all_resources = self._hierarchy_service.get_all_resources()
+        all_resources = self._hierarchy_service.get_all_resources(tenant_context=tenant_context)
 
         # 2. Filter resources by tenant scope grants and query filters
         filtered_resources = []
@@ -1771,8 +1771,21 @@ class ResourceDetailService:
         if tenant_context.roles and "RESTRICTED_VIEWER" in tenant_context.roles:  # no-hardcode-allow: reason="Restricted viewer role permission boundary check", reviewer="Prompt-48-Audit"
             raise FinancialDetailAccessDeniedException()
 
-        # 2. Filter seeded lines by scope / group
-        lines = list(self._charge_lines_store)
+        # 2. Check if tenant has any resources in hierarchy
+        all_resources = self._hierarchy_service.get_all_resources(tenant_context=tenant_context)
+        if not all_resources:
+            return ChargeLinesResponse(
+                total_count=0,
+                limit=limit,
+                offset=offset,
+                total_amount=Decimal("0.00"),
+                currency="USD",
+                items=[],
+            )
+
+        # 3. Filter lines by tenant resources and scope / group
+        resource_ids = {r.id for r in all_resources}
+        lines = [line for line in self._charge_lines_store if line.resource_id in resource_ids]
 
         if dimension and group_id and group_id != "ALL":
             lines = [
@@ -1992,7 +2005,7 @@ class ResourceDetailService:
         tenant_context: TenantContext,
     ) -> RuntimeEstateOverview:
         """Returns estate-wide runtime schedule adherence, excess hours, and valuations."""
-        all_resources = self._hierarchy_service.get_all_resources()
+        all_resources = self._hierarchy_service.get_all_resources(tenant_context=tenant_context)
         managed_count = 0
         compliant_count = 0
         out_of_schedule_count = 0

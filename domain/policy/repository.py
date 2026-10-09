@@ -282,42 +282,13 @@ class SqlPolicyRepository:
             res = await sess.execute(text(sql), params)
             rows = res.fetchall()
 
-            # If tenant has no custom policies, seed definitions from master data
-            if not rows:
-                from masterdata.service import get_master_data_service
-                md_service = get_master_data_service()
-                md_records = md_service.list_records("POLICY", tenant_id=tenant_context.tenant_id)
-                if md_records:
-                    seeded: list[PolicyDefinition] = []
-                    for rec in md_records:
-                        attrs = rec.attributes
-                        pol = PolicyDefinition(
-                            id=rec.code,
-                            name=rec.display_name,
-                            description=rec.description,
-                            rule_type=attrs.get("rule_type", "CUSTOM"),
-                            category=PolicyCategory(attrs.get("category", "COST_OPTIMIZATION")),
-                            severity=PolicySeverity(attrs.get("severity", "MEDIUM")),
-                            parameters=attrs.get("parameters", {}),
-                            enabled=attrs.get("enabled", True),
-                            version=1,
-                        )
-                        await self.save_policy_async(pol, tenant_context=tenant_context)
-                        seeded.append(pol)
-                    rows_seeded = seeded
-                    if enabled_only:
-                        rows_seeded = [p for p in rows_seeded if p.enabled]
-                    if category:
-                        rows_seeded = [p for p in rows_seeded if p.category == category]
-                    rows_seeded.sort(key=lambda p: (not p.enabled, p.id))
-                    return rows_seeded
-
             results = [self._row_to_policy(r) for r in rows]
             if enabled_only:
                 results = [p for p in results if p.enabled]
             if category:
                 results = [p for p in results if p.category == category]
             results.sort(key=lambda p: (not p.enabled, p.id))
+            return results
             return results
 
     def list_policies(

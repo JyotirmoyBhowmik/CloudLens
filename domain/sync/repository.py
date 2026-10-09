@@ -23,7 +23,7 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.models.enums import (
     ConnectorCapability,
     ProviderType,
@@ -44,14 +44,8 @@ class SqlSyncJobRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_job(self, row: Any) -> SyncJob:
         conn_type_val = row[2]
@@ -448,14 +442,8 @@ class SqlQuarantineRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_record(self, row: Any) -> QuarantineRecord:
         cap_val = row[4]
@@ -666,14 +654,8 @@ class SqlConnectorScheduleRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_schedule(self, row: Any) -> ConnectorSchedule:
         cap_val = row[3]
@@ -914,14 +896,8 @@ class SqlFirstSyncProgressRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_report(self, row: Any) -> FirstSyncProgressReport:
         raw_stages = row[6] or []

@@ -36,6 +36,21 @@ from domain.resource_detail.service import (
 from domain.tenant.context import TenantContext
 
 
+@pytest.fixture(autouse=True)
+def setup_test_repository():
+    from domain.hierarchy.repository import reset_hierarchy_repository
+    from domain.hierarchy.service import reset_hierarchy_service
+    from tests.fakes.hierarchy import InMemoryHierarchyRepository, seed_test_hierarchy
+
+    fake_repo = InMemoryHierarchyRepository()
+    reset_hierarchy_repository(fake_repo)
+    reset_hierarchy_service()
+    seed_test_hierarchy(fake_repo, "default-tenant")
+    yield
+    reset_hierarchy_service()
+    reset_hierarchy_repository()
+
+
 @pytest.fixture
 def service() -> ResourceDetailService:
     return get_resource_detail_service()
@@ -72,6 +87,17 @@ def restricted_viewer_context() -> TenantContext:
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def test_headers(make_auth_token) -> dict[str, str]:
+    token = make_auth_token(
+        tenant_id="default-tenant",
+        user_id="admin",
+        roles=["SUPERUSER"],
+        permissions=["*"],
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 
 # ==============================================================================
@@ -371,9 +397,9 @@ def test_scope_masking_discipline_raises_not_found(
 # ==============================================================================
 
 
-def test_api_get_resource_detail_success(client: TestClient):
+def test_api_get_resource_detail_success(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/{id} endpoint."""
-    resp = client.get("/api/v1/resource-detail/res-aws-vm-01")
+    resp = client.get("/api/v1/resource-detail/res-aws-vm-01", headers=test_headers)
     assert resp.status_code == 200
     data = resp.json()
 
@@ -384,13 +410,13 @@ def test_api_get_resource_detail_success(client: TestClient):
     assert data["fifteen_questions"]["q1_what_it_is"]
 
 
-def test_api_get_resource_detail_not_found(client: TestClient):
+def test_api_get_resource_detail_not_found(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/{id} for non-existent resource returns 404."""
-    resp = client.get("/api/v1/resource-detail/res-non-existent-999")
+    resp = client.get("/api/v1/resource-detail/res-non-existent-999", headers=test_headers)
     assert resp.status_code == 404
 
 
-def test_api_post_explorer_success(client: TestClient):
+def test_api_post_explorer_success(client: TestClient, test_headers: dict[str, str]):
     """Tests POST /api/v1/resource-detail/explorer endpoint."""
     payload = {
         "dimension": "SERVICE",
@@ -398,7 +424,7 @@ def test_api_post_explorer_success(client: TestClient):
         "comparison_period": "POP",
         "filters": {},
     }
-    resp = client.post("/api/v1/resource-detail/explorer", json=payload)
+    resp = client.post("/api/v1/resource-detail/explorer", json=payload, headers=test_headers)
     assert resp.status_code == 200
     data = resp.json()
 
@@ -407,9 +433,9 @@ def test_api_post_explorer_success(client: TestClient):
     assert float(data["total_spend"]) > 0.0
 
 
-def test_api_get_charge_lines_success(client: TestClient):
+def test_api_get_charge_lines_success(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/explorer/charge-lines endpoint."""
-    resp = client.get("/api/v1/resource-detail/explorer/charge-lines?group_id=res-aws-vm-01")
+    resp = client.get("/api/v1/resource-detail/explorer/charge-lines?group_id=res-aws-vm-01", headers=test_headers)
     assert resp.status_code == 200
     data = resp.json()
 
@@ -417,9 +443,9 @@ def test_api_get_charge_lines_success(client: TestClient):
     assert len(data["items"]) == 4
 
 
-def test_api_investigate_cost_increase_success(client: TestClient):
+def test_api_investigate_cost_increase_success(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/investigate/{entity_id} endpoint."""
-    resp = client.get("/api/v1/resource-detail/investigate/res-aws-rds-01")
+    resp = client.get("/api/v1/resource-detail/investigate/res-aws-rds-01", headers=test_headers)
     assert resp.status_code == 200
     data = resp.json()
 
@@ -428,9 +454,9 @@ def test_api_investigate_cost_increase_success(client: TestClient):
     assert len(data["daily_series"]) == 7
 
 
-def test_api_runtime_overview_success(client: TestClient):
+def test_api_runtime_overview_success(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/runtime-overview endpoint."""
-    resp = client.get("/api/v1/resource-detail/runtime-overview")
+    resp = client.get("/api/v1/resource-detail/runtime-overview", headers=test_headers)
     assert resp.status_code == 200
     data = resp.json()
 

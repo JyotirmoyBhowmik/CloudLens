@@ -24,7 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.cost.models import ConvertedCostFigure, CostPresentationBasis, CurrencyExchangeRate
 from domain.models.exceptions import CurrencyConversionException
 
@@ -66,14 +66,8 @@ class SqlCurrencyConversionService:
     def __init__(self) -> None:
         self._seed_default_rates_if_needed()
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _seed_default_rates_if_needed(self) -> None:
         async def _seed():

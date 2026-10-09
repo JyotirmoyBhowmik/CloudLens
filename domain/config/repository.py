@@ -19,7 +19,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.config.tenant_settings import TenantSettings
 
 logger = logging.getLogger("cloudlens.domain.config.repository")
@@ -125,16 +125,8 @@ class SqlTenantSettingsRepository:
         updated = TenantSettings.model_validate(current_data)
         return await self.save(updated, session=session)
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        # When running inside active event loop from sync context
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def get_sync(self, tenant_id: str) -> TenantSettings:
         return self._run_async(self.get(tenant_id))

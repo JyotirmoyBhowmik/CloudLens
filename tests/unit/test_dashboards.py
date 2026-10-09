@@ -30,6 +30,24 @@ from domain.dashboards.vocabulary import (
 from domain.tenant.context import TenantContext
 
 
+@pytest.fixture(autouse=True)
+def setup_test_repository():
+    from domain.dashboards.service import reset_dashboard_service
+    from domain.hierarchy.repository import reset_hierarchy_repository
+    from domain.hierarchy.service import reset_hierarchy_service
+    from tests.fakes.hierarchy import InMemoryHierarchyRepository, seed_test_hierarchy
+
+    fake_repo = InMemoryHierarchyRepository()
+    reset_hierarchy_repository(fake_repo)
+    reset_hierarchy_service()
+    reset_dashboard_service()
+    seed_test_hierarchy(fake_repo, "tenant-acme-corp")
+    yield
+    reset_dashboard_service()
+    reset_hierarchy_service()
+    reset_hierarchy_repository()
+
+
 @pytest.fixture
 def test_tenant_context() -> TenantContext:
     """Standard authorized tenant context with wildcard scope."""
@@ -60,6 +78,17 @@ def dashboard_service() -> DashboardService:
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def test_headers(make_auth_token) -> dict[str, str]:
+    token = make_auth_token(
+        tenant_id="tenant-acme-corp",
+        user_id="usr-test-executive",
+        roles=["EXECUTIVE"],
+        permissions=["*"],
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 
 # ==============================================================================
@@ -418,14 +447,8 @@ class TestWidgetDataExport:
 class TestDashboardAPIContracts:
     """End-to-end HTTP contract tests with FastAPI TestClient."""
 
-    def test_api_executive_dashboard(self, client: TestClient) -> None:
-        headers = {
-            "X-Tenant-ID": "tenant-acme-corp",
-            "X-User-ID": "usr-test-executive",
-            "X-User-Roles": "EXECUTIVE",
-            "X-Scope-Grants": "*",
-        }
-        res = client.get("/api/v1/dashboards/executive?period_id=2026-09", headers=headers)
+    def test_api_executive_dashboard(self, client: TestClient, test_headers: dict[str, str]) -> None:
+        res = client.get("/api/v1/dashboards/executive?period_id=2026-09", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
         assert "total_cloud_cost" in data
@@ -433,28 +456,16 @@ class TestDashboardAPIContracts:
         assert float(data["total_cloud_cost"]["amount"]) > 0
         assert float(data["cost_by_provider"]["items"][0]["cost"]) > 0
 
-    def test_api_provider_dashboard_native_terms(self, client: TestClient) -> None:
-        headers = {
-            "X-Tenant-ID": "tenant-acme-corp",
-            "X-User-ID": "usr-test-executive",
-            "X-User-Roles": "EXECUTIVE",
-            "X-Scope-Grants": "*",
-        }
-        res = client.get("/api/v1/dashboards/providers/azure", headers=headers)
+    def test_api_provider_dashboard_native_terms(self, client: TestClient, test_headers: dict[str, str]) -> None:
+        res = client.get("/api/v1/dashboards/providers/azure", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
         assert data["provider"] == "azure"
         assert data["native_group_term"] == "Management Groups"
         assert data["native_account_term"] == "Subscriptions"
 
-    def test_api_service_dashboard_sixteen_panels(self, client: TestClient) -> None:
-        headers = {
-            "X-Tenant-ID": "tenant-acme-corp",
-            "X-User-ID": "usr-test-executive",
-            "X-User-Roles": "EXECUTIVE",
-            "X-Scope-Grants": "*",
-        }
-        res = client.get("/api/v1/dashboards/services/AmazonEC2", headers=headers)
+    def test_api_service_dashboard_sixteen_panels(self, client: TestClient, test_headers: dict[str, str]) -> None:
+        res = client.get("/api/v1/dashboards/services/AmazonEC2", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
         assert data["service_code"] == "AmazonEC2"
@@ -463,16 +474,10 @@ class TestDashboardAPIContracts:
         assert len(data["pricing_units"]) >= 2
         assert data["pricing_source_badge"] == "OFFICIAL_PROVIDER_RATECARD"
 
-    def test_api_widget_export_csv_and_json(self, client: TestClient) -> None:
-        headers = {
-            "X-Tenant-ID": "tenant-acme-corp",
-            "X-User-ID": "usr-test-executive",
-            "X-User-Roles": "EXECUTIVE",
-            "X-Scope-Grants": "*",
-        }
+    def test_api_widget_export_csv_and_json(self, client: TestClient, test_headers: dict[str, str]) -> None:
         # CSV
         res_csv = client.get(
-            "/api/v1/dashboards/export/w_cost_by_provider?format=CSV", headers=headers
+            "/api/v1/dashboards/export/w_cost_by_provider?format=CSV", headers=test_headers
         )
         assert res_csv.status_code == 200
         assert "text/csv" in res_csv.headers["content-type"]
@@ -480,7 +485,7 @@ class TestDashboardAPIContracts:
 
         # JSON
         res_json = client.get(
-            "/api/v1/dashboards/export/w_cost_by_provider?format=JSON", headers=headers
+            "/api/v1/dashboards/export/w_cost_by_provider?format=JSON", headers=test_headers
         )
         assert res_json.status_code == 200
         assert "application/json" in res_json.headers["content-type"]

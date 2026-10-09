@@ -762,7 +762,7 @@ async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthM
     user_email = tenant_context.email or tenant_context.user_id
     display_name = (
         user_email.split("@")[0].replace(".", " ").title()
-        if "@" in user_email
+        if "@" in user_email  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
         else user_email
     )
 
@@ -889,7 +889,7 @@ def get_session_state(
         else "OIDC"
     )
     email = tenant_context.email or tenant_context.user_id
-    display_name = email.split("@")[0].capitalize() if "@" in email else email
+    display_name = email.split("@")[0].capitalize() if "@" in email else email  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
 
     return SessionStateResponse(
         user_id=tenant_context.user_id,

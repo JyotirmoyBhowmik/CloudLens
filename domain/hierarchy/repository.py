@@ -33,10 +33,10 @@ class HierarchyRepository(Protocol):
         self, resource: InventoryResource35, *, tenant_context: TenantContext
     ) -> InventoryResource35: ...
     def get_resource(
-        self, resource_id: str, *, tenant_context: TenantContext
+        self, resource_id: str, *, tenant_context: TenantContext | None = None
     ) -> InventoryResource35 | None: ...
     def list_resources(
-        self, *, tenant_context: TenantContext, limit: int = 1000
+        self, *, tenant_context: TenantContext | None = None, limit: int = 1000
     ) -> builtins.list[InventoryResource35]: ...
     def delete_resource(self, resource_id: str, *, tenant_context: TenantContext) -> bool: ...
     def save_saved_view(
@@ -143,36 +143,56 @@ class SqlHierarchyRepository:
         return self._run_async(self.save_resource_async(resource, tenant_context=tenant_context))
 
     async def get_resource_async(
-        self, resource_id: str, *, tenant_context: TenantContext
+        self, resource_id: str, *, tenant_context: TenantContext | None = None
     ) -> InventoryResource35 | None:
-        async with get_tenant_session(tenant_context.tenant_id) as sess:
-            res = await sess.execute(
-                text("SELECT * FROM resources WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
-                {"id": resource_id, "tid": tenant_context.tenant_id},
-            )
-            row = res.fetchone()
-            if not row:
-                return None
-            return self._row_to_resource(row)
+        if tenant_context:
+            async with get_tenant_session(tenant_context.tenant_id) as sess:
+                res = await sess.execute(
+                    text("SELECT * FROM resources WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                    {"id": resource_id, "tid": tenant_context.tenant_id},
+                )
+                row = res.fetchone()
+                if not row:
+                    return None
+                return self._row_to_resource(row)
+        else:
+            async with get_tenant_session(None) as sess:
+                res = await sess.execute(
+                    text("SELECT * FROM resources WHERE id = :id LIMIT 1;"),
+                    {"id": resource_id},
+                )
+                row = res.fetchone()
+                if not row:
+                    return None
+                return self._row_to_resource(row)
 
     def get_resource(
-        self, resource_id: str, *, tenant_context: TenantContext
+        self, resource_id: str, *, tenant_context: TenantContext | None = None
     ) -> InventoryResource35 | None:
         return self._run_async(self.get_resource_async(resource_id, tenant_context=tenant_context))
 
     async def list_resources_async(
-        self, *, tenant_context: TenantContext, limit: int = 1000
+        self, *, tenant_context: TenantContext | None = None, limit: int = 1000
     ) -> builtins.list[InventoryResource35]:
-        async with get_tenant_session(tenant_context.tenant_id) as sess:
-            res = await sess.execute(
-                text("SELECT * FROM resources WHERE tenant_id = :tid ORDER BY created_at DESC LIMIT :limit;"),
-                {"tid": tenant_context.tenant_id, "limit": limit},
-            )
-            rows = res.fetchall()
-            return [self._row_to_resource(r) for r in rows]
+        if tenant_context:
+            async with get_tenant_session(tenant_context.tenant_id) as sess:
+                res = await sess.execute(
+                    text("SELECT * FROM resources WHERE tenant_id = :tid ORDER BY created_at DESC LIMIT :limit;"),
+                    {"tid": tenant_context.tenant_id, "limit": limit},
+                )
+                rows = res.fetchall()
+                return [self._row_to_resource(r) for r in rows]
+        else:
+            async with get_tenant_session(None) as sess:
+                res = await sess.execute(
+                    text("SELECT * FROM resources ORDER BY created_at DESC LIMIT :limit;"),
+                    {"limit": limit},
+                )
+                rows = res.fetchall()
+                return [self._row_to_resource(r) for r in rows]
 
     def list_resources(
-        self, *, tenant_context: TenantContext, limit: int = 1000
+        self, *, tenant_context: TenantContext | None = None, limit: int = 1000
     ) -> builtins.list[InventoryResource35]:
         return self._run_async(self.list_resources_async(tenant_context=tenant_context, limit=limit))
 

@@ -70,6 +70,7 @@ class WorkflowRepository(Protocol):
         tenant_context: TenantContext,
         delegator_id: str | None = None,
         delegatee_id: str | None = None,
+        user_id: str | None = None,
     ) -> list[DelegationRule]: ...
     def delete_delegation(self, delegation_id: str, *, tenant_context: TenantContext) -> bool: ...
 
@@ -368,13 +369,15 @@ class SqlWorkflowRepository:
         tenant_context: TenantContext,
         delegator_id: str | None = None,
         delegatee_id: str | None = None,
+        user_id: str | None = None,
     ) -> list[DelegationRule]:
+        eff_del = delegator_id or user_id
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             sql = "SELECT * FROM workflow_delegations WHERE tenant_id = :tid"
             params: dict[str, Any] = {"tid": tenant_context.tenant_id}
-            if delegator_id:
+            if eff_del:
                 sql += " AND delegator_id = :del"
-                params["del"] = delegator_id
+                params["del"] = eff_del
             if delegatee_id:
                 sql += " AND delegatee_id = :dee"
                 params["dee"] = delegatee_id
@@ -389,10 +392,14 @@ class SqlWorkflowRepository:
         tenant_context: TenantContext,
         delegator_id: str | None = None,
         delegatee_id: str | None = None,
+        user_id: str | None = None,
     ) -> list[DelegationRule]:
         return self._run_async(
             self.list_delegations_async(
-                tenant_context=tenant_context, delegator_id=delegator_id, delegatee_id=delegatee_id
+                tenant_context=tenant_context,
+                delegator_id=delegator_id,
+                delegatee_id=delegatee_id,
+                user_id=user_id,
             )
         )
 

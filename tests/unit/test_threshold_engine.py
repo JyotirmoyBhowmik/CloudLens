@@ -699,12 +699,30 @@ class TestThresholdPreviewCapability:
 class TestThresholdAPIContracts:
     """Verifies FastAPI endpoints for API-035, API-036, overrides, and evaluation."""
 
-    def test_api_035_list_threshold_rules(self) -> None:
+    @pytest.fixture
+    def auth_headers(self) -> dict[str, str]:
+        from domain.identity.service import get_identity_service
+        token = get_identity_service().token_engine.issue_access_token(
+            user_id="usr-api-01",
+            tenant_id="tenant-api-01",
+            email="api01@cloudlens.internal",
+            session_id="sess-test-threshold",
+            token_family_id="fam-test-threshold",
+            roles=["ADMIN"],
+            permissions=["*"],
+            ttl_seconds=3600,
+        )
+        return {"Authorization": f"Bearer {token}", "X-Tenant-ID": "tenant-api-01"}
+
+    def test_api_035_list_threshold_rules(self, auth_headers: dict[str, str]) -> None:
         """API-035: GET /api/v1/thresholds returns configured threshold rules."""
         client = TestClient(app)
+        get_threshold_service().repository.ensure_tenant_default_rules(
+            tenant_context=TenantContext(tenant_id="tenant-api-01")
+        )
         response = client.get(
             "/api/v1/thresholds",
-            headers={"X-Tenant-ID": "tenant-api-01"},
+            headers=auth_headers,
         )
         assert response.status_code == 200
         data = response.json()
@@ -712,7 +730,7 @@ class TestThresholdAPIContracts:
         assert "total" in data
         assert data["total"] >= 1  # Auto-seeded default rule exists
 
-    def test_api_036_create_threshold_rule(self) -> None:
+    def test_api_036_create_threshold_rule(self, auth_headers: dict[str, str]) -> None:
         """API-036: POST /api/v1/thresholds creates rule with validated bands."""
         client = TestClient(app)
         payload = {
@@ -744,14 +762,14 @@ class TestThresholdAPIContracts:
         response = client.post(
             "/api/v1/thresholds",
             json=payload,
-            headers={"X-Tenant-ID": "tenant-api-01"},
+            headers=auth_headers,
         )
         assert response.status_code == 201
         created = response.json()
         assert created["name"] == "Production CPU Absolute Limit"
         assert len(created["bands"]) == 3
 
-    def test_api_036_rejects_overlapping_bands(self) -> None:
+    def test_api_036_rejects_overlapping_bands(self, auth_headers: dict[str, str]) -> None:
         """Verifies API-036 returns 422/400 error when bands overlap."""
         client = TestClient(app)
         payload = {
@@ -775,13 +793,13 @@ class TestThresholdAPIContracts:
         response = client.post(
             "/api/v1/thresholds",
             json=payload,
-            headers={"X-Tenant-ID": "tenant-api-01"},
+            headers=auth_headers,
         )
         assert response.status_code in (400, 422)
         err = response.json()
         assert "overlap" in str(err).lower()
 
-    def test_api_evaluate_endpoint(self) -> None:
+    def test_api_evaluate_endpoint(self, auth_headers: dict[str, str]) -> None:
         """POST /api/v1/thresholds/evaluate returns evaluation result with provenance."""
         client = TestClient(app)
         payload = {
@@ -793,7 +811,7 @@ class TestThresholdAPIContracts:
         response = client.post(
             "/api/v1/thresholds/evaluate",
             json=payload,
-            headers={"X-Tenant-ID": "tenant-api-01"},
+            headers=auth_headers,
         )
         assert response.status_code == 200
         res = response.json()
@@ -802,7 +820,7 @@ class TestThresholdAPIContracts:
         assert "resolved_source_display" in res
         assert res["source_provenance"]["origin_type"] == "DERIVED"
 
-    def test_api_preview_disabled_in_mvp(self) -> None:
+    def test_api_preview_disabled_in_mvp(self, auth_headers: dict[str, str]) -> None:
         """POST /api/v1/thresholds/preview returns 403 Forbidden in MVP."""
         client = TestClient(app)
         rule = create_tenant_default_budget_rule("tenant-api-01")
@@ -818,7 +836,7 @@ class TestThresholdAPIContracts:
         response = client.post(
             "/api/v1/thresholds/preview",
             json=payload,
-            headers={"X-Tenant-ID": "tenant-api-01"},
+            headers=auth_headers,
         )
         assert response.status_code == 403
         data = response.json()

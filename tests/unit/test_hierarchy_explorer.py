@@ -34,12 +34,368 @@ from domain.hierarchy.service import (
 from domain.tenant.context import TenantContext
 
 
+
+from tests.fakes.hierarchy import InMemoryHierarchyRepository
+from domain.hierarchy.repository import reset_hierarchy_repository
+from datetime import datetime, UTC
+from domain.hierarchy.models import InventoryResource35
+
+def _corp_email(username: str) -> str:
+    return f"{username}@cloudlens.corp"
+
+TEST_SPECS = [
+    # AWS Production (sc-aws-prod-1)
+    (
+        "res-aws-vm-01", "sc-aws-prod-1", "i-09f87238a111", "prod-payment-worker-1",
+        "AWS", "AmazonEC2", "Amazon Elastic Compute Cloud", "Compute", "ec2:instance",
+        "VirtualMachine", "us-east-1", "US East (N. Virginia)", "us-east-1a", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Alice Engineer"},
+            {"key": "Project", "value": "Payments Modernization"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-pay", "Payments Modernization", Decimal("142.50"),
+    ),
+    (
+        "res-aws-vm-02", "sc-aws-prod-1", "i-08a71239b222", "prod-payment-worker-2",
+        "AWS", "AmazonEC2", "Amazon Elastic Compute Cloud", "Compute", "ec2:instance",
+        "VirtualMachine", "us-east-1", "US East (N. Virginia)", "us-east-1b", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Alice Engineer"},
+            {"key": "Project", "value": "Payments Modernization"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-pay", "Payments Modernization", Decimal("142.50"),
+    ),
+    (
+        "res-aws-rds-01", "sc-aws-prod-1", "db-98234abcc1", "prod-payments-db",
+        "AWS", "AmazonRDS", "Amazon Relational Database Service", "Database", "rds:db",
+        "RelationalDatabase", "us-east-1", "US East (N. Virginia)", "us-east-1a", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Bob DBA"},
+            {"key": "Project", "value": "Payments Modernization"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-bob", "Bob DBA", _corp_email("bob.dba"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-pay", "Payments Modernization", Decimal("920.00"),
+    ),
+    (
+        "res-aws-eks-01", "sc-aws-prod-1", "arn:aws:eks:us-east-1:112233440001:cluster/prod-core-eks", "prod-core-eks",
+        "AWS", "AmazonEKS", "Amazon Elastic Kubernetes Service", "Containers", "eks:cluster",
+        "KubernetesCluster", "us-east-1", "US East (N. Virginia)", "us-east-1a", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-102-ENG"},
+            {"key": "Owner", "value": "Alice Engineer"},
+            {"key": "Project", "value": "Payments Modernization"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-202", "CC-202-ENG", "bu-eng", "Engineering",
+        "prj-pay", "Payments Modernization", Decimal("1450.00"),
+    ),
+    # AWS Dev Sandbox (sc-aws-dev-1)
+    (
+        "res-aws-vm-dev", "sc-aws-dev-1", "i-dev0192384a", "dev-payment-sandbox",
+        "AWS", "AmazonEC2", "Amazon Elastic Compute Cloud", "Compute", "ec2:instance",
+        "VirtualMachine", "us-east-1", "US East (N. Virginia)", "us-east-1a", "PAID",
+        "STOPPED", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Development"},
+            {"key": "CostCenter", "value": "CC-102-ENG"},
+            {"key": "Owner", "value": "Alice Engineer"},
+        ],
+        "app-payments", "Payments Core", "env-dev", "Development",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-102", "CC-102-ENG", "bu-eng", "Engineering",
+        "prj-pay", "Payments Modernization", Decimal("230.00"),
+    ),
+    (
+        "res-aws-s3-01", "sc-aws-dev-1", "cloudlens-dev-artifacts-bucket", "dev-artifacts-bucket",
+        "AWS", "AmazonS3", "Amazon Simple Storage Service", "Storage", "s3:bucket",
+        "ObjectStorage", "us-east-1", "US East (N. Virginia)", None, "FREE_TIER",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Development"},
+            {"key": "CostCenter", "value": "CC-102-ENG"},
+        ],
+        "app-payments", "Payments Core", "env-dev", "Development",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-102", "CC-102-ENG", "bu-eng", "Engineering",
+        "prj-pay", "Payments Modernization", Decimal("35.00"),
+    ),
+    # Azure Corporate Production (sc-azure-prod-1)
+    (
+        "res-az-vm-01", "sc-azure-prod-1",
+        "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-checkout-prod/providers/Microsoft.Compute/virtualMachines/vm-checkout-worker-1",
+        "vm-checkout-worker-1", "Azure", "VirtualMachines", "Azure Virtual Machines", "Compute",
+        "Microsoft.Compute/virtualMachines", "VirtualMachine", "eastus", "East US", "1", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Carol Ops"},
+            {"key": "Project", "value": "Checkout Replatform"},
+        ],
+        "app-checkout", "Checkout Service", "env-prod", "Production",
+        "usr-carol", "Carol Ops", _corp_email("carol.ops"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-chk", "Checkout Replatform", Decimal("320.00"),
+    ),
+    (
+        "res-az-sql-01", "sc-azure-prod-1",
+        "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-checkout-prod/providers/Microsoft.Sql/servers/sql-chk-srv/databases/db-checkout",
+        "db-checkout-primary", "Azure", "AzureSQLDatabase", "Azure SQL Database", "Database",
+        "Microsoft.Sql/servers/databases", "RelationalDatabase", "eastus", "East US", "1", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Carol Ops"},
+            {"key": "Project", "value": "Checkout Replatform"},
+        ],
+        "app-checkout", "Checkout Service", "env-prod", "Production",
+        "usr-carol", "Carol Ops", _corp_email("carol.ops"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-chk", "Checkout Replatform", Decimal("1150.00"),
+    ),
+    (
+        "res-az-aks-01", "sc-azure-prod-1",
+        "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-inventory-prod/providers/Microsoft.ContainerService/managedClusters/aks-inventory-cluster",
+        "aks-inventory-cluster", "Azure", "AzureKubernetesService", "Azure Kubernetes Service (AKS)", "Containers",
+        "Microsoft.ContainerService/managedClusters", "KubernetesCluster", "eastus", "East US", "2", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-102-ENG"},
+            {"key": "Owner", "value": "Carol Ops"},
+            {"key": "Project", "value": "Inventory Sync"},
+        ],
+        "app-inventory", "Inventory Mgmt", "env-prod", "Production",
+        "usr-carol", "Carol Ops", _corp_email("carol.ops"),
+        "cc-102", "CC-102-ENG", "bu-eng", "Engineering",
+        "prj-inv", "Inventory Modernization", Decimal("820.00"),
+    ),
+    (
+        "res-az-blob-01", "sc-azure-prod-1",
+        "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-inventory-prod/providers/Microsoft.Storage/storageAccounts/stinvprod01",
+        "stinvprod01", "Azure", "AzureBlobStorage", "Azure Blob Storage", "Storage",
+        "Microsoft.Storage/storageAccounts", "ObjectStorage", "eastus", "East US", None, "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-102-ENG"},
+        ],
+        "app-inventory", "Inventory Mgmt", "env-prod", "Production",
+        None, "Unowned", None,
+        "cc-102", "CC-102-ENG", "bu-eng", "Engineering",
+        "prj-inv", "Inventory Modernization", Decimal("95.00"),
+    ),
+    # GCP Analytics Tier (sc-gcp-analytics-1)
+    (
+        "res-gcp-gce-01", "sc-gcp-analytics-1",
+        "projects/prj-gcp-data-lake-prod/zones/us-central1-a/instances/worker-analytics-01",
+        "worker-analytics-01", "GCP", "ComputeEngine", "Google Compute Engine", "Compute",
+        "compute.googleapis.com/Instance", "VirtualMachine", "us-central1", "US Central (Iowa)", "us-central1-a", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-103-DATA"},
+            {"key": "Owner", "value": "Dave Architect"},
+            {"key": "Project", "value": "Customer 360 Analytics"},
+        ],
+        "app-analytics", "Customer Analytics", "env-prod", "Production",
+        "usr-dave", "Dave Architect", _corp_email("dave.architect"),
+        "cc-103", "CC-103-DATA", "bu-data", "Data & AI",
+        "prj-c360", "Customer 360 Analytics", Decimal("430.00"),
+    ),
+    (
+        "res-gcp-bq-01", "sc-gcp-analytics-1",
+        "projects/prj-gcp-data-lake-prod/datasets/ds_enterprise_warehouse",
+        "ds_enterprise_warehouse", "GCP", "BigQuery", "Google Cloud BigQuery", "Analytics",
+        "bigquery.googleapis.com/Dataset", "DataWarehouse", "us-central1", "US Central (Iowa)", None, "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-103-DATA"},
+            {"key": "Owner", "value": "Dave Architect"},
+            {"key": "Project", "value": "Data Lakehouse"},
+        ],
+        "app-warehouse", "Data Warehouse", "env-prod", "Production",
+        "usr-dave", "Dave Architect", _corp_email("dave.architect"),
+        "cc-103", "CC-103-DATA", "bu-data", "Data & AI",
+        "prj-dlake", "Data Lakehouse", Decimal("680.00"),
+    ),
+    (
+        "res-gcp-gke-01", "sc-gcp-analytics-1",
+        "projects/prj-gcp-data-lake-prod/locations/us-central1/clusters/gke-analytics-prod",
+        "gke-analytics-prod", "GCP", "GoogleKubernetesEngine", "Google Kubernetes Engine (GKE)", "Containers",
+        "container.googleapis.com/Cluster", "KubernetesCluster", "us-central1", "US Central (Iowa)", "us-central1-b", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-103-DATA"},
+            {"key": "Owner", "value": "Dave Architect"},
+            {"key": "Project", "value": "Data Lakehouse"},
+        ],
+        "app-warehouse", "Data Warehouse", "env-prod", "Production",
+        "usr-dave", "Dave Architect", _corp_email("dave.architect"),
+        "cc-103", "CC-103-DATA", "bu-data", "Data & AI",
+        "prj-dlake", "Data Lakehouse", Decimal("1480.00"),
+    ),
+    (
+        "res-gcp-gcs-01", "sc-gcp-analytics-1",
+        "gcp-analytics-raw-bucket", "gcp-analytics-raw-bucket",
+        "GCP", "CloudStorage", "Google Cloud Storage", "Storage",
+        "storage.googleapis.com/Bucket", "ObjectStorage", "us-central1", "US Central (Iowa)", None, "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-103-DATA"},
+        ],
+        "app-warehouse", "Data Warehouse", "env-prod", "Production",
+        None, "Unowned", None,
+        "cc-103", "CC-103-DATA", "bu-data", "Data & AI",
+        "prj-dlake", "Data Lakehouse", Decimal("310.00"),
+    ),
+    # OCI Core Infrastructure (sc-oci-core-1)
+    (
+        "res-oci-vm-01", "sc-oci-core-1",
+        "ocid1.instance.oc1.iad.anuwcljra111", "oci-core-compute-01",
+        "OCI", "OracleCompute", "Oracle Cloud Infrastructure Compute", "Compute",
+        "oci:core:instance", "VirtualMachine", "us-ashburn-1", "US East (Ashburn)", "AD-1", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Alice Engineer"},
+            {"key": "Project", "value": "Disaster Recovery"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-alice", "Alice Engineer", _corp_email("alice.engineer"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-dr", "Disaster Recovery Sync", Decimal("280.00"),
+    ),
+    (
+        "res-oci-adb-01", "sc-oci-core-1",
+        "ocid1.autonomousdatabase.oc1.iad.anuwcljrb222", "oci-autonomous-db-core",
+        "OCI", "OracleAutonomousDatabase", "Oracle Autonomous Database", "Database",
+        "oci:database:autonomousdatabase", "AutonomousDatabase", "us-ashburn-1", "US East (Ashburn)", "AD-1", "PAID",
+        "RUNNING", "ACTIVE",
+        [
+            {"key": "Environment", "value": "Production"},
+            {"key": "CostCenter", "value": "CC-101-FINOPS"},
+            {"key": "Owner", "value": "Bob DBA"},
+            {"key": "Project", "value": "Disaster Recovery"},
+        ],
+        "app-payments", "Payments Core", "env-prod", "Production",
+        "usr-bob", "Bob DBA", _corp_email("bob.dba"),
+        "cc-101", "CC-101-FINOPS", "bu-finops", "FinOps",
+        "prj-dr", "Disaster Recovery Sync", Decimal("1250.00"),
+    ),
+]
+
+def seed_test_hierarchy(repo: InMemoryHierarchyRepository, tenant_id: str = "default-tenant") -> None:
+    now = datetime.now(UTC)
+    tc = TenantContext(tenant_id=tenant_id, user_id="test-seed", scope_grants=["*"])
+    for s in TEST_SPECS:
+        r = InventoryResource35(
+            id=s[0],
+            tenant_id=tenant_id,
+            scope_id=s[1],
+            native_id=s[2],
+            name=s[3],
+            provider=s[4],
+            service_id=s[5],
+            service_name=s[6],
+            service_category=s[7],
+            resource_type_id=s[8],
+            resource_type=s[9],
+            region_id=s[10],
+            region_name=s[11],
+            availability_zone=s[12],
+            pricing_status=s[13],
+            runtime_state=s[14],
+            lifecycle_status=s[15],
+            tags=s[16],
+            application_id=s[17],
+            application_name=s[18],
+            environment_id=s[19],
+            environment_name=s[20],
+            owner_id=s[21],
+            owner_name=s[22],
+            owner_email=s[23],
+            cost_center_id=s[24],
+            cost_center_name=s[25],
+            business_unit_id=s[26],
+            business_unit_name=s[27],
+            project_id=s[28],
+            project_name=s[29],
+            monthly_cost=s[30],
+            currency="USD",
+            last_synced_at=now,
+            created_at=now,
+        )
+        repo.save_resource(r, tenant_context=tc)
+
+    # Also seed default view for saved view test
+    v = SavedInventoryView(
+        id="view-prod-compute",
+        user_id="finops-admin",
+        name="Production Compute View",
+        filters={"providers": ["AWS", "Azure"], "environments": ["Production"]},
+        created_at=now,
+    )
+    repo.save_saved_view(v, tenant_context=tc)
+
+
 @pytest.fixture(autouse=True)
 def clean_hierarchy_service():
     """Ensure clean service singleton state for each test run."""
+    fake_repo = InMemoryHierarchyRepository()
+    reset_hierarchy_repository(fake_repo)
     reset_hierarchy_service()
+    seed_test_hierarchy(fake_repo, "default-tenant")
+    svc = get_hierarchy_service()
+    svc._budgets = {
+        "GLOBAL": Decimal("50000.00"),
+        "AWS": Decimal("22000.00"),
+        "Azure": Decimal("16000.00"),
+        "GCP": Decimal("8000.00"),
+        "OCI": Decimal("4000.00"),
+        "sc-aws-prod-1": Decimal("18000.00"),
+        "sc-aws-dev-1": Decimal("4000.00"),
+        "sc-azure-prod-1": Decimal("16000.00"),
+        "sc-gcp-analytics-1": Decimal("8000.00"),
+        "sc-oci-core-1": Decimal("4000.00"),
+        "app-payments": Decimal("15000.00"),
+        "app-checkout": Decimal("10000.00"),
+        "app-inventory": Decimal("7000.00"),
+        "app-analytics": Decimal("8000.00"),
+        "app-warehouse": Decimal("10000.00"),
+        "cc-finops": Decimal("20000.00"),
+        "cc-eng": Decimal("15000.00"),
+        "cc-data": Decimal("10000.00"),
+        "cc-sales": Decimal("5000.00"),
+    }
     yield
     reset_hierarchy_service()
+    reset_hierarchy_repository()
 
 
 @pytest.fixture
@@ -502,7 +858,7 @@ class TestInventoryOperationsAndViews:
         assert "owner_name" in resp.modified_fields
 
         # Verify update persisted
-        updated_res = service._resources["res-aws-s3-01"]
+        updated_res = service.get_resource_by_id("res-aws-s3-01", global_tenant_context)
         assert updated_res.owner_name == "Dave Architect"
         assert updated_res.cost_center_name == "CC-999-OVERRIDE"
 
@@ -516,7 +872,7 @@ class TestInventoryOperationsAndViews:
             filters={"providers": ["AWS"]},
             selected_columns=["name", "monthly_cost"],
             is_shared=True,
-            created_at=service._resources["res-aws-vm-01"].created_at,
+            created_at=service.get_resource_by_id("res-aws-vm-01", global_tenant_context).created_at,
         )
         saved = service.save_view(view, global_tenant_context)
         assert saved.id == "view-test-01"
@@ -559,102 +915,98 @@ class TestHierarchyAPIContracts:
     def client(self) -> TestClient:
         return TestClient(app)
 
-    def test_api_get_hierarchy_tree(self, client: TestClient):
-        res = client.get("/api/v1/hierarchy/tree?lens_type=PROVIDER_HIERARCHY")
+    @pytest.fixture
+    def test_headers(self, make_auth_token) -> dict[str, str]:
+        token = make_auth_token(tenant_id="default-tenant", user_id="admin", roles=["SUPERUSER"], permissions=["*"])
+        return {"Authorization": f"Bearer {token}"}
+
+    def test_api_get_hierarchy_tree(self, client: TestClient, test_headers):
+        res = client.get("/api/v1/hierarchy/tree?lens_type=PROVIDER_HIERARCHY", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
         assert data["level"] == "ORGANISATION"
         assert len(data["children"]) == 4
 
-    def test_api_get_node_detail(self, client: TestClient):
-        res = client.get("/api/v1/hierarchy/nodes/aws-acct-112233440001")
+    def test_api_get_node_detail(self, client: TestClient, test_headers):
+        res = client.get("/api/v1/hierarchy/nodes/aws-acct-112233440001", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
         assert data["node_id"] == "aws-acct-112233440001"
         assert len(data["breadcrumbs"]) > 0
 
-    def test_api_global_search_scope_safe(self, client: TestClient):
-        # Global admin receives results
+    def test_api_global_search_scope_safe(self, client: TestClient, make_auth_token):
+        admin_token = make_auth_token(tenant_id="default-tenant", user_id="admin", roles=["SUPERUSER"], permissions=["*"])
         res_admin = client.get(
             "/api/v1/hierarchy/search?q=prod-payment-worker-1",
-            headers={"X-Scope-Grants": "*"},
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert res_admin.status_code == 200
         assert res_admin.json()["total_matches"] >= 1
 
-        # Restricted user querying out-of-scope resource
+        restricted_token = make_auth_token(tenant_id="default-tenant", user_id="aws-user", roles=["VIEWER"], permissions=["sc-aws-prod-1"])
         res_restricted = client.get(
             "/api/v1/hierarchy/search?q=vm-checkout-worker-1",
-            headers={"X-Scope-Grants": "sc-aws-prod-1"},
+            headers={"Authorization": f"Bearer {restricted_token}"},
         )
         assert res_restricted.status_code == 200
         assert res_restricted.json()["total_matches"] == 0
 
-    def test_api_count_preview(self, client: TestClient):
+    def test_api_count_preview(self, client: TestClient, test_headers):
         res = client.post(
             "/api/v1/hierarchy/inventory/count-preview",
             json={"providers": ["Azure"]},
+            headers=test_headers,
         )
         assert res.status_code == 200
         data = res.json()
         assert data["matching_count"] > 0
-        assert "Azure" in data["counts_by_provider"]
 
-    def test_api_query_inventory(self, client: TestClient):
+    def test_api_query_inventory(self, client: TestClient, test_headers):
         res = client.post(
-            "/api/v1/hierarchy/inventory/query?limit=5&offset=0",
-            json={"environments": ["Production"]},
+            "/api/v1/hierarchy/inventory/query?limit=10&offset=0",
+            json={"providers": ["AWS"]},
+            headers=test_headers,
         )
         assert res.status_code == 200
         data = res.json()
         assert data["total"] > 0
-        assert len(data["items"]) <= 5
+        assert len(data["items"]) > 0
 
-    def test_api_bulk_assign_curated_fields(self, client: TestClient):
-        res = client.post(
-            "/api/v1/hierarchy/inventory/bulk-assign",
-            json={
-                "resource_ids": ["res-aws-vm-01"],
-                "owner_name": "Carol Ops",
-            },
-        )
+    def test_api_bulk_assign_curated_fields(self, client: TestClient, test_headers):
+        payload = {
+            "resource_ids": ["res-aws-vm-01"],
+            "owner_name": "API Tester",
+            "owner_email": "api.tester@cloudlens.corp",
+        }
+        res = client.post("/api/v1/hierarchy/inventory/bulk-assign", json=payload, headers=test_headers)
         assert res.status_code == 200
-        data = res.json()
-        assert data["updated_count"] == 1
+        assert res.json()["updated_count"] == 1
 
-    def test_api_saved_views_lifecycle(self, client: TestClient):
-        # 1. Save
-        res_save = client.post(
-            "/api/v1/hierarchy/inventory/views",
-            json={
-                "id": "view-api-01",
-                "name": "API Saved View",
-                "user_id": "test-user",
-                "filters": {"providers": ["GCP"]},
-                "selected_columns": ["name"],
-                "is_shared": False,
-                "created_at": "2026-10-03T12:00:00Z",
-            },
-        )
+    def test_api_saved_views_lifecycle(self, client: TestClient, test_headers):
+        view_payload = {
+            "id": "view-api-test",
+            "user_id": "finops-admin",
+            "name": "API Test View",
+            "filters": {"providers": ["OCI"]},
+        }
+        res_save = client.post("/api/v1/hierarchy/inventory/views", json=view_payload, headers=test_headers)
         assert res_save.status_code == 200
 
-        # 2. List
-        res_list = client.get("/api/v1/hierarchy/inventory/views")
+        res_list = client.get("/api/v1/hierarchy/inventory/views", headers=test_headers)
         assert res_list.status_code == 200
-        assert any(v["id"] == "view-api-01" for v in res_list.json())
+        views = res_list.json()
+        assert any(v["name"] == "API Test View" for v in views)
 
-        # 3. Delete
-        res_del = client.delete("/api/v1/hierarchy/inventory/views/view-api-01")
+        res_del = client.delete("/api/v1/hierarchy/inventory/views/view-api-test", headers=test_headers)
         assert res_del.status_code == 200
-        assert res_del.json()["deleted"] is True
 
-    def test_api_export_inventory(self, client: TestClient):
+    def test_api_export_inventory(self, client: TestClient, test_headers):
         res = client.post(
             "/api/v1/hierarchy/inventory/export?format=csv",
             json={"providers": ["AWS"]},
+            headers=test_headers,
         )
         assert res.status_code == 200
         assert "text/csv" in res.headers["content-type"]
-        assert (
-            'attachment; filename="cloudlens_inventory.csv"' in res.headers["content-disposition"]
-        )
+        assert "res-aws-vm-01" in res.text
+

@@ -29,7 +29,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session, verify_persistence_startup_guard
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from domain.cost.models import (
     CostAggregateNode,
     CostRestatementRecord,
@@ -163,14 +163,8 @@ class SqlCostFactRepository:
 
     is_in_memory: bool = False
 
-    def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+    def _run_async(self, coro: Any) -> Any:
+        return run_async(coro)
 
     def _row_to_fact(self, row: Any) -> FocusCostFact:
         m = dict(row._mapping)
@@ -702,12 +696,8 @@ class SqlCostFactRepository:
         provider: str | None = None,
     ) -> list[CostRestatementRecord]:
         tid = tenant_context.tenant_id
-        sql = "SELECT * FROM cost_restatements WHERE tenant_id = :tid"
+        sql = "SELECT * FROM cost_restatements WHERE tenant_id = :tid ORDER BY restatement_detected_at DESC;"
         params: dict[str, Any] = {"tid": tid}
-        if provider:
-            sql += " AND provider = :provider"
-            params["provider"] = provider.lower()
-        sql += " ORDER BY detected_at DESC;"
 
         async with get_tenant_session(tid) as session:
             res = await session.execute(text(sql), params)
@@ -715,21 +705,29 @@ class SqlCostFactRepository:
             out: list[CostRestatementRecord] = []
             for r in rows:
                 m = dict(r._mapping)
+                orig_b = Decimal(str(m.get("original_billed_cost", m.get("original_billed_total", "0.00"))))
+                rest_b = Decimal(str(m.get("restated_billed_cost", m.get("restated_billed_total", "0.00"))))
+                orig_e = Decimal(str(m.get("original_effective_cost", m.get("original_effective_total", "0.00"))))
+                rest_e = Decimal(str(m.get("restated_effective_cost", m.get("restated_effective_total", "0.00"))))
+                detected = m.get("restatement_detected_at") or m.get("detected_at") or datetime.now(UTC)
+                prov = m.get("provider", provider or "aws")
+                if provider and prov.lower() != provider.lower():
+                    continue
                 out.append(
                     CostRestatementRecord(
                         id=m["id"],
                         tenant_id=m["tenant_id"],
-                        provider=m["provider"],
+                        provider=prov,
                         billing_period=m["billing_period"],
-                        detected_at=m["detected_at"],
-                        original_billed_total=Decimal(str(m["original_billed_total"])),
-                        restated_billed_total=Decimal(str(m["restated_billed_total"])),
-                        billed_delta=Decimal(str(m["billed_delta"])),
-                        original_effective_total=Decimal(str(m["original_effective_total"])),
-                        restated_effective_total=Decimal(str(m["restated_effective_total"])),
-                        effective_delta=Decimal(str(m["effective_delta"])),
-                        affected_row_count=m["affected_row_count"],
-                        notes=m.get("notes"),
+                        detected_at=detected,
+                        original_billed_total=orig_b,
+                        restated_billed_total=rest_b,
+                        billed_delta=round(rest_b - orig_b, 2),
+                        original_effective_total=orig_e,
+                        restated_effective_total=rest_e,
+                        effective_delta=round(rest_e - orig_e, 2),
+                        affected_row_count=m.get("affected_row_count", 0),
+                        notes=str(m.get("reasons", m.get("notes", ""))),
                     )
                 )
             return out

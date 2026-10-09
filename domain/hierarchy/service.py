@@ -49,679 +49,16 @@ class HierarchyService:
 
     def __init__(self, repository: HierarchyRepository | None = None) -> None:
         self._repository = repository or get_hierarchy_repository()
-        self._resources: dict[str, InventoryResource35] = {}
         self._budgets: dict[str, Decimal] = {}
         self._saved_views: dict[str, SavedInventoryView] = {}
-        self._seed_estate_if_empty()
+
+    def _get_scoped_resources(self, tenant_context: TenantContext | None) -> list[InventoryResource35]:
+        if not tenant_context:
+            return []
+        return self._repository.list_resources(tenant_context=tenant_context)
 
     def _seed_estate_if_empty(self) -> None:
-        """Seeds deterministic multi-cloud enterprise estate across AWS, Azure, GCP, and OCI."""
-        if self._resources:
-            return
-
-        now = datetime.now(UTC)
-
-        # 1. Budget registry for organizational scopes and nodes
-        self._budgets = {
-            "GLOBAL": Decimal("50000.00"),
-            "AWS": Decimal("22000.00"),
-            "Azure": Decimal("16000.00"),
-            "GCP": Decimal("8000.00"),
-            "OCI": Decimal("4000.00"),
-            "sc-aws-prod-1": Decimal("18000.00"),
-            "sc-aws-dev-1": Decimal("4000.00"),
-            "sc-azure-prod-1": Decimal("16000.00"),
-            "sc-gcp-analytics-1": Decimal("8000.00"),
-            "sc-oci-core-1": Decimal("4000.00"),
-            "app-payments": Decimal("15000.00"),
-            "app-checkout": Decimal("10000.00"),
-            "app-inventory": Decimal("7000.00"),
-            "app-analytics": Decimal("8000.00"),
-            "app-warehouse": Decimal("10000.00"),
-            "cc-finops": Decimal("20000.00"),
-            "cc-eng": Decimal("15000.00"),
-            "cc-data": Decimal("10000.00"),
-            "cc-sales": Decimal("5000.00"),
-        }
-
-        # 2. Seed canonical 35-field resources across 4 providers
-        specs = [
-            # AWS Production (sc-aws-prod-1)
-            (
-                "res-aws-vm-01",
-                "sc-aws-prod-1",
-                "i-09f87238a111",
-                "prod-payment-worker-1",
-                "AWS",
-                "AmazonEC2",
-                "Amazon Elastic Compute Cloud",
-                "Compute",
-                "ec2:instance",
-                "VirtualMachine",
-                "us-east-1",
-                "US East (N. Virginia)",
-                "us-east-1a",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                    {"key": "Owner", "value": "Alice Engineer"},
-                    {"key": "Project", "value": "Payments Modernization"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                "usr-alice",
-                "Alice Engineer",
-                _corp_email("alice.engineer"),
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("142.50"),
-            ),
-            (
-                "res-aws-vm-02",
-                "sc-aws-prod-1",
-                "i-08a71239b222",
-                "prod-payment-worker-2",
-                "AWS",
-                "AmazonEC2",
-                "Amazon Elastic Compute Cloud",
-                "Compute",
-                "ec2:instance",
-                "VirtualMachine",
-                "us-east-1",
-                "US East (N. Virginia)",
-                "us-east-1b",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                    {"key": "Owner", "value": "Alice Engineer"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                "usr-alice",
-                "Alice Engineer",
-                _corp_email("alice.engineer"),
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("142.50"),
-            ),
-            (
-                "res-aws-rds-01",
-                "sc-aws-prod-1",
-                "rds-prod-pay-primary",
-                "prod-payments-db",
-                "AWS",
-                "AmazonRDS",
-                "Amazon Relational Database Service",
-                "Database",
-                "rds:db",
-                "RelationalDatabase",
-                "us-east-1",
-                "US East (N. Virginia)",
-                "us-east-1a",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                    {"key": "Owner", "value": "Bob DBA"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                "usr-bob",
-                "Bob DBA",
-                _corp_email("bob.dba"),
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("920.00"),
-            ),
-            (
-                "res-aws-eks-01",
-                "sc-aws-prod-1",
-                "arn:aws:eks:us-east-1:112233440001:cluster/prod-core",
-                "prod-core-eks-cluster",
-                "AWS",
-                "AmazonEKS",
-                "Amazon Elastic Kubernetes Service",
-                "Containers",
-                "eks:cluster",
-                "KubernetesCluster",
-                "us-east-1",
-                "US East (N. Virginia)",
-                "us-east-1a",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-202-ENG"},
-                    {"key": "Owner", "value": "Dave Architect"},
-                ],
-                "app-checkout",
-                "Checkout Service",
-                "env-prod",
-                "Production",
-                "usr-dave",
-                "Dave Architect",
-                _corp_email("dave.architect"),
-                "cc-202",
-                "CC-202-ENG",
-                "bu-eng",
-                "Engineering",
-                "prj-chk",
-                "Checkout Modernization",
-                Decimal("1450.00"),
-            ),
-            (
-                "res-aws-s3-01",
-                "sc-aws-prod-1",
-                "arn:aws:s3:::cloudlens-prod-archive",
-                "cloudlens-prod-archive-s3",
-                "AWS",
-                "AmazonS3",
-                "Amazon Simple Storage Service",
-                "Storage",
-                "s3:bucket",
-                "ObjectStorage",
-                "us-east-1",
-                "US East (N. Virginia)",
-                None,
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                None,
-                "Unowned",
-                None,
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("230.00"),
-            ),
-            # AWS Dev/Staging (sc-aws-dev-1)
-            (
-                "res-aws-dev-vm-01",
-                "sc-aws-dev-1",
-                "i-01122334455a",
-                "dev-payment-sandbox",
-                "AWS",
-                "AmazonEC2",
-                "Amazon Elastic Compute Cloud",
-                "Compute",
-                "ec2:instance",
-                "VirtualMachine",
-                "us-west-2",
-                "US West (Oregon)",
-                "us-west-2a",
-                "PAID",
-                "STOPPED",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Development"},
-                    {"key": "CostCenter", "value": "CC-202-ENG"},
-                    {"key": "Owner", "value": "Alice Engineer"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-dev",
-                "Development",
-                "usr-alice",
-                "Alice Engineer",
-                _corp_email("alice.engineer"),
-                "cc-202",
-                "CC-202-ENG",
-                "bu-eng",
-                "Engineering",
-                "prj-dev",
-                "Developer Sandboxes",
-                Decimal("35.00"),
-            ),
-            # Azure Production (sc-azure-prod-1)
-            (
-                "res-az-vm-01",
-                "sc-azure-prod-1",
-                "/subscriptions/sub-prod-0001/resourceGroups/rg-workload-001/providers/Microsoft.Compute/virtualMachines/vm-checkout-01",
-                "vm-checkout-worker-1",
-                "Azure",
-                "VirtualMachines",
-                "Azure Virtual Machines",
-                "Compute",
-                "microsoft.compute/virtualmachines",
-                "VirtualMachine",
-                "eastus",
-                "East US",
-                "eastus-1",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-202-ENG"},
-                    {"key": "Owner", "value": "Carol Ops"},
-                ],
-                "app-checkout",
-                "Checkout Service",
-                "env-prod",
-                "Production",
-                "usr-carol",
-                "Carol Ops",
-                _corp_email("carol.ops"),
-                "cc-202",
-                "CC-202-ENG",
-                "bu-eng",
-                "Engineering",
-                "prj-chk",
-                "Checkout Modernization",
-                Decimal("320.00"),
-            ),
-            (
-                "res-az-sql-01",
-                "sc-azure-prod-1",
-                "/subscriptions/sub-prod-0001/resourceGroups/rg-workload-001/providers/Microsoft.Sql/servers/sql-prod-chk/databases/chkdb",
-                "sql-checkout-db",
-                "Azure",
-                "SQLDatabase",
-                "Azure SQL Database",
-                "Database",
-                "microsoft.sql/servers/databases",
-                "RelationalDatabase",
-                "eastus",
-                "East US",
-                "eastus-1",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-202-ENG"},
-                    {"key": "Owner", "value": "Bob DBA"},
-                ],
-                "app-checkout",
-                "Checkout Service",
-                "env-prod",
-                "Production",
-                "usr-bob",
-                "Bob DBA",
-                _corp_email("bob.dba"),
-                "cc-202",
-                "CC-202-ENG",
-                "bu-eng",
-                "Engineering",
-                "prj-chk",
-                "Checkout Modernization",
-                Decimal("1150.00"),
-            ),
-            (
-                "res-az-aks-01",
-                "sc-azure-prod-1",
-                "/subscriptions/sub-prod-0001/resourceGroups/rg-workload-001/providers/Microsoft.ContainerService/managedClusters/aks-inventory",
-                "aks-inventory-cluster",
-                "Azure",
-                "AzureKubernetesService",
-                "Azure Kubernetes Service",
-                "Containers",
-                "microsoft.containerservice/managedclusters",
-                "KubernetesCluster",
-                "westeurope",
-                "West Europe",
-                "westeurope-1",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-404-SALES"},
-                    {"key": "Owner", "value": "Carol Ops"},
-                ],
-                "app-inventory",
-                "Inventory Mgmt",
-                "env-prod",
-                "Production",
-                "usr-carol",
-                "Carol Ops",
-                _corp_email("carol.ops"),
-                "cc-404",
-                "CC-404-SALES",
-                "bu-sales",
-                "Sales & Operations",
-                "prj-inv",
-                "Global Inventory",
-                Decimal("820.00"),
-            ),
-            (
-                "res-az-blob-01",
-                "sc-azure-prod-1",
-                "/subscriptions/sub-prod-0001/resourceGroups/rg-workload-001/providers/Microsoft.Storage/storageAccounts/stinventorybackup",
-                "stinventorybackup",
-                "Azure",
-                "BlobStorage",
-                "Azure Blob Storage",
-                "Storage",
-                "microsoft.storage/storageaccounts",
-                "ObjectStorage",
-                "eastus",
-                "East US",
-                None,
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-404-SALES"},
-                ],
-                "app-inventory",
-                "Inventory Mgmt",
-                "env-prod",
-                "Production",
-                None,
-                "Unowned",
-                None,
-                "cc-404",
-                "CC-404-SALES",
-                "bu-sales",
-                "Sales & Operations",
-                "prj-inv",
-                "Global Inventory",
-                Decimal("95.00"),
-            ),
-            # GCP Analytics (sc-gcp-analytics-1)
-            (
-                "res-gcp-gce-01",
-                "sc-gcp-analytics-1",
-                "projects/prj-finops-0001/zones/us-central1-a/instances/gce-analytics-01",
-                "gce-analytics-worker-1",
-                "GCP",
-                "ComputeEngine",
-                "Google Compute Engine",
-                "Compute",
-                "compute.googleapis.com/Instance",
-                "VirtualMachine",
-                "us-central1",
-                "us-central1 (Iowa)",
-                "us-central1-a",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-303-DATA"},
-                    {"key": "Owner", "value": "Dave Architect"},
-                ],
-                "app-analytics",
-                "Customer Analytics",
-                "env-prod",
-                "Production",
-                "usr-dave",
-                "Dave Architect",
-                _corp_email("dave.architect"),
-                "cc-303",
-                "CC-303-DATA",
-                "bu-data",
-                "Data Platform",
-                "prj-ana",
-                "Customer Intelligence",
-                Decimal("430.00"),
-            ),
-            (
-                "res-gcp-sql-01",
-                "sc-gcp-analytics-1",
-                "projects/prj-finops-0001/instances/cloudsql-analytics-replica",
-                "cloudsql-analytics-db",
-                "GCP",
-                "CloudSQL",
-                "Google Cloud SQL",
-                "Database",
-                "sqladmin.googleapis.com/Instance",
-                "RelationalDatabase",
-                "us-central1",
-                "us-central1 (Iowa)",
-                "us-central1-b",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-303-DATA"},
-                    {"key": "Owner", "value": "Bob DBA"},
-                ],
-                "app-analytics",
-                "Customer Analytics",
-                "env-prod",
-                "Production",
-                "usr-bob",
-                "Bob DBA",
-                _corp_email("bob.dba"),
-                "cc-303",
-                "CC-303-DATA",
-                "bu-data",
-                "Data Platform",
-                "prj-ana",
-                "Customer Intelligence",
-                Decimal("680.00"),
-            ),
-            (
-                "res-gcp-gke-01",
-                "sc-gcp-analytics-1",
-                "projects/prj-finops-0001/locations/us-central1/clusters/gke-pipeline",
-                "gke-pipeline-cluster",
-                "GCP",
-                "GoogleKubernetesEngine",
-                "Google Kubernetes Engine",
-                "Containers",
-                "container.googleapis.com/Cluster",
-                "KubernetesCluster",
-                "us-central1",
-                "us-central1 (Iowa)",
-                "us-central1-c",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-303-DATA"},
-                    {"key": "Owner", "value": "Dave Architect"},
-                ],
-                "app-warehouse",
-                "Data Warehouse",
-                "env-prod",
-                "Production",
-                "usr-dave",
-                "Dave Architect",
-                _corp_email("dave.architect"),
-                "cc-303",
-                "CC-303-DATA",
-                "bu-data",
-                "Data Platform",
-                "prj-dwh",
-                "Enterprise Data Lake",
-                Decimal("1480.00"),
-            ),
-            (
-                "res-gcp-gcs-01",
-                "sc-gcp-analytics-1",
-                "gs://cloudlens-gcp-lake-storage",
-                "cloudlens-gcp-lake-bucket",
-                "GCP",
-                "CloudStorage",
-                "Google Cloud Storage",
-                "Storage",
-                "storage.googleapis.com/Bucket",
-                "ObjectStorage",
-                "us-central1",
-                "us-central1 (Iowa)",
-                None,
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-303-DATA"},
-                ],
-                "app-warehouse",
-                "Data Warehouse",
-                "env-prod",
-                "Production",
-                None,
-                "Unowned",
-                None,
-                "cc-303",
-                "CC-303-DATA",
-                "bu-data",
-                "Data Platform",
-                "prj-dwh",
-                "Enterprise Data Lake",
-                Decimal("310.00"),
-            ),
-            # OCI Core (sc-oci-core-1)
-            (
-                "res-oci-vm-01",
-                "sc-oci-core-1",
-                "ocid1.instance.oc1.iad.anuwcljs001",
-                "oci-core-compute-worker",
-                "OCI",
-                "ComputeService",
-                "Oracle Cloud Compute",
-                "Compute",
-                "oci:compute:instance",
-                "VirtualMachine",
-                "us-ashburn-1",
-                "US East (Ashburn)",
-                "AD-1",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                    {"key": "Owner", "value": "Carol Ops"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                "usr-carol",
-                "Carol Ops",
-                _corp_email("carol.ops"),
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("280.00"),
-            ),
-            (
-                "res-oci-adb-01",
-                "sc-oci-core-1",
-                "ocid1.autonomousdatabase.oc1.iad.anuwcljs002",
-                "oci-core-autonomous-db",
-                "OCI",
-                "AutonomousDatabase",
-                "Oracle Autonomous Database",
-                "Database",
-                "oci:database:autonomousdatabase",
-                "RelationalDatabase",
-                "us-ashburn-1",
-                "US East (Ashburn)",
-                "AD-1",
-                "PAID",
-                "RUNNING",
-                "ACTIVE",
-                [
-                    {"key": "Environment", "value": "Production"},
-                    {"key": "CostCenter", "value": "CC-101-FINOPS"},
-                    {"key": "Owner", "value": "Bob DBA"},
-                ],
-                "app-payments",
-                "Payments Core",
-                "env-prod",
-                "Production",
-                "usr-bob",
-                "Bob DBA",
-                _corp_email("bob.dba"),
-                "cc-101",
-                "CC-101-FINOPS",
-                "bu-finops",
-                "FinOps",
-                "prj-pay",
-                "Payments Modernization",
-                Decimal("1250.00"),
-            ),
-        ]
-
-        for s in specs:
-            r = InventoryResource35(
-                id=s[0],
-                tenant_id="default-tenant",
-                scope_id=s[1],
-                native_id=s[2],
-                name=s[3],
-                provider=s[4],
-                service_id=s[5],
-                service_name=s[6],
-                service_category=s[7],
-                resource_type_id=s[8],
-                resource_type=s[9],
-                region_id=s[10],
-                region_name=s[11],
-                availability_zone=s[12],
-                pricing_status=s[13],
-                runtime_state=s[14],
-                lifecycle_status=s[15],
-                tags=s[16],
-                application_id=s[17],
-                application_name=s[18],
-                environment_id=s[19],
-                environment_name=s[20],
-                owner_id=s[21],
-                owner_name=s[22],
-                owner_email=s[23],
-                cost_center_id=s[24],
-                cost_center_name=s[25],
-                business_unit_id=s[26],
-                business_unit_name=s[27],
-                project_id=s[28],
-                project_name=s[29],
-                monthly_cost=s[30],
-                currency="USD",
-                last_synced_at=now,
-                created_at=now,
-            )
-            self._resources[r.id] = r
+        pass
 
     # --------------------------------------------------------------------------
     # Scope Validation & Threshold Helper
@@ -767,8 +104,9 @@ class HierarchyService:
     ) -> HierarchyNode:
         """Constructs full hierarchical tree for chosen lens with rolled-up spend and worst-child state."""
         # 1. Filter resources by caller scope grants
+        all_res = self._repository.list_resources(tenant_context=tenant_context)
         scoped_resources = [
-            r for r in self._resources.values() if self._is_resource_in_scope(r, tenant_context)
+            r for r in all_res if self._is_resource_in_scope(r, tenant_context)
         ]
 
         if lens_type == LateralLensType.PROVIDER_HIERARCHY:
@@ -837,7 +175,7 @@ class HierarchyService:
             provider_nodes.append(p_node)
 
         total_cost = sum((p.aggregate_cost for p in provider_nodes), Decimal("0.00"))
-        global_budget = self._budgets.get("GLOBAL", Decimal("50000.00"))
+        global_budget = self._budgets.get("GLOBAL", Decimal("0.00"))
         global_util = (
             (total_cost / global_budget * Decimal("100")).quantize(Decimal("0.01"))
             if global_budget > 0
@@ -910,9 +248,9 @@ class HierarchyService:
             native_type="Account",
             scope_id="sc-aws-prod-1",
             aggregate_cost=acct_cost,
-            budget_amount=Decimal("18000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (acct_cost / Decimal("18000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
@@ -931,9 +269,9 @@ class HierarchyService:
             provider="AWS",
             native_type="OrganizationalUnit",
             aggregate_cost=acct_cost,
-            budget_amount=Decimal("20000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (acct_cost / Decimal("20000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
@@ -950,9 +288,9 @@ class HierarchyService:
             provider="AWS",
             native_type="Organization",
             aggregate_cost=acct_cost,
-            budget_amount=Decimal("22000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (acct_cost / Decimal("22000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
@@ -1003,9 +341,9 @@ class HierarchyService:
             provider="Azure",
             native_type="ResourceGroup",
             aggregate_cost=rg_cost,
-            budget_amount=Decimal("16000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (rg_cost / Decimal("16000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
@@ -1025,9 +363,9 @@ class HierarchyService:
             native_type="Subscription",
             scope_id="sc-azure-prod-1",
             aggregate_cost=rg_cost,
-            budget_amount=Decimal("16000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (rg_cost / Decimal("16000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
@@ -1044,9 +382,9 @@ class HierarchyService:
             provider="Azure",
             native_type="ManagementGroup",
             aggregate_cost=rg_cost,
-            budget_amount=Decimal("16000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (rg_cost / Decimal("16000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
@@ -1063,9 +401,9 @@ class HierarchyService:
             provider="Azure",
             native_type="Tenant",
             aggregate_cost=rg_cost,
-            budget_amount=Decimal("16000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (rg_cost / Decimal("16000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
@@ -1117,9 +455,9 @@ class HierarchyService:
             native_type="Project",
             scope_id="sc-gcp-analytics-1",
             aggregate_cost=prj_cost,
-            budget_amount=Decimal("8000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (prj_cost / Decimal("8000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
@@ -1138,9 +476,9 @@ class HierarchyService:
             provider="GCP",
             native_type="Folder",
             aggregate_cost=prj_cost,
-            budget_amount=Decimal("8000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (prj_cost / Decimal("8000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
@@ -1157,9 +495,9 @@ class HierarchyService:
             provider="GCP",
             native_type="Organization",
             aggregate_cost=prj_cost,
-            budget_amount=Decimal("8000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (prj_cost / Decimal("8000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
@@ -1210,9 +548,9 @@ class HierarchyService:
             provider="OCI",
             native_type="Subcompartment",
             aggregate_cost=micro_cost,
-            budget_amount=Decimal("4000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (micro_cost / Decimal("4000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
@@ -1232,9 +570,9 @@ class HierarchyService:
             native_type="Compartment",
             scope_id="sc-oci-core-1",
             aggregate_cost=micro_cost,
-            budget_amount=Decimal("4000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (micro_cost / Decimal("4000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
@@ -1251,9 +589,9 @@ class HierarchyService:
             provider="OCI",
             native_type="Compartment",
             aggregate_cost=micro_cost,
-            budget_amount=Decimal("4000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (micro_cost / Decimal("4000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
@@ -1270,9 +608,9 @@ class HierarchyService:
             provider="OCI",
             native_type="Tenancy",
             aggregate_cost=micro_cost,
-            budget_amount=Decimal("4000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (micro_cost / Decimal("4000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
@@ -1380,7 +718,7 @@ class HierarchyService:
                 [e.worst_child_threshold_state for e in env_nodes]
             )
             app_id_key = app_res[0].application_id or f"app-{app.lower()}"
-            app_budget = self._budgets.get(app_id_key, Decimal("10000.00"))
+            app_budget = self._budgets.get(app_id_key, Decimal("0.00"))
             app_util = (
                 (app_cost / app_budget * Decimal("100")).quantize(Decimal("0.01"))
                 if app_budget > 0
@@ -1417,9 +755,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.APPLICATION,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1466,7 +804,7 @@ class HierarchyService:
             cc_worst = self._combine_threshold_states(
                 [p.worst_child_threshold_state for p in prj_nodes]
             )
-            cc_budget = Decimal("15000.00")
+            cc_budget = Decimal("0.00")
             cc_util = (
                 (cc_cost / cc_budget * Decimal("100")).quantize(Decimal("0.01"))
                 if cc_budget > 0
@@ -1503,9 +841,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.COST_CENTRE,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1559,9 +897,9 @@ class HierarchyService:
                     level=HierarchyLevel.GROUP,
                     lens_type=LateralLensType.ENVIRONMENT,
                     aggregate_cost=env_cost,
-                    budget_amount=Decimal("20000.00"),
+                    budget_amount=Decimal("0.00"),
                     budget_utilisation_pct=(
-                        (env_cost / Decimal("20000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                        Decimal("0.00")
                     ),
                     worst_child_threshold_state=env_worst,
                     direct_resource_count=0,
@@ -1585,9 +923,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.ENVIRONMENT,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1615,11 +953,9 @@ class HierarchyService:
                     level=HierarchyLevel.GROUP,
                     lens_type=LateralLensType.OWNER,
                     aggregate_cost=owner_cost,
-                    budget_amount=Decimal("10000.00"),
+                    budget_amount=Decimal("0.00"),
                     budget_utilisation_pct=(
-                        (owner_cost / Decimal("10000.00") * Decimal("100")).quantize(
-                            Decimal("0.01")
-                        )
+                        Decimal("0.00")
                     ),
                     worst_child_threshold_state=owner_worst,
                     direct_resource_count=len(leaves),
@@ -1641,9 +977,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.OWNER,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1697,9 +1033,9 @@ class HierarchyService:
                     level=HierarchyLevel.GROUP,
                     lens_type=LateralLensType.REGION,
                     aggregate_cost=reg_cost,
-                    budget_amount=Decimal("15000.00"),
+                    budget_amount=Decimal("0.00"),
                     budget_utilisation_pct=(
-                        (reg_cost / Decimal("15000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                        Decimal("0.00")
                     ),
                     worst_child_threshold_state=reg_worst,
                     direct_resource_count=0,
@@ -1723,9 +1059,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.REGION,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1811,9 +1147,9 @@ class HierarchyService:
             level=HierarchyLevel.ORGANISATION,
             lens_type=LateralLensType.TAG,
             aggregate_cost=total_cost,
-            budget_amount=Decimal("50000.00"),
+            budget_amount=Decimal("0.00"),
             budget_utilisation_pct=(
-                (total_cost / Decimal("50000.00") * Decimal("100")).quantize(Decimal("0.01"))
+                Decimal("0.00")
             ),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
@@ -1858,8 +1194,9 @@ class HierarchyService:
         breadcrumbs = [p.name for p in path]
 
         # Collect direct or descendant resources
+        all_res = self._repository.list_resources(tenant_context=tenant_context)
         scoped_resources = [
-            r for r in self._resources.values() if self._is_resource_in_scope(r, tenant_context)
+            r for r in all_res if self._is_resource_in_scope(r, tenant_context)
         ]
 
         # Top contributing services under this node
@@ -1931,11 +1268,12 @@ class HierarchyService:
         is_restricted = "*" not in tenant_context.scope_grants
         user_scopes = set(tenant_context.scope_grants)
 
-        # Build index of 9 entity types
+        # Build index of entities dynamically from repository
         entities: list[GlobalSearchItem] = []
+        all_res = self._repository.list_resources(tenant_context=tenant_context)
+        scoped_res = [r for r in all_res if self._is_resource_in_scope(r, tenant_context)]
 
-        # 1. Resources
-        for r in self._resources.values():
+        for r in scoped_res:
             entities.append(
                 GlobalSearchItem(
                     id=r.id,
@@ -1949,9 +1287,8 @@ class HierarchyService:
                 )
             )
 
-        # 2. Services
         service_names = {
-            r.service_name: (r.service_id, r.provider, r.scope_id) for r in self._resources.values()
+            r.service_name: (r.service_id, r.provider, r.scope_id) for r in scoped_res
         }
         for s_name, (s_id, prov, sc_id) in service_names.items():
             entities.append(
@@ -1967,147 +1304,63 @@ class HierarchyService:
                 )
             )
 
-        # 3. Scopes
-        scope_defs = [
-            ("sc-aws-prod-1", "AWS Core Production", "AWS", "o-enterprise-root"),
-            ("sc-aws-dev-1", "AWS Dev Sandbox", "AWS", "o-enterprise-root"),
-            ("sc-azure-prod-1", "Azure Corporate Production", "Azure", "t-azure-enterprise"),
-            ("sc-gcp-analytics-1", "GCP Analytics Tier", "GCP", "org-gcp-enterprise"),
-            ("sc-oci-core-1", "OCI Core Infrastructure", "OCI", "ocid1.tenancy.oc1..enterprise"),
-        ]
-        for sid, sname, prov, p_org in scope_defs:
+        unique_scopes = {r.scope_id: r.provider for r in scoped_res}
+        scope_name_map = {
+            "sc-aws-prod-1": "AWS Core Production",
+            "sc-aws-dev-1": "AWS Dev Sandbox",
+            "sc-azure-prod-1": "Azure Corporate Production",
+            "sc-gcp-analytics-1": "GCP Analytics Tier",
+            "sc-oci-core-1": "OCI Core Infrastructure",
+        }
+        for sid, prov in unique_scopes.items():
+            sname = scope_name_map.get(sid, sid)
             entities.append(
                 GlobalSearchItem(
                     id=sid,
                     entity_type="SCOPE",
                     identifier=sid,
                     title=sname,
-                    subtitle=f"Scope Boundary • {prov} • {p_org}",
+                    subtitle=f"Scope Boundary • {prov}",
                     provider=prov,
                     scope_id=sid,
                     deep_link=f"/hierarchy?scope_id={sid}",
                 )
             )
 
-        # 4. Applications
-        apps = [
-            ("app-payments", "Payments Core", "sc-aws-prod-1"),
-            ("app-checkout", "Checkout Service", "sc-azure-prod-1"),
-            ("app-inventory", "Inventory Mgmt", "sc-azure-prod-1"),
-            ("app-analytics", "Customer Analytics", "sc-gcp-analytics-1"),
-            ("app-warehouse", "Data Warehouse", "sc-gcp-analytics-1"),
-        ]
-        for aid, aname, sc_id in apps:
+        unique_apps = {(r.application_id, r.application_name, r.scope_id) for r in scoped_res if r.application_name}
+        for aid, aname, sc_id in unique_apps:
             entities.append(
                 GlobalSearchItem(
-                    id=aid,
+                    id=aid or aname,
                     entity_type="APPLICATION",
-                    identifier=aid,
+                    identifier=aid or aname,
                     title=aname,
                     subtitle="Application System",
                     scope_id=sc_id,
-                    deep_link=f"/applications?app_id={aid}",
+                    deep_link=f"/applications?app_id={aid or aname}",
                 )
             )
 
-        # 5. Budgets
-        budgets = [
-            ("bgt-finops-core", "Core FinOps Q4 Budget", "sc-aws-prod-1"),
-            ("bgt-azure-corp", "Azure Corporate FY26 Budget", "sc-azure-prod-1"),
-            ("bgt-gcp-lake", "GCP Data Platform Annual Budget", "sc-gcp-analytics-1"),
-            ("bgt-oci-tier", "OCI Infrastructure Budget", "sc-oci-core-1"),
-        ]
-        for bid, bname, sc_id in budgets:
+        unique_owners = {(r.owner_id or r.owner_email, r.owner_name, r.owner_email, r.scope_id) for r in scoped_res if r.owner_name}
+        for oid, oname, email, sc_id in unique_owners:
             entities.append(
                 GlobalSearchItem(
-                    id=bid,
-                    entity_type="BUDGET",
-                    identifier=bid,
-                    title=bname,
-                    subtitle="Financial Control Budget",
-                    scope_id=sc_id,
-                    deep_link=f"/budgets?budget_id={bid}",
-                )
-            )
-
-        # 6. Owners
-        owners = [
-            ("usr-alice", "Alice Engineer", _corp_email("alice.engineer"), "sc-aws-prod-1"),
-            ("usr-bob", "Bob DBA", _corp_email("bob.dba"), "sc-aws-prod-1"),
-            ("usr-carol", "Carol Ops", _corp_email("carol.ops"), "sc-azure-prod-1"),
-            ("usr-dave", "Dave Architect", _corp_email("dave.architect"), "sc-gcp-analytics-1"),
-        ]
-        for oid, oname, email, sc_id in owners:
-            entities.append(
-                GlobalSearchItem(
-                    id=oid,
+                    id=oid or oname,
                     entity_type="OWNER",
-                    identifier=email,
+                    identifier=email or oname,
                     title=oname,
-                    subtitle=f"Resource Owner • {email}",
+                    subtitle=f"Resource Owner • {email or oname}",
                     scope_id=sc_id,
                     deep_link=f"/inventory?owner={oname}",
                 )
             )
 
-        # 7. Connectors
-        connectors = [
-            ("conn-aws-root", "AWS Multi-Account Connector", "AWS", "sc-aws-prod-1"),
-            ("conn-az-prod", "Azure EA Enterprise Connector", "Azure", "sc-azure-prod-1"),
-            ("conn-gcp-org", "GCP Billing Export Connector", "GCP", "sc-gcp-analytics-1"),
-            ("conn-oci-ten", "OCI Tenancy Sync Connector", "OCI", "sc-oci-core-1"),
-        ]
-        for cid, cname, prov, sc_id in connectors:
-            entities.append(
-                GlobalSearchItem(
-                    id=cid,
-                    entity_type="CONNECTOR",
-                    identifier=cid,
-                    title=cname,
-                    subtitle=f"Cloud Connector • {prov}",
-                    provider=prov,
-                    scope_id=sc_id,
-                    deep_link=f"/connectors?connector_id={cid}",
-                )
-            )
-
-        # 8. Policies
-        policies = [
-            ("pol-tag-req", "Mandatory FinOps Tagging Policy", "sc-aws-prod-1"),
-            ("pol-vm-rightsize", "Underutilised VM Rightsizing Policy", "sc-azure-prod-1"),
-            ("pol-storage-lifecycle", "Storage Cold Archive Policy", "sc-gcp-analytics-1"),
-        ]
-        for pid, pname, sc_id in policies:
-            entities.append(
-                GlobalSearchItem(
-                    id=pid,
-                    entity_type="POLICY",
-                    identifier=pid,
-                    title=pname,
-                    subtitle="Governance Tag & Cost Policy",
-                    scope_id=sc_id,
-                    deep_link=f"/policies?policy_id={pid}",
-                )
-            )
-
-        # 9. Alerts
-        alerts = [
-            ("alt-aws-spike", "EC2 Cost Velocity Anomaly Alert", "sc-aws-prod-1"),
-            ("alt-sql-budget", "Azure SQL Budget Threshold Warning", "sc-azure-prod-1"),
-            ("alt-gke-unallocated", "GKE Unallocated Cluster Waste Alert", "sc-gcp-analytics-1"),
-        ]
-        for aid, aname, sc_id in alerts:
-            entities.append(
-                GlobalSearchItem(
-                    id=aid,
-                    entity_type="ALERT",
-                    identifier=aid,
-                    title=aname,
-                    subtitle="Anomaly & Threshold Alert",
-                    scope_id=sc_id,
-                    deep_link=f"/alerts?alert_id={aid}",
-                )
-            )
+        # Scoped governance entities when scope is active in tenant
+        if "sc-aws-prod-1" in unique_scopes:
+            entities.append(GlobalSearchItem(id="bgt-finops-core", entity_type="BUDGET", identifier="bgt-finops-core", title="Core FinOps Q4 Budget", subtitle="Financial Control Budget", scope_id="sc-aws-prod-1", deep_link="/budgets?budget_id=bgt-finops-core"))
+            entities.append(GlobalSearchItem(id="conn-aws-root", entity_type="CONNECTOR", identifier="conn-aws-root", title="AWS Multi-Account Connector", subtitle="Cloud Connector • AWS", provider="AWS", scope_id="sc-aws-prod-1", deep_link="/connectors?connector_id=conn-aws-root"))
+            entities.append(GlobalSearchItem(id="pol-tag-req", entity_type="POLICY", identifier="pol-tag-req", title="Mandatory FinOps Tagging Policy", subtitle="Governance Tag & Cost Policy", scope_id="sc-aws-prod-1", deep_link="/policies?policy_id=pol-tag-req"))
+            entities.append(GlobalSearchItem(id="alt-aws-spike", entity_type="ALERT", identifier="alt-aws-spike", title="EC2 Cost Velocity Anomaly Alert", subtitle="Anomaly & Threshold Alert", scope_id="sc-aws-prod-1", deep_link="/alerts?alert_id=alt-aws-spike"))
 
         # Scope Filtering & Ranking
         matched_results: list[GlobalSearchItem] = []
@@ -2307,7 +1560,8 @@ class HierarchyService:
         env_counts: dict[str, int] = {}
 
         # Streaming aggregation pass
-        for resource in self._resources.values():
+        all_res = self._repository.list_resources(tenant_context=tenant_context)
+        for resource in all_res:
             if self._matches_filter(resource, query, tenant_context):
                 match_count += 1
                 total_spend += resource.monthly_cost
@@ -2336,7 +1590,8 @@ class HierarchyService:
     ) -> tuple[int, list[InventoryResource35]]:
         """Queries 35-field inventory with pagination after matching filters."""
         matched: list[InventoryResource35] = []
-        for resource in self._resources.values():
+        all_res = self._repository.list_resources(tenant_context=tenant_context)
+        for resource in all_res:
             if self._matches_filter(resource, query, tenant_context):
                 matched.append(resource)
 
@@ -2370,12 +1625,10 @@ class HierarchyService:
             modified_fields.append("cost_center_name")
 
         for rid in request.resource_ids:
-            if rid in self._resources:
-                res = self._resources[rid]
-                # Enforce caller scope boundary
+            res = self._repository.get_resource(rid, tenant_context=tenant_context)
+            if res:
                 if not self._is_resource_in_scope(res, tenant_context):
                     continue
-
                 updated_dict = res.model_dump()
                 if request.owner_name is not None:
                     updated_dict["owner_name"] = request.owner_name
@@ -2388,7 +1641,8 @@ class HierarchyService:
                 if request.cost_center is not None:
                     updated_dict["cost_center_name"] = request.cost_center
 
-                self._resources[rid] = InventoryResource35(**updated_dict)
+                updated_res = InventoryResource35(**updated_dict)
+                self._repository.save_resource(updated_res, tenant_context=tenant_context)
                 updated += 1
 
         return BulkAssignmentResponse(
@@ -2497,13 +1751,24 @@ class HierarchyService:
 
         return output.getvalue(), "text/csv"
 
-    def get_resource_by_id(self, resource_id: str) -> InventoryResource35 | None:
+    def get_resource_by_id(
+        self, resource_id: str, tenant_context: TenantContext | None = None
+    ) -> InventoryResource35 | None:
         """Retrieves a single 35-field inventory resource by ID."""
-        return self._resources.get(resource_id)
+        return self._repository.get_resource(resource_id, tenant_context=tenant_context)
 
-    def get_all_resources(self) -> list[InventoryResource35]:
+    def list_resources(
+        self, tenant_context: TenantContext | None = None
+    ) -> list[InventoryResource35]:
+        """Returns all resources for tenant context."""
+        return self._repository.list_resources(tenant_context=tenant_context)
+
+    def get_all_resources(
+        self, tenant_context: TenantContext | None = None
+    ) -> list[InventoryResource35]:
         """Returns all 35-field inventory resources in the estate."""
-        return list(self._resources.values())
+        return self.list_resources(tenant_context=tenant_context)
+
 
 
 # Global singleton instance

@@ -20,7 +20,7 @@ import threading
 from decimal import Decimal
 from typing import Any
 
-from domain.cost.currency_service import CurrencyConversionService
+from domain.cost.currency_service import CurrencyConversionService, get_currency_service
 from domain.models.enums import DecisionOutcome
 from domain.models.exceptions import StatementNotFoundException
 from domain.rules.monetary import to_decimal
@@ -77,7 +77,7 @@ class StatementService:
         self.acceptance_engine = acceptance_engine or StatementAcceptanceEngine()
         self.transparency_engine = transparency_engine or AllocationTransparencyEngine()
         self.distribution_engine = distribution_engine or StatementDistributionEngine()
-        self.currency_service = currency_service or CurrencyConversionService()
+        self.currency_service = currency_service or get_currency_service()
 
     # ==========================================================================
     # 1. Statement Generation & Retrieval
