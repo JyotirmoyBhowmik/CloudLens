@@ -22,7 +22,6 @@ from domain.credentials.service import (
     reset_credential_service,
 )
 from domain.credentials.store import (
-    InMemorySecretStore,
     SecretStore,
     VaultSecretStore,
     get_secret_store,
@@ -42,7 +41,6 @@ __all__ = [
     "ExpiryAlert",
     # Secret Store
     "SecretStore",
-    "InMemorySecretStore",
     "VaultSecretStore",
     "get_secret_store",
     "reset_secret_store",

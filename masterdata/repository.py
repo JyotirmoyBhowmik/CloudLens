@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from datetime import datetime, timezone
 
-from db.session import get_tenant_session, run_async
+from db.session import get_tenant_session, run_async, verify_persistence_startup_guard
 from masterdata.models import LifecycleStatus, MasterDataRecord, MasterRegistryEntry
 
 logger = logging.getLogger("cloudlens.masterdata.repository")
@@ -470,16 +470,14 @@ _master_data_repo_instance: MasterDataRepository | None = None
 def get_master_data_repository() -> MasterDataRepository:
     """Dependency provider with production startup guard."""
     global _master_data_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.masterdata import InMemoryMasterDataRepository
-        return InMemoryMasterDataRepository()
-
     if _master_data_repo_instance is None:
         _master_data_repo_instance = SqlMasterDataRepository()
+        verify_persistence_startup_guard(_master_data_repo_instance)
     return _master_data_repo_instance
+
+
+def reset_master_data_repository(repo: MasterDataRepository | None = None) -> MasterDataRepository:
+    """Resets master data repository singleton for test isolation."""
+    global _master_data_repo_instance
+    _master_data_repo_instance = repo
+    return _master_data_repo_instance or get_master_data_repository()

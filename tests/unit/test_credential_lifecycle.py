@@ -29,8 +29,10 @@ from domain.credentials.service import (
     reset_credential_service,
 )
 from domain.credentials.store import (
-    InMemorySecretStore,
     reset_secret_store,
+)
+from tests.fakes.credentials import (
+    InMemorySecretStore,
 )
 from domain.models.enums import (
     AlertSeverity,

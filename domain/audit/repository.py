@@ -23,7 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.audit.models import AuditEvent, AuditEventFilter
 from domain.models.enums import AuditEventType
 from domain.models.exceptions import (
@@ -310,16 +310,14 @@ _audit_repo_instance: AuditRepository | None = None
 def get_audit_repository() -> AuditRepository:
     """Dependency provider with production startup guard."""
     global _audit_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.audit import InMemoryAuditRepository
-        return InMemoryAuditRepository()
-
     if _audit_repo_instance is None:
         _audit_repo_instance = SqlAuditRepository()
+        verify_persistence_startup_guard(_audit_repo_instance)
     return _audit_repo_instance
+
+
+def reset_audit_repository(repo: AuditRepository | None = None) -> AuditRepository:
+    """Resets audit repository singleton for test isolation."""
+    global _audit_repo_instance
+    _audit_repo_instance = repo
+    return _audit_repo_instance or get_audit_repository()

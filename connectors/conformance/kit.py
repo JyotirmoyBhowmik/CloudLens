@@ -47,7 +47,7 @@ from domain.models.exceptions import (
     UndeclaredCapabilityException,
 )
 from domain.tenant.context import TenantContext
-from domain.tenant.object_store import InMemoryTenantObjectStorage
+from domain.tenant.object_store import TenantObjectStorage, get_tenant_object_storage
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class ConnectorConformanceKit:
     """Standardized conformance validation suite for cloud provider connectors."""
 
     def __init__(self) -> None:
-        self.storage = InMemoryTenantObjectStorage()
+        self.storage: TenantObjectStorage = get_tenant_object_storage()
         self.landing_service = RawLandingService(object_storage=self.storage)
         self.checkpoint_store = CheckpointStore()
         self.quota_tracker = HourlyQuotaTracker()

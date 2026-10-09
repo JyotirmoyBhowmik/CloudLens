@@ -155,20 +155,14 @@ def get_tenant_settings_repository() -> TenantSettingsRepository:
     Enforces Prompt P03 Item 4: Staging and production strictly require SqlTenantSettingsRepository.
     """
     global _sql_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical(
-                "FATAL STARTUP GUARD FAILURE: CLOUDLENS_ENV='%s' refuses InMemory repository configuration. "
-                "Real PostgreSQL database persistence (SqlRepository) is strictly mandatory in production environments.",
-                env,
-            )
-            sys.exit(1)
-        from tests.fakes.tenant_settings import InMemoryTenantSettingsRepository
-        return InMemoryTenantSettingsRepository()
-
     if _sql_repo_instance is None:
         _sql_repo_instance = SqlTenantSettingsRepository()
+        verify_persistence_startup_guard(_sql_repo_instance)
     return _sql_repo_instance
+
+
+def reset_tenant_settings_repository(repo: TenantSettingsRepository | None = None) -> TenantSettingsRepository:
+    """Resets tenant settings repository singleton for testing."""
+    global _sql_repo_instance
+    _sql_repo_instance = repo
+    return _sql_repo_instance or get_tenant_settings_repository()

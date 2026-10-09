@@ -1,7 +1,21 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe scripts/check_no_hardcoded_constants.py
-exit=0 duration=2.7s
+exit=1 duration=3.9s
 
 --- STDOUT ---
-[PASS] Zero hard-coding scan passed cleanly! (84 allow-listed exceptions in register)
 
 --- STDERR ---
+================================================================================
+CLOUDLENS BUILD GATE FINDINGS: HARD-CODED CONSTANTS DETECTED
+Mode: ENFORCE | Total Violations: 2
+================================================================================
+
+### Rule 4.2 � Identity Attribute String Comparisons (2 findings):
+  - api/cloudlens_api/routes/auth.py:765 -> '@'
+    Reason: Comparison of string literal '@' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - api/cloudlens_api/routes/auth.py:892 -> '@'
+    Reason: Comparison of string literal '@' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+
+================================================================================
+Summary: 2 violations found across 5 directories.
+Allow-listed exceptions recorded: 80
+[GATE RESULT: FAILED] Exiting with status 1 (Enforce mode).

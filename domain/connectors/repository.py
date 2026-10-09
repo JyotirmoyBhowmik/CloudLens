@@ -22,7 +22,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.connectors.models import ConnectorEntity
 from domain.models.enums import ConnectorLifecycleState, ProviderType
 from domain.tenant.context import TenantContext
@@ -399,25 +399,16 @@ _connector_repo_instance: Any = None
 def get_connector_repository() -> Any:
     """Dependency provider with production startup guard."""
     global _connector_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory connector repository.")
-            sys.exit(1)
-        from tests.fakes.connectors import InMemoryConnectorRepository
-        return InMemoryConnectorRepository()
-
     if _connector_repo_instance is None:
         _connector_repo_instance = SqlConnectorRepository()
+        verify_persistence_startup_guard(_connector_repo_instance)
     return _connector_repo_instance
 
 
-def reset_connector_repository() -> Any:
+def reset_connector_repository(repo: Any = None) -> Any:
     global _connector_repo_instance
-    _connector_repo_instance = None
-    return get_connector_repository()
+    _connector_repo_instance = repo
+    return _connector_repo_instance or get_connector_repository()
 
 
 __all__ = [

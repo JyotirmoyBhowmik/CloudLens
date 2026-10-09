@@ -71,111 +71,6 @@ class SecretStore(ABC):
         pass
 
 
-class InMemorySecretStore(SecretStore):
-    """Thread-safe, reference-based secret store simulating external HashiCorp Vault KV v2.
-
-    Guarantees strict reference isolation: raw credential material exists ONLY in this
-    dedicated storage boundary and is referenced across the platform solely by opaque URI.
-    """
-
-    def __init__(self, mount_point: str = "secret") -> None:
-        self._mount_point = mount_point
-        self._secrets: dict[str, dict[str, Any]] = {}
-        self._lock = threading.Lock()
-
-    def _build_reference_uri(self, tenant_id: str, profile_id: str, version: int) -> str:
-        clean_tenant = urllib.parse.quote(tenant_id, safe="")
-        clean_profile = urllib.parse.quote(profile_id, safe="")
-        return f"vault://{self._mount_point}/data/tenants/{clean_tenant}/credentials/{clean_profile}/v{version}"
-
-    def store_secret(
-        self,
-        tenant_id: str,
-        profile_id: str,
-        version: int,
-        secret_data: dict[str, Any],
-    ) -> str:
-        if not secret_data:
-            raise SecretStoreUnavailableException(
-                "Cannot store empty credential payload in SecretStore."
-            )
-
-        ref_uri = self._build_reference_uri(tenant_id, profile_id, version)
-        with self._lock:
-            # Store deep copy so mutations outside cannot corrupt stored secret material
-            self._secrets[ref_uri] = copy.deepcopy(secret_data)
-
-        logger.info(
-            "Credential material written directly to dedicated secret store",
-            extra={"tenant_id": tenant_id, "secret_ref": ref_uri, "version": version},
-        )
-        return ref_uri
-
-    def _validate_tenant_scope(self, secret_ref: str, tenant_id: str | None) -> None:
-        if tenant_id:
-            clean_tenant = urllib.parse.quote(tenant_id, safe="")
-            expected_prefix = f"/tenants/{clean_tenant}/"
-            if expected_prefix not in secret_ref:
-                raise CrossTenantCredentialAccessException(
-                    profile_id=secret_ref,
-                    caller_tenant_id=tenant_id,
-                    owner_tenant_id="external",
-                )
-
-    def get_secret(
-        self,
-        secret_ref: str,
-        tenant_id: str | None = None,
-        actor: str | None = None,
-        purpose: str | None = None,
-    ) -> dict[str, Any]:
-        self._validate_tenant_scope(secret_ref, tenant_id)
-        effective_actor = actor or "system"
-        # Item 2.5: Secret reads are audited (actor, ref, purpose); secret VALUES never logged
-        logger.info(
-            "Secret material accessed from dedicated secret store",
-            extra={
-                "actor": effective_actor,
-                "secret_ref": secret_ref,
-                "purpose": purpose or "credential_read",
-                "tenant_id": tenant_id,
-            },
-        )
-        with self._lock:
-            secret = self._secrets.get(secret_ref)
-
-        if secret is None:
-            raise CredentialNotFoundException(
-                profile_id=secret_ref,
-                tenant_id=tenant_id,
-            )
-        return copy.deepcopy(secret)
-
-    def delete_secret(self, secret_ref: str, tenant_id: str | None = None) -> bool:
-        self._validate_tenant_scope(secret_ref, tenant_id)
-        with self._lock:
-            removed = self._secrets.pop(secret_ref, None) is not None
-
-        if removed:
-            logger.info(
-                "Credential material permanently purged from secret store",
-                extra={"secret_ref": secret_ref},
-            )
-        return removed
-
-    def has_secret(self, secret_ref: str) -> bool:
-        with self._lock:
-            return secret_ref in self._secrets
-
-    def health_check(self) -> bool:
-        return True
-
-    def clear(self) -> None:
-        """Utility for test suite reset."""
-        with self._lock:
-            self._secrets.clear()
-
-
 class VaultSecretStore(SecretStore):
     """HashiCorp Vault and OpenBao KV v2 secret store implementation (Prompt R-SEC Part 2).
 
@@ -397,39 +292,20 @@ _store_lock = threading.Lock()
 
 
 def get_secret_store(config: SecretStoreConfig | None = None) -> SecretStore:
-    """Singleton provider for active dedicated SecretStore (Prompt R-SEC Part 2).
-
-    InMemorySecretStore is selectable ONLY when CLOUDLENS_ENV=development AND backend_type=memory explicitly.
-    """
+    """Singleton provider for active dedicated SecretStore (Prompt R-SEC Part 2)."""
     global _global_secret_store
     with _store_lock:
         if _global_secret_store is None:
             cfg = config or SecretStoreConfig()
-            env = os.getenv("CLOUDLENS_ENV", "development").lower()
-            backend = (os.getenv("SECRET_STORE_BACKEND") or cfg.backend_type or "vault").lower()
-
-            if backend == "vault":
-                _global_secret_store = VaultSecretStore(cfg)
-            elif backend == "memory":
-                if env != "development":
-                    logger.critical(
-                        "InMemorySecretStore is strictly forbidden in %s environment. Refusing to initialize.",
-                        env,
-                    )
-                    raise SecretStoreUnavailableException(
-                        f"InMemorySecretStore is permitted ONLY when CLOUDLENS_ENV=development. Current env: {env}"
-                    )
-                _global_secret_store = InMemorySecretStore(mount_point=cfg.mount_point)
-            else:
-                if env in ("staging", "production"):
-                    logger.critical(
-                        "Backend type '%s' is strictly forbidden in %s. Only 'vault' is permitted.",
-                        backend,
-                        env,
-                    )
-                    raise SecretStoreUnavailableException(f"Unsupported backend '{backend}' in {env}")
-                _global_secret_store = InMemorySecretStore(mount_point=cfg.mount_point)
+            _global_secret_store = VaultSecretStore(cfg)
         return _global_secret_store
+
+
+def set_secret_store(store: SecretStore | None) -> None:
+    """Sets active secret store instance."""
+    global _global_secret_store
+    with _store_lock:
+        _global_secret_store = store
 
 
 def verify_secret_store_startup_guard() -> None:
@@ -454,11 +330,11 @@ def verify_secret_store_startup_guard() -> None:
             sys.exit(1)
 
 
-def reset_secret_store() -> None:
+def reset_secret_store(store: SecretStore | None = None) -> None:
     """Resets global secret store singleton for unit test isolation."""
     global _global_secret_store
     with _store_lock:
-        if _global_secret_store and isinstance(_global_secret_store, InMemorySecretStore):
+        if _global_secret_store and hasattr(_global_secret_store, "clear"):
             _global_secret_store.clear()
-        _global_secret_store = None
+        _global_secret_store = store
 

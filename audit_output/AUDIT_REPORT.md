@@ -1,122 +1,143 @@
 # CloudLens Audit Report v2.0
 
-Generated **2026-10-06 05:55:01 UTC** | repo `CloudLens` | HEAD `e3b3f747fc30` | branch `main` | python `C:\Users\TEST\CloudLens\.venv\Scripts\python.exe`
+Generated **2026-10-09 00:31:36 UTC** | repo `CloudLens` | HEAD `117ebe7c6477` | branch `main` | python `C:\Users\TEST\CloudLens\.venv\Scripts\python.exe`
 
-> Every figure below was produced by a command or file scan in this run. Raw outputs: `audit_output/raw/`. Flags: `--run-tests` ON, `--coverage` ON, `--probe-startup` ON
+> Every figure below was produced by a command or file scan in this run. Raw outputs: `audit_output/raw/`. Flags: `--run-tests` OFF, `--coverage` OFF, `--probe-startup` OFF
 
-## 0. Findings summary — RED 6 | AMBER 19
+## 0. Findings summary — RED 7 | AMBER 16
 
 | # | Severity | Area | Finding |
 |---|---|---|---|
-| 1 | RED | Persistence | 87 non-test files hold state in Python dicts |
-| 2 | RED | Security | health_check() returns constant True in: domain/credentials/store.py |
-| 3 | RED | Security | Secret-like default values in code |
-| 4 | RED | Evidence | fat/control_tower_screenshot.jpg carries AI-generation / content-credential markers ['c2pa', 'C2PA', 'jumb', 'trainedAlgorithmicMedia'] — not valid test evidence |
-| 5 | RED | Evidence | Metric values (RTO/RPO/latency/cost/ROI) appear hard-coded in 6 script(s) that generate FAT evidence — they must be measured, not written |
-| 6 | RED | Evidence | AC-040 (two closed billing periods reconciled) marked PASS — impossible without live billing periods |
-| 7 | AMBER | Git | Very large or multi-prompt commit: 2027ff7|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS (250 files, +21422) — hard to review; one prompt per commit expected |
-| 8 | AMBER | Git | No commit message references R-SEC; no commit-level evidence it was executed |
-| 9 | AMBER | Git | No commit message references R-QUAL; no commit-level evidence it was executed |
-| 10 | AMBER | Git | No commit message references R-ROLES; no commit-level evidence it was executed |
-| 11 | AMBER | Git | No commit message references R-PERSIST; no commit-level evidence it was executed |
-| 12 | AMBER | Git | No commit message references R-DATA; no commit-level evidence it was executed |
-| 13 | AMBER | Tests | tests/upgrade has only 1 tests — thin evidence for that test level |
-| 14 | AMBER | Tests | tests/load has only 2 tests — thin evidence for that test level |
-| 15 | AMBER | Tests | tests/rbac has only 3 tests — thin evidence for that test level |
-| 16 | AMBER | Security | A break-glass provision route still referenced — only one break-glass path is allowed |
-| 17 | AMBER | Security | cors wildcard: 1 file(s) |
-| 18 | AMBER | Gates | Hard-coding gate passes with 84 allow-listed exceptions — review whether findings were exempted rather than fixed |
-| 19 | AMBER | Mandate M2 | Thresholds compared against Decimal literals in 28 file(s) — should come from master data |
-| 20 | AMBER | Evidence | Evidence/docs cite 'gitleaks' results but gitleaks is not installed here — results cannot have been produced on this machine |
-| 21 | AMBER | Evidence | Evidence/docs cite 'trivy' results but trivy is not installed here — results cannot have been produced on this machine |
-| 22 | AMBER | Evidence | Evidence/docs cite 'zap' results but zap is not installed here — results cannot have been produced on this machine |
-| 23 | AMBER | Deployment | Dockerfiles without a non-root USER: ['ops/docker/Dockerfile.api', 'ops/docker/Dockerfile.web', 'ops/docker/Dockerfile.worker'] |
-| 24 | AMBER | Security | 134 routes have no visible auth/tenant dependency in their signature — verify they are protected by middleware |
-| 25 | AMBER | Docs | Duplicate documents: ['exception_register', 'identity_verification_report', 'pre_identity_verification_report', 'pricing_dimensions_reconciled', 'sbom'] |
+| 1 | RED | Gates | no_hardcoded_constants gate failed (exit 1) |
+| 2 | RED | Gates | Undefined names (F821) present — code will crash on that path |
+| 3 | RED | Persistence | 52 non-test files hold state in Python dicts |
+| 4 | RED | Security | Secret-like default values in code |
+| 5 | RED | Evidence | fat/control_tower_screenshot.jpg carries AI-generation / content-credential markers ['c2pa', 'C2PA', 'jumb', 'trainedAlgorithmicMedia'] — not valid test evidence |
+| 6 | RED | Evidence | Metric values (RTO/RPO/latency/cost/ROI) appear hard-coded in 6 script(s) that generate FAT evidence — they must be measured, not written |
+| 7 | RED | Evidence | AC-040 (two closed billing periods reconciled) marked PASS — impossible without live billing periods |
+| 8 | AMBER | Git | 49 uncommitted files — audit does not reflect a committed state |
+| 9 | AMBER | Git | No commit message references R-SEC; no commit-level evidence it was executed |
+| 10 | AMBER | Git | No commit message references R-QUAL; no commit-level evidence it was executed |
+| 11 | AMBER | Git | No commit message references R-ROLES; no commit-level evidence it was executed |
+| 12 | AMBER | Git | No commit message references R-PERSIST; no commit-level evidence it was executed |
+| 13 | AMBER | Git | No commit message references R-DATA; no commit-level evidence it was executed |
+| 14 | AMBER | Tests | tests/upgrade has only 1 tests — thin evidence for that test level |
+| 15 | AMBER | Tests | tests/load has only 2 tests — thin evidence for that test level |
+| 16 | AMBER | Tests | tests/rbac has only 3 tests — thin evidence for that test level |
+| 17 | AMBER | Gates | Hard-coding gate passes with 80 allow-listed exceptions — review whether findings were exempted rather than fixed |
+| 18 | AMBER | Mandate M2 | Thresholds compared against Decimal literals in 28 file(s) — should come from master data |
+| 19 | AMBER | Evidence | Evidence/docs cite 'trivy' results but trivy is not installed here — results cannot have been produced on this machine |
+| 20 | AMBER | Evidence | Evidence/docs cite 'zap' results but zap is not installed here — results cannot have been produced on this machine |
+| 21 | AMBER | Deployment | Dockerfiles without a non-root USER: ['ops/docker/Dockerfile.api', 'ops/docker/Dockerfile.web', 'ops/docker/Dockerfile.worker'] |
+| 22 | AMBER | Security | 124 routes have no visible auth/tenant dependency in their signature — verify they are protected by middleware |
+| 23 | AMBER | Docs | Duplicate documents: ['exception_register', 'identity_verification_report', 'pre_identity_verification_report', 'pricing_dimensions_reconciled', 'sbom'] |
 
 ## 1. Git
-- Commits **78** | uncommitted **0** | unpushed **no upstream**
+- Commits **89** | uncommitted **49** | unpushed **no upstream**
 - Prompt IDs in commit messages: `15B, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 31B, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 47B, 50, 51, 52, 53, 54, 55, 56, 58, 59, 60, 61, CT, DOC, FEAT, FINAL, OBS, OPS, PERF, RUN, UI`
 - Recent commit sizes:
 ```
+  34 files +8512    117ebe7|P07: Persistence Tier 4 — Governance and Estate
+  35 files +6101    ca1063e|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconcilia
+  20 files +4323    40fb698|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
+  33 files +5497    879128b|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
+  13 files +1134    245362b|P03: Persistence Foundation
+  22 files +1324    64aa427|P02: Real Sign-in in the Web App
+  21 files +1269    b5d5107|P01B: Authentication Integrity — Login, Keys and Every Write Route
+  21 files +1055    3f93b54|P01: Close Every Header-Based Identity Bypass
+  10 files +531     bb7020f|P00: Baseline Environment and Real-Database Testing
+  35 files +53803   0f7fb1a|chore(audit): upload audit_output artifacts and root audit_full.json
+   7 files +98      4e60e9d|chore(audit): update configuration reports and ignore audit_full.json
    1 files +919     e3b3f74|Add files via upload
    2 files +85      205761a|chore(audit): update exception register timestamps
    3 files +19      e3549ad|fix(migrations): widen alembic_version version_num to varchar(128) and update boot
   35 files +2847    2db198c|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-liv
-  30 files +4071    51d29c2|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and 
-  11 files +1206    ea1cc4f|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-
- 250 files +21422   2027ff7|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS
-   1 files +374     7831aa5|chore: add cloudlens_audit.py script
-   1 files +1       d01098a|chore: add audit_output/ to .gitignore
-   1 files +512     c4b90ce|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, 
-  15 files +2901    3303556|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review p
-  18 files +3870    6cb8436|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, a
-   8 files +487     d6c1024|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, 
-   5 files +499     9813329|feat(commitments): complete commitment renewal, workflow routing, and alerting (Pr
-   2 files +143     25c68bc|docs: add provider capability register and open items register (Prompt 43)
 ```
 Last 15 commits:
 ```
+117ebe7|2026-10-09|P07: Persistence Tier 4 — Governance and Estate
+ca1063e|2026-10-09|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
+40fb698|2026-10-09|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
+879128b|2026-10-08|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
+245362b|2026-10-08|P03: Persistence Foundation
+64aa427|2026-10-08|P02: Real Sign-in in the Web App
+b5d5107|2026-10-08|P01B: Authentication Integrity — Login, Keys and Every Write Route
+3f93b54|2026-10-08|P01: Close Every Header-Based Identity Bypass
+bb7020f|2026-10-07|P00: Baseline Environment and Real-Database Testing
+0f7fb1a|2026-10-06|chore(audit): upload audit_output artifacts and root audit_full.json
+4e60e9d|2026-10-06|chore(audit): update configuration reports and ignore audit_full.json
 e3b3f74|2026-10-06|Add files via upload
 205761a|2026-10-06|chore(audit): update exception register timestamps
 e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification
 2db198c|2026-10-06|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
-51d29c2|2026-10-06|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and fat artifacts
-ea1cc4f|2026-10-06|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-level markers (Prompt R-PERF)
-2027ff7|2026-10-06|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS, R-CT, R-OPS, R-UI, R-FEAT)
-7831aa5|2026-10-04|chore: add cloudlens_audit.py script
-d01098a|2026-10-04|chore: add audit_output/ to .gitignore
-c4b90ce|2026-10-04|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook
-3303556|2026-10-04|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack
-6cb8436|2026-10-04|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox
-d6c1024|2026-10-04|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks
-9813329|2026-10-04|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)
-25c68bc|2026-10-04|docs: add provider capability register and open items register (Prompt 43)
+```
+Uncommitted:
+```
+ M api/cloudlens_api/conventions/idempotency.py
+ M api/cloudlens_api/conventions/rate_limit.py
+ M connectors/conformance/kit.py
+ M connectors/contract/checkpoint_store.py
+ M connectors/contract/raw_landing.py
+ M db/session.py
+ M docs/configuration/exception_register.json
+ M docs/configuration/exception_register.md
+ M domain/abuse/tracker.py
+ M domain/analytics/repository.py
+ M domain/analytics/watermark.py
+ M domain/audit/repository.py
+ M domain/budgets/repository.py
+ M domain/catalogues/repository.py
+ M domain/config/feature_flags_repository.py
+ M domain/config/repository.py
+ M domain/connectors/repository.py
+ M domain/cost/currency_service.py
+ M domain/cost/reconciliation/repository.py
+ M domain/cost/repository.py
 ```
 
 ## 2. Size
-- Files **920** | non-blank lines **303425**
+- Files **1002** | non-blank lines **329091**
 
 | Top-level | Files | LOC |
 |---|---|---|
-| domain | 327 | 86036 |
-| docs | 44 | 85388 |
-| tests | 119 | 40215 |
-| web | 68 | 24503 |
-| connectors | 83 | 15800 |
-| (root) | 13 | 14287 |
-| api | 61 | 13786 |
-| masterdata | 67 | 8006 |
-| scripts | 39 | 5585 |
-| db | 23 | 2894 |
-| ops | 46 | 2793 |
+| domain | 337 | 95837 |
+| docs | 47 | 85735 |
+| tests | 172 | 48953 |
+| web | 71 | 24887 |
+| (root) | 14 | 16722 |
+| connectors | 83 | 16091 |
+| api | 61 | 14376 |
+| masterdata | 69 | 8559 |
+| scripts | 42 | 6018 |
+| db | 29 | 4704 |
+| ops | 47 | 3061 |
 | fat | 11 | 2132 |
-| workers | 6 | 1011 |
+| workers | 6 | 1027 |
 | artifacts | 4 | 411 |
 | normalisation | 7 | 399 |
 | .github | 2 | 179 |
 
 | Language | Files | LOC |
 |---|---|---|
-| Python | 672 | 173111 |
-| JSON | 84 | 97301 |
-| TypeScript | 66 | 24454 |
-| Markdown | 55 | 5133 |
-| YAML | 38 | 3192 |
-| TOML | 2 | 135 |
+| Python | 744 | 195147 |
+| JSON | 87 | 100014 |
+| TypeScript | 69 | 24838 |
+| Markdown | 58 | 5512 |
+| YAML | 38 | 3232 |
+| TOML | 2 | 138 |
+| PowerShell | 2 | 133 |
 | Template | 1 | 67 |
-| PowerShell | 1 | 22 |
 | Shell | 1 | 10 |
 
 Key directories:
 - **api/**: cloudlens_api
-- **domain/**: abuse, adoption, alerting, analytics, attribution, audit, bootstrap, budgets, bulk_import, catalogues, commitments, config, control_tower, cost, credentials, dashboards, demo, dependency, diagnostics, explanation, forecasting, hierarchy, identity, integrations, lifecycle, maintenance, models, notification, observability, overrides, planning, policy, pricing, provisioning, quotas, rbac, release, remediation, reports, resource_detail, rules, runtime, statements, sync, synthetic, tenant, thresholds, topology, usage, wizard, workflows
+- **domain/**: abuse, adoption, alerting, analytics, attribution, audit, bootstrap, budgets, bulk_import, catalogues, commitments, config, connectors, control_tower, cost, credentials, dashboards, demo, dependency, diagnostics, explanation, forecasting, hierarchy, identity, integrations, lifecycle, maintenance, models, notification, observability, overrides, planning, policy, pricing, provisioning, quotas, rbac, release, remediation, reports, resource_detail, rules, runtime, statements, sync, synthetic, tenant, thresholds, topology, usage, wizard, workflows
 - **connectors/**: aws, azure, conformance, contract, diagnostics, fixtures, gcp, oci, simulator, stub, sync, wizard
 - **normalisation/**: mappings, tags, units
 - **masterdata/**: catalogues, registries, seeds
 - **db/**: aggregates, lifecycle, migrations, partitioning, schema, seeds
-- **web/**: public, src, tests
-- **tests/**: acceptance, adoption, analytics, cloud_provider, commitments, connectors, contracts, control_tower, cost_reconciliation, data, data_validation, dr, e2e, failure_injection, improvements, integration, integrations, lifecycle, load, mandates, masterdata, perf, planning, rbac, regression, security, ui, unit, upgrade, workers, workflow
+- **web/**: public, screenshots, src, tests
+- **tests/**: acceptance, adoption, analytics, cloud_provider, commitments, connectors, contracts, control_tower, cost_reconciliation, data, data_validation, dr, e2e, failure_injection, fakes, improvements, integration, integrations, lifecycle, load, mandates, masterdata, perf, planning, rbac, regression, security, ui, unit, upgrade, workers, workflow
 - **ops/**: alertmanager, cosign, dashboards, docker, grafana, helm, keycloak, loki, otel, prometheus, promtail, sbom, tempo
 - **scripts/**: (files only)
 - **docs/**: analytics, configuration, connectors, decisions, permissions, security
@@ -124,21 +145,14 @@ Key directories:
 - **fat/**: (files only)
 
 ## 3. Tests
-- Collected **1413** | collection errors **0** | collect exit 0
-- EXECUTED: **1413** | passed **1409** | failed **0** | errors **0** | skipped **4** | 265.5s
-- Random-order run: `{'exit': 0, 'tail': ['=========== 1409 passed, 4 skipped, 1 warning in 261.06s (0:04:21) ============']}`
-- Skipped (reasons):
-```
-SKIPPED [1] tests\integration\test_database_real.py:74: Real PostgreSQL instance is not reachable at localhost:5432. Skipping real database integration test. (Strict constraint: Mock databases are str
-SKIPPED [1] tests\integration\test_database_real.py:84: Real PostgreSQL instance is not reachable at localhost:5432. Skipping real database integration test. (Strict constraint: Mock databases are str
-SKIPPED [1] tests\integration\test_database_real.py:145: Real PostgreSQL instance is not reachable at localhost:5432. Skipping real database integration test. (Strict constraint: Mock databases are st
-SKIPPED [1] tests\integration\test_database_real.py:171: Real PostgreSQL instance is not reachable at localhost:5432. Skipping real database integration test. (Strict constraint: Mock databases are st
-```
+- Collected **1485** | collection errors **0** | collect exit 0
+- Tests not executed in this run (use `--run-tests`).
 
 | Test directory | Tests |
 |---|---|
 | unit | 1026 |
-| security | 95 |
+| security | 110 |
+| integration | 63 |
 | contracts | 30 |
 | e2e | 26 |
 | workers | 26 |
@@ -157,7 +171,6 @@ SKIPPED [1] tests\integration\test_database_real.py:171: Real PostgreSQL instanc
 | failure_injection | 7 |
 | perf | 7 |
 | planning | 7 |
-| integration | 6 |
 | masterdata | 6 |
 | ui | 6 |
 | data_validation | 5 |
@@ -169,66 +182,52 @@ SKIPPED [1] tests\integration\test_database_real.py:171: Real PostgreSQL instanc
 | load | 2 |
 | upgrade | 1 |
 
-Slowest tests:
-```
-8.1s tests.workers.test_scheduled_work_suite::test_beat_leader_lock_prevents_duplicate_runs
-8.1s tests.workers.test_scheduled_work_suite::test_task_concurrency_lock
-6.5s tests.unit.test_bulk_import_framework.Test5000RowBulkImportAndProvenance::test_five_thousand_row_import_lifecycle
-5.6s tests.unit.test_layering::test_layering_rule_passes_on_clean_codebase
-4.3s tests.workers.test_scheduled_work_suite::test_database_beat_scheduler_zero_cron_literals
-4.3s tests.workers.test_scheduled_work_suite::test_canonical_task_execution[send_daily_platform_summary]
-4.3s tests.workers.test_scheduled_work_suite::test_canonical_task_execution[run_analytical_extract]
-4.1s tests.workers.test_scheduled_work_suite::test_canonical_task_execution[verify_remediation]
-4.1s tests.workers.test_scheduled_work_suite::test_canonical_task_execution[ingest_usage]
-4.1s tests.workers.test_scheduled_work_suite::test_canonical_task_execution[heartbeat]
-```
-
 ## 4. Coverage
-- Total: **87%** over domain, api, connectors, normalisation, masterdata, workers
+- {'status': 'not run (use --coverage)'}
 
 ## 5. Quality gates
 - **layering**: exit 0 — [PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer.
-- **no_hardcoded_constants**: exit 0 — [PASS] Zero hard-coding scan passed cleanly! (84 allow-listed exceptions in register)
-- **ruff**: exit 1 — Found 1 error. / [*] 1 fixable with the `--fix` option.
+- **no_hardcoded_constants**: exit 1 — Allow-listed exceptions recorded: 80 / [GATE RESULT: FAILED] Exiting with status 1 (Enforce mode).
+- **ruff**: exit 0 — 
 - **ruff F-class findings**:
 ```
 api\cloudlens_api\routes\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
 api\cloudlens_api\routes\__init__.py:11:57: F401 `api.cloudlens_api.routes.calendar.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+api\cloudlens_api\routes\auth.py:33:36: F401 [*] `domain.identity.models.AuthContext` imported but unused
+api\cloudlens_api\routes\auth.py:40:5: F401 [*] `domain.models.exceptions.NoMappedRoleException` imported but unused
+api\cloudlens_api\routes\auth.py:47:5: F401 [*] `domain.models.exceptions.UserNotProvisionedException` imported but unused
 api\cloudlens_api\routes\control_tower.py:29:5: F401 [*] `domain.control_tower.models.BlastRadius` imported but unused
 api\cloudlens_api\routes\control_tower.py:31:5: F401 [*] `domain.control_tower.models.ControlTowerActionResult` imported but unused
+api\cloudlens_api\routes\credentials.py:23:41: F401 [*] `fastapi.Header` imported but unused
 api\cloudlens_api\routes\inventory.py:32:33: F401 [*] `domain.models.enums.PricingStatus` imported but unused
 api\cloudlens_api\routes\inventory.py:32:48: F401 [*] `domain.models.enums.ProviderType` imported but unused
 api\cloudlens_api\routes\inventory.py:32:62: F401 [*] `domain.models.enums.ServiceCategory` imported but unused
+api\cloudlens_api\routes\rbac.py:23:81: F401 [*] `domain.models.enums.SystemRole` imported but unused
+connectors\contract\checkpoint_store.py:16:8: F401 [*] `os` imported but unused
+connectors\contract\checkpoint_store.py:17:8: F401 [*] `sys` imported but unused
+connectors\contract\checkpoint_store.py:41:13: F841 Local variable `loop` is assigned to but never used
+connectors\contract\raw_landing.py:19:8: F401 [*] `os` imported but unused
+connectors\contract\raw_landing.py:20:8: F401 [*] `sys` imported but unused
+connectors\contract\raw_landing.py:57:13: F841 Local variable `loop` is assigned to but never used
+db\session.py:136:14: F821 Undefined name `Any`
+db\session.py:196:57: F821 Undefined name `Any`
+db\session.py:273:21: F821 Undefined name `Any`
+db\session.py:273:29: F821 Undefined name `Any`
+domain\alerting\repository.py:15:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\alerting\repository.py:17:24: F401 [*] `db.session.get_sync_bridge_loop` imported but unused
+domain\analytics\watermark.py:17:20: F401 [*] `typing.Any` imported but unused
+domain\analytics\watermark.py:158:13: F841 Local variable `wid` is assigned to but never used
 domain\attribution\governance_resolver.py:10:20: F401 [*] `typing.Any` imported but unused
-domain\control_tower\service.py:30:32: F401 [*] `datetime.timedelta` imported but unused
-domain\control_tower\service.py:34:8: F401 [*] `httpx` imported but unused
-domain\control_tower\service.py:46:38: F401 [*] `domain.credentials.store.get_secret_store` imported but unused
-domain\control_tower\service.py:48:34: F401 [*] `domain.observability.metrics` imported but unused
-domain\control_tower\service.py:52:5: F401 [*] `domain.sync.repository.get_connector_schedule_repository` imported but unused
-domain\control_tower\service.py:396:9: F811 Redefinition of unused `metrics` from line 48: `metrics` redefined here
-domain\synthetic\journey_monitor.py:20:33: F401 [*] `domain.models.enums.AlertSeverity` imported but unused
-domain\synthetic\journey_monitor.py:20:48: F401 [*] `domain.models.enums.AlertStatus` imported but unused
-domain\synthetic\journey_monitor.py:45:9: F841 Local variable `tc` is assigned to but never used
-domain\synthetic\journey_monitor.py:68:13: F841 Local variable `cost_engine` is assigned to but never used
-domain\synthetic\journey_monitor.py:105:17: F841 Local variable `alert_svc` is assigned to but never used
-scripts\count_level_markers.py:6:8: F401 [*] `subprocess` imported but unused
-scripts\count_level_markers.py:7:8: F401 [*] `sys` imported but unused
-scripts\generate_fat_package.py:22:22: F401 [*] `datetime.datetime` imported but unused
-scripts\generate_fat_package.py:22:32: F401 [*] `datetime.timezone` imported but unused
-scripts\generate_fat_package.py:24:38: F401 [*] `xml.etree.ElementTree` imported but unused
-scripts\generate_fat_package.py:140:9: F841 Local variable `content` is assigned to but never used
-scripts\generate_rtm.py:21:8: F401 [*] `os` imported but unused
-scripts\generate_rtm.py:23:8: F401 [*] `sys` imported but unused
-scripts\run_proof_tasks.py:15:8: F401 [*] `time` imported but unused
-scripts\run_proof_tasks.py:16:22: F401 [*] `datetime.UTC` imported but unused
-scripts\run_proof_tasks.py:16:27: F401 [*] `datetime.datetime` imported but unused
+domain\audit\repository.py:18:8: F401 [*] `os` imported but unused
+domain\audit\repository.py:19:8: F401 [*] `sys` imported but unused
+domain\audit\repository.py:24:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
 ```
 - **web_typecheck**: exit 0 —  (TS errors 0)
 
 ## 6. Persistence and fail-closed startup
-- `domain/**/repository.py` files: **26** | using SQL: **23**
-- Non-test files holding state in Python dicts: **87** | files using a DB session: **6** | files with `class InMemory*`: **2** | files with `class Sql*Repository`: **0**
-- Migrations: **10** | tables created: **49** | RLS statements: **10** | code that sets `app.current_tenant`: **2** file(s)
+- `domain/**/repository.py` files: **33** | using SQL: **33**
+- Non-test files holding state in Python dicts: **52** | files using a DB session: **37** | files with `class InMemory*`: **0** | files with `class Sql*Repository`: **34**
+- Migrations: **16** | tables created: **133** | RLS statements: **22** | code that sets `app.current_tenant`: **11** file(s)
 - Migration files:
 ```
 db/migrations/versions/001_initial_schema.py
@@ -241,16 +240,13 @@ db/migrations/versions/007_tenant_isolation_and_overrides.py
 db/migrations/versions/008_connector_contract_and_capabilities.py
 db/migrations/versions/009_sync_orchestration_and_wizard.py
 db/migrations/versions/010_onboarding_step_restoration_and_alert_test.py
+db/migrations/versions/011_persistence_foundation_and_rls.py
+db/migrations/versions/012_persistence_tier1_identity_audit_config.py
+db/migrations/versions/013_persistence_tier2_unique_idempotency.py
+db/migrations/versions/014_persistence_tier3_cost_budgets_pricing.py
+db/migrations/versions/015_persistence_tier4_governance_and_estate.py
+db/migrations/versions/016_persistence_tier5_remaining_modules.py
 ```
-- repository.py files with NO SQL (in-memory):
-```
-domain/catalogues/repository.py
-domain/pricing/repository.py
-domain/provisioning/repository.py
-```
-- Startup probe with no Vault/DB reachable (expect REFUSED):
-  - `production`: `REFUSED_TO_START exit 1`
-  - `staging`: `REFUSED_TO_START exit 1`
 - Environment guards found:
 ```
 api/cloudlens_api/routes/provisioning.py:76: intended_environment: str = Field(..., description="Target environment (PROD, STAGING, DEV)")
@@ -260,9 +256,9 @@ domain/budgets/templates.py:165: display_name="Environment Sandbox/Production Sp
 domain/budgets/templates.py:166: description="Environment isolation budget ceiling (e.g. dev sandbox cap or production baseline).",
 domain/bulk_import/catalogue.py:366: description="Environment tiers (Production, Staging, Dev) with production flags.",
 domain/bulk_import/catalogue.py:381: description="Environment code (e.g. ENV-PROD, ENV-STAGING)",
-domain/hierarchy/service.py:106: {"key": "Environment", "value": "Production"},
-domain/hierarchy/service.py:144: {"key": "Environment", "value": "Production"},
-domain/hierarchy/service.py:181: {"key": "Environment", "value": "Production"},
+domain/hierarchy/service.py:108: {"key": "Environment", "value": "Production"},
+domain/hierarchy/service.py:146: {"key": "Environment", "value": "Production"},
+domain/hierarchy/service.py:183: {"key": "Environment", "value": "Production"},
 ```
 
 ## 7. Security checks
@@ -270,35 +266,29 @@ domain/hierarchy/service.py:181: {"key": "Environment", "value": "Production"},
 |---|---|---|
 | superuser_literal_in_app_code | 0 |  |
 | email_identity_comparison | 0 |  |
-| secret_like_defaults | 1 | domain/identity/models.py:136: token_type: str = Field(default="Bearer", description="Token type descriptor") |
+| secret_like_defaults | 1 | domain/identity/models.py:146: token_type: str = Field(default="Bearer", description="Token type descriptor") |
 | inmemory_secret_fallback | 0 |  |
-| break_glass_provision_route | 1 | api/cloudlens_api/routes/auth.py:6: - POST /api/v1/auth/break-glass/provision: Strictly limited emergency break-glass account setup (Item 65). |
-| secret_returned_or_printed | 1 | domain/credentials/store.py:45: Returns an opaque reference URI (e.g. vault://secret/data/tenants/{tenant_id}/credentials/{profile_id}/v{version}).<br>domain/credentials/store.py:152: return copy.deepcopy(secret) |
-| cors_wildcard | 1 | api/cloudlens_api/main.py:209: allow_origins=["*"], |
+| break_glass_provision_route | 0 |  |
+| secret_returned_or_printed | 1 | domain/credentials/store.py:45: Returns an opaque reference URI (e.g. vault://secret/data/tenants/{tenant_id}/credentials/{profile_id}/v{version}). |
+| cors_wildcard | 0 |  |
 | debug_true | 0 |  |
 | verify_false | 0 |  |
 | sql_string_format | 0 |  |
 | sample_people_in_app_code | 0 |  |
 | email_literals_in_app_code | 14 | connectors/fixtures/aws_cur_sample.json:23: "resourceTags/user:Owner": "platform-team@company.internal",<br>connectors/fixtures/aws_cur_sample.json:47: "resourceTags/user:Owner": "data-engineering@company.internal",<br>connectors/fixtures/gcp_billing_export_sample.json:26: { "key": "owner", "value": "banking-eng@cloudlens.internal" }, |
 
-- `health_check()` returning constant True: ['domain/credentials/store.py']
+- `health_check()` returning constant True: none
 
 ## 8. Hard-coding exception register
-- File: `docs/configuration/exception_register.json` | entries: **84** | missing reason/reviewer: **0**
-- By area: `{'?': 84}`
+- File: `docs/configuration/exception_register.json` | entries: **80** | missing reason/reviewer: **0**
+- By area: `{'?': 80}`
 - Entries touching sensitive areas:
 ```
-"file_path": "api/cloudlens_api/tenant_context.py",
-"literal_value": "SUPER_ADMIN",
-"file_path": "api/cloudlens_api/tenant_context.py",
-"literal_value": "GLOBAL_ADMIN",
 "file_path": "domain/cost/reconciliation/engine.py",
 "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
 "file_path": "domain/cost/reconciliation/engine.py",
 "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
 "file_path": "domain/cost/reconciliation/engine.py",
-"file_path": "domain/cost/reconciliation/engine.py",
-"reason": "Investigation severity variance threshold",
 "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
 "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
 "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
@@ -318,6 +308,12 @@ domain/hierarchy/service.py:181: {"key": "Environment", "value": "Production"},
 "file_path": "domain/statements/disputes.py",
 "file_path": "domain/statements/generator.py",
 "reason": "Budget variance tolerance threshold percentage (10%)",
+"file_path": "domain/statements/generator.py",
+"reason": "Period cost movement significance threshold",
+"file_path": "domain/statements/generator.py",
+"reason": "Period cost movement significance threshold",
+"file_path": "domain/thresholds/models.py",
+"reason": "Canonical UI threshold state hex colour code",
 ```
 - Comparisons against Decimal literals: **28** file(s)
 ```
@@ -359,7 +355,7 @@ fat/test_summary.md (4568 B)
 |---|---|---|
 | helm | 2 file(s) | True |
 | kubeconform | 2 file(s) | True |
-| gitleaks | 3 file(s) | False |
+| gitleaks | 3 file(s) | True |
 | trivy | 1 file(s) | False |
 | k6 | 0 file(s) | False |
 | zap | 3 file(s) | False |
@@ -418,11 +414,11 @@ docs/cost-register.md:42: - Azure Cost Management Scheduled Exports to Blob Stor
 - helm lint: `{'exit': 0, 'tail': ['[INFO] Chart.yaml: icon is recommended', '', '1 chart(s) linted, 0 chart(s) failed']}`
 - Possible secrets in values files: 0
 - Dockerfiles: ['ops/docker/Dockerfile.api', 'ops/docker/Dockerfile.web', 'ops/docker/Dockerfile.web.dev', 'ops/docker/Dockerfile.worker'] | without non-root USER: ['ops/docker/Dockerfile.api', 'ops/docker/Dockerfile.web', 'ops/docker/Dockerfile.worker']
-- Compose services: docker-compose.yml:postgres, docker-compose.yml:redis, docker-compose.yml:minio, docker-compose.yml:vault, docker-compose.yml:api, docker-compose.yml:worker, docker-compose.yml:web, docker-compose.yml:prometheus, docker-compose.yml:alertmanager, docker-compose.yml:grafana, docker-compose.yml:loki, docker-compose.yml:promtail, docker-compose.yml:tempo, docker-compose.yml:otel-collector, docker-compose.yml:postgres-exporter, docker-compose.yml:redis-exporter, docker-compose.yml:celery-exporter, docker-compose.yml:mailpit, docker-compose.yml:keycloak, docker-compose.yml:pgdata, docker-compose.yml:redisdata, docker-compose.yml:miniodata, docker-compose.yml:prometheusdata, docker-compose.yml:alertmanagerdata, docker-compose.yml:grafanadata, docker-compose.yml:lokidata, docker-compose.yml:tempodata
+- Compose services: docker-compose.yml:postgres, docker-compose.yml:redis, docker-compose.yml:minio, docker-compose.yml:openbao, docker-compose.yml:mailpit, docker-compose.yml:keycloak, docker-compose.yml:api, docker-compose.yml:worker, docker-compose.yml:web, docker-compose.yml:prometheus, docker-compose.yml:alertmanager, docker-compose.yml:grafana, docker-compose.yml:loki, docker-compose.yml:promtail, docker-compose.yml:tempo, docker-compose.yml:otel-collector, docker-compose.yml:postgres-exporter, docker-compose.yml:redis-exporter, docker-compose.yml:celery-exporter, docker-compose.yml:pgdata, docker-compose.yml:redisdata, docker-compose.yml:miniodata, docker-compose.yml:prometheusdata, docker-compose.yml:alertmanagerdata, docker-compose.yml:grafanadata, docker-compose.yml:lokidata, docker-compose.yml:tempodata
 - Celery tasks registered (26): cloudlens.health, cloudlens.overrides.revert_expired, cloudlens.tasks.apply_retention_and_downsampling, cloudlens.tasks.auto_resolve_alerts, cloudlens.tasks.collect_quota, cloudlens.tasks.compute_forecasts, cloudlens.tasks.credential_expiry_check, cloudlens.tasks.discover_relationships, cloudlens.tasks.escalate_alerts, cloudlens.tasks.evaluate_policies, cloudlens.tasks.evaluate_thresholds, cloudlens.tasks.export_daily_audit_bundle, cloudlens.tasks.generate_freshness_sla_report, cloudlens.tasks.heartbeat, cloudlens.tasks.ingest_cost, cloudlens.tasks.ingest_inventory, cloudlens.tasks.ingest_usage, cloudlens.tasks.maintain_partitions, cloudlens.tasks.reconcile_closed_period, cloudlens.tasks.refresh_pricing, cloudlens.tasks.renewal_pipeline, cloudlens.tasks.revert_overrides, cloudlens.tasks.run_analytical_extract, cloudlens.tasks.run_synthetic_journey_monitor, cloudlens.tasks.send_daily_platform_summary, cloudlens.tasks.verify_remediation
 - Beat schedule evidence:
 ```
-workers/cloudlens_workers/celery_app.py:31: beat_scheduler="workers.cloudlens_workers.scheduler.DatabaseBeatScheduler",
+workers/cloudlens_workers/celery_app.py:32: beat_scheduler="workers.cloudlens_workers.scheduler.DatabaseBeatScheduler",
 ```
 - Tools on this machine:
 
@@ -432,7 +428,7 @@ workers/cloudlens_workers/celery_app.py:31: beat_scheduler="workers.cloudlens_wo
 | helm | v4.3.0+gbec5b06 |
 | kubectl | Client Version: v1.35.3-dispatcher |
 | kubeconform | v0.8.0 |
-| gitleaks | NOT INSTALLED |
+| gitleaks | 8.30.1 |
 | trivy | NOT INSTALLED |
 | k6 | NOT INSTALLED |
 | cosign | ______   ______        _______. __    _______ .__   __. |
@@ -440,7 +436,7 @@ workers/cloudlens_workers/celery_app.py:31: beat_scheduler="workers.cloudlens_wo
 | pnpm | NOT FOUND: [WinError 2] The system cannot find the file specified |
 
 ## 11. API and Web
-- API routes: **279** | routes with no visible auth dependency: **134**
+- API routes: **282** | routes with no visible auth dependency: **124**
 - Routes by prefix:
 ```
   29 /api/v1/masterdata
@@ -448,11 +444,11 @@ workers/cloudlens_workers/celery_app.py:31: beat_scheduler="workers.cloudlens_wo
   18 /api/v1/alerts
   17 /api/v1/system
   16 /api/v1/imports
+  15 /api/v1/auth
   14 /api/v1/connectors
   14 /api/v1/policies
   13 /api/v1/dependencies
   13 /api/v1/statements
-  12 /api/v1/auth
   11 /api/v1/admin
    9 /api/v1/wizard
    8 /api/v1/analytics
@@ -498,7 +494,8 @@ api/cloudlens_api/routes/attribution.py: POST /ownership/resolve
 api/cloudlens_api/routes/attribution.py: GET /allocation/rules
 api/cloudlens_api/routes/attribution.py: POST /allocation/evaluate
 api/cloudlens_api/routes/attribution.py: POST /allocation/aggregate
-api/cloudlens_api/routes/auth.py: POST /step-up/initiate
+api/cloudlens_api/routes/auth.py: GET /oidc/authorize
+api/cloudlens_api/routes/auth.py: GET /oidc/callback
 api/cloudlens_api/routes/auth.py: POST /step-up/verify
 api/cloudlens_api/routes/bootstrap.py: POST /pre-identity
 api/cloudlens_api/routes/bootstrap.py: GET /pre-identity/status
@@ -523,10 +520,9 @@ api/cloudlens_api/routes/control_tower.py: GET /audit/tail
 api/cloudlens_api/routes/control_tower.py: POST /actions/{action_name}
 api/cloudlens_api/routes/cost.py: GET /summary
 api/cloudlens_api/routes/cost.py: GET /drill-through
-api/cloudlens_api/routes/cost.py: GET /timeseries
 ```
 - Web pages (36): AboutPage.tsx, AdminConsolePage.tsx, AuditLogPage.tsx, BudgetManagementPage.tsx, BudgetPlanningPage.tsx, CommitmentRenewalsPage.tsx, ConnectorManagementPage.tsx, ControlTowerPage.tsx, CostEstimatorPage.tsx, CostExplorerPage.tsx, DependencyGraphPage.tsx, DesignSystemShowcase.tsx, ExecutiveDashboard.tsx, ExplanationLayerView.tsx, ForbiddenPage.tsx, HierarchyExplorer.tsx, InvestigationViewPage.tsx, LandingPage.tsx, LoginPage.tsx, MasterDataConsole.tsx, NotFoundPage.tsx, OnboardingWizardPage.tsx, PolicyManagementPage.tsx, ProviderDashboard.tsx, ProvisioningRequestsPage.tsx, QuotaHeadroomPage.tsx, RemediationBoardPage.tsx, ReportsPage.tsx, ResourceDetailPage.tsx, RuntimeViewPage.tsx, ServiceDashboard.tsx, ServiceInventory.tsx, SettingsPage.tsx, ShowbackStatementsPage.tsx, UsageDetailPage.tsx, UsersRbacPage.tsx
-- Web route definitions found: **67** | Playwright specs: 1
+- Web route definitions found: **67** | Playwright specs: 2
 - Screen presence:
 
 | Screen | Page file |
@@ -561,10 +557,10 @@ api/cloudlens_api/routes/cost.py: GET /timeseries
 | Control Tower | yes |
 
 ## 12. Docs and traceability
-- Docs: 44 files | duplicates: ['exception_register', 'identity_verification_report', 'pre_identity_verification_report', 'pricing_dimensions_reconciled', 'sbom']
+- Docs: 47 files | duplicates: ['exception_register', 'identity_verification_report', 'pre_identity_verification_report', 'pricing_dimensions_reconciled', 'sbom']
 - rtm_distinct_ids: `458`
 - rtm_ids_by_prefix: `{'AC': 78, 'API': 66, 'BR': 18, 'CON': 32, 'CST': 32, 'DEP': 18, 'DR': 7, 'FR': 89, 'NFR': 50, 'PR': 20, 'RUN': 10, 'SEC': 31, 'USE': 10}`
-- rtm_status_words: `{'fail': 1, 'implemented': 1, 'pass': 432, 'implemented - unverified': 27, 'verified': 2, 'partial': 1}`
+- rtm_status_words: `{'partial': 1, 'implemented - unverified': 27, 'pass': 432, 'verified': 7, 'implemented': 1, 'fail': 1}`
 - rtm_rows_with_test_reference: `2`
 - register_ac_count: `76`
 - README statements containing figures/claims (each needs a source):
@@ -589,19 +585,19 @@ Net & ROI & DQ & Funnel --> Pack
 |---|---|---|---|---|
 | ROLES_BBP_NINE | 1 | 9 | 9 | APPLICATION_OWNER, AUDITOR, CLOUD_ADMINISTRATOR, FINANCE_USER, FINOPS_ADMINISTRATOR, IT_OPERATIONS_USER, PLATFORM_ADMIN, READ_ONLY_USER |
 | ROLES_NON_BBP | 0 | 0 | 0 |  |
-| ALERT_IDS | 13 | 20 | 20 | missing: none |
-| POLICY_IDS | 21 | 18 | 18 | missing: none |
+| ALERT_IDS | 14 | 20 | 20 | missing: none |
+| POLICY_IDS | 22 | 18 | 18 | missing: none |
 | REQ_PREFIXES | 6 | 6 | 6 | missing: none |
-| PLATFORM_OBSERVE | 6 | 1 | 1 | platform.observe |
-| ACT_AS_TENANT | 7 | 5 | 1 | ACT_AS, Act-As, Act-as, act-as, act_as |
+| PLATFORM_OBSERVE | 7 | 1 | 1 | platform.observe |
+| ACT_AS_TENANT | 9 | 5 | 1 | ACT_AS, Act-As, Act-as, act-as, act_as |
 | CONTROL_TOWER | 12 | 5 | 1 | CONTROL_TOWER, Control-Tower, ControlTower, control-tower, control_tower |
 | DEMO_MODE | 33 | 6 | 1 | DEMO MODE, DEMO_MODE, Demo Mode, DemoMode, demo mode, demo_mode |
 | SIMULATOR | 2 | 2 | 1 | class ProviderSimulatorConnector, class SimulatorProfile |
-| QUOTA | 46 | 3 | 1 | QUOTA, Quota, quota |
+| QUOTA | 47 | 3 | 1 | QUOTA, Quota, quota |
 | PROVISIONING_GATE | 19 | 6 | 1 | GATE, Gate, REQUEST, Request, gate, request |
 | SHOWBACK | 21 | 3 | 1 | SHOWBACK, Showback, showback |
 | BULK_IMPORT_DRYRUN | 16 | 7 | 1 | DRY_RUN, Dry-Run, Dry-run, DryRun, dry-run, dry_run, dryrun |
-| MASTER_REGISTRY | 7 | 2 | 1 | MasterRegistry, SYSTEM_MASTER_REGISTRY |
+| MASTER_REGISTRY | 8 | 2 | 1 | MasterRegistry, SYSTEM_MASTER_REGISTRY |
 | MAINTENANCE_MODE | 7 | 6 | 1 | MAINTENANCE_MODE, Maintenance Mode, Maintenance mode, MaintenanceMode, maintenance mode, maintenance_mode |
 | SESSION_REVOKE | 2 | 2 | 1 | /sessions, revoke_session |
 | FIRST_SYNC | 8 | 5 | 1 | FIRST_SYNC, First sync, FirstSync, first sync, first_sync |

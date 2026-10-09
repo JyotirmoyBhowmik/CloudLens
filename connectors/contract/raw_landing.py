@@ -34,7 +34,7 @@ from domain.models.exceptions import (
     RawLandingException,
 )
 from domain.tenant.context import TenantContext
-from domain.tenant.object_store import InMemoryTenantObjectStorage, TenantObjectStorage
+from domain.tenant.object_store import TenantObjectStorage, get_tenant_object_storage
 
 logger = logging.getLogger("cloudlens.connectors.raw_landing")
 
@@ -49,7 +49,7 @@ class RawLandingService:
         object_storage: TenantObjectStorage | None = None,
         audit_service: AuditService | None = None,
     ) -> None:
-        self._storage = object_storage or InMemoryTenantObjectStorage()
+        self._storage = object_storage or get_tenant_object_storage()
         self._audit = audit_service or get_audit_service()
 
     def _run_async(self, coro):

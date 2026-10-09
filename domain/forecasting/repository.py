@@ -24,7 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.forecasting.models import (
     ForecastEntity,
     ForecastMilestoneSnapshot,
@@ -445,26 +445,17 @@ _forecast_repo_instance: Any = None
 def get_forecast_repository() -> Any:
     """Returns singleton ForecastRepository instance with production startup guard."""
     global _forecast_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory forecast repository.")
-            sys.exit(1)
-        from tests.fakes.forecasting import InMemoryForecastRepository
-        return InMemoryForecastRepository()
-
     if _forecast_repo_instance is None:
         _forecast_repo_instance = SqlForecastRepository()
+        verify_persistence_startup_guard(_forecast_repo_instance)
     return _forecast_repo_instance
 
 
-def reset_forecast_repository() -> Any:
+def reset_forecast_repository(repo: Any = None) -> Any:
     """Resets singleton ForecastRepository (for test teardown)."""
     global _forecast_repo_instance
-    _forecast_repo_instance = None
-    return get_forecast_repository()
+    _forecast_repo_instance = repo
+    return _forecast_repo_instance or get_forecast_repository()
 
 
 __all__ = [

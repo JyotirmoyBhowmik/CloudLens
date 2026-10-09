@@ -25,12 +25,13 @@ from domain.catalogues import (
     GapStatus,
 )
 from domain.models.exceptions import IncompatibleUnitError, UnitConversionError
+from tests.fakes.catalogues import InMemoryCatalogueRepository
 
 
 @pytest.fixture
 def catalogue() -> CatalogueService:
     """Fixture providing an isolated catalogue service with pre-loaded seeds."""
-    repo = CatalogueRepository(load_seeds=True)
+    repo = InMemoryCatalogueRepository(load_seeds=True)
     return CatalogueService(repository=repo)
 
 

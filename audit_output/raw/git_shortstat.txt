@@ -1,7 +1,40 @@
 $ git log -15 --shortstat --pretty=format:@@%h|%s
-exit=0 duration=0.5s
+exit=0 duration=0.7s
 
 --- STDOUT ---
+@@117ebe7|P07: Persistence Tier 4 — Governance and Estate
+ 34 files changed, 8512 insertions(+), 1630 deletions(-)
+
+@@ca1063e|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
+ 35 files changed, 6101 insertions(+), 2282 deletions(-)
+
+@@40fb698|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
+ 20 files changed, 4323 insertions(+), 582 deletions(-)
+
+@@879128b|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
+ 33 files changed, 5497 insertions(+), 257 deletions(-)
+
+@@245362b|P03: Persistence Foundation
+ 13 files changed, 1134 insertions(+), 62 deletions(-)
+
+@@64aa427|P02: Real Sign-in in the Web App
+ 22 files changed, 1324 insertions(+), 208 deletions(-)
+
+@@b5d5107|P01B: Authentication Integrity — Login, Keys and Every Write Route
+ 21 files changed, 1269 insertions(+), 369 deletions(-)
+
+@@3f93b54|P01: Close Every Header-Based Identity Bypass
+ 21 files changed, 1055 insertions(+), 400 deletions(-)
+
+@@bb7020f|P00: Baseline Environment and Real-Database Testing
+ 10 files changed, 531 insertions(+), 43 deletions(-)
+
+@@0f7fb1a|chore(audit): upload audit_output artifacts and root audit_full.json
+ 35 files changed, 53803 insertions(+), 2 deletions(-)
+
+@@4e60e9d|chore(audit): update configuration reports and ignore audit_full.json
+ 7 files changed, 98 insertions(+), 97 deletions(-)
+
 @@e3b3f74|Add files via upload
  1 file changed, 919 insertions(+)
 
@@ -13,38 +46,5 @@ exit=0 duration=0.5s
 
 @@2db198c|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
  35 files changed, 2847 insertions(+), 133 deletions(-)
-
-@@51d29c2|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and fat artifacts
- 30 files changed, 4071 insertions(+), 554 deletions(-)
-
-@@ea1cc4f|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-level markers (Prompt R-PERF)
- 11 files changed, 1206 insertions(+), 65 deletions(-)
-
-@@2027ff7|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS, R-CT, R-OPS, R-UI, R-FEAT)
- 250 files changed, 21422 insertions(+), 1857 deletions(-)
-
-@@7831aa5|chore: add cloudlens_audit.py script
- 1 file changed, 374 insertions(+)
-
-@@d01098a|chore: add audit_output/ to .gitignore
- 1 file changed, 1 insertion(+)
-
-@@c4b90ce|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook
- 1 file changed, 512 insertions(+), 72 deletions(-)
-
-@@3303556|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack
- 15 files changed, 2901 insertions(+), 3 deletions(-)
-
-@@6cb8436|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox
- 18 files changed, 3870 insertions(+), 3 deletions(-)
-
-@@d6c1024|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks
- 8 files changed, 487 insertions(+), 32 deletions(-)
-
-@@9813329|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)
- 5 files changed, 499 insertions(+), 25 deletions(-)
-
-@@25c68bc|docs: add provider capability register and open items register (Prompt 43)
- 2 files changed, 143 insertions(+)
 
 --- STDERR ---

@@ -22,7 +22,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import OverrideClass, OverrideStatus
 from domain.models.exceptions import CrossTenantAccessForbiddenException
 from domain.overrides.models import OverrideApproval, OverrideRecord
@@ -274,16 +274,14 @@ _override_repo_instance: OverrideRepository | None = None
 def get_override_repository() -> OverrideRepository:
     """Dependency provider with production startup guard."""
     global _override_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.overrides import InMemoryOverrideRepository
-        return InMemoryOverrideRepository()
-
     if _override_repo_instance is None:
         _override_repo_instance = SqlOverrideRepository()
+        verify_persistence_startup_guard(_override_repo_instance)
     return _override_repo_instance
+
+
+def reset_override_repository(repo: OverrideRepository | None = None) -> OverrideRepository:
+    """Resets override repository singleton for testing."""
+    global _override_repo_instance
+    _override_repo_instance = repo
+    return _override_repo_instance or get_override_repository()

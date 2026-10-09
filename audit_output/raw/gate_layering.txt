@@ -1,5 +1,5 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe scripts/check_layering.py
-exit=0 duration=4.0s
+exit=0 duration=19.8s
 
 --- STDOUT ---
 [PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer.

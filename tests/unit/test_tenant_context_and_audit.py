@@ -27,7 +27,7 @@ from domain.models.exceptions import (
 from domain.overrides.models import OverrideApproval, OverrideCreateRequest
 from domain.overrides.service import get_override_service, reset_override_service
 from domain.tenant.context import TenantContext, require_tenant_context
-from domain.tenant.object_store import InMemoryTenantObjectStorage
+from tests.fakes.tenant import InMemoryTenantObjectStorage
 from domain.tenant.repository import TenantAwareRepository
 from workers.cloudlens_workers.celery_app import execute_tenant_job
 

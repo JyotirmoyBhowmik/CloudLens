@@ -23,7 +23,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.tenant.context import TenantContext
 from domain.thresholds.defaults import create_tenant_default_budget_rule
 from domain.thresholds.models import (
@@ -140,7 +140,7 @@ class SqlThresholdRepository:
     is_in_memory: bool = False
 
     def __init__(self) -> None:
-        self._storm_events: dict[tuple[str, str], StormGroupEvent] = {}
+        pass
 
     def _run_async(self, coro):
         try:
@@ -572,8 +572,27 @@ class SqlThresholdRepository:
         self, event: StormGroupEvent, *, tenant_context: TenantContext
     ) -> StormGroupEvent:
         tid = tenant_context.tenant_id
-        self._storm_events[(tid, event.id)] = event
-        return event
+        async def _save():
+            async with get_tenant_session(tid) as session:
+                q = text("""
+                    INSERT INTO alerts (id, tenant_id, alert_type, title, severity, status, scope_id, alert_payload, updated_at)
+                    VALUES (:id, :tid, 'STORM_GROUP', :title, 'CRITICAL', 'TRIGGERED', :scope_id, :payload, :now)
+                    ON CONFLICT (id) DO UPDATE SET
+                        alert_payload = :payload,
+                        updated_at = :now;
+                """)
+                payload = json.dumps(event.model_dump(mode="json"))
+                await session.execute(q, {
+                    "id": event.id,
+                    "tid": tid,
+                    "title": f"Storm Event: {event.id}",
+                    "scope_id": event.scope_id or "default",
+                    "payload": payload,
+                    "now": datetime.now(UTC),
+                })
+                await session.commit()
+                return event
+        return self._run_async(_save())
 
     def list_storm_events(
         self,
@@ -583,11 +602,24 @@ class SqlThresholdRepository:
         limit: int = 50,
     ) -> list[StormGroupEvent]:
         tid = tenant_context.tenant_id
-        events = [e for (t_id, _), e in self._storm_events.items() if t_id == tid]
-        if scope_id:
-            events = [e for e in events if e.scope_id == scope_id]
-        events.sort(key=lambda ev: ev.cycle_timestamp, reverse=True)
-        return events[:limit]
+        async def _list():
+            async with get_tenant_session(tid) as session:
+                sql = "SELECT alert_payload FROM alerts WHERE tenant_id = :tid AND alert_type = 'STORM_GROUP'"
+                params: dict[str, Any] = {"tid": tid}
+                if scope_id:
+                    sql += " AND scope_id = :sid"
+                    params["sid"] = scope_id
+                sql += " ORDER BY updated_at DESC LIMIT :lim;"
+                params["lim"] = limit
+                res = await session.execute(text(sql), params)
+                events = []
+                for row in res.fetchall():
+                    raw = row[0]
+                    if isinstance(raw, str):
+                        raw = json.loads(raw)
+                    events.append(StormGroupEvent.model_validate(raw))
+                return events
+        return self._run_async(_list())
 
 
 _threshold_repository_instance: Any = None
@@ -596,26 +628,17 @@ _threshold_repository_instance: Any = None
 def get_threshold_repository() -> Any:
     """Returns singleton ThresholdRepository instance with production startup guard."""
     global _threshold_repository_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory threshold repository.")
-            sys.exit(1)
-        from tests.fakes.thresholds import InMemoryThresholdRepository
-        return InMemoryThresholdRepository()
-
     if _threshold_repository_instance is None:
         _threshold_repository_instance = SqlThresholdRepository()
+        verify_persistence_startup_guard(_threshold_repository_instance)
     return _threshold_repository_instance
 
 
-def reset_threshold_repository() -> Any:
+def reset_threshold_repository(repo: Any = None) -> Any:
     """Resets the singleton ThresholdRepository for test isolation."""
     global _threshold_repository_instance
-    _threshold_repository_instance = None
-    return get_threshold_repository()
+    _threshold_repository_instance = repo
+    return _threshold_repository_instance or get_threshold_repository()
 
 
 __all__ = [

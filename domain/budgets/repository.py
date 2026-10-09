@@ -23,7 +23,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.budgets.models import (
     BudgetAmendment,
     BudgetApprovalDecision,
@@ -537,26 +537,17 @@ _budget_repository: Any = None
 def get_budget_repository() -> Any:
     """Returns the singleton BudgetRepository instance with startup guard."""
     global _budget_repository
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory budget repository.")
-            sys.exit(1)
-        from tests.fakes.budgets import InMemoryBudgetRepository
-        return InMemoryBudgetRepository()
-
     if _budget_repository is None:
         _budget_repository = SqlBudgetRepository()
+        verify_persistence_startup_guard(_budget_repository)
     return _budget_repository
 
 
-def reset_budget_repository() -> Any:
+def reset_budget_repository(repo: Any = None) -> Any:
     """Resets the singleton BudgetRepository instance for testing."""
     global _budget_repository
-    _budget_repository = None
-    return get_budget_repository()
+    _budget_repository = repo
+    return _budget_repository or get_budget_repository()
 
 
 __all__ = [

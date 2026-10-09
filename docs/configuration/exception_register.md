@@ -3,7 +3,7 @@
 Enforces **Mandate M2** and **Prompt 48 Item 35**.
 Every allow-listed literal in application code must be approved with a named reason and reviewer.
 
-**Last Updated:** 2026-10-08 19:58:16Z | **Total Exceptions:** 80
+**Last Updated:** 2026-10-09 00:32:53Z | **Total Exceptions:** 80
 
 | File Path | Line | Literal | Business Rationale | Approving Reviewer |
 | :--- | :--- | :--- | :--- | :--- |
@@ -22,9 +22,9 @@ Every allow-listed literal in application code must be approved with a named rea
 | `domain/forecasting/engine.py` | 506 | `0.3` | Cost trend spiking threshold ratio (30%) | **Prompt-48-Audit** |
 | `domain/forecasting/engine.py` | 514 | `0.4` | Cost trend volatility coefficient of variation threshold (0.40) | **Prompt-48-Audit** |
 | `domain/forecasting/engine.py` | 530 | `0.05` | Cost trend normalized slope drift threshold (5%) | **Prompt-48-Audit** |
-| `domain/hierarchy/service.py` | 750 | `CRITICAL` | Canonical threshold state string | **Prompt-48-Audit** |
-| `domain/hierarchy/service.py` | 752 | `WARNING` | Canonical threshold state string | **Prompt-48-Audit** |
-| `domain/hierarchy/service.py` | 2128 | `0.9` | Search ranking score weight | **Prompt-48-Audit** |
+| `domain/hierarchy/service.py` | 752 | `CRITICAL` | Canonical threshold state string | **Prompt-48-Audit** |
+| `domain/hierarchy/service.py` | 754 | `WARNING` | Canonical threshold state string | **Prompt-48-Audit** |
+| `domain/hierarchy/service.py` | 2130 | `0.9` | Search ranking score weight | **Prompt-48-Audit** |
 | `domain/identity/password_hasher.py` | 22 | `30` | RFC 6238 TOTP standard interval of 30 seconds | **security-arch** |
 | `domain/observability/health.py` | 65 | `0.9` | Simulated probe latency metric | **Prompt-48-Audit** |
 | `domain/provisioning/service.py` | 135 | `@` | Check if user identifier contains email domain delimiter | **Prompt-48-Audit** |

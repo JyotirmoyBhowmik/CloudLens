@@ -2,6 +2,17 @@ $ git log --pretty=format:%h|%ad|%s --date=short
 exit=0 duration=0.1s
 
 --- STDOUT ---
+117ebe7|2026-10-09|P07: Persistence Tier 4 — Governance and Estate
+ca1063e|2026-10-09|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
+40fb698|2026-10-09|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
+879128b|2026-10-08|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
+245362b|2026-10-08|P03: Persistence Foundation
+64aa427|2026-10-08|P02: Real Sign-in in the Web App
+b5d5107|2026-10-08|P01B: Authentication Integrity — Login, Keys and Every Write Route
+3f93b54|2026-10-08|P01: Close Every Header-Based Identity Bypass
+bb7020f|2026-10-07|P00: Baseline Environment and Real-Database Testing
+0f7fb1a|2026-10-06|chore(audit): upload audit_output artifacts and root audit_full.json
+4e60e9d|2026-10-06|chore(audit): update configuration reports and ignore audit_full.json
 e3b3f74|2026-10-06|Add files via upload
 205761a|2026-10-06|chore(audit): update exception register timestamps
 e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification

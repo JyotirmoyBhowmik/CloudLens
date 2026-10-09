@@ -1,5 +1,5 @@
 $ helm lint C:\Users\TEST\CloudLens\ops\helm\cloudlens
-exit=0 duration=0.3s
+exit=0 duration=0.8s
 
 --- STDOUT ---
 ==> Linting C:\Users\TEST\CloudLens\ops\helm\cloudlens

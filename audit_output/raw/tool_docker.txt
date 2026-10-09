@@ -1,5 +1,5 @@
 $ docker --version
-exit=0 duration=0.2s
+exit=0 duration=0.3s
 
 --- STDOUT ---
 Docker version 29.8.1, build 4a63305

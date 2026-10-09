@@ -24,7 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.identity.models import (
     BreakGlassAccount,
     MachineClient,
@@ -921,16 +921,14 @@ _identity_repo_instance: IdentityRepository | None = None
 def get_identity_repository() -> IdentityRepository:
     """Dependency provider for IdentityRepository."""
     global _identity_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.identity import InMemoryIdentityRepository
-        return InMemoryIdentityRepository()
-
     if _identity_repo_instance is None:
         _identity_repo_instance = SqlIdentityRepository()
+        verify_persistence_startup_guard(_identity_repo_instance)
     return _identity_repo_instance
+
+
+def reset_identity_repository(repo: IdentityRepository | None = None) -> IdentityRepository:
+    """Resets identity repository singleton for testing."""
+    global _identity_repo_instance
+    _identity_repo_instance = repo
+    return _identity_repo_instance or get_identity_repository()

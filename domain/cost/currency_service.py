@@ -24,7 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.cost.models import ConvertedCostFigure, CostPresentationBasis, CurrencyExchangeRate
 from domain.models.exceptions import CurrencyConversionException
 
@@ -229,26 +229,17 @@ _DEFAULT_CURRENCY_SERVICE: Any = None
 def get_currency_service() -> Any:
     """Returns singleton instance of CurrencyConversionService with startup guard."""
     global _DEFAULT_CURRENCY_SERVICE
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory currency service.")
-            sys.exit(1)
-        from tests.fakes.currency import InMemoryCurrencyConversionService
-        return InMemoryCurrencyConversionService()
-
     if _DEFAULT_CURRENCY_SERVICE is None:
         _DEFAULT_CURRENCY_SERVICE = SqlCurrencyConversionService()
+        verify_persistence_startup_guard(_DEFAULT_CURRENCY_SERVICE)
     return _DEFAULT_CURRENCY_SERVICE
 
 
-def reset_currency_service() -> Any:
+def reset_currency_service(service: Any = None) -> Any:
     """Resets singleton instance for test isolation."""
     global _DEFAULT_CURRENCY_SERVICE
-    _DEFAULT_CURRENCY_SERVICE = None
-    return get_currency_service()
+    _DEFAULT_CURRENCY_SERVICE = service
+    return _DEFAULT_CURRENCY_SERVICE or get_currency_service()
 
 
 __all__ = [

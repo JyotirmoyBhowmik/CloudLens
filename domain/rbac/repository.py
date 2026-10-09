@@ -21,7 +21,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import FinancialSensitivity, GrantEffect, GranteeType
 from domain.rbac.models import RoleDefinition, ScopeGrant
 
@@ -433,16 +433,14 @@ _rbac_repo_instance: RBACRepository | None = None
 def get_rbac_repository() -> RBACRepository:
     """Dependency provider with production startup guard."""
     global _rbac_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.rbac import InMemoryRBACRepository
-        return InMemoryRBACRepository()
-
     if _rbac_repo_instance is None:
         _rbac_repo_instance = SqlRBACRepository()
+        verify_persistence_startup_guard(_rbac_repo_instance)
     return _rbac_repo_instance
+
+
+def reset_rbac_repository(repo: RBACRepository | None = None) -> RBACRepository:
+    """Resets rbac repository singleton for testing."""
+    global _rbac_repo_instance
+    _rbac_repo_instance = repo
+    return _rbac_repo_instance or get_rbac_repository()

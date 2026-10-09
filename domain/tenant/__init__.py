@@ -2,10 +2,11 @@
 
 from domain.tenant.context import TenantContext, require_tenant_context
 from domain.tenant.object_store import (
-    InMemoryTenantObjectStorage,
+    FilesystemTenantObjectStorage,
     TenantObjectStorage,
     get_tenant_object_storage,
     reset_tenant_object_storage,
+    set_tenant_object_storage,
 )
 from domain.tenant.repository import TenantAwareRepository
 
@@ -14,7 +15,8 @@ __all__ = [
     "require_tenant_context",
     "TenantAwareRepository",
     "TenantObjectStorage",
-    "InMemoryTenantObjectStorage",
+    "FilesystemTenantObjectStorage",
     "get_tenant_object_storage",
     "reset_tenant_object_storage",
+    "set_tenant_object_storage",
 ]

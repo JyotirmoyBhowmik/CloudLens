@@ -22,7 +22,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import NotificationChannel, NotificationStatus
 from domain.notification.models import NotificationLogRecord
 from domain.tenant.context import TenantContext
@@ -318,25 +318,16 @@ _notification_log_repo_instance: Any = None
 def get_notification_log_repository() -> Any:
     """Dependency provider with production startup guard."""
     global _notification_log_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory notification log repository.")
-            sys.exit(1)
-        from tests.fakes.notification import InMemoryNotificationLogRepository
-        return InMemoryNotificationLogRepository()
-
     if _notification_log_repo_instance is None:
         _notification_log_repo_instance = SqlNotificationLogRepository()
+        verify_persistence_startup_guard(_notification_log_repo_instance)
     return _notification_log_repo_instance
 
 
-def reset_notification_log_repository() -> Any:
+def reset_notification_log_repository(repo: Any = None) -> Any:
     global _notification_log_repo_instance
-    _notification_log_repo_instance = None
-    return get_notification_log_repository()
+    _notification_log_repo_instance = repo
+    return _notification_log_repo_instance or get_notification_log_repository()
 
 
 __all__ = [

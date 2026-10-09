@@ -19,7 +19,7 @@ from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.base import CanonicalEntity
 from domain.tenant.context import TenantContext, require_tenant_context
 from domain.tenant.models import Tenant
@@ -231,16 +231,14 @@ _tenant_repo_instance: TenantRepository | None = None
 def get_tenant_repository() -> TenantRepository:
     """Dependency provider for TenantRepository."""
     global _tenant_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.tenant import InMemoryTenantRepository
-        return InMemoryTenantRepository()
-
     if _tenant_repo_instance is None:
         _tenant_repo_instance = SqlTenantRepository()
+        verify_persistence_startup_guard(_tenant_repo_instance)
     return _tenant_repo_instance
+
+
+def reset_tenant_repository(repo: TenantRepository | None = None) -> TenantRepository:
+    """Resets tenant repository singleton for testing."""
+    global _tenant_repo_instance
+    _tenant_repo_instance = repo
+    return _tenant_repo_instance or get_tenant_repository()

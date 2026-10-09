@@ -21,7 +21,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.config.feature_flags import FlagAuditEvent
 
 logger = logging.getLogger("cloudlens.domain.config.feature_flags_repository")
@@ -280,16 +280,14 @@ _feature_flag_repo_instance: FeatureFlagRepository | None = None
 def get_feature_flag_repository() -> FeatureFlagRepository:
     """Dependency provider with production startup guard."""
     global _feature_flag_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.feature_flags import InMemoryFeatureFlagRepository
-        return InMemoryFeatureFlagRepository()
-
     if _feature_flag_repo_instance is None:
         _feature_flag_repo_instance = SqlFeatureFlagRepository()
+        verify_persistence_startup_guard(_feature_flag_repo_instance)
     return _feature_flag_repo_instance
+
+
+def reset_feature_flag_repository(repo: FeatureFlagRepository | None = None) -> FeatureFlagRepository:
+    """Resets feature flag repository singleton for testing."""
+    global _feature_flag_repo_instance
+    _feature_flag_repo_instance = repo
+    return _feature_flag_repo_instance or get_feature_flag_repository()

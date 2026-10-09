@@ -22,7 +22,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import ProviderType, WizardStep
 from domain.tenant.context import TenantContext
 from domain.wizard.models import WizardSession
@@ -363,27 +363,14 @@ _wizard_repo_instance: Any = None
 def get_wizard_repository() -> Any:
     """Dependency provider with production startup guard."""
     global _wizard_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical(
-                "FATAL STARTUP GUARD: CLOUDLENS_ENV='%s' refuses InMemory repository configuration. "
-                "Real PostgreSQL database persistence (SqlWizardRepository) is mandatory.",
-                env,
-            )
-            sys.exit(1)
-        from tests.fakes.wizard import InMemoryWizardRepository
-        return InMemoryWizardRepository()
-
     if _wizard_repo_instance is None:
         _wizard_repo_instance = SqlWizardRepository()
+        verify_persistence_startup_guard(_wizard_repo_instance)
     return _wizard_repo_instance
 
 
-def reset_wizard_repository() -> Any:
+def reset_wizard_repository(repo: Any = None) -> Any:
     """Resets repository singleton for test harnesses."""
     global _wizard_repo_instance
-    _wizard_repo_instance = None
-    return get_wizard_repository()
+    _wizard_repo_instance = repo
+    return _wizard_repo_instance or get_wizard_repository()

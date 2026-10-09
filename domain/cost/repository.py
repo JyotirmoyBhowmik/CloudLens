@@ -29,7 +29,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.cost.models import (
     CostAggregateNode,
     CostRestatementRecord,
@@ -1025,26 +1025,17 @@ _DEFAULT_COST_REPOSITORY: Any = None
 def get_cost_repository() -> Any:
     """Returns singleton instance of CostFactRepository with production startup guard."""
     global _DEFAULT_COST_REPOSITORY
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory cost repository.")
-            sys.exit(1)
-        from tests.fakes.cost import InMemoryCostFactRepository
-        return InMemoryCostFactRepository()
-
     if _DEFAULT_COST_REPOSITORY is None:
         _DEFAULT_COST_REPOSITORY = SqlCostFactRepository()
+        verify_persistence_startup_guard(_DEFAULT_COST_REPOSITORY)
     return _DEFAULT_COST_REPOSITORY
 
 
-def reset_cost_repository() -> Any:
+def reset_cost_repository(repo: Any = None) -> Any:
     """Resets singleton instance for test isolation."""
     global _DEFAULT_COST_REPOSITORY
-    _DEFAULT_COST_REPOSITORY = None
-    return get_cost_repository()
+    _DEFAULT_COST_REPOSITORY = repo
+    return _DEFAULT_COST_REPOSITORY or get_cost_repository()
 
 
 __all__ = [

@@ -2,5 +2,74 @@ $ git status --porcelain
 exit=0 duration=0.1s
 
 --- STDOUT ---
+ M api/cloudlens_api/conventions/idempotency.py
+ M api/cloudlens_api/conventions/rate_limit.py
+ M audit_output/AUDIT_REPORT.md
+ M audit_output/audit_full.json
+ M audit_output/raw/gate_layering.txt
+ M audit_output/raw/gate_no_hardcoded_constants.txt
+ M audit_output/raw/gate_ruff.txt
+ M audit_output/raw/gate_ruff_F.txt
+ M audit_output/raw/git_count.txt
+ M audit_output/raw/git_head.txt
+ M audit_output/raw/git_log.txt
+ M audit_output/raw/git_shortstat.txt
+ M audit_output/raw/git_status.txt
+ M audit_output/raw/helm_lint.txt
+ M audit_output/raw/pytest_collect.txt
+ M audit_output/raw/tool_cosign.txt
+ M audit_output/raw/tool_docker.txt
+ M audit_output/raw/tool_helm.txt
+ M audit_output/raw/tool_kubeconform.txt
+ M audit_output/raw/tool_kubectl.txt
+ M audit_output/raw/web_typecheck.txt
+ M connectors/conformance/kit.py
+ M connectors/contract/checkpoint_store.py
+ M connectors/contract/raw_landing.py
+ M db/session.py
+ M docs/configuration/exception_register.json
+ M docs/configuration/exception_register.md
+ M domain/abuse/tracker.py
+ M domain/analytics/repository.py
+ M domain/analytics/watermark.py
+ M domain/audit/repository.py
+ M domain/budgets/repository.py
+ M domain/catalogues/repository.py
+ M domain/config/feature_flags_repository.py
+ M domain/config/repository.py
+ M domain/connectors/repository.py
+ M domain/cost/currency_service.py
+ M domain/cost/reconciliation/repository.py
+ M domain/cost/repository.py
+ M domain/credentials/__init__.py
+ M domain/credentials/repository.py
+ M domain/credentials/store.py
+ M domain/forecasting/repository.py
+ M domain/identity/repository.py
+ M domain/notification/repository.py
+ M domain/overrides/repository.py
+ M domain/pricing/repository.py
+ M domain/rbac/repository.py
+ M domain/reports/repository.py
+ M domain/sync/repository.py
+ M domain/tenant/__init__.py
+ M domain/tenant/object_store.py
+ M domain/tenant/repository.py
+ M domain/thresholds/repository.py
+ M domain/wizard/repository.py
+ M masterdata/repository.py
+ M scripts/check_layering.py
+ M tests/fakes/credentials.py
+ M tests/fakes/tenant.py
+ M tests/unit/test_catalogues.py
+ M tests/unit/test_connector_contract.py
+ M tests/unit/test_credential_lifecycle.py
+ M tests/unit/test_tenant_context_and_audit.py
+?? audit_output/raw/tool_gitleaks.txt
+?? db/migrations/versions/016_persistence_tier5_remaining_modules.py
+?? tests/fakes/analytics.py
+?? tests/fakes/catalogues.py
+?? tests/fakes/reports.py
+?? tests/integration/test_p08_full_restart_scenario.py
 
 --- STDERR ---

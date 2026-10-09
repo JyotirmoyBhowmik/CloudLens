@@ -56,3 +56,89 @@ class InMemoryCredentialRepository:
 
     def delete_sync(self, profile_id: str) -> bool:
         return bool(self._profiles.pop(profile_id, None))
+
+
+import copy
+import logging
+import threading
+import urllib.parse
+from domain.credentials.store import SecretStore
+from domain.models.exceptions import (
+    CredentialNotFoundException,
+    CrossTenantCredentialAccessException,
+    SecretStoreUnavailableException,
+)
+
+logger = logging.getLogger("cloudlens.fakes.credentials")
+
+
+class InMemorySecretStore(SecretStore):
+    """Thread-safe in-memory test fake simulating external HashiCorp Vault KV v2."""
+
+    is_in_memory: bool = True
+
+    def __init__(self, mount_point: str = "secret") -> None:
+        self._mount_point = mount_point
+        self._secrets: dict[str, dict[str, Any]] = {}
+        self._lock = threading.Lock()
+
+    def _build_reference_uri(self, tenant_id: str, profile_id: str, version: int) -> str:
+        clean_tenant = urllib.parse.quote(tenant_id, safe="")
+        clean_profile = urllib.parse.quote(profile_id, safe="")
+        return f"vault://{self._mount_point}/data/tenants/{clean_tenant}/credentials/{clean_profile}/v{version}"
+
+    def store_secret(
+        self,
+        tenant_id: str,
+        profile_id: str,
+        version: int,
+        secret_data: dict[str, Any],
+    ) -> str:
+        if not secret_data:
+            raise SecretStoreUnavailableException("Cannot store empty credential payload in SecretStore.")
+
+        ref_uri = self._build_reference_uri(tenant_id, profile_id, version)
+        with self._lock:
+            self._secrets[ref_uri] = copy.deepcopy(secret_data)
+        return ref_uri
+
+    def _validate_tenant_scope(self, secret_ref: str, tenant_id: str | None) -> None:
+        if tenant_id:
+            clean_tenant = urllib.parse.quote(tenant_id, safe="")
+            expected_prefix = f"/tenants/{clean_tenant}/"
+            if expected_prefix not in secret_ref:
+                raise CrossTenantCredentialAccessException(
+                    profile_id=secret_ref,
+                    caller_tenant_id=tenant_id,
+                    owner_tenant_id="external",
+                )
+
+    def get_secret(
+        self,
+        secret_ref: str,
+        tenant_id: str | None = None,
+        actor: str | None = None,
+        purpose: str | None = None,
+    ) -> dict[str, Any]:
+        self._validate_tenant_scope(secret_ref, tenant_id)
+        with self._lock:
+            secret = self._secrets.get(secret_ref)
+        if secret is None:
+            raise CredentialNotFoundException(profile_id=secret_ref, tenant_id=tenant_id)
+        return copy.deepcopy(secret)
+
+    def delete_secret(self, secret_ref: str, tenant_id: str | None = None) -> bool:
+        self._validate_tenant_scope(secret_ref, tenant_id)
+        with self._lock:
+            return self._secrets.pop(secret_ref, None) is not None
+
+    def has_secret(self, secret_ref: str) -> bool:
+        with self._lock:
+            return secret_ref in self._secrets
+
+    def health_check(self) -> bool:
+        return True
+
+    def clear(self) -> None:
+        with self._lock:
+            self._secrets.clear()

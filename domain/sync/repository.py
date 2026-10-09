@@ -23,7 +23,7 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import (
     ConnectorCapability,
     ProviderType,
@@ -1169,58 +1169,47 @@ def _check_startup_guard(repo_name: str) -> None:
 
 def get_sync_job_repository() -> Any:
     global _sync_job_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    _check_startup_guard("SyncJob")
-    if mode == "inmemory":
-        from tests.fakes.sync import InMemorySyncJobRepository
-        return InMemorySyncJobRepository()
     if _sync_job_repo_instance is None:
         _sync_job_repo_instance = SqlSyncJobRepository()
+        verify_persistence_startup_guard(_sync_job_repo_instance)
     return _sync_job_repo_instance
 
 
 def get_quarantine_repository() -> Any:
     global _quarantine_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    _check_startup_guard("Quarantine")
-    if mode == "inmemory":
-        from tests.fakes.sync import InMemoryQuarantineRepository
-        return InMemoryQuarantineRepository()
     if _quarantine_repo_instance is None:
         _quarantine_repo_instance = SqlQuarantineRepository()
+        verify_persistence_startup_guard(_quarantine_repo_instance)
     return _quarantine_repo_instance
 
 
 def get_connector_schedule_repository() -> Any:
     global _sched_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    _check_startup_guard("ConnectorSchedule")
-    if mode == "inmemory":
-        from tests.fakes.sync import InMemoryConnectorScheduleRepository
-        return InMemoryConnectorScheduleRepository()
     if _sched_repo_instance is None:
         _sched_repo_instance = SqlConnectorScheduleRepository()
+        verify_persistence_startup_guard(_sched_repo_instance)
     return _sched_repo_instance
 
 
 def get_first_sync_progress_repository() -> Any:
     global _first_sync_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    _check_startup_guard("FirstSyncProgress")
-    if mode == "inmemory":
-        from tests.fakes.sync import InMemoryFirstSyncProgressRepository
-        return InMemoryFirstSyncProgressRepository()
     if _first_sync_repo_instance is None:
         _first_sync_repo_instance = SqlFirstSyncProgressRepository()
+        verify_persistence_startup_guard(_first_sync_repo_instance)
     return _first_sync_repo_instance
 
 
-def reset_sync_repositories() -> None:
+def reset_sync_repositories(
+    sync_jobs: Any = None,
+    quarantine: Any = None,
+    schedules: Any = None,
+    progress: Any = None,
+) -> None:
     global _sync_job_repo_instance, _quarantine_repo_instance, _sched_repo_instance, _first_sync_repo_instance
-    _sync_job_repo_instance = None
-    _quarantine_repo_instance = None
-    _sched_repo_instance = None
-    _first_sync_repo_instance = None
+    _sync_job_repo_instance = sync_jobs
+    _quarantine_repo_instance = quarantine
+    _sched_repo_instance = schedules
+    _first_sync_repo_instance = progress
 
 
 __all__ = [

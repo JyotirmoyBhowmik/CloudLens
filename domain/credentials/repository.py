@@ -20,7 +20,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.credentials.models import CredentialProfile
 from domain.models.enums import CredentialType, ProviderType, RotationState
 
@@ -240,16 +240,14 @@ _cred_repo_instance: CredentialRepository | None = None
 def get_credential_repository() -> CredentialRepository:
     """Dependency provider with production startup guard."""
     global _cred_repo_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory repository.")
-            sys.exit(1)
-        from tests.fakes.credentials import InMemoryCredentialRepository
-        return InMemoryCredentialRepository()
-
     if _cred_repo_instance is None:
         _cred_repo_instance = SqlCredentialRepository()
+        verify_persistence_startup_guard(_cred_repo_instance)
     return _cred_repo_instance
+
+
+def reset_credential_repository(repo: CredentialRepository | None = None) -> CredentialRepository:
+    """Resets credential repository singleton for testing."""
+    global _cred_repo_instance
+    _cred_repo_instance = repo
+    return _cred_repo_instance or get_credential_repository()

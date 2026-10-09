@@ -1,26 +1,153 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -m ruff check . --select F821,F811,F841,F401 --output-format=concise
-exit=1 duration=0.7s
+exit=1 duration=0.8s
 
 --- STDOUT ---
 api\cloudlens_api\routes\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
 api\cloudlens_api\routes\__init__.py:11:57: F401 `api.cloudlens_api.routes.calendar.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+api\cloudlens_api\routes\auth.py:33:36: F401 [*] `domain.identity.models.AuthContext` imported but unused
+api\cloudlens_api\routes\auth.py:40:5: F401 [*] `domain.models.exceptions.NoMappedRoleException` imported but unused
+api\cloudlens_api\routes\auth.py:47:5: F401 [*] `domain.models.exceptions.UserNotProvisionedException` imported but unused
 api\cloudlens_api\routes\control_tower.py:29:5: F401 [*] `domain.control_tower.models.BlastRadius` imported but unused
 api\cloudlens_api\routes\control_tower.py:31:5: F401 [*] `domain.control_tower.models.ControlTowerActionResult` imported but unused
+api\cloudlens_api\routes\credentials.py:23:41: F401 [*] `fastapi.Header` imported but unused
 api\cloudlens_api\routes\inventory.py:32:33: F401 [*] `domain.models.enums.PricingStatus` imported but unused
 api\cloudlens_api\routes\inventory.py:32:48: F401 [*] `domain.models.enums.ProviderType` imported but unused
 api\cloudlens_api\routes\inventory.py:32:62: F401 [*] `domain.models.enums.ServiceCategory` imported but unused
+api\cloudlens_api\routes\rbac.py:23:81: F401 [*] `domain.models.enums.SystemRole` imported but unused
+connectors\contract\checkpoint_store.py:16:8: F401 [*] `os` imported but unused
+connectors\contract\checkpoint_store.py:17:8: F401 [*] `sys` imported but unused
+connectors\contract\checkpoint_store.py:41:13: F841 Local variable `loop` is assigned to but never used
+connectors\contract\raw_landing.py:19:8: F401 [*] `os` imported but unused
+connectors\contract\raw_landing.py:20:8: F401 [*] `sys` imported but unused
+connectors\contract\raw_landing.py:57:13: F841 Local variable `loop` is assigned to but never used
+db\session.py:136:14: F821 Undefined name `Any`
+db\session.py:196:57: F821 Undefined name `Any`
+db\session.py:273:21: F821 Undefined name `Any`
+db\session.py:273:29: F821 Undefined name `Any`
+domain\alerting\repository.py:15:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\alerting\repository.py:17:24: F401 [*] `db.session.get_sync_bridge_loop` imported but unused
+domain\analytics\watermark.py:17:20: F401 [*] `typing.Any` imported but unused
+domain\analytics\watermark.py:158:13: F841 Local variable `wid` is assigned to but never used
 domain\attribution\governance_resolver.py:10:20: F401 [*] `typing.Any` imported but unused
+domain\audit\repository.py:18:8: F401 [*] `os` imported but unused
+domain\audit\repository.py:19:8: F401 [*] `sys` imported but unused
+domain\audit\repository.py:24:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\audit\repository.py:78:13: F841 Local variable `loop` is assigned to but never used
+domain\budgets\repository.py:17:8: F401 [*] `os` imported but unused
+domain\budgets\repository.py:18:8: F401 [*] `sys` imported but unused
+domain\budgets\repository.py:20:21: F401 [*] `decimal.Decimal` imported but unused
+domain\budgets\repository.py:106:13: F841 Local variable `loop` is assigned to but never used
+domain\bulk_import\repository.py:17:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\catalogues\repository.py:13:8: F401 [*] `asyncio` imported but unused
+domain\catalogues\repository.py:22:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\catalogues\repository.py:27:5: F401 [*] `domain.catalogues.models.DEFAULT_CATALOGUE_EPOCH` imported but unused
+domain\config\feature_flags_repository.py:16:8: F401 [*] `os` imported but unused
+domain\config\feature_flags_repository.py:17:8: F401 [*] `sys` imported but unused
+domain\config\feature_flags_repository.py:92:13: F841 Local variable `loop` is assigned to but never used
+domain\config\repository.py:15:8: F401 [*] `os` imported but unused
+domain\config\repository.py:16:8: F401 [*] `sys` imported but unused
+domain\config\repository.py:130:13: F841 Local variable `loop` is assigned to but never used
+domain\config\repository.py:160:9: F821 Undefined name `verify_persistence_startup_guard`
+domain\connectors\models.py:8:22: F401 [*] `pydantic.BaseModel` imported but unused
+domain\connectors\repository.py:17:8: F401 [*] `os` imported but unused
+domain\connectors\repository.py:18:8: F401 [*] `sys` imported but unused
+domain\connectors\repository.py:90:13: F841 Local variable `loop` is assigned to but never used
 domain\control_tower\service.py:30:32: F401 [*] `datetime.timedelta` imported but unused
 domain\control_tower\service.py:34:8: F401 [*] `httpx` imported but unused
 domain\control_tower\service.py:46:38: F401 [*] `domain.credentials.store.get_secret_store` imported but unused
 domain\control_tower\service.py:48:34: F401 [*] `domain.observability.metrics` imported but unused
 domain\control_tower\service.py:52:5: F401 [*] `domain.sync.repository.get_connector_schedule_repository` imported but unused
 domain\control_tower\service.py:396:9: F811 Redefinition of unused `metrics` from line 48: `metrics` redefined here
+domain\cost\currency_service.py:18:8: F401 [*] `os` imported but unused
+domain\cost\currency_service.py:19:8: F401 [*] `sys` imported but unused
+domain\cost\currency_service.py:25:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\cost\currency_service.py:71:13: F841 Local variable `loop` is assigned to but never used
+domain\cost\reconciliation\repository.py:21:8: F401 [*] `os` imported but unused
+domain\cost\reconciliation\repository.py:22:8: F401 [*] `sys` imported but unused
+domain\cost\reconciliation\repository.py:27:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\cost\reconciliation\repository.py:149:13: F841 Local variable `loop` is assigned to but never used
+domain\cost\repository.py:22:8: F401 [*] `os` imported but unused
+domain\cost\repository.py:23:8: F401 [*] `sys` imported but unused
+domain\cost\repository.py:168:13: F841 Local variable `loop` is assigned to but never used
+domain\cost\repository.py:187:73: F401 [*] `domain.models.enums.ServiceCategory` imported but unused
+domain\cost\repository.py:323:9: F841 Local variable `b_val` is assigned to but never used
+domain\cost\repository.py:324:9: F841 Local variable `e_val` is assigned to but never used
+domain\cost\repository.py:325:9: F841 Local variable `c_val` is assigned to but never used
+domain\cost\repository.py:326:9: F841 Local variable `l_val` is assigned to but never used
+domain\cost\repository.py:327:9: F841 Local variable `q_val` is assigned to but never used
+domain\cost\repository.py:560:21: F841 Local variable `b_val` is assigned to but never used
+domain\cost\repository.py:561:21: F841 Local variable `e_val` is assigned to but never used
+domain\cost\repository.py:562:21: F841 Local variable `c_val` is assigned to but never used
+domain\cost\repository.py:563:21: F841 Local variable `l_val` is assigned to but never used
+domain\cost\repository.py:564:21: F841 Local variable `q_val` is assigned to but never used
+domain\credentials\repository.py:16:8: F401 [*] `os` imported but unused
+domain\credentials\repository.py:17:8: F401 [*] `sys` imported but unused
+domain\credentials\repository.py:70:13: F841 Local variable `loop` is assigned to but never used
+domain\dependency\repository.py:20:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\forecasting\repository.py:19:8: F401 [*] `os` imported but unused
+domain\forecasting\repository.py:20:8: F401 [*] `sys` imported but unused
+domain\forecasting\repository.py:25:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\forecasting\repository.py:113:13: F841 Local variable `loop` is assigned to but never used
+domain\hierarchy\repository.py:19:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\identity\repository.py:18:8: F401 [*] `os` imported but unused
+domain\identity\repository.py:19:8: F401 [*] `sys` imported but unused
+domain\identity\repository.py:20:8: F401 [*] `time` imported but unused
+domain\identity\repository.py:22:20: F401 [*] `typing.Any` imported but unused
+domain\identity\repository.py:29:5: F401 [*] `domain.identity.models.BreakGlassAccount` imported but unused
+domain\identity\repository.py:131:13: F841 Local variable `loop` is assigned to but never used
+domain\identity\token_engine.py:11:8: F401 [*] `hashlib` imported but unused
+domain\identity\token_engine.py:12:8: F401 [*] `hmac` imported but unused
+domain\identity\token_engine.py:18:25: F401 [*] `typing.cast` imported but unused
+domain\identity\token_engine.py:466:9: F841 Local variable `check_iss` is assigned to but never used
+domain\notification\repository.py:17:8: F401 [*] `os` imported but unused
+domain\notification\repository.py:18:8: F401 [*] `sys` imported but unused
+domain\notification\repository.py:80:13: F841 Local variable `loop` is assigned to but never used
+domain\overrides\repository.py:18:8: F401 [*] `os` imported but unused
+domain\overrides\repository.py:19:8: F401 [*] `sys` imported but unused
+domain\overrides\repository.py:23:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\overrides\repository.py:71:13: F841 Local variable `loop` is assigned to but never used
+domain\pricing\repository.py:21:8: F401 [*] `os` imported but unused
+domain\pricing\repository.py:22:8: F401 [*] `sys` imported but unused
+domain\pricing\repository.py:27:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\pricing\repository.py:32:5: F401 [*] `domain.pricing.models.DiscountInfo` imported but unused
+domain\pricing\repository.py:33:5: F401 [*] `domain.pricing.models.FreeAllowance` imported but unused
+domain\pricing\repository.py:36:5: F401 [*] `domain.pricing.models.PricingTierModel` imported but unused
+domain\pricing\repository.py:38:5: F401 [*] `domain.pricing.models.TierBracket` imported but unused
+domain\pricing\repository.py:39:5: F401 [*] `domain.pricing.models.TierStructure` imported but unused
+domain\pricing\repository.py:116:13: F841 Local variable `loop` is assigned to but never used
+domain\provisioning\repository.py:18:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\quotas\repository.py:19:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\rbac\repository.py:17:8: F401 [*] `os` imported but unused
+domain\rbac\repository.py:18:8: F401 [*] `sys` imported but unused
+domain\rbac\repository.py:106:13: F841 Local variable `loop` is assigned to but never used
+domain\remediation\repository.py:20:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\runtime\repository.py:20:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\statements\repository.py:18:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\sync\repository.py:36:78: F401 [*] `domain.sync.models.SyncScopeResult` imported but unused
+domain\sync\repository.py:49:13: F841 Local variable `loop` is assigned to but never used
+domain\sync\repository.py:453:13: F841 Local variable `loop` is assigned to but never used
+domain\sync\repository.py:671:13: F841 Local variable `loop` is assigned to but never used
+domain\sync\repository.py:919:13: F841 Local variable `loop` is assigned to but never used
 domain\synthetic\journey_monitor.py:20:33: F401 [*] `domain.models.enums.AlertSeverity` imported but unused
 domain\synthetic\journey_monitor.py:20:48: F401 [*] `domain.models.enums.AlertStatus` imported but unused
 domain\synthetic\journey_monitor.py:45:9: F841 Local variable `tc` is assigned to but never used
 domain\synthetic\journey_monitor.py:68:13: F841 Local variable `cost_engine` is assigned to but never used
 domain\synthetic\journey_monitor.py:105:17: F841 Local variable `alert_svc` is assigned to but never used
+domain\tenant\repository.py:14:8: F401 [*] `os` imported but unused
+domain\tenant\repository.py:15:8: F401 [*] `sys` imported but unused
+domain\tenant\repository.py:117:13: F841 Local variable `loop` is assigned to but never used
+domain\thresholds\repository.py:18:8: F401 [*] `os` imported but unused
+domain\thresholds\repository.py:19:8: F401 [*] `sys` imported but unused
+domain\thresholds\repository.py:24:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\thresholds\repository.py:147:13: F841 Local variable `loop` is assigned to but never used
+domain\usage\repository.py:19:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused
+domain\wizard\repository.py:17:8: F401 [*] `os` imported but unused
+domain\wizard\repository.py:18:8: F401 [*] `sys` imported but unused
+domain\wizard\repository.py:87:13: F841 Local variable `loop` is assigned to but never used
+masterdata\repository.py:13:8: F401 [*] `asyncio` imported but unused
+masterdata\repository.py:14:8: F401 [*] `concurrent.futures` imported but unused
+masterdata\repository.py:17:8: F401 [*] `os` imported but unused
+masterdata\repository.py:18:8: F401 [*] `sys` imported but unused
 scripts\count_level_markers.py:6:8: F401 [*] `subprocess` imported but unused
 scripts\count_level_markers.py:7:8: F401 [*] `sys` imported but unused
 scripts\generate_fat_package.py:22:22: F401 [*] `datetime.datetime` imported but unused
@@ -43,17 +170,77 @@ tests\control_tower\test_control_tower_suite.py:17:8: F401 [*] `json` imported b
 tests\control_tower\test_control_tower_suite.py:23:41: F401 [*] `domain.control_tower.models.PanelStatus` imported but unused
 tests\control_tower\test_control_tower_suite.py:25:33: F401 [*] `domain.models.enums.SystemRole` imported but unused
 tests\dr\test_disaster_recovery.py:20:8: F401 [*] `pytest` imported but unused
+tests\fakes\alerting.py:6:20: F401 [*] `datetime` imported but unused
+tests\fakes\alerting.py:14:55: F401 [*] `domain.models.enums.ContextualAlertType` imported but unused
+tests\fakes\audit.py:13:50: F401 [*] `domain.tenant.context.require_tenant_context` imported but unused
+tests\fakes\connectors.py:6:20: F401 [*] `typing.Any` imported but unused
+tests\fakes\feature_flags.py:5:20: F401 [*] `typing.Any` imported but unused
+tests\fakes\masterdata.py:5:20: F401 [*] `typing.Any` imported but unused
+tests\fakes\policy.py:5:8: F401 [*] `builtins` imported but unused
+tests\fakes\pricing.py:7:20: F401 [*] `typing.Any` imported but unused
+tests\fakes\pricing.py:11:5: F401 [*] `domain.pricing.models.DiscountInfo` imported but unused
+tests\fakes\pricing.py:12:5: F401 [*] `domain.pricing.models.FreeAllowance` imported but unused
+tests\fakes\pricing.py:15:5: F401 [*] `domain.pricing.models.PricingTierModel` imported but unused
+tests\fakes\pricing.py:17:5: F401 [*] `domain.pricing.models.TierBracket` imported but unused
+tests\fakes\pricing.py:18:5: F401 [*] `domain.pricing.models.TierStructure` imported but unused
+tests\fakes\rbac.py:5:20: F401 [*] `typing.Any` imported but unused
+tests\fakes\tenant.py:6:38: F401 [*] `domain.tenant.repository.TenantRepository` imported but unused
 tests\improvements\test_improvements_suite.py:19:8: F401 [*] `json` imported but unused
 tests\improvements\test_improvements_suite.py:35:5: F401 [*] `domain.commitments.calendar.get_commitment_calendar_service` imported but unused
 tests\improvements\test_improvements_suite.py:53:5: F401 [*] `domain.release.service.get_release_service` imported but unused
+tests\integration\test_p04_dict_audit.py:21:34: F401 [*] `domain.audit.service.get_audit_service` imported but unused
+tests\integration\test_p04_dict_audit.py:33:32: F401 [*] `masterdata.service.get_master_data_service` imported but unused
+tests\integration\test_p06_budget_restart.py:9:22: F401 [*] `datetime.UTC` imported but unused
+tests\integration\test_p06_budget_restart.py:9:33: F401 [*] `datetime.datetime` imported but unused
+tests\integration\test_p06_reconciliation_masterdata.py:14:8: F401 [*] `pytest` imported but unused
+tests\integration\test_p06_reconciliation_masterdata.py:17:47: F401 [*] `domain.cost.reconciliation.models.InvestigationPriority` imported but unused
+tests\integration\test_p06_reconciliation_masterdata.py:18:35: F401 [*] `domain.tenant.context.TenantContext` imported but unused
+tests\integration\test_p06_reconciliation_masterdata.py:36:5: F841 Local variable `tree` is assigned to but never used
+tests\integration\test_p06_reingest_sql_totals.py:18:65: F401 [*] `domain.models.enums.ServiceCategory` imported but unused
+tests\integration\test_p07_findings_count_sql.py:21:5: F401 [*] `domain.policy.repository.SqlPolicyRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:31:5: F401 [*] `domain.alerting.contextual.SqlContextualAlertRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:40:5: F401 [*] `domain.alerting.models.RecipientSubscription` imported but unused
+tests\integration\test_p07_restart_proofs.py:43:5: F401 [*] `domain.alerting.repository.SqlAlertRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:49:5: F401 [*] `domain.bulk_import.models.DryRunSummary` imported but unused
+tests\integration\test_p07_restart_proofs.py:56:5: F401 [*] `domain.bulk_import.repository.SqlBulkImportRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:67:5: F401 [*] `domain.dependency.repository.SqlDependencyRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:76:5: F401 [*] `domain.hierarchy.repository.SqlHierarchyRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:116:5: F401 [*] `domain.policy.repository.SqlPolicyRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:125:5: F401 [*] `domain.provisioning.models.GateTriggerRule` imported but unused
+tests\integration\test_p07_restart_proofs.py:132:5: F401 [*] `domain.provisioning.repository.SqlProvisioningRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:139:5: F401 [*] `domain.quotas.models.QuotaRemediationTask` imported but unused
+tests\integration\test_p07_restart_proofs.py:142:5: F401 [*] `domain.quotas.repository.SqlQuotaRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:150:5: F401 [*] `domain.remediation.models.TaskCreationRule` imported but unused
+tests\integration\test_p07_restart_proofs.py:153:5: F401 [*] `domain.remediation.repository.SqlRemediationRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:160:5: F401 [*] `domain.runtime.models.RuntimeExemption` imported but unused
+tests\integration\test_p07_restart_proofs.py:161:5: F401 [*] `domain.runtime.models.RuntimeObservation` imported but unused
+tests\integration\test_p07_restart_proofs.py:166:5: F401 [*] `domain.runtime.repository.SqlRuntimeRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:173:5: F401 [*] `domain.statements.models.StatementAdjustment` imported but unused
+tests\integration\test_p07_restart_proofs.py:178:5: F401 [*] `domain.statements.repository.SqlStatementRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:187:5: F401 [*] `domain.usage.models.UsageExpectation` imported but unused
+tests\integration\test_p07_restart_proofs.py:188:5: F401 [*] `domain.usage.models.ExpectationLevel` imported but unused
+tests\integration\test_p07_restart_proofs.py:192:5: F401 [*] `domain.usage.repository.SqlUsageRepository` imported but unused
+tests\integration\test_p07_restart_proofs.py:203:5: F401 [*] `domain.workflows.repository.SqlWorkflowRepository` imported but unused
+tests\integration\test_p08_full_restart_scenario.py:18:37: F401 [*] `datetime.timedelta` imported but unused
+tests\integration\test_p08_full_restart_scenario.py:23:58: F401 [*] `domain.analytics.models.FactCostAndUsageRecord` imported but unused
+tests\integration\test_p08_full_restart_scenario.py:32:5: F401 [*] `domain.catalogues.models.MetricDTO` imported but unused
+tests\integration\test_p08_full_restart_scenario.py:35:5: F401 [*] `domain.catalogues.models.ServiceDTO` imported but unused
+tests\integration\test_rls_raw_sql.py:10:8: F401 [*] `asyncio` imported but unused
+tests\integration\test_tenant_settings_persistence.py:13:67: F401 [*] `domain.config.repository.get_tenant_settings_repository` imported but unused
+tests\integration\test_tenant_settings_persistence.py:14:43: F401 [*] `domain.config.tenant_settings.TenantSettings` imported but unused
+tests\security\test_auth_integrity.py:12:8: F401 [*] `copy` imported but unused
+tests\security\test_auth_integrity.py:14:8: F401 [*] `time` imported but unused
+tests\security\test_auth_integrity.py:15:20: F401 [*] `typing.Any` imported but unused
+tests\security\test_auth_integrity.py:17:8: F401 [*] `jwt` imported but unused
 tests\security\test_rbac_negative_suite.py:26:34: F401 [*] `domain.audit.service.get_audit_service` imported but unused
 tests\security\test_rbac_negative_suite.py:30:33: F401 [*] `domain.models.enums.AuditEventType` imported but unused
+tests\unit\test_catalogues.py:22:5: F401 [*] `domain.catalogues.CatalogueRepository` imported but unused
 tests\workers\test_scheduled_work_suite.py:97:5: F841 Local variable `sleep_1` is assigned to but never used
 workers\cloudlens_workers\tasks.py:32:56: F401 [*] `domain.forecasting.models.ForecastGenerateRequest` imported but unused
 workers\cloudlens_workers\tasks.py:43:34: F401 [*] `domain.observability.current_correlation_id` imported but unused
 workers\cloudlens_workers\tasks.py:43:58: F401 [*] `domain.observability.current_tenant_id` imported but unused
 workers\cloudlens_workers\tasks.py:53:37: F401 [*] `domain.topology.service.get_topology_service` imported but unused
-Found 51 errors.
-[*] 41 fixable with the `--fix` option (6 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Found 238 errors.
+[*] 186 fixable with the `--fix` option (43 hidden fixes can be enabled with the `--unsafe-fixes` option).
 
 --- STDERR ---

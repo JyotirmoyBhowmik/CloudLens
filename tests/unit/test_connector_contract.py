@@ -50,7 +50,7 @@ from domain.models.exceptions import (
     UndeclaredCapabilityException,
 )
 from domain.tenant.context import TenantContext
-from domain.tenant.object_store import InMemoryTenantObjectStorage
+from tests.fakes.tenant import InMemoryTenantObjectStorage
 
 client = TestClient(app)
 

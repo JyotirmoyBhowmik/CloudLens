@@ -26,7 +26,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.exceptions import PricingSCDConflictException
 from domain.pricing.models import (
     DiscountInfo,
@@ -109,7 +109,7 @@ class SqlPricingRepository:
     is_in_memory: bool = False
 
     def __init__(self) -> None:
-        self._unknown_skus: dict[tuple[str, str, str], UnknownSkuRecord] = {}
+        pass
 
     def _run_async(self, coro):
         try:
@@ -439,33 +439,63 @@ class SqlPricingRepository:
         tenant_id: str | None = None,
         occurred_at: datetime | None = None,
     ) -> UnknownSkuRecord:
-        key = ((tenant_id or "").strip(), provider.strip().lower(), sku.strip().lower())
         now = occurred_at or datetime.now(UTC)
-        if key in self._unknown_skus:
-            rec = self._unknown_skus[key]
-            updated = rec.model_copy(update={"count": rec.count + 1, "last_seen_at": now})
-            self._unknown_skus[key] = updated
-            return updated
-        new_rec = UnknownSkuRecord(
-            tenant_id=tenant_id,
-            provider=provider.strip().lower(),
-            sku=sku.strip(),
-            first_seen_at=now,
-            last_seen_at=now,
-            count=1,
-        )
-        self._unknown_skus[key] = new_rec
-        return new_rec
+        p = provider.strip().lower()
+        s = sku.strip()
+        tid = tenant_id or "system"
+        gid = f"gap-sku-{p}-{s}"
+
+        async def _record():
+            async with get_tenant_session(tid) as session:
+                q = text("""
+                    INSERT INTO catalogue_gaps (id, tenant_id, catalogue_type, provider, native_identifier, status, occurrence_count, first_seen_at, last_seen_at, context_payload)
+                    VALUES (:id, :tid, 'PRICING_SKU', :p, :sku, 'OPEN', 1, :now, :now, '{}'::jsonb)
+                    ON CONFLICT (id) DO UPDATE SET
+                        occurrence_count = catalogue_gaps.occurrence_count + 1,
+                        last_seen_at = :now
+                    RETURNING id, tenant_id, provider, native_identifier, occurrence_count, first_seen_at, last_seen_at;
+                """)
+                res = await session.execute(q, {"id": gid, "tid": tid, "p": p, "sku": s, "now": now})
+                row = res.fetchone()
+                return UnknownSkuRecord(
+                    tenant_id=row.tenant_id,
+                    provider=row.provider,
+                    sku=row.native_identifier,
+                    count=row.occurrence_count,
+                    first_seen_at=row.first_seen_at,
+                    last_seen_at=row.last_seen_at,
+                )
+
+        return self._run_async(_record())
 
     def list_unknown_skus(
         self, provider: str | None = None, tenant_id: str | None = None
     ) -> list[UnknownSkuRecord]:
-        return [
-            rec
-            for rec in self._unknown_skus.values()
-            if (provider is None or rec.provider == provider.strip().lower())
-            and (tenant_id is None or rec.tenant_id == tenant_id)
-        ]
+        async def _list():
+            async with get_tenant_session(tenant_id or "system") as session:
+                sql = "SELECT tenant_id, provider, native_identifier, occurrence_count, first_seen_at, last_seen_at FROM catalogue_gaps WHERE catalogue_type = 'PRICING_SKU'"
+                params: dict[str, Any] = {}
+                if provider:
+                    sql += " AND provider = :p"
+                    params["p"] = provider.strip().lower()
+                if tenant_id:
+                    sql += " AND tenant_id = :tid"
+                    params["tid"] = tenant_id
+                sql += " ORDER BY last_seen_at DESC;"
+                res = await session.execute(text(sql), params)
+                return [
+                    UnknownSkuRecord(
+                        tenant_id=r.tenant_id,
+                        provider=r.provider,
+                        sku=r.native_identifier,
+                        count=r.occurrence_count,
+                        first_seen_at=r.first_seen_at,
+                        last_seen_at=r.last_seen_at,
+                    )
+                    for r in res.fetchall()
+                ]
+
+        return self._run_async(_list())
 
     def list_changes(
         self,
@@ -520,26 +550,17 @@ _pricing_repository: Any = None
 def get_pricing_repository() -> Any:
     """Returns singleton PricingRepository instance with production startup guard."""
     global _pricing_repository
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory pricing repository.")
-            sys.exit(1)
-        from tests.fakes.pricing import InMemoryPricingRepository
-        return InMemoryPricingRepository()
-
     if _pricing_repository is None:
         _pricing_repository = SqlPricingRepository()
+        verify_persistence_startup_guard(_pricing_repository)
     return _pricing_repository
 
 
-def reset_pricing_repository() -> Any:
+def reset_pricing_repository(repo: Any = None) -> Any:
     """Resets the singleton PricingRepository for testing."""
     global _pricing_repository
-    _pricing_repository = None
-    return get_pricing_repository()
+    _pricing_repository = repo
+    return _pricing_repository or get_pricing_repository()
 
 
 __all__ = [

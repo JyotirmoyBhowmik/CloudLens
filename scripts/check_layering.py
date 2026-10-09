@@ -81,6 +81,14 @@ def check_file(file_path: Path, root_path: Path) -> list[Violation]:
                             Violation(rel_path, node.lineno, alias.name, file_layer, msg)
                         )
                         break
+                if alias.name == "tests" or alias.name.startswith("tests."):
+                    msg = (
+                        f"Layering gate violated: production layer '{file_layer}' must not import "
+                        f"from tests package or test fakes ('{alias.name}')."
+                    )
+                    violations.append(
+                        Violation(rel_path, node.lineno, alias.name, file_layer, msg)
+                    )
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 for sdk in FORBIDDEN_PROVIDER_SDKS:
@@ -94,6 +102,14 @@ def check_file(file_path: Path, root_path: Path) -> list[Violation]:
                             Violation(rel_path, node.lineno, node.module, file_layer, msg)
                         )
                         break
+                if node.module == "tests" or node.module.startswith("tests."):
+                    msg = (
+                        f"Layering gate violated: production layer '{file_layer}' must not import "
+                        f"from tests package or test fakes ('{node.module}')."
+                    )
+                    violations.append(
+                        Violation(rel_path, node.lineno, node.module, file_layer, msg)
+                    )
 
     return violations
 

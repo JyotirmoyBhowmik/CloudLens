@@ -23,7 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from connectors.contract.models import JobCheckpoint
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.models.enums import ConnectorCapability
 from domain.models.exceptions import MissingTenantContextException, PaginationCheckpointException
 from domain.tenant.context import TenantContext
@@ -294,19 +294,16 @@ _checkpoint_store_instance: Any = None
 
 def get_checkpoint_store() -> Any:
     global _checkpoint_store_instance
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory checkpoint store.")
-            sys.exit(1)
-        from tests.fakes.checkpoints import InMemoryCheckpointStore
-        return InMemoryCheckpointStore()
-
     if _checkpoint_store_instance is None:
         _checkpoint_store_instance = SqlCheckpointStore()
+        verify_persistence_startup_guard(_checkpoint_store_instance)
     return _checkpoint_store_instance
+
+
+def reset_checkpoint_store(store: Any = None) -> Any:
+    global _checkpoint_store_instance
+    _checkpoint_store_instance = store
+    return _checkpoint_store_instance or get_checkpoint_store()
 
 
 checkpoint_store = get_checkpoint_store()

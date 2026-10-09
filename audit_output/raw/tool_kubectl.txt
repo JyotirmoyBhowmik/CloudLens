@@ -1,5 +1,5 @@
 $ kubectl version --client
-exit=0 duration=0.5s
+exit=0 duration=2.5s
 
 --- STDOUT ---
 Client Version: v1.35.3-dispatcher

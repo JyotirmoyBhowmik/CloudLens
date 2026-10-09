@@ -1,0 +1,7 @@
+$ gitleaks version
+exit=0 duration=2.9s
+
+--- STDOUT ---
+8.30.1
+
+--- STDERR ---

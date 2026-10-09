@@ -26,7 +26,7 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_tenant_session
+from db.session import get_tenant_session, verify_persistence_startup_guard
 from domain.cost.reconciliation.models import (
     EstimateVsActualItem,
     InvestigationStatus,
@@ -561,26 +561,17 @@ _GLOBAL_RECONCILIATION_REPO: Any = None
 def get_reconciliation_repository() -> Any:
     """Dependency injection provider for ReconciliationRepository with startup guard."""
     global _GLOBAL_RECONCILIATION_REPO
-    mode = os.getenv("PERSISTENCE_MODE", "sql").strip().lower()
-    env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
-
-    if mode == "inmemory":
-        if env in ("staging", "production"):
-            logger.critical("FATAL STARTUP GUARD: Staging/production refuses InMemory reconciliation repository.")
-            sys.exit(1)
-        from tests.fakes.reconciliation import InMemoryReconciliationRepository
-        return InMemoryReconciliationRepository()
-
     if _GLOBAL_RECONCILIATION_REPO is None:
         _GLOBAL_RECONCILIATION_REPO = SqlReconciliationRepository()
+        verify_persistence_startup_guard(_GLOBAL_RECONCILIATION_REPO)
     return _GLOBAL_RECONCILIATION_REPO
 
 
-def reset_reconciliation_repository() -> Any:
+def reset_reconciliation_repository(repo: Any = None) -> Any:
     """Resets the ReconciliationRepository singleton for testing."""
     global _GLOBAL_RECONCILIATION_REPO
-    _GLOBAL_RECONCILIATION_REPO = None
-    return get_reconciliation_repository()
+    _GLOBAL_RECONCILIATION_REPO = repo
+    return _GLOBAL_RECONCILIATION_REPO or get_reconciliation_repository()
 
 
 __all__ = [

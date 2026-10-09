@@ -1,9 +1,6 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -m ruff check . --statistics
-exit=1 duration=2.1s
+exit=0 duration=2.5s
 
 --- STDOUT ---
-1	C420	[*] unnecessary-dict-comprehension-for-iterable
-Found 1 error.
-[*] 1 fixable with the `--fix` option.
 
 --- STDERR ---

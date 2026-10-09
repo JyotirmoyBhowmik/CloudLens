@@ -92,13 +92,19 @@ class TenantObjectStorage(ABC):
         raise NotImplementedError
 
 
-class InMemoryTenantObjectStorage(TenantObjectStorage):
-    """Thread-safe in-memory object storage implementation."""
+import os
+from pathlib import Path
 
-    def __init__(self) -> None:
+
+class FilesystemTenantObjectStorage(TenantObjectStorage):
+    """Production persistent filesystem-backed object storage implementation."""
+
+    is_in_memory: bool = False
+
+    def __init__(self, base_dir: Path | str | None = None) -> None:
         self._lock = threading.Lock()
-        # Full scoped key -> (bytes, content_type)
-        self._store: dict[str, tuple[bytes, str]] = {}
+        self._base_dir = Path(base_dir or os.getenv("OBJECT_STORAGE_DIR", "data/object_store")).resolve()
+        self._base_dir.mkdir(parents=True, exist_ok=True)
 
     def put_object(
         self,
@@ -110,42 +116,48 @@ class InMemoryTenantObjectStorage(TenantObjectStorage):
     ) -> str:
         tc = require_tenant_context(tenant_context)
         scoped_key = self.sanitize_and_resolve_key(tc.tenant_id, key)
+        dest_path = self._base_dir / scoped_key
         with self._lock:
-            self._store[scoped_key] = (data, content_type)
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            dest_path.write_bytes(data)
         return scoped_key
 
     def get_object(self, *, tenant_context: TenantContext, key: str) -> bytes:
         tc = require_tenant_context(tenant_context)
         scoped_key = self.sanitize_and_resolve_key(tc.tenant_id, key)
+        src_path = self._base_dir / scoped_key
         with self._lock:
-            if scoped_key not in self._store:
+            if not src_path.is_file():
                 raise FileNotFoundError(
                     f"Object '{key}' not found in tenant '{tc.tenant_id}' storage."
                 )
-            return self._store[scoped_key][0]
+            return src_path.read_bytes()
 
     def delete_object(self, *, tenant_context: TenantContext, key: str) -> bool:
         tc = require_tenant_context(tenant_context)
         scoped_key = self.sanitize_and_resolve_key(tc.tenant_id, key)
+        target_path = self._base_dir / scoped_key
         with self._lock:
-            if scoped_key in self._store:
-                del self._store[scoped_key]
+            if target_path.is_file():
+                target_path.unlink()
                 return True
             return False
 
     def list_objects(self, *, tenant_context: TenantContext, prefix: str = "") -> list[str]:
         tc = require_tenant_context(tenant_context)
-        tenant_root = f"tenants/{tc.tenant_id}/"
+        tenant_dir = self._base_dir / "tenants" / tc.tenant_id
         clean_prefix = prefix.strip("/")
-        full_prefix = f"{tenant_root}{clean_prefix}" if clean_prefix else tenant_root
 
         results: list[str] = []
         with self._lock:
-            for scoped_key in self._store.keys():
-                if scoped_key.startswith(full_prefix):
-                    # Return path relative to tenant root
-                    relative_key = scoped_key[len(tenant_root) :]
-                    results.append(relative_key)
+            if not tenant_dir.is_dir():
+                return []
+            for root, _, files in os.walk(tenant_dir):
+                for f in files:
+                    full_p = Path(root) / f
+                    rel_p = str(full_p.relative_to(tenant_dir)).replace("\\", "/")
+                    if not clean_prefix or rel_p.startswith(clean_prefix):
+                        results.append(rel_p)
         return sorted(results)
 
     def object_exists(self, tenant_context: TenantContext, key: str) -> bool:
@@ -153,8 +165,9 @@ class InMemoryTenantObjectStorage(TenantObjectStorage):
         tc = require_tenant_context(tenant_context)
         try:
             scoped_key = self.sanitize_and_resolve_key(tc.tenant_id, key)
+            target_path = self._base_dir / scoped_key
             with self._lock:
-                return scoped_key in self._store
+                return target_path.is_file()
         except Exception:
             return False
 
@@ -168,12 +181,19 @@ def get_tenant_object_storage() -> TenantObjectStorage:
     global _GLOBAL_STORAGE
     with _STORAGE_LOCK:
         if _GLOBAL_STORAGE is None:
-            _GLOBAL_STORAGE = InMemoryTenantObjectStorage()
+            _GLOBAL_STORAGE = FilesystemTenantObjectStorage()
         return _GLOBAL_STORAGE
 
 
-def reset_tenant_object_storage() -> None:
+def set_tenant_object_storage(storage: TenantObjectStorage | None) -> None:
+    """Sets active tenant object storage instance."""
+    global _GLOBAL_STORAGE
+    with _STORAGE_LOCK:
+        _GLOBAL_STORAGE = storage
+
+
+def reset_tenant_object_storage(storage: TenantObjectStorage | None = None) -> None:
     """Resets storage for test isolation."""
     global _GLOBAL_STORAGE
     with _STORAGE_LOCK:
-        _GLOBAL_STORAGE = InMemoryTenantObjectStorage()
+        _GLOBAL_STORAGE = storage
