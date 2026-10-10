@@ -30,6 +30,7 @@ class StatusText(StrEnum):
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     CRITICAL = "CRITICAL"
+    UNAVAILABLE = "UNAVAILABLE"
     UNKNOWN = "UNKNOWN"
 
 
@@ -42,6 +43,8 @@ def get_status_label(status: PanelStatus | str) -> str:
         return StatusText.DEGRADED.value
     if val == "red":
         return StatusText.CRITICAL.value
+    if val == "grey":
+        return StatusText.UNAVAILABLE.value
     return StatusText.UNKNOWN.value
 
 
