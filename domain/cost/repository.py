@@ -547,7 +547,28 @@ class SqlCostFactRepository:
                         :effective_cost, :effective_cost_state, :contracted_cost, :contracted_cost_state,
                         :list_cost, :list_cost_state, :billing_currency, :pricing_quantity,
                         :pricing_quantity_state, :pricing_unit, CAST(:provider_native AS jsonb), :created_at
-                    );
+                    )
+                    ON CONFLICT (billing_period_start, tenant_id, id) DO UPDATE SET
+                        scope_id = EXCLUDED.scope_id,
+                        resource_id = EXCLUDED.resource_id,
+                        service_id = EXCLUDED.service_id,
+                        charge_period_start = EXCLUDED.charge_period_start,
+                        charge_period_end = EXCLUDED.charge_period_end,
+                        charge_category = EXCLUDED.charge_category,
+                        charge_subcategory = EXCLUDED.charge_subcategory,
+                        billed_cost = EXCLUDED.billed_cost,
+                        billed_cost_state = EXCLUDED.billed_cost_state,
+                        effective_cost = EXCLUDED.effective_cost,
+                        effective_cost_state = EXCLUDED.effective_cost_state,
+                        contracted_cost = EXCLUDED.contracted_cost,
+                        contracted_cost_state = EXCLUDED.contracted_cost_state,
+                        list_cost = EXCLUDED.list_cost,
+                        list_cost_state = EXCLUDED.list_cost_state,
+                        billing_currency = EXCLUDED.billing_currency,
+                        pricing_quantity = EXCLUDED.pricing_quantity,
+                        pricing_quantity_state = EXCLUDED.pricing_quantity_state,
+                        pricing_unit = EXCLUDED.pricing_unit,
+                        provider_native = EXCLUDED.provider_native;
                 """)
                 for f in facts:
                     b_date_f = f.billing_period_start or p_date

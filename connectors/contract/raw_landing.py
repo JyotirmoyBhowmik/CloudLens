@@ -124,6 +124,8 @@ class RawLandingService:
         raw_payload: Any,
         schema_version: str = "2026-09-01",
         actor: str = "SYSTEM_INGESTION",
+        dataset: str | None = None,
+        period: str | None = None,
     ) -> RawLandingRecord:
         """Serializes and lands the immutable raw provider payload before normalization."""
         if not tenant_context or not tenant_context.tenant_id:
@@ -165,7 +167,18 @@ class RawLandingService:
 
         cap_val = capability.value if hasattr(capability, "value") else str(capability)
 
-        # 4. Storage Key: relative key
+        # Prompt P14 Dataset and Period naming: raw-landing/{tenant}/{connector}/{dataset}/{period}/
+        eff_dataset = dataset or (
+            "cost"
+            if "cost" in cap_val.lower()
+            else ("inventory" if "inventory" in cap_val.lower() or "resource" in cap_val.lower() else cap_val.lower())
+        )
+        eff_period = period or now.strftime("%Y-%m")
+
+        minio_key = f"{tenant_id}/{connector_id}/{eff_dataset}/{eff_period}/run_{run_id}_page_{page_number}.json"
+        full_storage_path = f"raw-landing/{minio_key}"
+
+        # 4. Storage Key: relative key for tenant storage
         relative_key = (
             f"landings/{connector_id}/{cap_val}/{run_id}/page_{page_number}.json"
         )
@@ -189,7 +202,33 @@ class RawLandingService:
             content_type="application/json",
         )
 
-        full_storage_path = f"tenants/{tenant_id}/{relative_key}"
+        # Upload directly to MinIO S3 bucket 'raw-landing' (Prompt P14 Item 2)
+        try:
+            import boto3
+
+            s3_endpoint = os.getenv("S3_ENDPOINT", os.getenv("MINIO_ENDPOINT", "http://localhost:9000"))
+            s3_access = os.getenv("S3_ACCESS_KEY", os.getenv("OBJECT_STORE_ACCESS_KEY", "cloudlens_minio"))
+            s3_secret = os.getenv("S3_SECRET_KEY", os.getenv("OBJECT_STORE_SECRET_KEY", "cloudlens_minio_password"))
+            s3_client = boto3.client(
+                "s3",
+                endpoint_url=s3_endpoint,
+                aws_access_key_id=s3_access,
+                aws_secret_access_key=s3_secret,
+                region_name="us-east-1",
+            )
+            try:
+                s3_client.create_bucket(Bucket="raw-landing")
+            except Exception:
+                pass
+            s3_client.put_object(
+                Bucket="raw-landing",
+                Key=minio_key,
+                Body=payload_bytes,
+                ContentType="application/json",
+            )
+            logger.info("Uploaded raw payload to MinIO: %s (%d bytes)", full_storage_path, byte_size)
+        except Exception as s3_err:
+            logger.debug("MinIO S3 landing note: %s", s3_err)
 
         landing_record = RawLandingRecord(
             landing_id=landing_id,

@@ -1,5 +1,21 @@
 [
   {
+    "code": "SCHED_LIVE_REAL_COST",
+    "display_name": "Live Real Connector Scheduled Cost Ingestion",
+    "description": "Short-interval scheduled ingestion cycle for live real cloud connection.",
+    "sort_order": 0,
+    "attributes": {
+      "capability_or_task": "ingest_cost",
+      "capability": "collect_cost_bulk",
+      "tenant_id": "tenant-snpl-prod-17bd57",
+      "connector_id": "conn-aws-live-17bd57",
+      "interval_seconds": 10,
+      "interval_minutes": 1,
+      "lookback_days": 5,
+      "max_retries": 3
+    }
+  },
+  {
     "code": "SCHED_COST",
     "display_name": "Cost Ingestion Schedule",
     "description": "Cost collection every 6h during open period with 5-day restatement look-back.",

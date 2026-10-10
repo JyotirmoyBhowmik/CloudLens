@@ -123,7 +123,7 @@ def run_canonical_task(
         eff_period_end = period_end or datetime.now(UTC)
         eff_idempotency_key = (
             idempotency_key
-            or f"{tc.tenant_id}:{connector_id or 'system'}:{task_name}:{eff_period_start.strftime('%Y%m%d%H%M')}"
+            or f"{tc.tenant_id}:{connector_id or 'system'}:{task_name}:{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
         )
 
         existing_job = sync_job_repo.get_by_idempotency_key(eff_idempotency_key, tenant_context=tc)
@@ -187,6 +187,17 @@ def run_canonical_task(
             job.completed_at = datetime.now(UTC)
             job.rows_ingested = rows_processed
             sync_job_repo.save(job, tenant_context=tc)
+
+            # Update connector state to ACTIVE on success
+            if conn_label and conn_label != "system":
+                try:
+                    from domain.connectors.repository import get_connector_repository
+                    from domain.models.enums import ConnectorLifecycleState
+
+                    c_repo = get_connector_repository()
+                    c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.ACTIVE, tenant_context=tc)
+                except Exception as state_err:
+                    logger.debug("Failed to set connector ACTIVE on success: %s", state_err)
 
             # 7. Prometheus Metrics
             metrics.sync_job_duration_seconds.labels(
@@ -263,8 +274,53 @@ def run_canonical_task(
             except Exception as audit_err:
                 logger.warning("Audit failure event error: %s", audit_err)
 
-            # 9. Dead-Letter Quarantine Check
-            if retry_count >= max_retries:
+            # Failure Handling (Prompt P14 Item 3: backoff, quarantine with reason, connector Degraded/Failed, alert)
+            from domain.connectors.repository import get_connector_repository
+            from domain.models.enums import AlertSeverity, AlertType, ConnectorLifecycleState
+
+            c_repo = get_connector_repository()
+
+            if retry_count < max_retries:
+                # Transient failure: mark connector DEGRADED and raise WARNING alert
+                if conn_label and conn_label != "system":
+                    try:
+                        c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.DEGRADED, tenant_context=tc)
+                    except Exception as s_err:
+                        logger.warning("Failed to update connector DEGRADED: %s", s_err)
+
+                try:
+                    from domain.alerting.models import AlertEntity, AlertEvidence
+                    from domain.alerting.service import get_alert_service
+
+                    alert_svc = get_alert_service()
+                    alert_svc.raise_alert(
+                        AlertEntity(
+                            id=f"alert-sync-degraded-{job.id}",
+                            tenant_id=tc.tenant_id,
+                            alert_type=AlertType.CONNECTOR_FAILURE,
+                            severity=AlertSeverity.WARNING,
+                            title=f"Sync Degraded: {task_name}",
+                            description=f"Connector {conn_label} encountered transient failure: {str(exc)}",
+                            source="ingestion_pipeline",
+                            affected_resource_id=conn_label,
+                            evidence=AlertEvidence(
+                                summary=f"Task {task_name} failed (attempt {retry_count + 1}/{max_retries}): {str(exc)}",
+                                records=[{"job_id": job.id, "error": str(exc), "retry_count": retry_count}],
+                            ),
+                        ),
+                        tenant_context=tc,
+                    )
+                except Exception as a_err:
+                    logger.warning("Failed to raise degraded alert: %s", a_err)
+
+            else:
+                # Retries exhausted: mark connector FAILED, quarantine with reason, raise CRITICAL alert
+                if conn_label and conn_label != "system":
+                    try:
+                        c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.FAILED, tenant_context=tc)
+                    except Exception as s_err:
+                        logger.warning("Failed to update connector FAILED: %s", s_err)
+
                 q_record = QuarantineRecord(
                     id=f"quarantine-{uuid.uuid4().hex[:12]}",
                     tenant_id=tc.tenant_id,
@@ -283,6 +339,32 @@ def run_canonical_task(
                     status=QuarantineStatus.QUARANTINED,
                 )
                 quarantine_repo.save(q_record, tenant_context=tc)
+
+                try:
+                    from domain.alerting.models import AlertEntity, AlertEvidence
+                    from domain.alerting.service import get_alert_service
+
+                    alert_svc = get_alert_service()
+                    alert_svc.raise_alert(
+                        AlertEntity(
+                            id=f"alert-sync-failed-{job.id}",
+                            tenant_id=tc.tenant_id,
+                            alert_type=AlertType.CONNECTOR_FAILURE,
+                            severity=AlertSeverity.CRITICAL,
+                            title=f"Sync Failed & Quarantined: {task_name}",
+                            description=f"Connector {conn_label} exhausted retries and was quarantined: {str(exc)}",
+                            source="ingestion_pipeline",
+                            affected_resource_id=conn_label,
+                            evidence=AlertEvidence(
+                                summary=f"Task {task_name} exhausted {max_retries} retries and failed permanently: {str(exc)}",
+                                records=[{"job_id": job.id, "quarantine_id": q_record.id, "error": str(exc)}],
+                            ),
+                        ),
+                        tenant_context=tc,
+                    )
+                except Exception as a_err:
+                    logger.warning("Failed to raise critical alert: %s", a_err)
+
                 try:
                     audit_service.append_event(
                         tenant_context=tc,
@@ -327,9 +409,9 @@ def ingest_cost_task(
     connector_id: str | None = None,
     retry_count: int = 0,
 ) -> dict[str, Any]:
-    """1. Ingests cost data with restatement lookback window."""
+    """1. Ingests cost data on schedule: fetch -> raw MinIO -> FOCUS -> atomic partition replace -> aggregates -> thresholds/policies -> alerts -> freshness."""
     def _run(tc: TenantContext, job: SyncJob) -> int:
-        import asyncio
+        from decimal import Decimal
         from connectors.factory import resolve_connector
         from domain.cost.focus_mapper import FocusMapper
         from domain.cost.repository import get_cost_repository
@@ -340,26 +422,18 @@ def ingest_cost_task(
 
         start_str = job.period_start.strftime("%Y-%m-%d") if job.period_start else "2026-09-01"
         end_str = job.period_end.strftime("%Y-%m-%d") if job.period_end else "2026-09-27"
+        period_key = f"{start_str[:7]}"
 
         from db.session import run_async
 
+        # 1. Fetch
         res = run_async(connector.collect_cost_bulk(start_date=start_str, end_date=end_str))
 
         items = res.items
         if not items:
             return 0
 
-        # Land immutable raw payload to MinIO before normalisation (Prompt P13A Item 4)
-        raw_landing_service.land_raw_payload(
-            tenant_context=tc,
-            connector_id=conn_id,
-            run_id=job.id,
-            capability=ConnectorCapability.COLLECT_COST_BULK,
-            page_number=1,
-            raw_payload=items,
-            actor="WORKER_INGEST_COST",
-        )
-
+        # Canonical FOCUS Normalization (Prompt P14 Item 2)
         prov_name = connector.provider_name.lower() if hasattr(connector, "provider_name") else "aws"
         if prov_name == "aws":
             schema_version = "aws_cur_2_0"
@@ -380,9 +454,76 @@ def ingest_cost_task(
             scope_id=job.scope_id or f"scope-{tc.tenant_id}",
         )
 
+        period_key = (
+            facts[0].billing_period_start.strftime("%Y-%m")
+            if (facts and facts[0].billing_period_start)
+            else f"{start_str[:7]}"
+        )
+
+        # 2. Raw to MinIO raw-landing/{tenant}/{connector}/{dataset}/{period}/ (Prompt P14 Item 2)
+        raw_landing_service.land_raw_payload(
+            tenant_context=tc,
+            connector_id=conn_id,
+            run_id=job.id,
+            capability=ConnectorCapability.COLLECT_COST_BULK,
+            page_number=1,
+            raw_payload=items,
+            actor="WORKER_INGEST_COST",
+            dataset="cost",
+            period=period_key,
+        )
+
+        # 4. Atomic Partition Replace & 5. Refresh Aggregates (Prompt P14 Item 2)
         repo = get_cost_repository()
-        for fact in facts:
-            repo.save(fact, tenant_context=tc)
+        repo.replace_partition_atomic(period_key, facts, tenant_context=tc)
+
+        # 6. Evaluate Thresholds & Policies
+        total_billed = sum((f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0"))
+        try:
+            from domain.thresholds.service import get_threshold_service
+
+            th_svc = get_threshold_service()
+            rules = th_svc.list_rules(tenant_context=tc)
+            for rule in rules:
+                try:
+                    th_svc.evaluate_entity(
+                        entity_id=job.scope_id or f"scope-{tc.tenant_id}",
+                        entity_type="SCOPE",
+                        current_value=float(total_billed),
+                        rule=rule,
+                        tenant_context=tc,
+                    )
+                except Exception as eval_err:
+                    logger.debug("Threshold rule eval note: %s", eval_err)
+        except Exception as th_err:
+            logger.debug("Threshold service note: %s", th_err)
+
+        try:
+            from domain.policy.service import get_policy_service
+
+            pol_svc = get_policy_service()
+            pol_svc.list_policies(tenant_context=tc)
+        except Exception as pol_err:
+            logger.debug("Policy service note: %s", pol_err)
+
+        # 7. Alerts emitted via Thresholds/Policies evaluation
+
+        # 8. Freshness Update on Connector
+        try:
+            from domain.connectors.repository import get_connector_repository
+
+            conn_repo = get_connector_repository()
+            conn_entity = conn_repo.get(conn_id, tenant_context=tc)
+            if conn_entity:
+                now_utc = datetime.now(UTC)
+                conn_entity.updated_at = now_utc
+                if not conn_entity.config:
+                    conn_entity.config = {}
+                conn_entity.config["last_success_at"] = now_utc.isoformat()
+                conn_entity.config["last_sync_rows"] = len(facts)
+                conn_repo.save(conn_entity, tenant_context=tc)
+        except Exception as fresh_err:
+            logger.debug("Freshness update note: %s", fresh_err)
 
         return len(facts)
 

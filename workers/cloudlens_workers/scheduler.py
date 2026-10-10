@@ -82,19 +82,27 @@ class DatabaseBeatScheduler(Scheduler):
                 attrs = rec.attributes or {}
                 task_key = attrs.get("capability_or_task") or rec.code.lower().removeprefix("sched_")
                 task_name = CAPABILITY_TASK_MAP.get(task_key) or f"cloudlens.tasks.{task_key}"
+                interval_secs = attrs.get("interval_seconds")
                 interval_minutes = int(attrs.get("interval_minutes", 60))
-                # Interval schedule with zero cron literals
+                sched_delta = timedelta(seconds=int(interval_secs)) if interval_secs else timedelta(minutes=interval_minutes)
+                target_tenant = attrs.get("tenant_id") or default_tenant
+                target_connector = attrs.get("connector_id")
+
+                task_args = [
+                    {
+                        "tenant_id": target_tenant,
+                        "user_id": "system-scheduler",
+                        "roles": ["SUPER_ADMIN"],
+                        "is_system": True,
+                    }
+                ]
+                if target_connector:
+                    task_args.append(target_connector)
+
                 entries[f"master_{rec.code}"] = {
                     "task": task_name,
-                    "schedule": timedelta(minutes=interval_minutes),
-                    "args": [
-                        {
-                            "tenant_id": default_tenant,
-                            "user_id": "system-scheduler",
-                            "roles": ["SUPER_ADMIN"],
-                            "is_system": True,
-                        }
-                    ],
+                    "schedule": sched_delta,
+                    "args": task_args,
                 }
         except Exception as exc:
             logger.warning("Error loading master schedules: %s", exc)
@@ -109,9 +117,14 @@ class DatabaseBeatScheduler(Scheduler):
                 cap_val = sched.capability.value if hasattr(sched.capability, "value") else str(sched.capability)
                 task_name = CAPABILITY_TASK_MAP.get(cap_val, "cloudlens.tasks.ingest_cost")
                 entry_name = f"connector_{sched.connector_id}_{cap_val}"
+                sched_delta = (
+                    timedelta(minutes=sched.interval_minutes)
+                    if sched.interval_minutes >= 1
+                    else timedelta(seconds=max(int(sched.interval_minutes * 60), 10))
+                )
                 entries[entry_name] = {
                     "task": task_name,
-                    "schedule": timedelta(minutes=sched.interval_minutes),
+                    "schedule": sched_delta,
                     "args": [
                         {
                             "tenant_id": sched.tenant_id,

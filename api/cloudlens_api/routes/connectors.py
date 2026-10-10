@@ -798,6 +798,39 @@ async def list_connector_raw_landings(
     )
 
 
+@router.post("/{connector_id}/transition", response_model=ConnectorResponse, status_code=status.HTTP_200_OK)
+async def transition_connector_lifecycle(
+    connector_id: str,
+    payload: StateTransitionRequest,
+    tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
+) -> ConnectorResponse:
+    """Explicitly transitions connector lifecycle state via state machine (Prompt 14 Item 91)."""
+    repo = get_connector_repository()
+    record = repo.get(connector_id, tenant_context=tenant_context)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connector '{connector_id}' not found in tenant.",
+        )
+
+    try:
+        new_state = connector_lifecycle_manager.transition_state(
+            tenant_context=tenant_context,
+            connector_id=connector_id,
+            target_state=payload.target_state,
+            reason=payload.reason,
+        )
+    except InvalidConnectorStateTransitionException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+
+    repo.update_lifecycle_state(connector_id, new_state, tenant_context=tenant_context)
+    record.lifecycle_state = new_state
+    return _entity_to_response(record, tenant_context)
+
+
 class ConnectorUpdateRequest(BaseModel):
     """Payload to update connector configuration (Prompt P13 Item 6)."""
 
