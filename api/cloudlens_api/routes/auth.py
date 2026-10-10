@@ -739,18 +739,13 @@ async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthM
     available_tenants: list[TenantSummary] = []
     if tenant_context.is_super_admin:
         try:
-            async with get_tenant_session() as session:
-                res = await session.execute(select(TenantModel).order_by(TenantModel.name))
-                rows = res.scalars().all()
-                for row in rows:
-                    available_tenants.append(TenantSummary(id=row.id, name=row.name))
+            from domain.tenant.repository import get_tenant_repository
+            repo = get_tenant_repository()
+            tenants_list = repo.list_sync()
+            for t in tenants_list:
+                available_tenants.append(TenantSummary(id=t.id, name=t.name))
         except Exception:
             pass
-        if not available_tenants:
-            available_tenants = [
-                TenantSummary(id="tenant-primary", name="Primary Enterprise"),
-                TenantSummary(id="tenant-demo", name="Demo Enterprise (M3)"),
-            ]
     else:
         eff_tid = tenant_context.effective_tenant_id or tenant_context.tenant_id
         available_tenants = [TenantSummary(id=eff_tid, name=f"Tenant {eff_tid}")]

@@ -25,8 +25,22 @@ class InMemoryTenantRepository:
     async def delete(self, tenant_id: str, session=None) -> bool:
         return bool(self._items.pop(tenant_id, None))
 
+    async def get_by_code(self, code: str, session=None) -> Tenant | None:
+        norm = code.strip().upper()
+        for t in self._items.values():
+            if t.code.strip().upper() == norm:
+                return t
+        return None
+
     def get_sync(self, tenant_id: str) -> Tenant | None:
         return self._items.get(tenant_id)
+
+    def get_by_code_sync(self, code: str) -> Tenant | None:
+        norm = code.strip().upper()
+        for t in self._items.values():
+            if t.code.strip().upper() == norm:
+                return t
+        return None
 
     def list_sync(self) -> list[Tenant]:
         return list(self._items.values())

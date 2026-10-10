@@ -45,6 +45,8 @@ import { UsersRbacPage } from './pages/UsersRbacPage';
 import { AuditLogPage } from './pages/AuditLogPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { TenantsPage } from './pages/TenantsPage';
+import { SetupWizardPage } from './pages/SetupWizardPage';
 import { ForbiddenPage } from './pages/ForbiddenPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AboutPage } from './pages/AboutPage';
@@ -130,6 +132,8 @@ const ResourceDetailWrapper: React.FC = () => {
 
 // Main App Layout & Router Shell
 const AppLayout: React.FC = () => {
+  const auth = useAuth();
+  const navigate = useNavigate();
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -208,6 +212,44 @@ const AppLayout: React.FC = () => {
 
       <MaintenanceModeBanner active={isMaintenanceMode} message={maintMessage} />
       <DemoModeBanner isDemo={isDemo} />
+
+      {auth.isAuthenticated &&
+        (auth.hasRole('SUPER_ADMIN') || auth.roles.includes('SUPER_ADMIN')) &&
+        (auth.tenants.length === 0 || (auth.tenants.length === 1 && auth.tenants[0].id === 'tenant-system')) && (
+          <div
+            data-testid="first-run-banner"
+            style={{
+              backgroundColor: '#eff6ff',
+              borderBottom: '1px solid #bfdbfe',
+              color: '#1e40af',
+              padding: '0.625rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+            }}
+          >
+            <span>
+              First-Run Setup Required: Super Administrator detected with no organizational tenants configured. Complete setup to initialize your environment.
+            </span>
+            <button
+              id="first-run-setup-btn"
+              onClick={() => navigate('/setup')}
+              style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '0.25rem',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Start Setup
+            </button>
+          </div>
+        )}
 
       <div
         style={{
@@ -334,6 +376,26 @@ const AppLayout: React.FC = () => {
               element={
                 <ProtectedRoute requiredCapability="tenants:settings:read">
                   <SettingsPage isDemo={isDemo} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Tenants Administration */}
+            <Route
+              path="/tenants"
+              element={
+                <ProtectedRoute requiredCapability="tenants:settings:read">
+                  <TenantsPage isDemo={isDemo} />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* First-Run Setup Wizard */}
+            <Route
+              path="/setup"
+              element={
+                <ProtectedRoute requiredCapability="admin:access">
+                  <SetupWizardPage isDemo={isDemo} />
                 </ProtectedRoute>
               }
             />

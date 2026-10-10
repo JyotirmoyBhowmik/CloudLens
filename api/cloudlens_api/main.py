@@ -60,6 +60,7 @@ from api.cloudlens_api.routes import (
     statements_router,
     storage_router,
     sync_router,
+    tenants_router,
     thresholds_router,
     topology_router,
     usage_router,
@@ -1055,6 +1056,7 @@ app.include_router(hierarchy_router, dependencies=auth_dep)
 app.include_router(resource_detail_router, dependencies=auth_dep)
 app.include_router(explanation_router, dependencies=auth_dep)
 app.include_router(admin_router, dependencies=auth_dep)
+app.include_router(tenants_router, dependencies=auth_dep)
 app.include_router(control_tower_router, dependencies=auth_dep)
 
 

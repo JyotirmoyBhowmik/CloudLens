@@ -812,6 +812,12 @@ class AuditEventType(StrEnum):
     # Platform Control Tower (Prompt R-CT)
     CT_ACTION = "CT_ACTION"
 
+    # Tenant Administration & Lifecycle (Prompt P12)
+    TENANT_CREATED = "TENANT_CREATED"
+    TENANT_UPDATED = "TENANT_UPDATED"
+    TENANT_SUSPENDED = "TENANT_SUSPENDED"
+    TENANT_RESUMED = "TENANT_RESUMED"
+
 
 
 class OverrideClass(StrEnum):

@@ -41,6 +41,7 @@ from api.cloudlens_api.routes.scopes import router as scopes_router
 from api.cloudlens_api.routes.statements import router as statements_router
 from api.cloudlens_api.routes.storage import router as storage_router
 from api.cloudlens_api.routes.sync import router as sync_router
+from api.cloudlens_api.routes.tenants import router as tenants_router
 from api.cloudlens_api.routes.thresholds import router as thresholds_router
 from api.cloudlens_api.routes.topology import router as topology_router
 from api.cloudlens_api.routes.usage import router as usage_router
@@ -90,6 +91,7 @@ __all__ = [
     "statements_router",
     "storage_router",
     "sync_router",
+    "tenants_router",
     "thresholds_router",
     "topology_router",
     "usage_router",
