@@ -247,6 +247,8 @@ class SqlConnectorRepository:
             state_val = lifecycle_state.value if hasattr(lifecycle_state, "value") else str(lifecycle_state)
             conditions.append("lifecycle_state = :state")
             params["state"] = state_val
+        else:
+            conditions.append("lifecycle_state != 'DELETED'")
 
         where_clause = " AND ".join(conditions)
         query = text(f"""

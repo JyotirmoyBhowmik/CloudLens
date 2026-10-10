@@ -46,32 +46,38 @@ ALLOWED_TRANSITIONS: dict[ConnectorLifecycleState, set[ConnectorLifecycleState]]
     ConnectorLifecycleState.REGISTERED: {
         ConnectorLifecycleState.CREDENTIAL_BOUND,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.CREDENTIAL_BOUND: {
         ConnectorLifecycleState.VALIDATED,
         ConnectorLifecycleState.FAILED,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.VALIDATED: {
         ConnectorLifecycleState.ACTIVE,
         ConnectorLifecycleState.DEGRADED,
         ConnectorLifecycleState.FAILED,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.ACTIVE: {
         ConnectorLifecycleState.DEGRADED,
         ConnectorLifecycleState.FAILED,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.DEGRADED: {
         ConnectorLifecycleState.ACTIVE,
         ConnectorLifecycleState.FAILED,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.FAILED: {
         ConnectorLifecycleState.CREDENTIAL_BOUND,
         ConnectorLifecycleState.VALIDATED,
         ConnectorLifecycleState.SUSPENDED,
+        ConnectorLifecycleState.DELETED,
     },
     ConnectorLifecycleState.SUSPENDED: {
         ConnectorLifecycleState.REGISTERED,
@@ -79,8 +85,11 @@ ALLOWED_TRANSITIONS: dict[ConnectorLifecycleState, set[ConnectorLifecycleState]]
         ConnectorLifecycleState.VALIDATED,
         ConnectorLifecycleState.ACTIVE,
         ConnectorLifecycleState.FAILED,
+        ConnectorLifecycleState.DELETED,
     },
+    ConnectorLifecycleState.DELETED: set(),
 }
+
 
 
 class ConnectorLifecycleManager:
@@ -99,7 +108,7 @@ class ConnectorLifecycleManager:
         self._capability_health: dict[tuple[str, str, str], CapabilityHealthRecord] = {}
         # Map: (tenant_id, connector_id) -> set[ConnectorCapability]
         self._declared_capabilities: dict[tuple[str, str], set[ConnectorCapability]] = {}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def get_state(self, tenant_id: str, connector_id: str) -> ConnectorLifecycleState:
         """Returns the current lifecycle state of the connector, defaulting to REGISTERED."""

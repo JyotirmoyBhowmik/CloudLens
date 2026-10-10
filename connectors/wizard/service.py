@@ -316,12 +316,27 @@ class OnboardingWizardService:
         session = self.get_session(session_id, tenant_context=tenant_context)
         provider = session.provider or ProviderType.AWS
 
-        # Use simulator connector for probe validation
-        connector = ProviderSimulatorConnector(
+        # Prompt P13: Simulator only in DEMO tenants (API 403 otherwise)
+        is_sim = (
+            "simulator" in provider.value.lower()
+            or "simulator" in str(credentials_payload.get("provider", "")).lower()
+            or bool(credentials_payload.get("simulate_provider"))
+        )
+        if is_sim:
+            from domain.tenant.models import TenantType
+            from domain.tenant.repository import get_tenant_repository
+            t_repo = get_tenant_repository()
+            t_entity = t_repo.get_sync(tenant_context.tenant_id)
+            if not t_entity or (t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"):
+                raise PermissionError(
+                    f"Tenant '{tenant_context.tenant_id}' is not DEMO. Simulator connectors are strictly restricted to DEMO tenants."
+                )
+
+        from connectors.factory import resolve_connector
+        connector = resolve_connector(
             connector_id=f"probe-{uuid.uuid4().hex[:8]}",
-            tenant_id=tenant_context.tenant_id,
-            profile=provider.value,
-            config=credentials_payload,
+            tenant_context=tenant_context,
+            override_config=credentials_payload,
         )
 
         try:
@@ -589,13 +604,28 @@ class OnboardingWizardService:
         val_perm_data = session.wizard_data.get(WizardStep.VALIDATE_PERMISSIONS.value, {})
         missing_perms = set(val_perm_data.get("missing_permissions", []))
 
-        # Default full simulator capabilities
-        simulator = ProviderSimulatorConnector(
+        # Prompt P13: Simulator only in DEMO tenants (API 403 otherwise)
+        if "simulator" in provider.value.lower():
+            from domain.tenant.models import TenantType
+            from domain.tenant.repository import get_tenant_repository
+            t_repo = get_tenant_repository()
+            t_entity = t_repo.get_sync(tenant_context.tenant_id)
+            if not t_entity or (t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"):
+                raise PermissionError(
+                    f"Tenant '{tenant_context.tenant_id}' is not DEMO. Simulator connectors are strictly restricted to DEMO tenants."
+                )
+
+        from connectors.factory import resolve_connector
+        initial_scopes = session.selected_scopes or ["root"]
+        connector_instance = resolve_connector(
             connector_id=connector_id,
-            tenant_id=tenant_context.tenant_id,
-            profile=provider.value,
+            tenant_context=tenant_context,
+            override_config={
+                "scopes": initial_scopes,
+                "credential_profile_id": cred_profile_id,
+            },
         )
-        declared_caps = simulator.declared_capabilities
+        declared_caps = connector_instance.declared_capabilities
 
         # If permissions missing, degrade capabilities (Item 102)
         degraded_caps: set[ConnectorCapability] = set()
@@ -633,15 +663,43 @@ class OnboardingWizardService:
             reason="Onboarding wizard completed successfully.",
         )
 
+        # Save Connector entity to PostgreSQL repository (Prompt P13 Requirement 1 & 5)
+        now_dt = datetime.now(UTC)
+        provider_name_display = session.wizard_data.get(WizardStep.SELECT_PROVIDER.value, {}).get("name") or f"{provider.value.upper()} Production Connector"
+        from domain.connectors.models import ConnectorEntity
+        from domain.connectors.repository import get_connector_repository
+
+        saved_entity = ConnectorEntity(
+            id=connector_id,
+            tenant_id=tenant_context.tenant_id,
+            name=provider_name_display,
+            provider=provider,
+            lifecycle_state=ConnectorLifecycleState.ACTIVE,
+            credential_profile_id=cred_profile_id,
+            declared_capabilities=[c.value for c in active_caps],
+            verified_capabilities=[c.value for c in active_caps],
+            config={
+                "scopes": initial_scopes,
+                "include_future_scopes": session.include_future_scopes,
+                "wizard_session_id": session_id,
+                "last_success_at": now_dt.isoformat(),
+            },
+            created_at=now_dt,
+            updated_at=now_dt,
+        )
+        get_connector_repository().save(saved_entity, tenant_context=tenant_context)
+
+        # Purge staged secrets from memory and wizard data immediately (SEC-008, SEC-009, SEC-017)
+        session.wizard_data.pop("_staged_credentials", None)
+
         # 3. Initialize Default Schedules (Item 98)
         schedules = self._sync_scheduler.initialize_connector_schedules(
             connector_id=connector_id, tenant_context=tenant_context
         )
 
         # 4. Trigger Initial Discovery Sync Job (Item 97)
-        initial_scopes = session.selected_scopes or ["root"]
         sync_job = await self._sync_orchestrator.execute_sync(
-            connector=simulator,
+            connector=connector_instance,
             sync_type=SyncType.INITIAL_DISCOVERY,
             tenant_context=tenant_context,
             target_scopes=initial_scopes,
@@ -650,10 +708,11 @@ class OnboardingWizardService:
         # 5. Execute First-Sync Stages (Prompt 15B Item 21)
         first_sync_report = await self._first_sync_service.execute_first_sync_stages(
             session_id=session_id,
-            connector=simulator,
+            connector=connector_instance,
             job_id=sync_job.id,
             tenant_context=tenant_context,
         )
+
 
         # 6. Build Onboarding Completion Summary (Prompt 15B Item 27)
         ref = PermissionReferenceService.get_reference(provider)

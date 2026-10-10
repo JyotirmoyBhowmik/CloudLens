@@ -12,6 +12,8 @@ import { DenseTable, ColumnDefinition } from '../design-system/DenseTable';
 import { NullValue } from '../design-system/NullValue';
 import { CostValue, createCostExplanation } from '../design-system/CostValue';
 import { SkeletonLoader } from '../design-system/SkeletonLoader';
+import { apiClient } from '../api/client';
+
 
 export interface InventoryItem35 {
   id: string;
@@ -115,12 +117,7 @@ export const ServiceInventory: React.FC = () => {
   useEffect(() => {
     setPreviewLoading(true);
     const payload = buildFilterPayload();
-    fetch('/api/v1/hierarchy/inventory/count-preview', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
+    apiClient.post<CountPreviewData>('/api/v1/hierarchy/inventory/count-preview', payload)
       .then((data: CountPreviewData) => {
         setCountPreview(data);
         setPreviewLoading(false);
@@ -136,12 +133,10 @@ export const ServiceInventory: React.FC = () => {
     setLoading(true);
     const payload = buildFilterPayload();
     const offset = (page - 1) * pageSize;
-    fetch(`/api/v1/hierarchy/inventory/query?limit=${pageSize}&offset=${offset}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
+    apiClient.post<{ total: number; items: InventoryItem35[] }>(
+      `/api/v1/hierarchy/inventory/query?limit=${pageSize}&offset=${offset}`,
+      payload
+    )
       .then((data) => {
         setItems(data.items || []);
         setTotalCount(data.total || 0);
@@ -159,8 +154,7 @@ export const ServiceInventory: React.FC = () => {
 
   // Load Saved Views
   useEffect(() => {
-    fetch('/api/v1/hierarchy/inventory/views')
-      .then((res) => res.json())
+    apiClient.get('/api/v1/hierarchy/inventory/views')
       .then((data) => setSavedViews(data || []))
       .catch(() => {});
   }, []);
@@ -195,16 +189,10 @@ export const ServiceInventory: React.FC = () => {
     if (bulkCostCenter) body.cost_center = bulkCostCenter;
 
     try {
-      const res = await fetch('/api/v1/hierarchy/inventory/bulk-assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        setIsBulkModalOpen(false);
-        setSelectedIds(new Set());
-        loadData();
-      }
+      await apiClient.post('/api/v1/hierarchy/inventory/bulk-assign', body);
+      setIsBulkModalOpen(false);
+      setSelectedIds(new Set());
+      loadData();
     } catch (e) {
       console.error('Bulk assignment error:', e);
     }
@@ -222,17 +210,10 @@ export const ServiceInventory: React.FC = () => {
       created_at: new Date().toISOString(),
     };
     try {
-      const res = await fetch('/api/v1/hierarchy/inventory/views', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        setSavedViews((prev) => [...prev, saved]);
-        setViewNameInput('');
-        setIsSaveViewOpen(false);
-      }
+      const saved = await apiClient.post('/api/v1/hierarchy/inventory/views', payload);
+      setSavedViews((prev) => [...prev, saved]);
+      setViewNameInput('');
+      setIsSaveViewOpen(false);
     } catch (e) {
       console.error('Error saving view:', e);
     }

@@ -60,4 +60,6 @@ logs/
 artifacts/
 test-results/
 playwright-report/
+scratch/
+web/tests/e2e/test_token.json
 

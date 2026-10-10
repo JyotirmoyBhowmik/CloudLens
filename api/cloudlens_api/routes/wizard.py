@@ -174,6 +174,11 @@ async def validate_credentials(
             credentials_payload=payload.credentials,
             tenant_context=tenant_context,
         )
+    except PermissionError as p_err:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(p_err),
+        ) from p_err
     except CredentialValidationFailedException as exc:
         # Surface provider error verbatim without persisting credentials
         raise HTTPException(
@@ -233,8 +238,12 @@ async def complete_wizard(
 ) -> CompleteWizardResponse:
     """Finalizes wizard, registers connector, binds credentials, initializes schedules, and launches initial sync (Item 100)."""
     service = get_wizard_service()
-    result = await service.complete_wizard(session_id=session_id, tenant_context=tenant_context)
-    return CompleteWizardResponse(**result)
+    try:
+        result = await service.complete_wizard(session_id=session_id, tenant_context=tenant_context)
+        return CompleteWizardResponse(**result)
+    except PermissionError as p_err:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(p_err)) from p_err
+
 
 
 @router.post(

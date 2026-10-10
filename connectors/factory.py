@@ -68,16 +68,44 @@ def resolve_connector(
         else:
             provider_str = "aws"
 
-    # Check Tenant Type
-    is_production = False
+    # Resolve credentials via OpenBao by vault:// reference or credential_profile_id
+    cred_profile_id = (
+        entity.get("credential_profile_id")
+        if isinstance(entity, dict)
+        else getattr(entity, "credential_profile_id", None)
+    ) if entity is not None else None
+
+    cred_ref = config.get("credential_ref") or config.get("secret_ref")
+    if cred_profile_id and not cred_ref:
+        try:
+            from domain.credentials.repository import get_credential_repository
+            cred_repo = get_credential_repository()
+            profile = cred_repo.get_sync(cred_profile_id)
+            if profile and profile.secret_ref:
+                cred_ref = profile.secret_ref
+        except Exception as c_err:
+            logger.debug("Credential profile resolution note: %s", c_err)
+
+    if cred_ref and str(cred_ref).startswith("vault://"):
+        try:
+            from domain.credentials.store import get_secret_store
+            vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
+            if isinstance(vault_secret, dict):
+                config["credentials"] = {**(config.get("credentials") or {}), **vault_secret}
+                config["credential_ref"] = str(cred_ref)
+        except Exception as v_err:
+            logger.debug("Vault credential resolution note for %s: %s", cred_ref, v_err)
+
+    # Check Tenant Type (Prompt P13: Simulator only in DEMO tenants)
+    is_demo = False
     try:
         from domain.tenant.repository import get_tenant_repository
         tenant_repo = get_tenant_repository()
         t_entity = tenant_repo.get_sync(tenant_id) if hasattr(tenant_repo, "get_sync") else None
         if t_entity:
             t_type = getattr(t_entity, "type", None)
-            if t_type == TenantType.PRODUCTION or str(t_type).upper() == "PRODUCTION":
-                is_production = True
+            if t_type == TenantType.DEMO or str(t_type).upper() == "DEMO":
+                is_demo = True
     except Exception as t_err:
         logger.debug("Tenant type resolution note: %s", t_err)
 
@@ -90,14 +118,14 @@ def resolve_connector(
             config=config,
         )
 
-    # Production Tenants: Simulator Forbidden
-    if is_production and ("simulator" in provider_str or "mock" in provider_str or "stub" in provider_str):
+    # Simulator strictly restricted to DEMO tenants (API 403 / PermissionError)
+    if not is_demo and ("simulator" in provider_str or "mock" in provider_str or "stub" in provider_str):
         raise PermissionError(
-            f"Production tenant '{tenant_id}' is strictly forbidden from using simulator or fixture connectors."
+            f"Tenant '{tenant_id}' is not DEMO. Simulator and fixture connectors are strictly restricted to DEMO tenants."
         )
 
     # If DEMO tenant explicitly requested simulator
-    if not is_production and ("simulator" in provider_str or "mock" in provider_str):
+    if is_demo and ("simulator" in provider_str or "mock" in provider_str):
         from connectors.simulator.connector import ProviderSimulatorConnector
         return ProviderSimulatorConnector(
             connector_id=connector_id,
@@ -115,3 +143,4 @@ def resolve_connector(
         return OCIConnector(connector_id=connector_id, tenant_id=tenant_id, config=config)
     else:
         return AWSConnector(connector_id=connector_id, tenant_id=tenant_id, config=config)
+

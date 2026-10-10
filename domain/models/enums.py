@@ -484,6 +484,7 @@ class ConnectorLifecycleState(StrEnum):
     DEGRADED = "DEGRADED"
     FAILED = "FAILED"
     SUSPENDED = "SUSPENDED"
+    DELETED = "DELETED"
 
 
 class CapabilityHealth(StrEnum):

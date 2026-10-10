@@ -137,7 +137,12 @@ const AppLayout: React.FC = () => {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDemo] = useState<boolean>(true);
+  const isDemo = Boolean(
+    auth.currentTenant?.id === 'T-DEMO' ||
+    auth.currentTenant?.id === 'tenant-demo' ||
+    auth.currentTenant?.name?.toLowerCase().includes('demo') ||
+    (auth.currentTenant as any)?.type === 'DEMO'
+  );
 
   const [isMaintenanceMode, setIsMaintenanceMode] = useState<boolean>(false);
   const [maintMessage, setMaintMessage] = useState<string>('CloudLens is currently undergoing scheduled platform maintenance. Mutating operations are paused.');

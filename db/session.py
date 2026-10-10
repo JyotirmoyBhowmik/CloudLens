@@ -270,9 +270,9 @@ def get_sync_bridge_loop() -> asyncio.AbstractEventLoop:
         return _sync_bridge_loop
 
 
-def run_async(coro: Any) -> Any:
-    """Executes a coroutine from synchronous code on the persistent bridge event loop."""
+def run_async(coro: Any, timeout: float = 10.0) -> Any:
+    """Executes a coroutine from synchronous code on the persistent bridge event loop with timeout."""
     loop = get_sync_bridge_loop()
     future = asyncio.run_coroutine_threadsafe(coro, loop)
-    return future.result()
+    return future.result(timeout=timeout)
 
