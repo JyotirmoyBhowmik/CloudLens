@@ -46,13 +46,29 @@ def get_database_url() -> str:
     raw_url = os.getenv("DATABASE_URL")
     env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
     if not raw_url:
-        if env in ("staging", "production"):
+        host = os.getenv("POSTGRES_HOST")
+        if host:
+            port = os.getenv("POSTGRES_PORT", "5432")
+            user = os.getenv("POSTGRES_USER", "cloudlens")
+            password = os.getenv("POSTGRES_PASSWORD")
+            if not password:
+                if env in ("staging", "production"):
+                    logger.critical(
+                        "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but POSTGRES_PASSWORD is not set. Exiting non-zero.",
+                        env,
+                    )
+                    sys.exit(1)
+                password = "cloudlens_dev_password"
+            db = os.getenv("POSTGRES_DB", "cloudlens")
+            raw_url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
+        elif env in ("staging", "production"):
             logger.critical(
                 "CRITICAL STARTUP FAILURE: CLOUDLENS_ENV is '%s' but DATABASE_URL is not set. Exiting non-zero.",
                 env,
             )
             sys.exit(1)
-        raw_url = DEFAULT_DATABASE_URL
+        else:
+            raw_url = DEFAULT_DATABASE_URL
     if raw_url.startswith("postgresql://"):
         return raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     return raw_url

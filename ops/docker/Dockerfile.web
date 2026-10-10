@@ -1,4 +1,6 @@
-FROM node:20-alpine AS build
+# Multi-stage hardened build for CloudLens Web UI (Prompt P17)
+# Stage 1: Build web frontend assets
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
 
 WORKDIR /app
 
@@ -14,23 +16,25 @@ COPY web ./web
 WORKDIR /app/web
 RUN pnpm build
 
-FROM nginx:alpine
+# Stage 2: Hardened Runtime on nginx-unprivileged with CSP & HSTS (Zero build tools, USER 10001)
+FROM nginxinc/nginx-unprivileged:alpine@sha256:b9241c6e7b8e9a862f129d8d4199ab64b10390949a78bdd5603379b32c844083 AS runner
 
-COPY --from=build /app/web/dist /usr/share/nginx/html
+USER root
 
-RUN echo 'server { \
-    listen 3000; \
-    location / { \
-        root /usr/share/nginx/html; \
-        try_files $$uri $$uri/ /index.html; \
-    } \
-    location /api/ { \
-        proxy_pass http://api:8000; \
-        proxy_set_header Host $$host; \
-        proxy_set_header X-Real-IP $$remote_addr; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Create USER 10001 cloudlens and setup directories
+RUN addgroup -g 10001 -S cloudlens && \
+    adduser -u 10001 -D -S -G cloudlens cloudlens && \
+    mkdir -p /var/cache/nginx /var/run/nginx /tmp /usr/share/nginx/html /etc/nginx/conf.d && \
+    chown -R 10001:10001 /var/cache/nginx /var/run/nginx /tmp /usr/share/nginx/html /etc/nginx
+
+COPY --from=build --chown=10001:10001 /app/web/dist /usr/share/nginx/html
+COPY --chown=10001:10001 ops/docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+USER 10001
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- http://localhost:3000/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

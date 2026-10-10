@@ -18,8 +18,12 @@ data:
   POSTGRES_HOST: {{ .Values.external.postgres.host | quote }}
   POSTGRES_PORT: {{ .Values.external.postgres.port | default 5432 | quote }}
   POSTGRES_DB: {{ .Values.external.postgres.database | quote }}
+  POSTGRES_USER: "cloudlens"
   REDIS_HOST: {{ .Values.external.redis.host | quote }}
   REDIS_PORT: {{ .Values.external.redis.port | default 6379 | quote }}
+  REDIS_URL: {{ printf "redis://%s:%v/0" .Values.external.redis.host (.Values.external.redis.port | default 6379) | quote }}
+  CELERY_BROKER_URL: {{ printf "redis://%s:%v/1" .Values.external.redis.host (.Values.external.redis.port | default 6379) | quote }}
+  CELERY_RESULT_BACKEND: {{ printf "redis://%s:%v/2" .Values.external.redis.host (.Values.external.redis.port | default 6379) | quote }}
   MINIO_ENDPOINT: {{ .Values.external.minio.endpoint | quote }}
   MINIO_BUCKET: {{ .Values.external.minio.bucket | quote }}
   IDP_ISSUER_URL: {{ .Values.external.idp.issuerUrl | quote }}

@@ -1,22 +1,50 @@
-FROM python:3.11-slim
+# Multi-stage hardened build for CloudLens API (Prompt P17)
+# Stage 1: Build dependencies with compiler toolchain
+FROM python:3.11-slim@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce AS builder
+
+WORKDIR /build
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Stage 2: Hardened Runtime Container (Zero build tools, USER 10001, Read-only Root FS)
+FROM python:3.11-slim@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce AS runner
 
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    PYTHONPYCACHEPREFIX=/tmp/pycache \
+    PATH=/home/cloudlens/.local/bin:$PATH
 
+# Install only minimal runtime shared libraries (libpq5), NO build tools or compilers
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
     curl \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 10001 cloudlens \
+    && useradd -u 10001 -g 10001 -m -s /bin/bash cloudlens \
+    && mkdir -p /tmp/pycache /app/scratch \
+    && chown -R 10001:10001 /app /tmp/pycache /home/cloudlens
 
-COPY requirements.txt requirements-lock.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy built dependencies and application source
+COPY --from=builder --chown=10001:10001 /root/.local /home/cloudlens/.local
+COPY --chown=10001:10001 . .
 
-COPY . .
+USER 10001
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
 
 CMD ["uvicorn", "api.cloudlens_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

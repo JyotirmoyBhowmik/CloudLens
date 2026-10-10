@@ -46,6 +46,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/liveness
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /api/v1/health/liveness
@@ -58,7 +64,7 @@ spec:
             httpGet:
               path: /api/v1/health/liveness
               port: http
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3

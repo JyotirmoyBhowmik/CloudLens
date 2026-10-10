@@ -11,8 +11,10 @@ from domain.models.exceptions import MissingTenantContextException
 from domain.observability import current_correlation_id, current_tenant_id
 from domain.tenant.context import TenantContext
 
-broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
-result_backend = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+redis_host = os.getenv("REDIS_HOST", "localhost")
+redis_port = os.getenv("REDIS_PORT", "6379")
+broker_url = os.getenv("CELERY_BROKER_URL", f"redis://{redis_host}:{redis_port}/0")
+result_backend = os.getenv("CELERY_RESULT_BACKEND", f"redis://{redis_host}:{redis_port}/1")
 
 celery_app = Celery(
     "cloudlens_workers",

@@ -128,7 +128,7 @@ serviceAccounts:
 # External Dependencies by Reference Only (ZERO Secrets - OpenBao Paths Only)
 external:
   openbao:
-    address: "http://vault:8200"
+    address: "http://172.23.0.15:8200"
     backendType: "memory"
     authMethod: "kubernetes"
     mountPath: "secret"
@@ -138,21 +138,21 @@ external:
     idpSecretPath: "secret/data/cloudlens/idp"
     smtpSecretPath: "secret/data/cloudlens/smtp"
   postgres:
-    host: "postgres"
+    host: "172.23.0.16"
     port: 5432
     database: "cloudlens"
     cnpgClusterName: "cloudlens-dev-pg"
   redis:
-    host: "redis"
+    host: "172.23.0.14"
     port: 6379
   minio:
-    endpoint: "http://minio:9000"
+    endpoint: "http://172.23.0.10:9000"
     bucket: "cloudlens-data"
   idp:
     issuerUrl: "http://keycloak:8080/realms/cloudlens"
     clientId: "cloudlens-dev"
   smtp:
-    host: "mailpit"
+    host: "172.23.0.12"
     port: 1025
 
 backups:
