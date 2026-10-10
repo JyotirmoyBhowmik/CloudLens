@@ -226,6 +226,46 @@ class DataValidationSettings(BaseModel):
     )
 
 
+class NotificationSettings(BaseModel):
+    """Notification configuration surface for alerts, webhooks, and SMTP relay."""
+
+    smtp_host: str = Field(default="mailpit.internal", description="SMTP relay host")
+    smtp_port: int = Field(default=1025, description="SMTP relay port")
+    smtp_sender: str = Field(default="alerts@cloudlens.internal", description="Default notification sender email")
+    smtp_use_tls: bool = Field(default=False, description="Whether to enforce TLS encryption on SMTP relay")
+    webhook_url: str = Field(default="https://webhook.internal/cloudlens/events", description="Default outbound webhook target URL")
+    webhook_signing_secret_ref: str = Field(default="vault://secret/notifications/webhook_signing_key", description="Vault secret reference for webhook HMAC signature")
+
+
+class SecuritySettings(BaseModel):
+    """Security timeouts, MFA per role, and act-as session controls."""
+
+    session_idle_timeout_seconds: int = Field(default=1800, description="Idle session timeout in seconds (30m)")
+    session_absolute_lifetime_seconds: int = Field(default=28800, description="Absolute session lifetime in seconds (8h)")
+    access_token_ttl_seconds: int = Field(default=900, description="Access token lifespan in seconds (15m)")
+    step_up_token_ttl_seconds: int = Field(default=300, description="Step-up elevation token lifespan (5m)")
+    mfa_required_roles: list[str] = Field(default_factory=lambda: ["SUPER_ADMIN", "PLATFORM_ADMIN"], description="Roles requiring multi-factor authentication")
+    act_as_duration_minutes: int = Field(default=60, description="Maximum duration for administrative act-as impersonation sessions")
+
+
+class CurrencyFxSettings(BaseModel):
+    """Currency and foreign exchange representation settings."""
+
+    reporting_currency: str = Field(default="USD", description="Base ISO 4217 reporting currency")
+    presentation_currencies: list[str] = Field(default_factory=lambda: ["USD", "EUR", "GBP", "JPY"], description="Allowed multi-currency presentation standards")
+    fx_rate_provider: str = Field(default="MASTER_DATA", description="Authoritative exchange rate provider: MASTER_DATA, ECB, or FIXED")
+    fx_refresh_cadence_hours: int = Field(default=24, description="Cadence in hours to update FX rate cards")
+    fx_variance_threshold_percentage: float = Field(default=5.0, description="Material variance warning threshold on exchange rate swing")
+
+
+class MaintenanceModeSettings(BaseModel):
+    """Maintenance mode state and banner parameters."""
+
+    enabled: bool = Field(default=False, description="Whether maintenance mode is active")
+    banner_message: str = Field(default="CloudLens is currently undergoing scheduled platform maintenance. Mutating operations are paused.", description="Notice rendered across platform UI")
+    allowed_roles: list[str] = Field(default_factory=lambda: ["SUPER_ADMIN"], description="Roles exempt from maintenance mode access restrictions")
+
+
 class TenantSettings(BaseModel):
     """Canonical tenant configuration profile."""
 
@@ -296,6 +336,13 @@ class TenantSettings(BaseModel):
         default=300,
         description="Step-up authentication elevated claim validity duration in seconds (5 minutes default)",
     )
+    # Prompt P15 Configuration Surfaces
+    notification_settings: NotificationSettings = Field(default_factory=NotificationSettings)
+    security_settings: SecuritySettings = Field(default_factory=SecuritySettings)
+    currency_fx_settings: CurrencyFxSettings = Field(default_factory=CurrencyFxSettings)
+    maintenance_mode_settings: MaintenanceModeSettings = Field(default_factory=MaintenanceModeSettings)
+    mfa_required_roles: list[str] = Field(default_factory=lambda: ["SUPER_ADMIN", "PLATFORM_ADMIN"])
+    act_as_duration_minutes: int = Field(default=60)
     max_break_glass_accounts: int = Field(
         default=2,
         description="Strictly limited maximum count of local break-glass emergency accounts per tenant",

@@ -37,6 +37,8 @@ DEFAULT_DATABASE_URL = "postgresql+asyncpg://cloudlens@localhost:5432/cloudlens"
 
 _async_engine: AsyncEngine | None = None
 _async_session_factory: async_sessionmaker[AsyncSession] | None = None
+_engines_by_loop: dict[asyncio.AbstractEventLoop, AsyncEngine] = {}
+_factories_by_loop: dict[asyncio.AbstractEventLoop, async_sessionmaker[AsyncSession]] = {}
 
 
 def get_database_url() -> str:
@@ -57,42 +59,77 @@ def get_database_url() -> str:
 
 
 def get_async_engine() -> AsyncEngine:
-    """Returns singleton async SQLAlchemy engine configured with connection pooling."""
-    global _async_engine
+    """Returns async SQLAlchemy engine configured with connection pooling, bound to current event loop."""
+    global _async_engine, _engines_by_loop
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None:
+        if loop not in _engines_by_loop:
+            db_url = get_database_url()
+            is_test_env = (
+                "pytest" in sys.modules
+                or "PYTEST_CURRENT_TEST" in os.environ
+                or os.getenv("CLOUDLENS_TEST_MODE") == "1"
+            )
+            if is_test_env:
+                _engines_by_loop[loop] = create_async_engine(
+                    db_url,
+                    poolclass=NullPool,
+                    echo=False,
+                )
+            else:
+                _engines_by_loop[loop] = create_async_engine(
+                    db_url,
+                    pool_size=int(os.getenv("DB_POOL_SIZE", "20")),
+                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
+                    pool_pre_ping=True,
+                    echo=False,
+                )
+        return _engines_by_loop[loop]
+
     if _async_engine is None:
         db_url = get_database_url()
-        is_test_env = (
-            "pytest" in sys.modules
-            or "PYTEST_CURRENT_TEST" in os.environ
-            or os.getenv("CLOUDLENS_TEST_MODE") == "1"
+        _async_engine = create_async_engine(
+            db_url,
+            poolclass=NullPool,
+            echo=False,
         )
-        if is_test_env:
-            _async_engine = create_async_engine(
-                db_url,
-                poolclass=NullPool,
-                echo=False,
-            )
-        else:
-            _async_engine = create_async_engine(
-                db_url,
-                pool_size=int(os.getenv("DB_POOL_SIZE", "20")),
-                max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
-                pool_pre_ping=True,
-                echo=False,
-            )
     return _async_engine
 
 
 def reset_async_engine() -> None:
     """Disposes and resets engine singleton for testing."""
-    global _async_engine, _async_session_factory
+    global _async_engine, _async_session_factory, _engines_by_loop, _factories_by_loop
     _async_engine = None
     _async_session_factory = None
+    _engines_by_loop.clear()
+    _factories_by_loop.clear()
 
 
 def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
-    """Returns singleton async session factory."""
-    global _async_session_factory
+    """Returns async session factory bound to the current event loop."""
+    global _async_session_factory, _factories_by_loop
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None:
+        if loop not in _factories_by_loop:
+            engine = get_async_engine()
+            _factories_by_loop[loop] = async_sessionmaker(
+                bind=engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+                autoflush=False,
+            )
+        return _factories_by_loop[loop]
+
     if _async_session_factory is None:
         engine = get_async_engine()
         _async_session_factory = async_sessionmaker(

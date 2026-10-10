@@ -7,6 +7,7 @@ from api.cloudlens_api.routes.audit import router as audit_router
 from api.cloudlens_api.routes.auth import router as auth_router
 from api.cloudlens_api.routes.bootstrap import router as bootstrap_router
 from api.cloudlens_api.routes.budgets import router as budgets_router
+from api.cloudlens_api.routes.business_objects import router as business_objects_router
 from api.cloudlens_api.routes.bulk_import import router as bulk_import_router
 from api.cloudlens_api.routes.calendar import router as calendar_router
 from api.cloudlens_api.routes.config import router as config_router
@@ -58,6 +59,7 @@ __all__ = [
     "auth_router",
     "bootstrap_router",
     "budgets_router",
+    "business_objects_router",
     "bulk_import_router",
     "config_router",
     "connectors_router",

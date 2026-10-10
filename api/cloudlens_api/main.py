@@ -26,6 +26,7 @@ from api.cloudlens_api.routes import (
     auth_router,
     bootstrap_router,
     budgets_router,
+    business_objects_router,
     bulk_import_router,
     calendar_router,
     config_router,
@@ -1042,6 +1043,7 @@ app.include_router(runtime_router, dependencies=auth_dep)
 app.include_router(thresholds_router, dependencies=auth_dep)
 app.include_router(quotas_router, dependencies=auth_dep)
 app.include_router(budgets_router, dependencies=auth_dep)
+app.include_router(business_objects_router, dependencies=auth_dep)
 app.include_router(forecasting_router, dependencies=auth_dep)
 app.include_router(policies_router, dependencies=auth_dep)
 app.include_router(workflows_router, dependencies=auth_dep)

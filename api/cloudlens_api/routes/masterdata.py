@@ -16,7 +16,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 
+from api.cloudlens_api.conventions.concurrency import generate_etag, validate_if_match
 from api.cloudlens_api.tenant_context import require_auth
+from domain.audit.service import get_audit_service
+from domain.models.enums import AuditEventType
 from domain.models.exceptions import (
     CannotDeleteSystemMasterException,
     MasterDataApprovalException,
@@ -301,16 +304,30 @@ async def list_master_records(
     master_type: str,
     as_of: datetime | None = Query(None, description="Point-in-time timestamp"),
     include_inactive: bool = Query(False, description="Include deactivated versions"),
+    search: str | None = Query(None, description="Filter records by code or name"),
+    sort: str | None = Query(None, description="Sort property e.g. code, -display_name, sort_order"),
+    limit: int = Query(500, ge=1, le=1000, description="Max record limit"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
     x_tenant_id: str | None = Header(None, alias="X-Tenant-ID"),
 ) -> list[MasterDataRecord]:
-    """Lists effective master records for a registered master type."""
+    """Lists effective master records for a registered master type with server pagination/sort/filter."""
     try:
-        return get_master_service().list_records(
+        items = get_master_service().list_records(
             master_type=master_type,
             as_of=as_of,
             tenant_id=x_tenant_id,
             include_inactive=include_inactive,
         )
+        if search:
+            s = search.lower().strip()
+            items = [r for r in items if s in r.code.lower() or s in r.display_name.lower() or (r.description and s in r.description.lower())]
+
+        if sort:
+            desc = sort.startswith("-")
+            field = sort[1:] if desc else sort
+            items.sort(key=lambda x: getattr(x, field, "") or "", reverse=desc)
+
+        return items[offset : offset + limit]
     except MasterNotRegisteredException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message) from e
 
@@ -320,10 +337,11 @@ async def list_master_records(
 async def get_master_record(
     master_type: str,
     code: str,
+    response: Response,
     as_of: datetime | None = Query(None, description="Point-in-time timestamp"),
     x_tenant_id: str | None = Header(None, alias="X-Tenant-ID"),
 ) -> MasterDataRecord:
-    """Retrieves a specific master record by code and effective date."""
+    """Retrieves a specific master record by code with ETag concurrency token."""
     try:
         record = get_master_service().get_record(
             master_type=master_type,
@@ -337,6 +355,7 @@ async def get_master_record(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Record '{code}' not found in master '{master_type}'.",
             )
+        response.headers["ETag"] = generate_etag(record.model_dump(mode="json"))
         return record
     except MasterNotRegisteredException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message) from e
@@ -346,13 +365,14 @@ async def get_master_record(
 async def create_master_record(
     master_type: str,
     payload: CreateRecordRequest,
+    response: Response,
     tc: TenantContext = Depends(require_auth),
 ) -> MasterDataRecord:
-    """Creates a new master data record."""
+    """Creates a new master data record with audit logging."""
     tc.require_capability("masterdata:write")
     caller_id = tc.email or tc.user_id
     try:
-        return get_master_service().create_record(
+        record = get_master_service().create_record(
             master_type=master_type,
             code=payload.code,
             display_name=payload.display_name,
@@ -363,6 +383,21 @@ async def create_master_record(
             tenant_id=tc.effective_tenant_id,
             created_by=caller_id,
         )
+        try:
+            get_audit_service().record_event(
+                tenant_context=tc,
+                event_type=AuditEventType.CONFIG_CHANGED,
+                actor=caller_id,
+                payload={"master_type": master_type, "code": payload.code, "name": payload.display_name},
+                action="MASTER_DATA_CREATED",
+                resource_type="MASTER_DATA",
+                resource_id=f"{master_type}:{payload.code}",
+            )
+        except Exception:
+            pass
+
+        response.headers["ETag"] = generate_etag(record.model_dump(mode="json"))
+        return record
     except MasterDataException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
@@ -372,13 +407,31 @@ async def update_master_record(
     master_type: str,
     code: str,
     payload: UpdateRecordRequest,
+    response: Response,
+    if_match: str | None = Header(default=None, alias="If-Match"),
     tc: TenantContext = Depends(require_auth),
 ) -> MasterDataRecord:
-    """Updates a master record via effective-dated versioning."""
+    """Updates a master record via effective-dated versioning with If-Match check."""
     tc.require_capability("masterdata:write")
     caller_id = tc.email or tc.user_id
+
+    # 1. Optimistic Concurrency check
+    existing = get_master_service().get_record(
+        master_type=master_type,
+        code=code,
+        tenant_id=tc.effective_tenant_id,
+        include_inactive=True,
+    )
+    if existing and if_match:
+        cur_etag = generate_etag(existing.model_dump(mode="json"))
+        if not validate_if_match(cur_etag, if_match):
+            raise HTTPException(
+                status_code=status.HTTP_412_PRECONDITION_FAILED,
+                detail="Precondition Failed: Master record modified concurrently. Please refresh.",
+            )
+
     try:
-        return get_master_service().update_record(
+        updated = get_master_service().update_record(
             master_type=master_type,
             code=code,
             display_name=payload.display_name,
@@ -390,6 +443,21 @@ async def update_master_record(
             change_reason=payload.change_reason,
             tenant_id=tc.effective_tenant_id,
         )
+        try:
+            get_audit_service().record_event(
+                tenant_context=tc,
+                event_type=AuditEventType.CONFIG_CHANGED,
+                actor=caller_id,
+                payload={"master_type": master_type, "code": code, "version": updated.version, "reason": payload.change_reason},
+                action="MASTER_DATA_UPDATED",
+                resource_type="MASTER_DATA",
+                resource_id=f"{master_type}:{code}",
+            )
+        except Exception:
+            pass
+
+        response.headers["ETag"] = generate_etag(updated.model_dump(mode="json"))
+        return updated
     except MasterDataException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message) from e
 
