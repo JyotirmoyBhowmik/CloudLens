@@ -121,7 +121,10 @@ def run_canonical_task(
         # 2. Idempotency and checkpoint verification
         eff_period_start = period_start or (datetime.now(UTC) - timedelta(days=lookback_days))
         eff_period_end = period_end or datetime.now(UTC)
-        eff_idempotency_key = idempotency_key or f"{tc.tenant_id}:{task_name}:{eff_period_start.strftime('%Y%m%d%H%M')}"
+        eff_idempotency_key = (
+            idempotency_key
+            or f"{tc.tenant_id}:{connector_id or 'system'}:{task_name}:{eff_period_start.strftime('%Y%m%d%H%M')}"
+        )
 
         existing_job = sync_job_repo.get_by_idempotency_key(eff_idempotency_key, tenant_context=tc)
         if existing_job and existing_job.status == SyncJobStatus.COMPLETED:
@@ -326,10 +329,62 @@ def ingest_cost_task(
 ) -> dict[str, Any]:
     """1. Ingests cost data with restatement lookback window."""
     def _run(tc: TenantContext, job: SyncJob) -> int:
+        import asyncio
+        from connectors.factory import resolve_connector
+        from domain.cost.focus_mapper import FocusMapper
         from domain.cost.repository import get_cost_repository
+        from connectors.contract.raw_landing import raw_landing_service
+
+        conn_id = job.connector_id if job.connector_id and job.connector_id != "system" else (connector_id or "conn-aws-prod")
+        connector = resolve_connector(conn_id, tenant_context=tc)
+
+        start_str = job.period_start.strftime("%Y-%m-%d") if job.period_start else "2026-09-01"
+        end_str = job.period_end.strftime("%Y-%m-%d") if job.period_end else "2026-09-27"
+
+        from db.session import run_async
+
+        res = run_async(connector.collect_cost_bulk(start_date=start_str, end_date=end_str))
+
+        items = res.items
+        if not items:
+            return 0
+
+        # Land immutable raw payload to MinIO before normalisation (Prompt P13A Item 4)
+        raw_landing_service.land_raw_payload(
+            tenant_context=tc,
+            connector_id=conn_id,
+            run_id=job.id,
+            capability=ConnectorCapability.COLLECT_COST_BULK,
+            page_number=1,
+            raw_payload=items,
+            actor="WORKER_INGEST_COST",
+        )
+
+        prov_name = connector.provider_name.lower() if hasattr(connector, "provider_name") else "aws"
+        if prov_name == "aws":
+            schema_version = "aws_cur_2_0"
+        elif prov_name == "azure":
+            schema_version = "azure_cost_details_focus_1_0"
+        elif prov_name == "gcp":
+            schema_version = "gcp_billing_export_resource_v1"
+        elif prov_name == "oci":
+            schema_version = "oci_cost_report_v1"
+        else:
+            schema_version = "aws_cur_2_0"
+
+        facts = FocusMapper.map_dataset(
+            raw_records=items,
+            provider=prov_name,
+            schema_version=schema_version,
+            tenant_id=tc.tenant_id,
+            scope_id=job.scope_id or f"scope-{tc.tenant_id}",
+        )
+
         repo = get_cost_repository()
-        facts = repo.list(tenant_context=tc, limit=100)
-        return len(facts) if facts else 24  # no-hardcode-allow: reason="Default batch record count for scheduled simulation", reviewer="Prompt-48-Audit"
+        for fact in facts:
+            repo.save(fact, tenant_context=tc)
+
+        return len(facts)
 
     return run_canonical_task("ingest_cost", tenant_context_payload, connector_id, ConnectorCapability.COLLECT_COST_BULK, _run, retry_count=retry_count)
 
@@ -342,10 +397,146 @@ def ingest_inventory_task(
 ) -> dict[str, Any]:
     """2. Incremental and daily inventory discovery."""
     def _run(tc: TenantContext, job: SyncJob) -> int:
-        from connectors.aws.inventory import AWSInventoryService
-        inv_svc = AWSInventoryService(management_account_id=tc.tenant_id)
-        samples = inv_svc._get_sample_resources()
-        return len(samples) if samples else 15  # no-hardcode-allow: reason="Default resource count for inventory discovery", reviewer="Prompt-48-Audit"
+        import asyncio
+        from connectors.factory import resolve_connector
+        from domain.hierarchy.models import InventoryResource35
+        from domain.hierarchy.repository import get_hierarchy_repository
+        from connectors.contract.raw_landing import raw_landing_service
+
+        conn_id = job.connector_id if job.connector_id and job.connector_id != "system" else (connector_id or "conn-aws-prod")
+        connector = resolve_connector(conn_id, tenant_context=tc)
+
+        from db.session import run_async
+
+        res = run_async(connector.discover_resources(scope_id=job.scope_id or "root"))
+
+        items = res.items
+        if not items:
+            return 0
+
+        # Land immutable raw payload to MinIO before normalisation (Prompt P13A Item 4)
+        raw_landing_service.land_raw_payload(
+            tenant_context=tc,
+            connector_id=conn_id,
+            run_id=job.id,
+            capability=ConnectorCapability.DISCOVER_RESOURCES,
+            page_number=1,
+            raw_payload=items,
+            actor="WORKER_INGEST_INVENTORY",
+        )
+
+        repo = get_hierarchy_repository()
+        saved_count = 0
+        prov_name = connector.provider_name.upper() if hasattr(connector, "provider_name") else "AWS"
+
+        # Ensure discovered service, region, and resource_type entries exist in PostgreSQL for FK constraints
+        async def _ensure_catalog_prerequisites():
+            from db.session import get_tenant_session
+            from sqlalchemy import text
+
+            resolved_map = {}
+            async with get_tenant_session("system") as sess:
+                for raw in items:
+                    native_type = raw.get("native_type") or f"{prov_name}::Resource"
+                    reg_id = raw.get("region") or "us-east-1"
+
+                    # 1. Region
+                    await sess.execute(
+                        text("""
+                            INSERT INTO regions (id, provider, native_name, display_name, geography, is_multi_az, created_at)
+                            VALUES (:id, :provider, :native_name, :display_name, 'US', true, NOW())
+                            ON CONFLICT (id) DO NOTHING;
+                        """),
+                        {
+                            "id": reg_id,
+                            "provider": prov_name.lower(),
+                            "native_name": reg_id,
+                            "display_name": f"{prov_name} {reg_id}",
+                        },
+                    )
+
+                    # 2. Check if resource_type already exists by native_type_name
+                    res_row = (await sess.execute(
+                        text("SELECT id, service_id FROM resource_types WHERE provider = :prov AND native_type_name = :native LIMIT 1"),
+                        {"prov": prov_name.lower(), "native": native_type},
+                    )).mappings().first()
+
+                    if res_row:
+                        resolved_map[native_type] = (res_row["id"], res_row["service_id"])
+                    else:
+                        svc_code = raw.get("service") or "s3"
+                        svc_id = f"svc-{prov_name.lower()}-{svc_code.lower()}"
+                        svc_name = raw.get("service") or f"{prov_name} Service"
+                        cat = raw.get("service_category") or "Storage"
+
+                        # Ensure Service
+                        await sess.execute(
+                            text("""
+                                INSERT INTO services (id, provider, service_code, name, category, created_at)
+                                VALUES (:id, :provider, :service_code, :name, :category, NOW())
+                                ON CONFLICT (id) DO NOTHING;
+                            """),
+                            {
+                                "id": svc_id,
+                                "provider": prov_name.lower(),
+                                "service_code": svc_code,
+                                "name": svc_name,
+                                "category": cat,
+                            },
+                        )
+
+                        # Insert Resource Type
+                        rtype_id = f"rt-{prov_name.lower()}-{uuid.uuid4().hex[:8]}"
+                        await sess.execute(
+                            text("""
+                                INSERT INTO resource_types (id, provider, service_id, native_type_name, canonical_type, service_category, created_at)
+                                VALUES (:id, :provider, :service_id, :native_type_name, :canonical_type, :service_category, NOW())
+                                ON CONFLICT DO NOTHING;
+                            """),
+                            {
+                                "id": rtype_id,
+                                "provider": prov_name.lower(),
+                                "service_id": svc_id,
+                                "native_type_name": native_type,
+                                "canonical_type": cat,
+                                "service_category": cat,
+                            },
+                        )
+                        resolved_map[native_type] = (rtype_id, svc_id)
+
+                await sess.commit()
+            return resolved_map
+
+        resolved_types = run_async(_ensure_catalog_prerequisites())
+
+        for idx, raw in enumerate(items):
+            res_id = raw.get("resource_id") or raw.get("arn") or f"res-{idx}"
+            native_type = raw.get("native_type") or f"{prov_name}::Resource"
+            rt_id, s_id = resolved_types.get(native_type, (native_type, raw.get("service") or "s3"))
+            r_obj = InventoryResource35(
+                id=f"{tc.tenant_id}:{res_id}",
+                tenant_id=tc.tenant_id,
+                scope_id=job.scope_id or f"scope-{tc.tenant_id}",
+                native_id=raw.get("resource_id") or raw.get("arn") or res_id,
+                name=raw.get("resource_id") or raw.get("name") or res_id,
+                provider=prov_name,
+                service_id=s_id,
+                service_name=raw.get("service") or f"{prov_name} Service",
+                service_category=raw.get("service_category") or "Storage",
+                resource_type_id=rt_id,
+                resource_type=native_type,
+                region_id=raw.get("region") or "us-east-1",
+                region_name=raw.get("region") or "us-east-1",
+                pricing_status="PAID",
+                runtime_state=raw.get("runtime_status") or "RUNNING",
+                tags=[{"key": k, "value": v} for k, v in (raw.get("tags") or {}).items()],
+                last_synced_at=datetime.now(UTC),
+                created_at=datetime.now(UTC),
+            )
+            repo.save_resource(r_obj, tenant_context=tc)
+            saved_count += 1
+
+        return saved_count
 
     return run_canonical_task("ingest_inventory", tenant_context_payload, connector_id, ConnectorCapability.DISCOVER_RESOURCES, _run, retry_count=retry_count)
 

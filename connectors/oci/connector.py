@@ -70,6 +70,17 @@ class OCIConnector(BaseCloudConnector):
         )
 
         cfg = self.config or {}
+        cred_ref = cfg.get("credential_ref") or cfg.get("secret_ref")
+        if cred_ref and str(cred_ref).startswith("vault://"):
+            try:
+                from domain.credentials.store import get_secret_store
+                vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
+                if isinstance(vault_secret, dict):
+                    cfg["credentials"] = {**(cfg.get("credentials") or {}), **vault_secret}
+                    self.config = cfg
+            except Exception as v_err:
+                logger.warning("Could not resolve OCI credentials from OpenBao %s: %s", cred_ref, v_err)
+
         tenancy_id = cfg.get("tenancy_ocid") or cfg.get(
             "tenancy_id", "ocid1.tenancy.oc1..aaaaaaaademo123456789"
         )

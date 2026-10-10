@@ -30,7 +30,7 @@ from connectors.contract.models import (
 )
 from connectors.contract.quota_tracker import hourly_quota_tracker
 from connectors.contract.raw_landing import raw_landing_service
-from connectors.simulator.connector import ProviderSimulatorConnector
+from connectors.factory import resolve_connector
 from connectors.stub.connector import StubConnector
 from connectors.sync.orchestrator import get_sync_orchestrator
 from domain.models.enums import (
@@ -230,17 +230,11 @@ async def probe_connector_capabilities(
     declared_caps = {ConnectorCapability(c) for c in record.declared_capabilities}
 
     # Instantiate connector for probing
-    conn: BaseCloudConnector
-    if "stub" in record["provider"].lower():
-        conn = StubConnector(
-            connector_id=connector_id,
-            tenant_id=tenant_context.tenant_id,
-            declared_capabilities=declared_caps,
-        )
-    else:
-        conn = ProviderSimulatorConnector(
-            connector_id=connector_id, tenant_id=tenant_context.tenant_id
-        )
+    conn = resolve_connector(
+        connector_id=connector_id,
+        tenant_context=tenant_context,
+        override_config={"declared_capabilities": declared_caps},
+    )
 
     # Validate health/credentials
     verified_caps: set[ConnectorCapability] = set()

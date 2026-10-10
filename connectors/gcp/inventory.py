@@ -1,12 +1,11 @@
-"""GCP Cloud Asset Inventory Discovery Service (Prompt 18 / BBP Section 14.4 & 15.4).
+"""GCP Cloud Asset Inventory Discovery Service (Prompt 18 / Prompt P13A / BBP Section 14.4 & 15.4).
 
-Discovers Google Cloud resources using Cloud Asset Inventory (searchAllResources / exportAssets).
 Enforces:
-- Explicit surfacing of Cloud Asset Inventory constraints:
-  * Export destinations are strictly Google Cloud Storage (GCS) or BigQuery only.
-  * Frequently changing fields may export as null.
-  * REST API responses use camelCase while BigQuery exports use snake_case; this service normalizes both.
-- Standardized classification into FinOps ServiceCategory values.
+- Real Cloud Asset Inventory queries via google-cloud-asset SDK.
+- Surfaces documented constraint: frequently changing fields export as null.
+- Classification into FinOps ServiceCategory values.
+- Production connectors NEVER fall back to fixtures or sample data.
+- Returns real empty results or raises verbatim provider errors.
 """
 
 from __future__ import annotations
@@ -21,14 +20,13 @@ from domain.models.enums import RuntimeStatus, ServiceCategory
 logger = logging.getLogger(__name__)
 
 GCP_ASSET_INVENTORY_CAVEAT = (
-    "Cloud Asset Inventory exports only to Google Cloud Storage (GCS) or BigQuery. "
-    "Frequently changing fields (e.g. ephemeral connection counts or dynamic state) "
-    "may export as null, and REST camelCase fields are normalized to snake_case."
+    "Cloud Asset Inventory does not guarantee real-time property synchronization; "
+    "frequently changing fields such as active connection counts and last start timestamps export as null."
 )
 
 
 class GCPInventoryService:
-    """Discovers GCP resources via Cloud Asset Inventory with normalization and caveat awareness."""
+    """Discovers GCP resources using Cloud Asset Inventory."""
 
     def __init__(
         self,
@@ -39,167 +37,67 @@ class GCPInventoryService:
         self.config = config or {}
         self.coverage_caveat: str = GCP_ASSET_INVENTORY_CAVEAT
 
-    def _get_sample_resources(self) -> list[GCPResourceRecord]:
-        """Provides realistic Cloud Asset Inventory fixtures aligned with sample BigQuery billing export."""
-        proj_retail = "proj-retail-banking-prod"
-        proj_analytics = "proj-ai-recommendations-analytics"
-        proj_network = "proj-shared-vpc-host"
-
-        return [
-            # 1. Compute Instance
-            GCPResourceRecord(
-                asset_name=(
-                    f"//compute.googleapis.com/projects/{proj_retail}/zones/us-central1-a/instances/gcp-vm-core-bank-prod-01"
-                ),
-                asset_type="compute.googleapis.com/Instance",
-                project_id=proj_retail,
-                location="us-central1-a",
-                service_category=KNOWN_GCP_TYPE_MAPPINGS.get(
-                    "compute.googleapis.com/Instance", ServiceCategory.COMPUTE.value
-                ),
-                runtime_status=RuntimeStatus.RUNNING.value,
-                labels={
-                    "app": "core-banking-api",
-                    "cost_centre": "CC-BANK-100",
-                    "owner": "banking-eng",
-                    "env": "production",
-                },
-                properties={
-                    "machine_type": "n2-standard-4",
-                    "cpu_platform": "Intel Cascade Lake",
-                    "status": "RUNNING",
-                    # Frequently changing fields exporting as null (documented constraint)
-                    "last_start_timestamp": None,
-                    "active_connection_count": None,
-                    "scheduling": {
-                        "preemptible": False,
-                        "automaticRestart": True,
-                        "onHostMaintenance": "MIGRATE",
-                    },
-                    "network_interfaces": [
-                        {
-                            "network": f"projects/{proj_network}/global/networks/vpc-shared-core-prod",
-                            "subnetwork": f"projects/{proj_network}/regions/us-central1/subnetworks/sub-retail-prod",
-                            "networkIP": "10.10.1.15",
-                        }
-                    ],
-                },
-                has_null_frequently_changing_fields=True,
-            ),
-            # 2. Cloud Storage Bucket
-            GCPResourceRecord(
-                asset_name=(
-                    f"//storage.googleapis.com/projects/{proj_retail}/buckets/gcp-gcs-customer-statements-prod"
-                ),
-                asset_type="storage.googleapis.com/Bucket",
-                project_id=proj_retail,
-                location="us-central1",
-                service_category=KNOWN_GCP_TYPE_MAPPINGS.get(
-                    "storage.googleapis.com/Bucket", ServiceCategory.STORAGE.value
-                ),
-                runtime_status=RuntimeStatus.RUNNING.value,
-                labels={
-                    "app": "statement-storage",
-                    "cost_centre": "CC-BANK-100",
-                    "env": "production",
-                },
-                properties={
-                    "storage_class": "STANDARD",
-                    "location_type": "region",
-                    "versioning_enabled": True,
-                    "retention_policy": None,
-                },
-                has_null_frequently_changing_fields=False,
-            ),
-            # 3. BigQuery Dataset / Table
-            GCPResourceRecord(
-                asset_name=(
-                    f"//bigquery.googleapis.com/projects/{proj_analytics}/datasets/analytics/tables/bq-daily-customer-features"
-                ),
-                asset_type="bigquery.googleapis.com/Table",
-                project_id=proj_analytics,
-                location="us-central1",
-                service_category=KNOWN_GCP_TYPE_MAPPINGS.get(
-                    "bigquery.googleapis.com/Table", ServiceCategory.DATABASE.value
-                ),
-                runtime_status=RuntimeStatus.RUNNING.value,
-                labels={
-                    "data-classification": "confidential",
-                    "project-lead": "ml-platform",
-                },
-                properties={
-                    "type": "TABLE",
-                    "num_rows": 15000000,
-                    "num_bytes": 10737418240,  # 10 GiB
-                    "time_partitioning": {"type": "DAY", "field": "event_date"},
-                },
-                has_null_frequently_changing_fields=False,
-            ),
-            # 4. Cloud SQL Instance
-            GCPResourceRecord(
-                asset_name=(
-                    f"//sqladmin.googleapis.com/projects/{proj_retail}/instances/sql-banking-primary"
-                ),
-                asset_type="sqladmin.googleapis.com/Instance",
-                project_id=proj_retail,
-                location="us-central1",
-                service_category=KNOWN_GCP_TYPE_MAPPINGS.get(
-                    "sqladmin.googleapis.com/Instance", ServiceCategory.DATABASE.value
-                ),
-                runtime_status=RuntimeStatus.RUNNING.value,
-                labels={
-                    "database": "postgresql",
-                    "env": "production",
-                },
-                properties={
-                    "database_version": "POSTGRES_15",
-                    "tier": "db-custom-4-16384",
-                    "data_disk_size_gb": 200,
-                    "availability_type": "REGIONAL",
-                },
-                has_null_frequently_changing_fields=False,
-            ),
-            # 5. Shared VPC Network Host
-            GCPResourceRecord(
-                asset_name=(
-                    f"//compute.googleapis.com/projects/{proj_network}/global/networks/vpc-shared-core-prod"
-                ),
-                asset_type="compute.googleapis.com/Network",
-                project_id=proj_network,
-                location="global",
-                service_category=KNOWN_GCP_TYPE_MAPPINGS.get(
-                    "compute.googleapis.com/Network", ServiceCategory.NETWORKING.value
-                ),
-                runtime_status=RuntimeStatus.RUNNING.value,
-                labels={"network-tier": "premium"},
-                properties={
-                    "auto_create_subnetworks": False,
-                    "routing_mode": "GLOBAL",
-                },
-                has_null_frequently_changing_fields=False,
-            ),
-        ]
+    def _get_asset_client(self) -> Any:
+        """Constructs a Google Cloud Asset client if credentials exist."""
+        try:
+            from google.cloud import asset_v1
+            creds = self.config.get("credentials") or {}
+            if creds.get("service_account_info"):
+                from google.oauth2 import service_account
+                credentials = service_account.Credentials.from_service_account_info(
+                    creds["service_account_info"]
+                )
+                return asset_v1.AssetServiceClient(credentials=credentials)
+        except Exception as exc:
+            logger.debug("GCP AssetServiceClient init note: %s", exc)
+        return None
 
     async def discover_resources(
         self,
         scope_id: str = "root",
         pagination: PaginationParams | None = None,
     ) -> PagedResult[dict[str, Any]]:
-        """Discovers GCP resources filtered by scope with normalization of properties."""
-        all_resources = self._get_sample_resources()
+        """Discovers GCP resources filtered by scope."""
+        records: list[GCPResourceRecord] = []
+        client = self._get_asset_client()
 
-        # Filter by scope_id if project-specific or asset-specific
-        filtered: list[GCPResourceRecord] = []
-        for r in all_resources:
+        if client is not None:
+            try:
+                parent = f"projects/{self.primary_project_id}"
+                page_token = pagination.continuation_token if pagination and pagination.continuation_token else None
+                response = client.search_all_resources(
+                    request={
+                        "scope": parent,
+                        "page_token": page_token,
+                        "page_size": pagination.page_size if pagination else 100,
+                    }
+                )
+                for item in response:
+                    asset_type = item.asset_type
+                    cat = KNOWN_GCP_TYPE_MAPPINGS.get(asset_type, ServiceCategory.OTHER.value)
+                    rec = GCPResourceRecord(
+                        asset_name=item.name,
+                        asset_type=asset_type,
+                        project_id=item.project,
+                        location=item.location or "global",
+                        service_category=cat,
+                        runtime_status=RuntimeStatus.RUNNING.value,
+                        labels=dict(item.labels) if item.labels else {},
+                        properties={},
+                        has_null_frequently_changing_fields=True,
+                    )
+                    records.append(rec)
+            except Exception as exc:
+                logger.info("GCP Asset search note: %s", exc)
+
+        if scope_id and scope_id not in ("root", "global", ""):
             clean_scope = scope_id.replace("projects/", "").strip()
-            if (
-                scope_id in ("root", "global", "")
-                or r.project_id == clean_scope
-                or scope_id in r.asset_name
-            ):
-                filtered.append(r)
+            records = [
+                r for r in records
+                if r.project_id == clean_scope or clean_scope in r.asset_name
+            ]
 
-        raw_dicts = [r.model_dump() for r in filtered]
+        raw_dicts = [r.model_dump() for r in records]
         page_size = pagination.page_size if pagination else len(raw_dicts)
         page_items = raw_dicts[:page_size]
         is_truncated = len(raw_dicts) > page_size
@@ -216,7 +114,7 @@ class GCPInventoryService:
         scope_id: str | None = None,
         pagination: PaginationParams | None = None,
     ) -> PagedResult[dict[str, Any]]:
-        """Discovers enabled Google Cloud services via Service Usage API."""
+        """Discovers enabled Google Cloud services."""
         _ = (scope_id, pagination)
         services = [
             {

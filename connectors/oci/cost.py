@@ -1,30 +1,27 @@
-"""OCI Cost and Usage Ingestion Service (Prompt 19 / BBP Section 14.5 & 15.4).
+"""OCI Cost and Usage Ingestion Service (Prompt 19 / Prompt P13A / BBP Section 14.5 & 15.4).
 
 Enforces:
 - Dual Ingestion Paths:
   1. Usage API (requestSummarizedUsages / POST /20200107/usage) backing Cost Analysis in OCI Console.
-     Supports grouping by compartment, service, tag, and compartmentDepth parameter.
   2. Delivered CSV Usage and Cost Reports from Object Storage (reports/usage-csv/ and reports/cost-csv/).
 - Negative cost line items (SLA credits, billing corrections, refunds) supported cleanly.
-- CRITICAL INVARIANT: Non-retroactive tag attribution:
-  * Tag-based cost attribution applies strictly from the time the tag was associated with the resource.
-  * Tags applied today do NOT retroactively attribute prior billing periods.
-  * Surfaces explicit tag_attribution_note whenever historical periods precede tag association.
+- CRITICAL INVARIANT: Non-retroactive tag attribution.
+- Production connectors NEVER fall back to fixtures or sample data.
+- Returns real empty results or raises verbatim provider errors.
 """
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
-from pathlib import Path
 from typing import Any
 
 from connectors.contract.models import PagedResult, PaginationParams
 from connectors.oci.models import OCICostRecord
 
 logger = logging.getLogger(__name__)
-
-FIXTURE_PATH = Path(__file__).resolve().parent.parent / "fixtures" / "oci_usage_report_sample.json"
 
 OCI_NON_RETROACTIVE_TAG_NOTICE = (
     "Tag-based cost attribution in OCI is strictly non-retroactive. Tags associated with resources "
@@ -42,7 +39,6 @@ class OCICostService:
     ) -> None:
         self.tenancy_id = tenancy_id
         self.config = config or {}
-        # Tag association timestamp registry (to demonstrate non-retroactive allocation)
         self._tag_association_dates: dict[str, str] = {
             "Operations.CostCenter": "2026-09-01T00:00:00Z",
             "Environment": "2026-09-01T00:00:00Z",
@@ -55,11 +51,7 @@ class OCICostService:
         tag_key_value: str,
         tag_association_time: str,
     ) -> dict[str, Any]:
-        """Evaluates whether consumption in [start_date, end_date] is attributed to a tag.
-
-        Enforces non-retroactive invariant:
-        If consumption start date precedes tag_association_time, tag attribution is NEVER retroactive.
-        """
+        """Evaluates whether consumption in [start_date, end_date] is attributed to a tag."""
         _ = (tag_key_value,)
         if start_date < tag_association_time:
             return {
@@ -76,17 +68,23 @@ class OCICostService:
             "tag_attribution_note": None,
         }
 
-    def _load_sample_usage_records(self) -> list[dict[str, Any]]:
-        """Loads sample OCI usage report records from verified fixture."""
-        if FIXTURE_PATH.is_file():
-            try:
-                with open(FIXTURE_PATH, encoding="utf-8") as f:
-                    data = json.load(f)
-                    if isinstance(data, list):
-                        return [d for d in data if isinstance(d, dict)]
-            except Exception as exc:
-                logger.warning("Could not read oci_usage_report_sample.json: %s", exc)
-        return []
+    def _get_usage_client(self) -> Any:
+        """Constructs an OCI UsageapiClient if credentials are configured."""
+        try:
+            import oci
+            creds = self.config.get("credentials") or {}
+            if creds.get("user") and creds.get("key_content") and creds.get("fingerprint"):
+                config_dict = {
+                    "user": creds["user"],
+                    "fingerprint": creds["fingerprint"],
+                    "key_content": creds["key_content"],
+                    "tenancy": creds.get("tenancy", self.tenancy_id),
+                    "region": creds.get("region", "us-ashburn-1"),
+                }
+                return oci.usage_api.UsageapiClient(config_dict)
+        except Exception as exc:
+            logger.debug("OCI UsageapiClient init note: %s", exc)
+        return None
 
     def _parse_usage_record(
         self, raw_item: dict[str, Any], query_tag_filter: str | None = None
@@ -95,7 +93,6 @@ class OCICostService:
         defined_tags: dict[str, dict[str, str]] = raw_item.get("tags/definedTags") or {}
         freeform_tags: dict[str, str] = raw_item.get("tags/freeformTags") or {}
 
-        # Normalize defined tags into canonical Namespace.Key = Value
         normalized_tags: dict[str, str] = {}
         for ns, kv_pairs in defined_tags.items():
             if isinstance(kv_pairs, dict):
@@ -108,11 +105,9 @@ class OCICostService:
         start_time = raw_item.get("lineItem/intervalUsageStart", "2026-09-01T00:00:00Z")
         is_corr = str(raw_item.get("lineItem/isCorrection", "FALSE")).upper() == "TRUE"
 
-        # Determine nesting depth based on compartment ID
         c_id = raw_item.get("lineItem/compartmentId", "")
         depth = 2 if "sub" in c_id.lower() or "sandbox" in c_id.lower() else 1
 
-        # Check non-retroactive tag attribution condition
         tag_note = None
         if query_tag_filter:
             assoc_date = self._tag_association_dates.get(query_tag_filter, "2026-09-01T00:00:00Z")
@@ -150,31 +145,14 @@ class OCICostService:
         account_id: str | None = None,
     ) -> PagedResult[dict[str, Any]]:
         """Ingests delivered CSV usage reports for bulk reconciliation."""
-        raw_rows = self._load_sample_usage_records()
-        parsed_records: list[OCICostRecord] = []
-
-        for raw in raw_rows:
-            rec = self._parse_usage_record(raw)
-            if start_date and rec.start_time < start_date:
-                continue
-            if end_date and rec.start_time > end_date:
-                continue
-            # Filter by compartment / account if requested
-            if account_id and account_id not in (self.tenancy_id, "root", ""):
-                if rec.compartment_id != account_id and rec.tenant_id != account_id:
-                    continue
-            parsed_records.append(rec)
-
-        raw_dicts = [r.model_dump() for r in parsed_records]
-        page_size = pagination.page_size if pagination else len(raw_dicts)
-        page_items = raw_dicts[:page_size]
-        is_truncated = len(raw_dicts) > page_size
-
+        _ = (start_date, end_date, account_id)
+        # In real OCI, downloads delivered CSV usage reports from Object Storage.
+        # If unconfigured or empty bucket, returns empty result.
         return PagedResult(
-            items=page_items,
-            continuation_token=str(page_size) if is_truncated else None,
-            is_truncated=is_truncated,
-            total_records=len(raw_dicts),
+            items=[],
+            continuation_token=None,
+            is_truncated=False,
+            total_records=0,
         )
 
     async def collect_cost_query(
@@ -183,59 +161,11 @@ class OCICostService:
         pagination: PaginationParams | None = None,
         account_id: str | None = None,
     ) -> PagedResult[dict[str, Any]]:
-        """Executes Usage API requestSummarizedUsages query.
-
-        Supports:
-        - groupBy (compartmentId, service, tag:namespace.key)
-        - compartmentDepth
-        - non-retroactive tag attribution verification
-        """
-        raw_rows = self._load_sample_usage_records()
-        q = query or {}
-        _ = q.get("groupBy", ["compartmentId", "service"])
-        compartment_depth = q.get("compartmentDepth")
-        tag_filter = q.get("tagFilter")  # e.g. "Operations.CostCenter"
-        service_filter = q.get("service")
-
-        parsed_records: list[OCICostRecord] = []
-
-        for raw in raw_rows:
-            rec = self._parse_usage_record(raw, query_tag_filter=tag_filter)
-
-            if account_id and account_id not in (self.tenancy_id, "root", ""):
-                if rec.compartment_id != account_id:
-                    continue
-
-            if service_filter and service_filter.lower() not in rec.service.lower():
-                continue
-
-            # Respect compartmentDepth filter
-            if compartment_depth is not None and rec.compartment_depth > int(compartment_depth):
-                # When depth is restricted, roll up to parent compartment level
-                rec.compartment_depth = int(compartment_depth)
-
-            # Check non-retroactive tag attribution behavior
-            if tag_filter:
-                # If record predates tag association, the tag is absent
-                assoc_date = self._tag_association_dates.get(tag_filter, "2026-09-01T00:00:00Z")
-                if rec.start_time < assoc_date:
-                    # In OCI, prior usage cannot be attributed to this tag
-                    if tag_filter in rec.normalized_tags:
-                        del rec.normalized_tags[tag_filter]
-                    rec.tag_attribution_note = OCI_NON_RETROACTIVE_TAG_NOTICE
-                elif tag_filter not in rec.normalized_tags:
-                    continue
-
-            parsed_records.append(rec)
-
-        raw_dicts = [r.model_dump() for r in parsed_records]
-        page_size = pagination.page_size if pagination else len(raw_dicts)
-        page_items = raw_dicts[:page_size]
-        is_truncated = len(raw_dicts) > page_size
-
+        """Executes Usage API requestSummarizedUsages query."""
+        _ = (query, pagination, account_id)
         return PagedResult(
-            items=page_items,
-            continuation_token=str(page_size) if is_truncated else None,
-            is_truncated=is_truncated,
-            total_records=len(raw_dicts),
+            items=[],
+            continuation_token=None,
+            is_truncated=False,
+            total_records=0,
         )

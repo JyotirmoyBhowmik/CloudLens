@@ -18,8 +18,7 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
-from connectors.simulator.connector import ProviderSimulatorConnector
-from connectors.simulator.models import SimulatorProfile
+from connectors.factory import resolve_connector
 from domain.models.enums import (
     CloudProvider,
     QuotaHeadroomState,
@@ -291,11 +290,9 @@ async def sync_provider_quotas(
 ) -> list[QuotaEntity]:
     """Synchronizes quotas from cloud connector."""
     provider_enum = CloudProvider(provider.lower())
-    profile = SimulatorProfile(provider_enum.value.lower())
-    connector = ProviderSimulatorConnector(
-        connector_id=f"conn-sim-{provider_enum.value.lower()}",
-        tenant_id=tenant_context.tenant_id,
-        profile=profile,
+    connector = resolve_connector(
+        connector_id=f"conn-{provider_enum.value.lower()}",
+        tenant_context=tenant_context,
     )
     return service.sync_connector_quotas(
         connector,

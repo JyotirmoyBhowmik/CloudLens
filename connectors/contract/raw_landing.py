@@ -53,13 +53,9 @@ class RawLandingService:
         self._audit = audit_service or get_audit_service()
 
     def _run_async(self, coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
+        from db.session import run_async
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(lambda: asyncio.run(coro)).result()
+        return run_async(coro)
 
     def _row_to_record(self, row: Any) -> RawLandingRecord:
         cap_val = row[4]

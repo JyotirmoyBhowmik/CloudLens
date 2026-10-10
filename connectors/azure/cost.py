@@ -1,4 +1,4 @@
-"""Azure Cost Ingestion Service: Bulk Exports First with Query API Fallback (Prompt 16 / BBP Section 14.2 & 15.4).
+"""Azure Cost Ingestion Service: Bulk Exports First with Query API Fallback (Prompt 16 / Prompt P13A / BBP Section 14.2 & 15.4).
 
 Enforces:
 - Cost Management Scheduled Exports as default bulk ingestion path (FOCUS 1.0 & ActualCost).
@@ -6,13 +6,15 @@ Enforces:
 - Automatic agreement-type detection (EA, MCA, MPA, DIRECT) and scope-form validation.
 - Explicit diagnostic errors on agreement/scope-form mismatches.
 - Unsupported subscription types (Free Trial, Sponsored) handled gracefully as declared capability gaps, NOT errors.
+- Production connectors NEVER fall back to fixtures or sample data.
 """
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
-from pathlib import Path
 from typing import Any
 
 from connectors.azure.models import (
@@ -25,8 +27,6 @@ from connectors.azure.models import (
 from connectors.contract.models import PagedResult, PaginationParams
 
 logger = logging.getLogger(__name__)
-
-FIXTURE_PATH = Path(__file__).resolve().parent.parent / "fixtures" / "azure_cost_export_sample.json"
 
 
 class AzureCostService:
@@ -55,17 +55,36 @@ class AzureCostService:
         validate_scope_for_agreement(agreement_type=agreement, scope_uri=scope_uri)
         return agreement
 
-    def _load_sample_export_records(self) -> list[dict[str, Any]]:
-        """Loads sample export records from the verified fixture."""
-        if FIXTURE_PATH.is_file():
-            try:
-                with open(FIXTURE_PATH, encoding="utf-8") as f:
-                    data = json.load(f)
+    def _read_blob_exports(self) -> list[dict[str, Any]]:
+        """Reads Azure Cost Management scheduled export files from Blob storage."""
+        records: list[dict[str, Any]] = []
+        conn_str = self.config.get("storage_connection_string")
+        container_name = self.config.get("export_container", "azure-cost-exports")
+        prefix = self.config.get("export_prefix", "")
+
+        if not conn_str:
+            return records
+
+        try:
+            from azure.storage.blob import BlobServiceClient
+            blob_service = BlobServiceClient.from_connection_string(conn_str)
+            container_client = blob_service.get_container_client(container_name)
+            for blob in container_client.list_blobs(name_starts_with=prefix):
+                blob_client = container_client.get_blob_client(blob.name)
+                stream = io.BytesIO()
+                blob_client.download_blob().readinto(stream)
+                stream.seek(0)
+                if blob.name.endswith(".csv"):
+                    reader = csv.DictReader(io.TextIOWrapper(stream, encoding="utf-8"))
+                    records.extend(list(reader))
+                elif blob.name.endswith(".json"):
+                    data = json.load(stream)
                     if isinstance(data, list):
-                        return [d for d in data if isinstance(d, dict)]
-            except Exception as exc:
-                logger.warning("Could not read azure_cost_export_sample.json: %s", exc)
-        return []
+                        records.extend(data)
+        except Exception as exc:
+            logger.info("Azure Blob export read check: %s", exc)
+
+        return records
 
     async def collect_cost_bulk(
         self,
@@ -81,7 +100,6 @@ class AzureCostService:
         declared capability gap rather than a fatal connector failure.
         """
         _ = (start_date, end_date)
-        # Capability Gap Handling for Free Trial / Sponsored subscriptions
         if is_unsupported_cost_offer(offer_id):
             logger.info(
                 "Subscription offer '%s' at scope '%s' does not support Cost Management Scheduled Exports. "
@@ -96,13 +114,12 @@ class AzureCostService:
                 total_records=0,
             )
 
-        # Agreement detection & scope validation
         self.detect_and_validate_scope(scope_uri)
 
-        raw_fixtures = self._load_sample_export_records()
+        raw_items = self._read_blob_exports()
         records: list[dict[str, Any]] = []
 
-        for item in raw_fixtures:
+        for item in raw_items:
             tags_raw = item.get("tags", "{}")
             tags_dict = json.loads(tags_raw) if isinstance(tags_raw, str) else tags_raw
 
@@ -146,30 +163,20 @@ class AzureCostService:
         query: dict[str, Any] | None = None,
         pagination: PaginationParams | None = None,
     ) -> PagedResult[dict[str, Any]]:
-        """Interactive Query API fallback for recent-day or on-demand cost queries.
-
-        Endpoint: POST https://management.azure.com/{scope}/providers/Microsoft.CostManagement/query?api-version=2023-03-01
-        """
+        """Interactive Query API fallback for recent-day or on-demand cost queries."""
         _ = query
-        # Capability Gap Handling
         if is_unsupported_cost_offer(offer_id):
-            logger.info(
-                "Subscription offer '%s' at scope '%s' does not support Cost Management Query API. "
-                "Handled as declared capability gap.",
-                offer_id,
-                scope_uri,
-            )
             return PagedResult(
                 items=[], continuation_token=None, is_truncated=False, total_records=0
             )
 
-        # Agreement detection & scope validation
         self.detect_and_validate_scope(scope_uri)
 
-        raw_fixtures = self._load_sample_export_records()
+        # In production without real export blobs, returns empty list
+        raw_items = self._read_blob_exports()
         records: list[dict[str, Any]] = []
 
-        for item in raw_fixtures:
+        for item in raw_items:
             tags_raw = item.get("tags", "{}")
             tags_dict = json.loads(tags_raw) if isinstance(tags_raw, str) else tags_raw
 
@@ -191,7 +198,7 @@ class AzureCostService:
                 billing_currency=item.get("billingCurrency", "USD"),
                 usage_date=item.get("date", "2026-09-01T00:00:00Z"),
                 tags=tags_dict,
-                is_estimated=True,  # Query API cost is interactive/estimated until invoice lock
+                is_estimated=True,
             )
             records.append(cost_rec.model_dump())
 

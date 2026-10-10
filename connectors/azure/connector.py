@@ -68,6 +68,17 @@ class AzureConnector(BaseCloudConnector):
 
         # Build credentials payload with sensible defaults for testing if unconfigured
         cfg = self.config or {}
+        cred_ref = cfg.get("credential_ref") or cfg.get("secret_ref")
+        if cred_ref and str(cred_ref).startswith("vault://"):
+            try:
+                from domain.credentials.store import get_secret_store
+                vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
+                if isinstance(vault_secret, dict):
+                    cfg["credentials"] = {**(cfg.get("credentials") or {}), **vault_secret}
+                    self.config = cfg
+            except Exception as v_err:
+                logger.warning("Could not resolve Azure credentials from OpenBao %s: %s", cred_ref, v_err)
+
         credentials_dict = cfg.get("credentials") or {
             "tenant_id": cfg.get("azure_tenant_id", "00000000-0000-0000-0000-000000000001"),
             "client_id": cfg.get("client_id", "00000000-0000-0000-0000-000000000002"),

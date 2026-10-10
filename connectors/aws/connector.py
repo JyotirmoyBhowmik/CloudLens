@@ -73,6 +73,18 @@ class AWSConnector(BaseCloudConnector):
         management_account_id = cfg.get("management_account_id", "112233445566")
         self.management_account_id = management_account_id
 
+        # Resolve credentials from OpenBao by vault:// reference at call time (Prompt P13A)
+        cred_ref = cfg.get("credential_ref") or cfg.get("secret_ref")
+        if cred_ref and str(cred_ref).startswith("vault://"):
+            try:
+                from domain.credentials.store import get_secret_store
+                vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
+                if isinstance(vault_secret, dict):
+                    cfg["credentials"] = {**(cfg.get("credentials") or {}), **vault_secret}
+                    self.config = cfg
+            except Exception as v_err:
+                logger.warning("Could not resolve credentials from OpenBao %s: %s", cred_ref, v_err)
+
         # Build credentials payload with sensible defaults for cross-account assumption
         credentials_dict = cfg.get("credentials") or {
             "management_account_id": management_account_id,

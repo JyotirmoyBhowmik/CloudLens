@@ -29,6 +29,18 @@ dependencies = [
     "opentelemetry-sdk>=1.26.0",
     "prometheus-client>=0.20.0",
     "pyarrow>=17.0.0",
+    # Pinned Cloud Provider SDKs (Prompt P13A)
+    "boto3==1.43.111",
+    "azure-identity==1.26.0",
+    "azure-mgmt-resourcegraph==8.0.1",
+    "azure-mgmt-costmanagement==5.0.0",
+    "azure-mgmt-managementgroups==2.0.0",
+    "azure-storage-blob==12.31.0",
+    "google-cloud-asset==4.5.0",
+    "google-cloud-bigquery==3.46.1",
+    "google-cloud-billing==1.21.0",
+    "google-cloud-resource-manager==1.19.0",
+    "oci==2.187.2",
 ]
 
 [project.optional-dependencies]

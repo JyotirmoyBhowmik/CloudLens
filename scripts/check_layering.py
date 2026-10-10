@@ -110,6 +110,26 @@ def check_file(file_path: Path, root_path: Path) -> list[Violation]:
                     violations.append(
                         Violation(rel_path, node.lineno, node.module, file_layer, msg)
                     )
+                if node.module == "connectors.simulator" or node.module.startswith("connectors.simulator."):
+                    msg = (
+                        f"Layering gate violated: production layer '{file_layer}' must not import "
+                        f"from simulator package ('{node.module}')."
+                    )
+                    violations.append(
+                        Violation(rel_path, node.lineno, node.module, file_layer, msg)
+                    )
+
+    # Real connector verification: connectors/aws, connectors/azure, connectors/gcp, connectors/oci
+    # must never contain _get_sample_resources or FIXTURES_DIR (Prompt P13A)
+    real_connector_prefixes = ("connectors/aws/", "connectors/azure/", "connectors/gcp/", "connectors/oci/")
+    if any(rel_path.startswith(prefix) for prefix in real_connector_prefixes):
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == "_get_sample_resources":
+                msg = "Real connector must not define '_get_sample_resources' (fixtures belong only in simulator/tests)."
+                violations.append(Violation(rel_path, node.lineno, node.name, "connector", msg))
+            elif isinstance(node, ast.Name) and node.id in ("_get_sample_resources", "FIXTURES_DIR"):
+                msg = f"Real connector must not reference '{node.id}' (fixtures belong only in simulator/tests)."
+                violations.append(Violation(rel_path, node.lineno, node.id, "connector", msg))
 
     return violations
 

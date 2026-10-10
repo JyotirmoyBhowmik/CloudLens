@@ -78,6 +78,17 @@ class GCPConnector(BaseCloudConnector):
         )
 
         cfg = self.config or {}
+        cred_ref = cfg.get("credential_ref") or cfg.get("secret_ref")
+        if cred_ref and str(cred_ref).startswith("vault://"):
+            try:
+                from domain.credentials.store import get_secret_store
+                vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
+                if isinstance(vault_secret, dict):
+                    cfg["credentials"] = {**(cfg.get("credentials") or {}), **vault_secret}
+                    self.config = cfg
+            except Exception as v_err:
+                logger.warning("Could not resolve GCP credentials from OpenBao %s: %s", cred_ref, v_err)
+
         primary_project_id = cfg.get("project_id", "proj-cloudlens-core")
         self.primary_project_id = primary_project_id
         organization_id = cfg.get("organization_id", "1092837465")

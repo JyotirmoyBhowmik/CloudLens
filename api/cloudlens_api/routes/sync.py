@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from api.cloudlens_api.tenant_context import get_authenticated_tenant_context
-from connectors.simulator.connector import ProviderSimulatorConnector
+from connectors.factory import resolve_connector
 from connectors.sync.orchestrator import get_sync_orchestrator
 from connectors.sync.scheduler import get_sync_scheduler
 from domain.models.enums import (
@@ -85,20 +85,9 @@ async def trigger_sync_job(
     tenant_context: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> SyncJob:
     """Dispatches a synchronization run supporting all seven sync types."""
-    cid_low = payload.connector_id.lower()
-    if "azure" in cid_low:
-        provider_str = "azure"
-    elif "gcp" in cid_low:
-        provider_str = "gcp"
-    elif "oci" in cid_low:
-        provider_str = "oci"
-    else:
-        provider_str = "aws"
-
-    connector = ProviderSimulatorConnector(
+    connector = resolve_connector(
         connector_id=payload.connector_id,
-        tenant_id=tenant_context.tenant_id,
-        profile=provider_str,
+        tenant_context=tenant_context,
     )
 
     orchestrator = get_sync_orchestrator()
