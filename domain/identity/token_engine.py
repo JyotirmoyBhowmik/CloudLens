@@ -649,9 +649,17 @@ class CryptographicTokenEngine:
         """Extracts verified AuthContext security principal from token."""
         payload = self.verify_token(token_str)
         t_type = TokenType(payload.get("typ", TokenType.ACCESS.value))
-        roles = [
-            SystemRole(r) for r in payload.get("roles", []) if r in SystemRole._value2member_map_
-        ]
+        roles: list[Any] = []
+        for r in payload.get("roles", []):
+            try:
+                role_enum = SystemRole(r)
+                if role_enum not in roles:
+                    roles.append(role_enum)
+                if isinstance(r, str) and r != role_enum.value and r not in roles:
+                    roles.append(r)
+            except (ValueError, KeyError, AttributeError):
+                if r not in roles:
+                    roles.append(r)
 
         return AuthContext(
             user_id=payload.get("uid", ""),

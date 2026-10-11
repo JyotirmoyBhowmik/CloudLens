@@ -25,7 +25,7 @@ class User(CanonicalEntity):
     email: str = Field(..., description="Unique email address identifier")
     display_name: str = Field(..., description="Human-readable full name")
     status: UserStatus = Field(default=UserStatus.ACTIVE, description="Account lifecycle status")
-    roles: list[SystemRole] = Field(default_factory=list, description="Assigned canonical roles")
+    roles: list[SystemRole | str] = Field(default_factory=list, description="Assigned canonical or custom roles")
     idp_sub: str | None = Field(
         default=None, description="IdP subject identifier (OIDC sub or SAML NameID)"
     )
@@ -165,7 +165,7 @@ class AuthContext(BaseModel):
     user_id: str = Field(..., description="Authenticated user ID or machine client ID")
     tenant_id: str = Field(..., description="Tenant ID")
     email: str = Field(..., description="User email or machine client identifier")
-    roles: list[SystemRole] = Field(default_factory=list, description="Canonical roles")
+    roles: list[SystemRole | str] = Field(default_factory=list, description="Canonical or custom roles")
     permissions: list[str] = Field(default_factory=list, description="Effective permission set")
     session_id: str | None = Field(default=None, description="Associated session ID")
     token_type: TokenType = Field(default=TokenType.ACCESS, description="Token type")

@@ -63,6 +63,9 @@ class WorkflowRepository(Protocol):
     def get_definition(
         self, def_id: str, *, tenant_context: TenantContext
     ) -> WorkflowDefinition | None: ...
+    def get_definition_by_type(
+        self, request_type: str, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition | None: ...
     def list_definitions(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]: ...
     def save_delegation(
         self, delegation: DelegationRule, *, tenant_context: TenantContext
@@ -329,6 +332,11 @@ class SqlWorkflowRepository:
         self, def_id: str, *, tenant_context: TenantContext
     ) -> WorkflowDefinition | None:
         return self._run_async(self.get_definition_async(def_id, tenant_context=tenant_context))
+
+    def get_definition_by_type(
+        self, request_type: str, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition | None:
+        return self.get_definition(request_type, tenant_context=tenant_context)
 
     async def list_definitions_async(
         self, *, tenant_context: TenantContext

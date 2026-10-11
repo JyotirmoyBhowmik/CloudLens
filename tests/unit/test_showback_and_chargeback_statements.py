@@ -60,7 +60,11 @@ from domain.tenant.context import TenantContext
 @pytest.fixture(autouse=True)
 def clean_statement_service():
     """Reset repository and service singleton between tests."""
+    from domain.statements.repository import reset_statement_repository
+    from tests.fakes.statements import InMemoryStatementRepository
+
     reset_statement_service()
+    reset_statement_repository(InMemoryStatementRepository())
     yield
     reset_statement_service()
 
@@ -676,13 +680,13 @@ def test_multi_format_export_and_distribution(
 # ==============================================================================
 
 
-def test_rest_api_statement_lifecycle_and_endpoints(client: TestClient):
+def test_rest_api_statement_lifecycle_and_endpoints(client: TestClient, auth_headers):
     """Full REST API integration test across all statement endpoints."""
-    headers = {
-        "X-Tenant-ID": "tenant-api-01",
-        "X-User-ID": "usr-admin",
-        "X-User-Roles": "GLOBAL_ADMIN,FINANCIAL_DETAIL",
-    }
+    headers = auth_headers(
+        tenant_id="tenant-api-01",
+        user_id="usr-admin",
+        roles=["GLOBAL_ADMIN", "FINANCIAL_DETAIL"],
+    )
 
     # 1. Generate Statement
     gen_payload = {

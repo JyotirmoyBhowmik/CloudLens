@@ -468,9 +468,10 @@ def test_phase_2_scheduling_flag_gated(tenant_admin_context: TenantContext):
 # ==============================================================================
 
 
-def test_api_list_templates_and_reports(client: TestClient):
+def test_api_list_templates_and_reports(client: TestClient, auth_headers):
     """Verify GET /api/v1/reports lists all templates and generated reports."""
-    res = client.get("/api/v1/reports", headers={"X-Tenant-ID": "test-t1"})
+    headers = auth_headers(tenant_id="test-t1", user_id="test-user")
+    res = client.get("/api/v1/reports", headers=headers)
     assert res.status_code == 200
     data = res.json()
     assert "templates" in data
@@ -479,8 +480,9 @@ def test_api_list_templates_and_reports(client: TestClient):
     assert "_metadata" in data
 
 
-def test_api_export_and_download_flow(client: TestClient):
+def test_api_export_and_download_flow(client: TestClient, auth_headers):
     """Verify POST /api/v1/reports/export generates report and download route retrieves it."""
+    headers = auth_headers(tenant_id="test-t1", user_id="test-user")
     export_payload = {
         "template_id": "tpl-cost-monthly",
         "format": "CSV",
@@ -489,7 +491,7 @@ def test_api_export_and_download_flow(client: TestClient):
     exp_res = client.post(
         "/api/v1/reports/export",
         json=export_payload,
-        headers={"X-Tenant-ID": "test-t1", "X-User-ID": "test-user"},
+        headers=headers,
     )
     assert exp_res.status_code == 202
     exp_data = exp_res.json()
@@ -497,7 +499,7 @@ def test_api_export_and_download_flow(client: TestClient):
     report_id = exp_data["report_id"]
 
     # List reports to find download url and token
-    list_res = client.get("/api/v1/reports", headers={"X-Tenant-ID": "test-t1"})
+    list_res = client.get("/api/v1/reports", headers=headers)
     assert list_res.status_code == 200
     reports = list_res.json()["reports"]
     matching_rep = next(
@@ -507,7 +509,7 @@ def test_api_export_and_download_flow(client: TestClient):
     dl_url = matching_rep["download_url"]
 
     # Perform download
-    dl_res = client.get(dl_url, headers={"X-Tenant-ID": "test-t1"})
+    dl_res = client.get(dl_url, headers=headers)
     assert dl_res.status_code == 200
     assert "text/csv" in dl_res.headers["content-type"]
     assert "# PROVENANCE & GOVERNANCE FOOTER" in dl_res.text

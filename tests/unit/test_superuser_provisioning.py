@@ -418,7 +418,12 @@ def test_api_superuser_lifecycle_endpoints():
         "working_tenant_name": "API Working Tenant",
         "admin_email": "admin@apiworking.internal",
         "admin_name": "Working Admin",
+        "step_up_token": "su-step-up-session-1",
     }
-    res_del = client.post("/api/v1/system/bootstrap/superuser/delegate", json=del_payload)
+    res_del = client.post(
+        "/api/v1/system/bootstrap/superuser/delegate",
+        json=del_payload,
+        headers={"Authorization": f"Bearer {tokens['access_token']}"},
+    )
     assert res_del.status_code == 200
     assert res_del.json()["status"] == "HANDOVER_COMPLETED"

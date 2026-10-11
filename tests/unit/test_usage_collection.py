@@ -57,13 +57,20 @@ from domain.usage.registry import (
     get_monitoring_type_definition,
     list_monitoring_types,
 )
+from domain.usage.repository import reset_usage_repository
 from domain.usage.service import get_usage_service, reset_usage_service
+from tests.fakes.usage import InMemoryUsageRepository
 
 
 @pytest.fixture(autouse=True)
 def setup_services():
     """Resets audit and usage singletons before each test."""
     reset_audit_service()
+    reset_usage_repository(InMemoryUsageRepository())
+    reset_usage_service()
+    yield
+    reset_audit_service()
+    reset_usage_repository(None)
     reset_usage_service()
 
 
@@ -76,6 +83,27 @@ def tenant_ctx() -> TenantContext:
         roles=[SystemRole.FINOPS_ADMIN],
         correlation_id="corr-test-usage-1234",
     )
+
+
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    from domain.identity.service import get_identity_service
+
+    token = get_identity_service().token_engine.issue_access_token(
+        user_id="finops-lead@enterprise.com",
+        tenant_id="tenant-usage-alpha",
+        email="finops-lead@enterprise.com",
+        session_id="sess-usage-test",
+        token_family_id="fam-usage-test",
+        roles=["FINOPS_ADMIN"],
+        permissions=["*"],
+        ttl_seconds=3600,
+    )
+    return {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": "tenant-usage-alpha",
+        "X-User-ID": "finops-lead@enterprise.com",
+    }
 
 
 # ==============================================================================
@@ -808,7 +836,7 @@ def test_statistical_consumption_spike_detection():
 # ==============================================================================
 
 
-def test_api_usage_metrics_query_contract(tenant_ctx: TenantContext):
+def test_api_usage_metrics_query_contract(tenant_ctx: TenantContext, auth_headers: dict[str, str]):
     """Verifies GET /api/v1/usage/metrics endpoint (API-031)."""
     service = get_usage_service()
     res_id = "res-api-metric-01"
@@ -831,10 +859,7 @@ def test_api_usage_metrics_query_contract(tenant_ctx: TenantContext):
     client = TestClient(app)
     response = client.get(
         "/api/v1/usage/metrics",
-        headers={
-            "X-Tenant-ID": tenant_ctx.tenant_id,
-            "X-User-ID": tenant_ctx.user_id,
-        },
+        headers=auth_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -843,10 +868,10 @@ def test_api_usage_metrics_query_contract(tenant_ctx: TenantContext):
     assert data["items"][0]["resource_id"] == res_id
 
 
-def test_api_monitoring_types_list_contract():
+def test_api_monitoring_types_list_contract(auth_headers: dict[str, str]):
     """Verifies GET /api/v1/usage/monitoring-types endpoint."""
     client = TestClient(app)
-    response = client.get("/api/v1/usage/monitoring-types")
+    response = client.get("/api/v1/usage/monitoring-types", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 15
@@ -856,7 +881,7 @@ def test_api_monitoring_types_list_contract():
     assert "MT-15" in codes
 
 
-def test_api_call_volume_estimate_contract():
+def test_api_call_volume_estimate_contract(auth_headers: dict[str, str]):
     """Verifies POST /api/v1/usage/call-volume-estimate endpoint."""
     client = TestClient(app)
     payload = {
@@ -865,7 +890,7 @@ def test_api_call_volume_estimate_contract():
         "monitoring_types": ["RUNTIME_BASED", "STORAGE_BASED"],
         "provider": "aws",
     }
-    response = client.post("/api/v1/usage/call-volume-estimate", json=payload)
+    response = client.post("/api/v1/usage/call-volume-estimate", json=payload, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["resource_count"] == 100
@@ -873,7 +898,7 @@ def test_api_call_volume_estimate_contract():
     assert "cardinality_risk" in data
 
 
-def test_api_materiality_filter_contract():
+def test_api_materiality_filter_contract(auth_headers: dict[str, str]):
     """Verifies POST /api/v1/usage/materiality-filter endpoint."""
     client = TestClient(app)
     payload = {
@@ -883,7 +908,7 @@ def test_api_materiality_filter_contract():
         ],
         "config": {"min_monthly_cost_threshold": "5.00", "enabled": True},
     }
-    response = client.post("/api/v1/usage/materiality-filter", json=payload)
+    response = client.post("/api/v1/usage/materiality-filter", json=payload, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["included_count"] == 1

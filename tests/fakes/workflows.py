@@ -117,6 +117,11 @@ class InMemoryWorkflowRepository:
             ("SYSTEM", def_id.upper())
         )
 
+    def get_definition_by_type(
+        self, request_type: str, *, tenant_context: TenantContext
+    ) -> WorkflowDefinition | None:
+        return self.get_definition(request_type, tenant_context=tenant_context)
+
     def list_definitions(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]:
         t_id = tenant_context.tenant_id
         res: dict[str, WorkflowDefinition] = {}

@@ -37,8 +37,14 @@ class IngestionDataValidator:
         quarantine_repo: QuarantineRepository | None = None,
         audit_service: Any = None,
     ) -> None:
-        self._quarantine_repo = quarantine_repo or get_quarantine_repository()
+        self._quarantine_repo_override = quarantine_repo
         self._audit_service = audit_service or get_audit_service()
+
+    @property
+    def _quarantine_repo(self) -> QuarantineRepository:
+        if self._quarantine_repo_override is not None:
+            return self._quarantine_repo_override
+        return get_quarantine_repository()
 
     def validate_single_record(
         self,

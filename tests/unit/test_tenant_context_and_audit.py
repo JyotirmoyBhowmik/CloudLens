@@ -25,8 +25,10 @@ from domain.models.exceptions import (
     PermanentOverrideNotAllowedException,
 )
 from domain.overrides.models import OverrideApproval, OverrideCreateRequest
+from domain.overrides.repository import reset_override_repository
 from domain.overrides.service import get_override_service, reset_override_service
 from domain.tenant.context import TenantContext, require_tenant_context
+from tests.fakes.overrides import InMemoryOverrideRepository
 from tests.fakes.tenant import InMemoryTenantObjectStorage
 from domain.tenant.repository import TenantAwareRepository
 from workers.cloudlens_workers.celery_app import execute_tenant_job
@@ -35,9 +37,11 @@ from workers.cloudlens_workers.celery_app import execute_tenant_job
 @pytest.fixture(autouse=True)
 def clean_services():
     reset_audit_service()
+    reset_override_repository(InMemoryOverrideRepository())
     reset_override_service()
     yield
     reset_audit_service()
+    reset_override_repository(None)
     reset_override_service()
 
 

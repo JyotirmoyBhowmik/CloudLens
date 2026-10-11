@@ -67,20 +67,26 @@ from domain.workflows.service import (
 )
 from domain.workflows.sla import SLAEngine
 from masterdata.service import get_master_data_service
+from domain.overrides.repository import reset_override_repository
+from tests.fakes.budgets import InMemoryBudgetRepository
+from tests.fakes.overrides import InMemoryOverrideRepository
+from tests.fakes.workflows import InMemoryWorkflowRepository
 
 
 @pytest.fixture(autouse=True)
 def reset_singletons():
     """Isolate state for each unit test."""
-    reset_workflow_repository()
+    reset_workflow_repository(InMemoryWorkflowRepository())
     reset_workflow_service()
-    reset_budget_repository()
+    reset_budget_repository(InMemoryBudgetRepository())
     reset_budget_service()
+    reset_override_repository(InMemoryOverrideRepository())
     yield
-    reset_workflow_repository()
+    reset_workflow_repository(None)
     reset_workflow_service()
-    reset_budget_repository()
+    reset_budget_repository(None)
     reset_budget_service()
+    reset_override_repository(None)
 
 
 @pytest.fixture
@@ -836,7 +842,20 @@ class TestWorkflowAPIEndpoints:
     def test_workflow_api_lifecycle_and_inbox(self):
         """End-to-end API test from submission to decision and inbox."""
         client = TestClient(app)
+        from domain.identity.service import get_identity_service
+
+        token = get_identity_service().token_engine.issue_access_token(
+            user_id="api-engineer-1",
+            tenant_id="tenant-api-test",
+            email="api-eng@test.com",
+            session_id="sess-api-wf",
+            token_family_id="fam-api-wf",
+            roles=["ENGINEER", "TENANT_ADMIN"],
+            permissions=["*"],
+            ttl_seconds=3600,
+        )
         headers = {
+            "Authorization": f"Bearer {token}",
             "X-Tenant-ID": "tenant-api-test",
             "X-User-ID": "api-engineer-1",
             "X-User-Email": "api-eng@test.com",

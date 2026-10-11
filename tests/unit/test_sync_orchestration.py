@@ -40,8 +40,33 @@ from domain.sync.repository import (
     ConnectorScheduleRepository,
     QuarantineRepository,
     SyncJobRepository,
+    get_connector_schedule_repository,
+    get_quarantine_repository,
+    get_sync_job_repository,
+    reset_sync_repositories,
 )
 from domain.tenant.context import TenantContext
+from connectors.contract.checkpoint_store import reset_checkpoint_store
+from tests.fakes.checkpoints import InMemoryCheckpointStore
+from tests.fakes.sync import (
+    InMemoryConnectorScheduleRepository,
+    InMemoryFirstSyncProgressRepository,
+    InMemoryQuarantineRepository,
+    InMemorySyncJobRepository,
+)
+
+
+@pytest.fixture(autouse=True)
+def setup_sync_repositories():
+    jobs = InMemorySyncJobRepository()
+    quar = InMemoryQuarantineRepository()
+    sched = InMemoryConnectorScheduleRepository()
+    prog = InMemoryFirstSyncProgressRepository()
+    reset_sync_repositories(sync_jobs=jobs, quarantine=quar, schedules=sched, progress=prog)
+    reset_checkpoint_store(InMemoryCheckpointStore())
+    yield
+    reset_sync_repositories(None, None, None, None)
+    reset_checkpoint_store(None)
 
 
 @pytest.fixture
@@ -55,18 +80,18 @@ def tenant_context() -> TenantContext:
 
 
 @pytest.fixture
-def sync_job_repo() -> SyncJobRepository:
-    return SyncJobRepository()
+def sync_job_repo() -> InMemorySyncJobRepository:
+    return get_sync_job_repository()
 
 
 @pytest.fixture
-def quarantine_repo() -> QuarantineRepository:
-    return QuarantineRepository()
+def quarantine_repo() -> InMemoryQuarantineRepository:
+    return get_quarantine_repository()
 
 
 @pytest.fixture
-def schedule_repo() -> ConnectorScheduleRepository:
-    return ConnectorScheduleRepository()
+def schedule_repo() -> InMemoryConnectorScheduleRepository:
+    return get_connector_schedule_repository()
 
 
 @pytest.fixture

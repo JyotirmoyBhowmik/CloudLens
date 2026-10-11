@@ -374,17 +374,38 @@ def test_configuration_drift_detector_detects_deviations_and_cleans():
 # ==============================================================================
 
 
-def test_api_config_audit_and_drift_and_string_endpoints(client: TestClient):
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    from domain.identity.service import get_identity_service
+
+    token = get_identity_service().token_engine.issue_access_token(
+        user_id="user-zero-hardcode",
+        tenant_id="tenant-zero-hardcode",
+        email="zero@enterprise.io",
+        session_id="sess-zhc",
+        token_family_id="fam-zhc",
+        roles=["PLATFORM_ADMIN"],
+        permissions=["*"],
+        ttl_seconds=3600,
+    )
+    return {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": "tenant-zero-hardcode",
+        "X-User-ID": "user-zero-hardcode",
+    }
+
+
+def test_api_config_audit_and_drift_and_string_endpoints(client: TestClient, auth_headers: dict[str, str]):
     """Tests new endpoints for audit report, drift detection, and string resolution."""
     # 1. GET /api/v1/config/audit-report
-    res_audit = client.get("/api/v1/config/audit-report")
+    res_audit = client.get("/api/v1/config/audit-report", headers=auth_headers)
     assert res_audit.status_code == 200
     audit_data = res_audit.json()
     assert audit_data["total_effective_settings"] > 20
     assert "layer_breakdown" in audit_data
 
     # 2. GET /api/v1/config/drift
-    res_drift = client.get("/api/v1/config/drift")
+    res_drift = client.get("/api/v1/config/drift", headers=auth_headers)
     assert res_drift.status_code == 200
     drift_data = res_drift.json()
     assert "is_drift_detected" in drift_data
@@ -393,12 +414,13 @@ def test_api_config_audit_and_drift_and_string_endpoints(client: TestClient):
     # 3. POST /api/v1/masterdata/strings/resolve
     res_str = client.post(
         "/api/v1/masterdata/strings/resolve",
+        headers=auth_headers,
         json={"key": "UI_NAV_DASHBOARD", "locale": "en_US"},
     )
     assert res_str.status_code == 200
     assert res_str.json()["resolved_text"] == "Executive Dashboard"
 
     # 4. GET /api/v1/masterdata/strings/resolve
-    res_str_get = client.get("/api/v1/masterdata/strings/resolve?key=UI_NAV_DASHBOARD")
+    res_str_get = client.get("/api/v1/masterdata/strings/resolve?key=UI_NAV_DASHBOARD", headers=auth_headers)
     assert res_str_get.status_code == 200
     assert res_str_get.json()["resolved_text"] == "Executive Dashboard"

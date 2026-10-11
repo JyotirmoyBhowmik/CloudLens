@@ -59,7 +59,12 @@ from domain.tenant.context import TenantContext
 @pytest.fixture(autouse=True)
 def reset_runtime_state() -> None:
     """Ensures clean repository and service instances between test executions."""
-    reset_runtime_repository()
+    from tests.fakes.runtime import InMemoryRuntimeRepository
+
+    reset_runtime_repository(InMemoryRuntimeRepository())
+    reset_runtime_service()
+    yield
+    reset_runtime_repository(None)
     reset_runtime_service()
 
 
@@ -381,7 +386,7 @@ def test_acceptance_ac_062_temporary_exemption_suppresses_alert_and_expires_auto
 ) -> None:
     """AC-062: Temporary runtime exemption suppresses alert, appears in active reports, and expires."""
     service = get_runtime_service()
-    now = datetime(2026, 10, 11, 12, 0, tzinfo=UTC)  # Sunday (weekend)
+    now = datetime.now(UTC)
 
     resource_id = "vm-loadtest-runner"
     w_start = now - timedelta(hours=6)
@@ -575,14 +580,10 @@ def test_idle_detection_signals_when_bypassed_for_phase_2_readiness() -> None:
 # ==============================================================================
 
 
-def test_api_runtime_states_endpoint_contract() -> None:
+def test_api_runtime_states_endpoint_contract(auth_headers) -> None:
     """Verify GET /api/v1/runtime/states (API-032)."""
     client = TestClient(app)
-    headers = {
-        "X-Tenant-ID": "tenant-test-api",
-        "X-User-ID": "user-test",
-        "X-User-Roles": "FINOPS_VIEWER",
-    }
+    headers = auth_headers(tenant_id="tenant-test-api", user_id="user-test", roles=["FINOPS_VIEWER"])
 
     # Query without observations returns UNKNOWN with non-green color
     response = client.get("/api/v1/runtime/states?resource_id=vm-unknown-01", headers=headers)
@@ -595,14 +596,10 @@ def test_api_runtime_states_endpoint_contract() -> None:
     assert data["is_green_permitted"] is False
 
 
-def test_api_runtime_schedules_endpoint_contract() -> None:
+def test_api_runtime_schedules_endpoint_contract(auth_headers) -> None:
     """Verify GET /api/v1/runtime/schedules (API-033)."""
     client = TestClient(app)
-    headers = {
-        "X-Tenant-ID": "tenant-test-api",
-        "X-User-ID": "user-test",
-        "X-User-Roles": "FINOPS_VIEWER",
-    }
+    headers = auth_headers(tenant_id="tenant-test-api", user_id="user-test", roles=["FINOPS_VIEWER"])
 
     response = client.get("/api/v1/runtime/schedules", headers=headers)
     assert response.status_code == 200
@@ -613,14 +610,10 @@ def test_api_runtime_schedules_endpoint_contract() -> None:
     assert "active_exemptions" in data
 
 
-def test_api_runtime_exemptions_endpoint_contract() -> None:
+def test_api_runtime_exemptions_endpoint_contract(auth_headers) -> None:
     """Verify POST /api/v1/runtime/exemptions (API-034)."""
     client = TestClient(app)
-    headers = {
-        "X-Tenant-ID": "tenant-test-api",
-        "X-User-ID": "user-test",
-        "X-User-Roles": "FINOPS_ADMIN",
-    }
+    headers = auth_headers(tenant_id="tenant-test-api", user_id="user-test", roles=["FINOPS_ADMIN"])
 
     future_exp = (datetime.now(UTC) + timedelta(days=2)).isoformat()
     payload = {
@@ -637,14 +630,10 @@ def test_api_runtime_exemptions_endpoint_contract() -> None:
     assert data["reason"] == payload["reason"]
 
 
-def test_api_idle_signals_endpoint_returns_mvp_disabled() -> None:
+def test_api_idle_signals_endpoint_returns_mvp_disabled(auth_headers) -> None:
     """Verify GET /api/v1/runtime/idle/signals reports disabled in MVP."""
     client = TestClient(app)
-    headers = {
-        "X-Tenant-ID": "tenant-test-api",
-        "X-User-ID": "user-test",
-        "X-User-Roles": "FINOPS_VIEWER",
-    }
+    headers = auth_headers(tenant_id="tenant-test-api", user_id="user-test", roles=["FINOPS_VIEWER"])
 
     response = client.get("/api/v1/runtime/idle/signals", headers=headers)
     assert response.status_code == 200

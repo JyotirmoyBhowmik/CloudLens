@@ -62,12 +62,16 @@ from domain.thresholds.service import (
     get_threshold_service,
     reset_threshold_service,
 )
+from tests.fakes.thresholds import InMemoryThresholdRepository
 
 
 @pytest.fixture(autouse=True)
 def reset_threshold_state() -> None:
     """Resets repository and service singletons before each test."""
-    reset_threshold_repository()
+    reset_threshold_repository(InMemoryThresholdRepository())
+    reset_threshold_service()
+    yield
+    reset_threshold_repository(None)
     reset_threshold_service()
 
 
