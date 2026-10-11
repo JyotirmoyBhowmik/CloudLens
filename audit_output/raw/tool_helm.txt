@@ -1,5 +1,5 @@
 $ helm version --short
-exit=0 duration=4.9s
+exit=0 duration=0.1s
 
 --- STDOUT ---
 v4.3.0+gbec5b06

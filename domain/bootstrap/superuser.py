@@ -695,7 +695,7 @@ class SuperuserProvisioningService:
         """Writes verification report to JSON and Markdown artifacts."""
         self._report_output_dir.mkdir(parents=True, exist_ok=True)
         json_path = self._report_output_dir / "identity_verification_report.json"
-        md_path = self._report_output_dir / "identity_verification_report.md"
+        md_path = self._report_output_dir / "identity_verification_summary.md"
 
         # JSON
         with open(json_path, "w", encoding="utf-8") as f:

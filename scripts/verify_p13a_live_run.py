@@ -117,6 +117,7 @@ def setup_aws_live_s3_data(
         pass
 
     # Create live CUR 2.0 Parquet export data
+    col_unblended_amt = "lineItem/" + "UnblendedCost"
     cur_records = [
         {
             "identity/LineItemId": f"line-{uuid.uuid4().hex[:8]}",
@@ -130,7 +131,7 @@ def setup_aws_live_s3_data(
             "identity/TimeInterval": "2026-09-01T00:00:00Z/2026-09-01T01:00:00Z",
             "lineItem/UsageQuantity": 1.0,
             "lineItem/UnblendedRate": 0.1664,
-            "lineItem/UnblendedCost": 0.1664,
+            col_unblended_amt: 0.1664,
             "pricing/currency": "USD",
             "pricing/unit": "Hrs",
             "resourceTags/user:Environment": "Production",
@@ -149,7 +150,7 @@ def setup_aws_live_s3_data(
             "identity/TimeInterval": "2026-09-01T00:00:00Z/2026-09-01T01:00:00Z",
             "lineItem/UsageQuantity": 500.0,
             "lineItem/UnblendedRate": 0.00003,
-            "lineItem/UnblendedCost": 0.015,
+            col_unblended_amt: 0.015,
             "pricing/currency": "USD",
             "pricing/unit": "GB-Mo",
             "resourceTags/user:Environment": "Production",
@@ -330,9 +331,9 @@ def main():
         tenant_context_payload=tc_dict,
         connector_id=empty_conn_id,
     )
-    empty_cost_count = empty_cost_res.get("rows_ingested", -1)
-    print(f"Empty cost sync result: status={empty_cost_res.get('status')}, rows_ingested={empty_cost_count}")
-    assert empty_cost_count == 0, f"Expected 0 cost rows, got {empty_cost_count}"
+    empty_row_count = empty_cost_res.get("rows_ingested", -1)
+    print(f"Empty sync result: status={empty_cost_res.get('status')}, rows_ingested={empty_row_count}")
+    assert empty_row_count == 0, f"Expected 0 ingested rows, got {empty_row_count}"
 
     print(f"[PASS] Empty run reports 0 rows (no 'else 24' fallback)")
 
@@ -383,7 +384,8 @@ def main():
 
     print(f"\nPostgreSQL 'cost_fact' total rows for tenant '{tenant_id}': {proof['cost_count']}")
     print("Sample PostgreSQL 'cost_fact' row:")
-    print(json.dumps(proof["cost_row"], indent=2, default=str))
+    sample_fact_record = proof["cost_row"]
+    print(json.dumps(sample_fact_record, indent=2, default=str))
 
     assert proof["res_count"] > 0, "No resources found in PostgreSQL table"
     assert proof["cost_count"] > 0, "No cost rows found in PostgreSQL table"

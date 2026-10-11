@@ -118,11 +118,11 @@ def generate_fat_results_md(data: dict) -> None:
         "",
         "| Exercise | Scenario | Measured Result | Target SLA | Status |",
         "| :--- | :--- | :---: | :---: | :---: |",
-        "| **DR-001** | CloudNativePG Primary Crash & Failover | **18.4s RTO / 0 byte loss** | RTO $\\le 4\\text{h}$, RPO $= 0$ | **PASS** |",
-        "| **DR-002** | 35-Day Point-In-Time Recovery (PITR) | **3.2m RTO / 0 byte loss** | RTO $\\le 4\\text{h}$, RPO $\\le 1\\text{h}$ | **PASS** |",
-        "| **DR-003** | OpenBao Raft Snapshot Recovery | **12.1s RTO / 0 byte loss** | RTO $\\le 1\\text{h}$, RPO $\\le 24\\text{h}$ | **PASS** |",
-        "| **DR-004** | Mid-Sync Worker Crash Recovery | **Checkpoint resumed in 4.8s** | RTO $\\le 15\\text{m}$, 0 duplicate writes | **PASS** |",
-        "| **UPG-001** | Rolling Upgrade (N-1 to N) with Schema Migration | **Zero Downtime, 100% Probe Success** | 0 dropped requests | **PASS** |",
+        "| **DR-001** | CloudNativePG Primary Crash & Failover | UNVERIFIED | RTO under target, RPO zero loss | **UNVERIFIED** |",
+        "| **DR-002** | 35-Day Point-In-Time Recovery (PITR) | UNVERIFIED | RTO under target, RPO under target | **UNVERIFIED** |",
+        "| **DR-003** | OpenBao Raft Snapshot Recovery | UNVERIFIED | RTO under target, RPO under target | **UNVERIFIED** |",
+        "| **DR-004** | Mid-Sync Worker Crash Recovery | UNVERIFIED | RTO under target, no duplicate writes | **UNVERIFIED** |",
+        "| **UPG-001** | Rolling Upgrade (N-1 to N) with Schema Migration | UNVERIFIED | Zero downtime, 0 dropped requests | **UNVERIFIED** |",
         "",
         "---",
         "Generated deterministically by `scripts/generate_fat_package.py`.",
@@ -188,7 +188,7 @@ def generate_acceptance_md() -> None:
         "| **AC-037** | Staged soak observation window for stopped resources | `domain/lifecycle/` | `test_staged_soak_window_and_surfacing_stopped_resources` | **PASS** |",
         "| **AC-038** | Billing cost-stop confirmation before decommissioning | `domain/lifecycle/` | `test_cost_stop_verification_from_actual_billing` | **PASS** |",
         "| **AC-039** | Retention obligation enforcement blocking deletion | `domain/lifecycle/` | `test_retention_obligation_blocks_deletion_until_confirmed_satisfied` | **PASS** |",
-        "| **AC-040** | Orphaned disk and residue asset detection | `domain/lifecycle/` | `test_orphan_and_residue_detection` | **PASS** |",
+        "| **AC-040** | Closed-period report shows platform total, provider total, and variance within agreed tolerance | `domain/cost/reconciliation/` | `test_reconciliation_pass_within_absolute_tolerance` | **NOT YET EVIDENCED** |",
         "| **AC-041** | Realized savings credited from actuals into ledger | `domain/lifecycle/` | `test_realised_saving_credited_from_actuals_never_estimate` | **PASS** |",
         "| **AC-042** | ITSM bidirectional incident synchronization | `domain/integrations/` | `test_itsm_bidirectional_sync_closing_ticket_closes_task` | **PASS** |",
         "| **AC-043** | CMDB authoritative import with conflict surfacing | `domain/integrations/` | `test_cmdb_authoritative_field_blocks_overwrite_and_surfaces_conflict` | **PASS** |",
@@ -224,10 +224,10 @@ def generate_acceptance_md() -> None:
         "| **AC-073** | 18 FinOps governance policies with automated evaluation | `domain/policy/` | `test_policy_engine.py` | **PASS** |",
         "| **AC-074** | 11 remediation task states with realized saving verification | `domain/remediation/` | `test_remediation_tasks_across_11_states` | **PASS** |",
         "| **AC-075** | Superuser provisioning with mandatory MFA and zero plaintext passwords | `domain/bootstrap/` | `test_identity_verification_report_generation_and_publishing` | **PASS** |",
-        "| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **NOT TESTABLE IN FAT (External Staging Engagement Required; automated OWASP ZAP & gitleaks passed)** |",
+        "| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **OPEN** |",
         "",
         "---",
-        "**Summary**: 75 criteria **PASS**, 1 criterion **NOT TESTABLE IN FAT**, 0 criteria **FAIL**.",
+        "**Summary**: 74 criteria **PASS**, 1 criterion **NOT YET EVIDENCED**, 1 criterion **OPEN**, 0 criteria **FAIL**.",
     ]
     (FAT_DIR / "ACCEPTANCE.md").write_text("\n".join(lines), encoding="utf-8")
 
@@ -243,7 +243,7 @@ def generate_decision_log_extract() -> None:
 
 def generate_exception_register_extract() -> None:
     print("[fat-pack] copying exception register to fat/ ...")
-    src = ROOT / "docs" / "configuration" / "exception_register.md"
+    src = ROOT / "docs" / "configuration" / "exception_register_summary.md"
     if src.exists():
         shutil.copy(src, FAT_DIR / "exception_register.md")
 
@@ -273,7 +273,7 @@ def generate_go_live_readiness_table() -> None:
         "| **G-06** | OpenBao Raft Snapshot Schedule | Daily automated Raft snapshot CronJob targeting MinIO S3 bucket | [x] | [`ops/helm/cloudlens/templates/cronjob-raft-snapshot.yaml`](../ops/helm/cloudlens/templates/cronjob-raft-snapshot.yaml) | Restored in drill in 12.1s with 0 bytes lost |",
         "| **G-07** | Valkey Sentinel Failover | 3-sentinel Valkey cluster with automatic leader election | [x] | [`docs/architecture-overview.md`](../docs/architecture-overview.md#32-high-availability-infrastructure-matrix) | Redis Sentinel protocol quorum verified |",
         "| **G-08** | Inward Architectural Layering | Zero provider SDK imports (`boto3`, `azure`, `google`) outside `connectors/` | [x] | [`fat/gate_layering.txt`](gate_layering.txt) | AST layering scanner passed with exit code 0 |",
-        "| **G-09** | Zero Hardcoded Constants (M2) | 100% of financial tolerances, thresholds, and enum literals from master data | [x] | [`fat/gate_constants.txt`](gate_constants.txt) | Enforce mode exit 0; 84 allow-listed exceptions registered |",
+        "| **G-09** | Zero Hardcoded Constants (M2) | 100% of financial tolerances, thresholds, and enum literals from master data | [x] | [`fat/gate_constants.txt`](gate_constants.txt) | Enforce mode exit 0; allow-listed exceptions registered |",
         "| **G-10** | Synthetic Demo Isolation (M3) | Complete demo mode separation with watermark and read-only interlocks | [x] | [`fat/acceptance_criteria_results.md`](acceptance_criteria_results.md) | All 11 demo scenarios load cleanly; zero live connector cross-talk |",
         "| **G-11** | Full Automated Test Suite | Complete execution of unit, contract, E2E, DR, and performance test suites | [x] | [`fat/junit.xml`](junit.xml) | **1,409 passed / 0 failed / 4 skipped** |",
         "| **G-12** | 27 Views + Control Tower | React Router v6 SPA with deep links, 4 null states, and RBAC guards | [x] | [`web/src/App.tsx`](../web/src/App.tsx) | 28 production routes verified with zero critical accessibility defects |",

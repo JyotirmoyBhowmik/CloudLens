@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "generated_utc": "2026-10-09 00:31:36",
+  "generated_utc": "2026-10-11 05:11:01",
   "python": "C:\\Users\\TEST\\CloudLens\\.venv\\Scripts\\python.exe",
   "flags": {
     "run_tests": false,
@@ -8,37 +8,48 @@
     "probe_startup": false
   },
   "git": {
-    "head": "117ebe7c64774d2f9b7586ea76cc2f8498677a1b",
+    "head": "9ab3c2a6f28f7716ac25eccf125dfa4688edac21",
     "branch": "main",
     "remote": [
       "origin\thttps://github.com/JyotirmoyBhowmik/CloudLens.git (fetch)"
     ],
-    "commit_count": 89,
-    "uncommitted_files": 49,
+    "commit_count": 100,
+    "uncommitted_files": 35,
     "uncommitted_sample": [
-      " M api/cloudlens_api/conventions/idempotency.py",
-      " M api/cloudlens_api/conventions/rate_limit.py",
-      " M connectors/conformance/kit.py",
-      " M connectors/contract/checkpoint_store.py",
-      " M connectors/contract/raw_landing.py",
-      " M db/session.py",
+      " M README.md",
+      " M api/cloudlens_api/routes/connectors.py",
+      " M build_requirements_register.py",
       " M docs/configuration/exception_register.json",
-      " M docs/configuration/exception_register.md",
-      " M domain/abuse/tracker.py",
-      " M domain/analytics/repository.py",
-      " M domain/analytics/watermark.py",
-      " M domain/audit/repository.py",
-      " M domain/budgets/repository.py",
-      " M domain/catalogues/repository.py",
-      " M domain/config/feature_flags_repository.py",
-      " M domain/config/repository.py",
-      " M domain/connectors/repository.py",
-      " M domain/cost/currency_service.py",
-      " M domain/cost/reconciliation/repository.py",
-      " M domain/cost/repository.py"
+      "RM docs/configuration/exception_register.md -> docs/configuration/exception_register_summary.md",
+      "R  docs/configuration/identity_verification_report.md -> docs/configuration/identity_verification_summary.md",
+      "R  docs/configuration/pre_identity_verification_report.md -> docs/configuration/pre_identity_verification_summary.md",
+      "R  docs/pricing-dimensions-reconciled.md -> docs/pricing-dimensions-catalogue.md",
+      " M docs/requirement_traceability_matrix.md",
+      "R  docs/sbom.md -> docs/sbom-report.md",
+      " M domain/bootstrap/pre_identity.py",
+      " M domain/bootstrap/superuser.py",
+      " M fat/ACCEPTANCE.md",
+      " M fat/FAT_RESULTS.md",
+      "D  fat/control_tower_screenshot.jpg",
+      " M fat/decision_log_extract.md",
+      " M fat/exception_register.md",
+      " M fat/gate_constants.txt",
+      " M fat/gate_layering.txt",
+      " M fat/gate_ruff.txt"
     ],
     "unpushed_commits": "no upstream",
     "last_25_commits": [
+      "9ab3c2a|2026-10-11|P17: Operational Hardening",
+      "c6cdab2|2026-10-10|P16: Control Tower With Measured Values Only",
+      "15249a0|2026-10-10|P15: Configuration Panel and Editable Business Objects",
+      "928016f|2026-10-10|P14: Ingestion Pipeline on Schedule",
+      "8b6e032|2026-10-10|P13: Cloud Connections UI \u2014 Real Read-Only Integration",
+      "9b80f8a|2026-10-10|P13A: Real Cloud Connectors (Replace Fixtures with Provider APIs)",
+      "76daa55|2026-10-10|P12: Tenant Administration and First-Run Setup",
+      "9c6b162|2026-10-10|P11: Left Sidebar and Clean Labels",
+      "9206beb|2026-10-10|P10: Wire Every Web Page to the API",
+      "18fc177|2026-10-10|P09: Blank Application \u2014 Remove All Embedded Data",
+      "3ffbbb5|2026-10-09|P08: Persistence Tier 5 \u2014 Remaining Modules and In-Memory Removal",
       "117ebe7|2026-10-09|P07: Persistence Tier 4 \u2014 Governance and Estate",
       "ca1063e|2026-10-09|P06: Persistence Tier 3 \u2014 Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation",
       "40fb698|2026-10-09|P05: Persistence Tier 2 \u2014 Connections, Sync, Wizard, Landing",
@@ -52,18 +63,7 @@
       "4e60e9d|2026-10-06|chore(audit): update configuration reports and ignore audit_full.json",
       "e3b3f74|2026-10-06|Add files via upload",
       "205761a|2026-10-06|chore(audit): update exception register timestamps",
-      "e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification",
-      "2db198c|2026-10-06|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness",
-      "51d29c2|2026-10-06|docs(r-doc): rebuild documentation from evidence, on-prem lld, rtm generator, and fat artifacts",
-      "ea1cc4f|2026-10-06|feat(perf): real load, DR failover, zero-downtime upgrade, security scans, and 20-level markers (Prompt R-PERF)",
-      "2027ff7|2026-10-06|feat(platform): release authoritative enterprise governance platform (R-RUN, R-OBS, R-CT, R-OPS, R-UI, R-FEAT)",
-      "7831aa5|2026-10-04|chore: add cloudlens_audit.py script",
-      "d01098a|2026-10-04|chore: add audit_output/ to .gitignore",
-      "c4b90ce|2026-10-04|docs: update README.md with comprehensive LLD, architecture diagrams, FAT matrix, and SRE runbook",
-      "3303556|2026-10-04|feat(adoption): implement Prompt 61 adoption analytics, value ledger, and review pack",
-      "6cb8436|2026-10-04|feat(integrations): implement Prompt 60 integration hub, adapters, event replay, and sandbox",
-      "d6c1024|2026-10-04|feat(lifecycle): complete Prompt 59 resource lifecycle, decommissioning workflow, and residue tasks",
-      "9813329|2026-10-04|feat(commitments): complete commitment renewal, workflow routing, and alerting (Prompt 58)"
+      "e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification"
     ],
     "prompt_ids_in_commits": {
       "15B": [
@@ -219,6 +219,61 @@
     },
     "recent_commit_sizes": [
       {
+        "commit": "9ab3c2a|P17: Operational Hardening",
+        "files": 11,
+        "insertions": 322
+      },
+      {
+        "commit": "c6cdab2|P16: Control Tower With Measured Values Only",
+        "files": 5,
+        "insertions": 775
+      },
+      {
+        "commit": "15249a0|P15: Configuration Panel and Editable Business Objects",
+        "files": 13,
+        "insertions": 3716
+      },
+      {
+        "commit": "928016f|P14: Ingestion Pipeline on Schedule",
+        "files": 8,
+        "insertions": 570
+      },
+      {
+        "commit": "8b6e032|P13: Cloud Connections UI \u2014 Real Read-Only Integration",
+        "files": 17,
+        "insertions": 2332
+      },
+      {
+        "commit": "9b80f8a|P13A: Real Cloud Connectors (Replace Fixtures with Provider APIs)",
+        "files": 25,
+        "insertions": 1999
+      },
+      {
+        "commit": "76daa55|P12: Tenant Administration and First-Run Setup",
+        "files": 20,
+        "insertions": 3905
+      },
+      {
+        "commit": "9c6b162|P11: Left Sidebar and Clean Labels",
+        "files": 39,
+        "insertions": 1281
+      },
+      {
+        "commit": "9206beb|P10: Wire Every Web Page to the API",
+        "files": 31,
+        "insertions": 58604
+      },
+      {
+        "commit": "18fc177|P09: Blank Application \u2014 Remove All Embedded Data",
+        "files": 47,
+        "insertions": 2589
+      },
+      {
+        "commit": "3ffbbb5|P08: Persistence Tier 5 \u2014 Remaining Modules and In-Memory Removal",
+        "files": 69,
+        "insertions": 4665
+      },
+      {
         "commit": "117ebe7|P07: Persistence Tier 4 \u2014 Governance and Estate",
         "files": 34,
         "insertions": 8512
@@ -237,121 +292,66 @@
         "commit": "879128b|P04: Persistence Tier 1 \u2014 Identity, Tenancy, Audit, Configuration",
         "files": 33,
         "insertions": 5497
-      },
-      {
-        "commit": "245362b|P03: Persistence Foundation",
-        "files": 13,
-        "insertions": 1134
-      },
-      {
-        "commit": "64aa427|P02: Real Sign-in in the Web App",
-        "files": 22,
-        "insertions": 1324
-      },
-      {
-        "commit": "b5d5107|P01B: Authentication Integrity \u2014 Login, Keys and Every Write Route",
-        "files": 21,
-        "insertions": 1269
-      },
-      {
-        "commit": "3f93b54|P01: Close Every Header-Based Identity Bypass",
-        "files": 21,
-        "insertions": 1055
-      },
-      {
-        "commit": "bb7020f|P00: Baseline Environment and Real-Database Testing",
-        "files": 10,
-        "insertions": 531
-      },
-      {
-        "commit": "0f7fb1a|chore(audit): upload audit_output artifacts and root audit_full.json",
-        "files": 35,
-        "insertions": 53803
-      },
-      {
-        "commit": "4e60e9d|chore(audit): update configuration reports and ignore audit_full.json",
-        "files": 7,
-        "insertions": 98
-      },
-      {
-        "commit": "e3b3f74|Add files via upload",
-        "files": 1,
-        "insertions": 919
-      },
-      {
-        "commit": "205761a|chore(audit): update exception register timestamps",
-        "files": 2,
-        "insertions": 85
-      },
-      {
-        "commit": "e3549ad|fix(migrations): widen alembic_version version_num to varchar(128) and update boot",
-        "files": 3,
-        "insertions": 19
-      },
-      {
-        "commit": "2db198c|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-liv",
-        "files": 35,
-        "insertions": 2847
       }
     ]
   },
   "size": {
     "total": {
-      "files": 1002,
-      "loc": 329091
+      "files": 1068,
+      "loc": 392562
     },
     "by_top_level": {
       "domain": {
-        "files": 337,
-        "loc": 95837
+        "files": 338,
+        "loc": 96058
       },
       "docs": {
-        "files": 47,
-        "loc": 85735
-      },
-      "tests": {
-        "files": 172,
-        "loc": 48953
+        "files": 49,
+        "loc": 88932
       },
       "web": {
-        "files": 71,
-        "loc": 24887
+        "files": 83,
+        "loc": 80538
+      },
+      "tests": {
+        "files": 175,
+        "loc": 50039
       },
       "(root)": {
         "files": 14,
-        "loc": 16722
+        "loc": 16745
       },
       "connectors": {
-        "files": 83,
-        "loc": 16091
+        "files": 85,
+        "loc": 16437
       },
       "api": {
-        "files": 61,
-        "loc": 14376
+        "files": 63,
+        "loc": 15773
       },
       "masterdata": {
         "files": 69,
-        "loc": 8559
+        "loc": 8575
       },
       "scripts": {
-        "files": 42,
-        "loc": 6018
+        "files": 48,
+        "loc": 7119
       },
       "db": {
-        "files": 29,
-        "loc": 4704
+        "files": 30,
+        "loc": 4811
       },
       "ops": {
         "files": 47,
-        "loc": 3061
+        "loc": 3071
       },
       "fat": {
         "files": 11,
-        "loc": 2132
+        "loc": 2112
       },
       "workers": {
         "files": 6,
-        "loc": 1027
+        "loc": 1326
       },
       "artifacts": {
         "files": 4,
@@ -364,32 +364,36 @@
       ".github": {
         "files": 2,
         "loc": 179
+      },
+      "data": {
+        "files": 37,
+        "loc": 37
       }
     },
     "by_language": {
       "Python": {
-        "files": 744,
-        "loc": 195147
+        "files": 759,
+        "loc": 199704
       },
       "JSON": {
-        "files": 87,
-        "loc": 100014
+        "files": 124,
+        "loc": 103113
       },
       "TypeScript": {
-        "files": 69,
-        "loc": 24838
+        "files": 81,
+        "loc": 80488
       },
       "Markdown": {
-        "files": 58,
-        "loc": 5512
+        "files": 60,
+        "loc": 5644
       },
       "YAML": {
         "files": 38,
-        "loc": 3232
+        "loc": 3253
       },
       "TOML": {
         "files": 2,
-        "loc": 138
+        "loc": 150
       },
       "PowerShell": {
         "files": 2,
@@ -516,6 +520,7 @@
         "e2e",
         "failure_injection",
         "fakes",
+        "fixtures",
         "improvements",
         "integration",
         "integrations",
@@ -525,6 +530,7 @@
         "masterdata",
         "perf",
         "planning",
+        "playwright",
         "rbac",
         "regression",
         "security",
@@ -565,72 +571,49 @@
     }
   },
   "tests": {
-    "collected": 1485,
-    "collect_exit": 0,
+    "collected": 0,
+    "collect_exit": 4,
     "collection_errors": 0,
-    "by_directory": {
-      "unit": 1026,
-      "security": 110,
-      "integration": 63,
-      "contracts": 30,
-      "e2e": 26,
-      "workers": 26,
-      "acceptance": 25,
-      "integrations": 17,
-      "adoption": 16,
-      "lifecycle": 14,
-      "improvements": 13,
-      "cloud_provider": 9,
-      "commitments": 9,
-      "control_tower": 9,
-      "cost_reconciliation": 8,
-      "mandates": 8,
-      "analytics": 7,
-      "connectors": 7,
-      "failure_injection": 7,
-      "perf": 7,
-      "planning": 7,
-      "masterdata": 6,
-      "ui": 6,
-      "data_validation": 5,
-      "dr": 5,
-      "workflow": 5,
-      "data": 4,
-      "regression": 4,
-      "rbac": 3,
-      "load": 2,
-      "upgrade": 1
-    }
+    "by_directory": {}
   },
   "coverage": {
     "status": "not run (use --coverage)"
   },
   "gates": {
     "layering": {
-      "exit": 0,
+      "exit": 1,
       "tail": [
-        "[PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer."
+        "[FAIL] Found 1 Layering Rule violation(s):",
+        "",
+        "  connectors/contract/raw_landing.py:207 in layer 'connectors/contract':",
+        "    ERROR: Layering rule 'presentation -> application -> domain -> normalisation -> ingestion -> connector -> provider' violated. Layer 'connectors/contract' must not import provider SDK 'boto3'."
       ]
     },
     "no_hardcoded_constants": {
-      "exit": 1,
+      "exit": 0,
       "tail": [
-        "================================================================================",
-        "Summary: 2 violations found across 5 directories.",
-        "Allow-listed exceptions recorded: 80",
-        "[GATE RESULT: FAILED] Exiting with status 1 (Enforce mode)."
+        "[PASS] Zero hard-coding scan passed cleanly! (83 allow-listed exceptions in register)"
       ]
     },
     "ruff": {
-      "exit": 0,
-      "tail": []
+      "exit": 1,
+      "tail": [
+        "8\tW291\ttrailing-whitespace",
+        "Found 8 errors.",
+        "No fixes available (8 hidden fixes can be enabled with the `--unsafe-fixes` option)."
+      ]
     },
     "ruff_F_errors": [
       "api\\cloudlens_api\\routes\\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
-      "api\\cloudlens_api\\routes\\__init__.py:11:57: F401 `api.cloudlens_api.routes.calendar.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
+      "api\\cloudlens_api\\routes\\__init__.py:12:57: F401 `api.cloudlens_api.routes.calendar.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
+      "api\\cloudlens_api\\routes\\auth.py:25:24: F401 [*] `sqlalchemy.select` imported but unused",
+      "api\\cloudlens_api\\routes\\auth.py:28:30: F401 [*] `db.schema.tables.TenantModel` imported but unused",
+      "api\\cloudlens_api\\routes\\auth.py:29:24: F401 [*] `db.session.get_tenant_session` imported but unused",
       "api\\cloudlens_api\\routes\\auth.py:33:36: F401 [*] `domain.identity.models.AuthContext` imported but unused",
       "api\\cloudlens_api\\routes\\auth.py:40:5: F401 [*] `domain.models.exceptions.NoMappedRoleException` imported but unused",
       "api\\cloudlens_api\\routes\\auth.py:47:5: F401 [*] `domain.models.exceptions.UserNotProvisionedException` imported but unused",
+      "api\\cloudlens_api\\routes\\business_objects.py:23:22: F401 [*] `datetime.UTC` imported but unused",
+      "api\\cloudlens_api\\routes\\connectors.py:24:38: F401 [*] `connectors.contract.base.BaseCloudConnector` imported but unused",
       "api\\cloudlens_api\\routes\\control_tower.py:29:5: F401 [*] `domain.control_tower.models.BlastRadius` imported but unused",
       "api\\cloudlens_api\\routes\\control_tower.py:31:5: F401 [*] `domain.control_tower.models.ControlTowerActionResult` imported but unused",
       "api\\cloudlens_api\\routes\\credentials.py:23:41: F401 [*] `fastapi.Header` imported but unused",
@@ -638,24 +621,19 @@
       "api\\cloudlens_api\\routes\\inventory.py:32:48: F401 [*] `domain.models.enums.ProviderType` imported but unused",
       "api\\cloudlens_api\\routes\\inventory.py:32:62: F401 [*] `domain.models.enums.ServiceCategory` imported but unused",
       "api\\cloudlens_api\\routes\\rbac.py:23:81: F401 [*] `domain.models.enums.SystemRole` imported but unused",
+      "api\\cloudlens_api\\routes\\tenants.py:23:42: F401 [*] `domain.tenant.models.TenantStatus` imported but unused",
       "connectors\\contract\\checkpoint_store.py:16:8: F401 [*] `os` imported but unused",
       "connectors\\contract\\checkpoint_store.py:17:8: F401 [*] `sys` imported but unused",
       "connectors\\contract\\checkpoint_store.py:41:13: F841 Local variable `loop` is assigned to but never used",
-      "connectors\\contract\\raw_landing.py:19:8: F401 [*] `os` imported but unused",
+      "connectors\\contract\\raw_landing.py:14:8: F401 [*] `asyncio` imported but unused",
+      "connectors\\contract\\raw_landing.py:15:8: F401 [*] `concurrent.futures` imported but unused",
       "connectors\\contract\\raw_landing.py:20:8: F401 [*] `sys` imported but unused",
-      "connectors\\contract\\raw_landing.py:57:13: F841 Local variable `loop` is assigned to but never used",
-      "db\\session.py:136:14: F821 Undefined name `Any`",
-      "db\\session.py:196:57: F821 Undefined name `Any`",
-      "db\\session.py:273:21: F821 Undefined name `Any`",
-      "db\\session.py:273:29: F821 Undefined name `Any`",
-      "domain\\alerting\\repository.py:15:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused",
-      "domain\\alerting\\repository.py:17:24: F401 [*] `db.session.get_sync_bridge_loop` imported but unused",
-      "domain\\analytics\\watermark.py:17:20: F401 [*] `typing.Any` imported but unused",
-      "domain\\analytics\\watermark.py:158:13: F841 Local variable `wid` is assigned to but never used",
-      "domain\\attribution\\governance_resolver.py:10:20: F401 [*] `typing.Any` imported but unused",
-      "domain\\audit\\repository.py:18:8: F401 [*] `os` imported but unused",
-      "domain\\audit\\repository.py:19:8: F401 [*] `sys` imported but unused",
-      "domain\\audit\\repository.py:24:36: F401 [*] `sqlalchemy.ext.asyncio.AsyncSession` imported but unused"
+      "connectors\\factory.py:22:33: F401 [*] `domain.models.enums.ProviderType` imported but unused",
+      "connectors\\gcp\\cost.py:16:8: F401 [*] `json` imported but unused",
+      "connectors\\oci\\cost.py:15:8: F401 [*] `csv` imported but unused",
+      "connectors\\oci\\cost.py:16:8: F401 [*] `io` imported but unused",
+      "connectors\\oci\\cost.py:17:8: F401 [*] `json` imported but unused",
+      "db\\session.py:189:14: F821 Undefined name `Any`"
     ],
     "web_typecheck": {
       "exit": 0,
@@ -762,7 +740,8 @@
       "db/migrations/versions/013_persistence_tier2_unique_idempotency.py",
       "db/migrations/versions/014_persistence_tier3_cost_budgets_pricing.py",
       "db/migrations/versions/015_persistence_tier4_governance_and_estate.py",
-      "db/migrations/versions/016_persistence_tier5_remaining_modules.py"
+      "db/migrations/versions/016_persistence_tier5_remaining_modules.py",
+      "db/migrations/versions/017_tenant_administration_fields.py"
     ],
     "tables_created_in_migrations": [
       "agg_cost_scope_day",
@@ -909,14 +888,14 @@
       "domain/budgets/templates.py:166: description=\"Environment isolation budget ceiling (e.g. dev sandbox cap or production baseline).\",",
       "domain/bulk_import/catalogue.py:366: description=\"Environment tiers (Production, Staging, Dev) with production flags.\",",
       "domain/bulk_import/catalogue.py:381: description=\"Environment code (e.g. ENV-PROD, ENV-STAGING)\",",
-      "domain/hierarchy/service.py:108: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:146: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:183: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:220: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:257: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:332: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:369: {\"key\": \"Environment\", \"value\": \"Production\"},",
-      "domain/hierarchy/service.py:406: {\"key\": \"Environment\", \"value\": \"Production\"},"
+      "domain/models/inventory.py:121: name: str = Field(..., description=\"Environment name (e.g. Production, Staging, QA)\")",
+      "domain/policy/models.py:118: description=\"Target deployment environments (PROD, DEV, STAGING, etc.)\",",
+      "domain/provisioning/models.py:142: default=\"*\", description=\"Deployment environment (PROD, STAGING, DEV, or '*')\"",
+      "domain/provisioning/models.py:430: ..., description=\"Target environment (PROD, STAGING, DEV, etc.)\"",
+      "domain/release/service.py:46: env = os.environ.get(\"CLOUDLENS_ENV\") or self._config.get(\"build_env\", \"production\")",
+      "domain/resource_detail/service.py:496: environment=\"Production\",",
+      "domain/resource_detail/service.py:780: environment=\"Production\",",
+      "domain/resource_detail/service.py:1035: environment=\"Production\","
     ]
   },
   "security": {
@@ -937,17 +916,20 @@
         "connectors/fixtures/oci_usage_report_sample.json",
         "connectors/simulator/connector.py",
         "domain/config/surface.py",
+        "domain/config/tenant_settings.py",
         "domain/synthetic/governance_generator.py",
         "domain/synthetic/journey_monitor.py",
         "domain/synthetic/mock_generator.py",
         "web/src/pages/AdminConsolePage.tsx",
-        "web/src/pages/AuditLogPage.tsx",
         "web/src/pages/LoginPage.tsx",
         "web/src/pages/OnboardingWizardPage.tsx",
         "web/src/pages/PolicyManagementPage.tsx",
+        "web/src/pages/ProvisioningRequestsPage.tsx",
+        "web/src/pages/SettingsPage.tsx",
+        "web/src/pages/SetupWizardPage.tsx",
         "web/src/pages/UsersRbacPage.tsx"
       ],
-      "file_count": 14,
+      "file_count": 17,
       "examples": [
         "connectors/fixtures/aws_cur_sample.json:23: \"resourceTags/user:Owner\": \"platform-team@company.internal\",",
         "connectors/fixtures/aws_cur_sample.json:47: \"resourceTags/user:Owner\": \"data-engineering@company.internal\",",
@@ -958,6 +940,7 @@
         "connectors/simulator/connector.py:412: \"Owner\": \"payments-dev@cloudlens.internal\",",
         "connectors/simulator/connector.py:452: \"Owner\": \"devops@cloudlens.internal\",",
         "domain/config/surface.py:189: default=\"alerts@cloudlens.internal\", description=\"From address for outgoing alerts\"",
+        "domain/config/tenant_settings.py:234: smtp_sender: str = Field(default=\"alerts@cloudlens.internal\", description=\"Default notification sender email\")",
         "domain/synthetic/governance_generator.py:300: assigned_owner_id=\"cloudops-azure@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:458: requester_email=\"eng-lead@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:630: bypassed_by=\"user-admin@cloudlens.internal\",",
@@ -972,16 +955,17 @@
         "domain/synthetic/governance_generator.py:1160: assigned_owner=\"finops-analyst@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:1177: adjusted_by=\"finance-lead@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:1280: decided_by=\"user-delegate-jane@cloudlens.internal\",",
-        "domain/synthetic/governance_generator.py:1283: on_behalf_of=\"user-finops-admin@cloudlens.internal\",",
-        "domain/synthetic/governance_generator.py:1294: requester_id=\"user-eng-lead@cloudlens.internal\","
+        "domain/synthetic/governance_generator.py:1283: on_behalf_of=\"user-finops-admin@cloudlens.internal\","
       ]
     },
     "secret_like_defaults": {
       "files": [
+        "domain/config/tenant_settings.py",
         "domain/identity/models.py"
       ],
-      "file_count": 1,
+      "file_count": 2,
       "examples": [
+        "domain/config/tenant_settings.py:237: webhook_signing_secret_ref: str = Field(default=\"vault://secret/notifications/webhook_signing_key\", description=\"Vault secret reference for webhook HMAC signature\")",
         "domain/identity/models.py:146: token_type: str = Field(default=\"Bearer\", description=\"Token type descriptor\")"
       ]
     },
@@ -1005,10 +989,11 @@
       "files": [
         "api/cloudlens_api/routes/auth.py",
         "api/cloudlens_api/routes/bootstrap.py",
+        "api/cloudlens_api/routes/business_objects.py",
         "api/cloudlens_api/routes/users.py",
         "api/cloudlens_api/tenant_context.py"
       ],
-      "file_count": 4,
+      "file_count": 5,
       "examples": [
         "api/cloudlens_api/tenant_context.py:41: (\"POST\", \"/api/v1/auth/break-glass/login\"),",
         "api/cloudlens_api/routes/auth.py:6: - POST /api/v1/auth/break-glass/login: Emergency break-glass sign-in with mandatory MFA and alerting (Item 65).",
@@ -1027,10 +1012,13 @@
         "api/cloudlens_api/routes/auth.py:324: except BreakGlassAuthFailedException as e:",
         "api/cloudlens_api/routes/auth.py:326: logger.error(\"Break-glass authentication failed for %s\", payload.account_name)",
         "api/cloudlens_api/routes/auth.py:683: is_break_glass: bool = False",
-        "api/cloudlens_api/routes/auth.py:775: is_break_glass=tenant_context.is_superuser,",
+        "api/cloudlens_api/routes/auth.py:770: is_break_glass=tenant_context.is_superuser,",
         "api/cloudlens_api/routes/bootstrap.py:55: break_glass_consolidated: bool = True",
         "api/cloudlens_api/routes/bootstrap.py:148: # Prompt 49B: Superuser Provisioning & Break-Glass Consolidation Endpoints",
         "api/cloudlens_api/routes/bootstrap.py:179: break_glass_consolidated=True,",
+        "api/cloudlens_api/routes/business_objects.py:213: \"auth_method\", \"idp_sub\", \"is_break_glass\",",
+        "api/cloudlens_api/routes/business_objects.py:216: \"email\", \"display_name\", \"status\", \"roles\", \"auth_method\", \"is_break_glass\", \"updated_at\",",
+        "api/cloudlens_api/routes/business_objects.py:224: \"is_break_glass\": False,",
         "api/cloudlens_api/routes/users.py:104: is_break_glass: bool",
         "api/cloudlens_api/routes/users.py:214: is_break_glass=False,"
       ]
@@ -1077,9 +1065,9 @@
   },
   "allowlist": {
     "file": "docs/configuration/exception_register.json",
-    "count": 80,
+    "count": 25,
     "by_area": {
-      "?": 80
+      "?": 25
     },
     "missing_reason_or_reviewer": 0,
     "sensitive_entries_first_30": [
@@ -1094,10 +1082,7 @@
       "\"reason\": \"Cost trend spiking threshold ratio (30%)\",",
       "\"reason\": \"Cost trend volatility coefficient of variation threshold (0.40)\",",
       "\"reason\": \"Cost trend normalized slope drift threshold (5%)\",",
-      "\"reason\": \"Canonical threshold state string\",",
-      "\"reason\": \"Canonical threshold state string\",",
       "\"file_path\": \"domain/identity/password_hasher.py\",",
-      "\"literal_value\": \"@\",",
       "\"file_path\": \"domain/statements/acceptance.py\",",
       "\"reason\": \"SLA escalation threshold days\",",
       "\"file_path\": \"domain/statements/acceptance.py\",",
@@ -1111,8 +1096,7 @@
       "\"reason\": \"Period cost movement significance threshold\",",
       "\"file_path\": \"domain/statements/generator.py\",",
       "\"reason\": \"Period cost movement significance threshold\",",
-      "\"file_path\": \"domain/thresholds/models.py\",",
-      "\"reason\": \"Canonical UI threshold state hex colour code\","
+      "\"reason\": \"Standard 6-hour reconciliation window slice for backfill planning\","
     ],
     "decimal_literals_in_financial_logic": {
       "files": [
@@ -1128,9 +1112,10 @@
         "domain/statements/transparency.py",
         "domain/thresholds/defaults.py",
         "domain/thresholds/models.py",
-        "domain/thresholds/preview.py"
+        "domain/thresholds/preview.py",
+        "domain/thresholds/repository.py"
       ],
-      "file_count": 13,
+      "file_count": 14,
       "examples": [
         "domain/cost/reconciliation/engine.py:58: absolute_tolerance=Decimal(\"5.00\"),",
         "domain/cost/reconciliation/engine.py:59: percentage_tolerance=Decimal(\"0.50\"),",
@@ -1232,39 +1217,25 @@
   },
   "evidence": {
     "fat_files": [
-      "fat/ACCEPTANCE.md (13248 B)",
+      "fat/ACCEPTANCE.md (13269 B)",
       "fat/BASELINE_VS_FINAL.md (5759 B)",
-      "fat/FAT_RESULTS.md (3587 B)",
+      "fat/FAT_RESULTS.md (3513 B)",
       "fat/acceptance_criteria_results.md (471 B)",
       "fat/baseline_audit_7831aa5.json (84559 B)",
-      "fat/control_tower_screenshot.jpg (620032 B)",
       "fat/cost_register.md (5708 B)",
       "fat/coverage.xml (90359 B)",
-      "fat/decision_log_extract.md (17814 B)",
-      "fat/exception_register.md (10709 B)",
+      "fat/decision_log_extract.md (24774 B)",
+      "fat/exception_register.md (3555 B)",
       "fat/gate_constants.txt (182 B)",
-      "fat/gate_layering.txt (161 B)",
-      "fat/gate_ruff.txt (59 B)",
-      "fat/go_live_readiness.md (4272 B)",
+      "fat/gate_layering.txt (387 B)",
+      "fat/gate_ruff.txt (91 B)",
+      "fat/go_live_readiness.md (4269 B)",
       "fat/junit.xml (205329 B)",
       "fat/performance_benchmark.md (2803 B)",
       "fat/test_summary.md (4568 B)"
     ],
-    "images": [
-      {
-        "file": "fat/control_tower_screenshot.jpg",
-        "bytes": 620032,
-        "embedded_markers": [
-          "c2pa",
-          "C2PA",
-          "jumb",
-          "trainedAlgorithmicMedia"
-        ],
-        "git_log": "2db198c 2026-10-06 feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness"
-      }
-    ],
+    "images": [],
     "numeric_claims_sample": [
-      "README.md:4: [![Automated Tests](https://img.shields.io/badge/Tests-350%20Passed%20(FAT)-success.svg)](fat/test_summary.md)",
       "README.md:5: [![BBP v1.1](https://img.shields.io/badge/BBP-458%20Requirements%20Traceable-blue.svg)](docs/requirement_traceability_matrix.md)",
       "README.md:6: [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)",
       "README.md:7: [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](pyproject.toml)",
@@ -1274,9 +1245,8 @@
       "README.md:343: ROI[\"Platform ROI Multiple\"]",
       "README.md:354: TotS & TotC --> Net & ROI",
       "README.md:355: Net & ROI & DQ & Funnel --> Pack",
-      "README.md:375: - **Recovery Time Objective (RTO)**: [RTO $\\le$ 4 hours (measured 3.2m in drill)](fat/performance_benchmark.md).",
-      "README.md:376: - **Recovery Point Objective (RPO)**: [RPO $\\approx$ 0 (< 60s WAL lag, 0 bytes lost)](fat/performance_benchmark.md).",
-      "README.md:496: | **Disaster Recovery RTO/RPO** | [5 DR Scenarios](fat/test_summary.md) | **RTO 3.2m / RPO 0 bytes lost** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md)",
+      "README.md:375: - **Recovery Time Objective (RTO)**: Target SLA $\\le$ 4 hours. See [Disaster Recovery Verification](fat/FAT_RESULTS.md).",
+      "README.md:376: - **Recovery Point Objective (RPO)**: Target SLA $\\le$ 1 hour with continuous WAL archiving. See [Disaster Recovery Architecture](docs/enterprise-datacenter-deployment-gu",
       "docs/cost-register.md:18: | **Daily Collection Cost (Total)** | **$\\le$ \\$25.00 / day** | **\\$14.20 / day** | **-43.2% (Nominal / Healthy)** |",
       "docs/cost-register.md:19: | **Monthly Collection Cost (Total)** | **$\\le$ \\$750.00 / month** | **\\$426.00 / month** | **-43.2% (Under Budget)** |",
       "docs/cost-register.md:20: | **Collection Cost as % of Managed Spend** | **$\\le$ 0.05%** | **0.0096%** | **Optimal FinOps ROI** |",
@@ -1323,30 +1293,14 @@
       "fat/cost_register.md:31: - AWS Cost and Usage Report (CUR 2.0) delivered to S3 bucket: \\$0.15 / day (S3 standard storage + GET requests).",
       "fat/cost_register.md:32: - AWS Organizations & Resource Explorer queries: \\$0.00 / day (included in AWS free tier).",
       "fat/cost_register.md:33: - AWS CloudWatch Metrics queries (GetMetricData API): \\$3.85 / day (approx. 77,000 metric requests/month @ \\$0.01 per 1,000 metrics requested).",
-      "fat/cost_register.md:34: - Cross-region data egress: \\$0.80 / day (approx. 9 GB/day at standard inter-region transfer rates)."
+      "fat/cost_register.md:34: - Cross-region data egress: \\$0.80 / day (approx. 9 GB/day at standard inter-region transfer rates).",
+      "fat/cost_register.md:40: - **Daily Cost**: **\\$3.90 / day**",
+      "fat/cost_register.md:42: - Azure Cost Management Scheduled Exports to Blob Storage: \\$0.20 / day (storage + read transactions)."
     ],
     "metric_values_hardcoded_in_scripts": {
-      "files": [
-        "scripts/generate_fat_package.py",
-        "scripts/run_dr_exercise.py",
-        "scripts/run_scale_load_test.py",
-        "scripts/verify_all_levels.py",
-        "scripts/verify_release_readiness.py",
-        "scripts/verify_seventeen_levels.py"
-      ],
-      "file_count": 6,
-      "examples": [
-        "scripts/generate_fat_package.py:121: \"| **DR-001** | CloudNativePG Primary Crash & Failover | **18.4s RTO / 0 byte loss** | RTO $\\\\le 4\\\\text{h}$, RPO $= 0$ | **PASS** |\",",
-        "scripts/run_dr_exercise.py:67: print(f\"{'DR-001':<10} | {'Full Restoration RTO':<36} | {'<= 4.0 hours':<16} | {f'{elapsed:.3f}s':<12} | {'PASS'}\")",
-        "scripts/run_dr_exercise.py:68: print(f\"{'DR-002':<10} | {'Configuration & Telemetry RPO':<36} | {'<= 1.0 hour':<16} | {'0.000s':<12} | {'PASS'}\")",
-        "scripts/run_scale_load_test.py:88: \"\"\"NFR-011: Bulk cost ingestion throughput must process >= 10,000 records/sec.\"\"\"",
-        "scripts/run_scale_load_test.py:188: \"\"\"NFR-016: Database read replica average query latency <= 50ms.\"\"\"",
-        "scripts/run_scale_load_test.py:214: \"\"\"NFR-018: Background worker queue latency <= 5.0 seconds under peak sync load.\"\"\"",
-        "scripts/run_scale_load_test.py:224: status = \"PASS\" if p95 <= 5.0 else \"FAIL\"",
-        "scripts/verify_all_levels.py:135: \"Automated restore, failover, verification within RTO <= 4h, RPO <= 1h\",",
-        "scripts/verify_release_readiness.py:122: return True, \"RTO <= 4h, RPO <= 1h, zero data loss, rolling upgrade verified\"",
-        "scripts/verify_seventeen_levels.py:130: \"Automated restore, failover, verification within RTO <= 4h, RPO <= 1h\","
-      ]
+      "files": [],
+      "file_count": 0,
+      "examples": []
     },
     "tool_claims": {
       "helm": {
@@ -1358,11 +1312,11 @@
         "installed_on_this_machine": true
       },
       "gitleaks": {
-        "mentioned_in_evidence_files": 3,
+        "mentioned_in_evidence_files": 1,
         "installed_on_this_machine": true
       },
       "trivy": {
-        "mentioned_in_evidence_files": 1,
+        "mentioned_in_evidence_files": 0,
         "installed_on_this_machine": false
       },
       "k6": {
@@ -1370,7 +1324,7 @@
         "installed_on_this_machine": false
       },
       "zap": {
-        "mentioned_in_evidence_files": 3,
+        "mentioned_in_evidence_files": 1,
         "installed_on_this_machine": false
       },
       "cosign": {
@@ -1378,22 +1332,22 @@
         "installed_on_this_machine": true
       },
       "kubectl": {
-        "mentioned_in_evidence_files": 4,
+        "mentioned_in_evidence_files": 5,
         "installed_on_this_machine": true
       }
     },
     "agent_named_pen_test": [],
     "acceptance_status_counts": {
-      "PASS": 76,
+      "PASS": 75,
       "FAIL": 1,
       "UNVERIFIED": 1,
-      "NOT TESTABLE": 3
+      "NOT TESTABLE": 1
     },
     "acceptance_key_rows": {
-      "AC-040": "| **AC-040** | Orphaned disk and residue asset detection | `domain/lifecycle/` | `test_orphan_and_residue_detection` | **PASS** |",
+      "AC-040": "| **AC-040** | Closed-period report shows platform total, provider total, and variance within agreed tolerance | `domain/cost/reconciliation/` | `test_reconciliation_pass_within_absolute_tolerance` | ",
       "AC-101": "absent",
       "AC-103": "absent",
-      "AC-104": "| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **NOT TESTABLE IN FAT (External Staging Engagement Required; a"
+      "AC-104": "| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **OPEN** |"
     }
   },
   "deploy": {
@@ -1416,6 +1370,7 @@
       "ops/docker/Dockerfile.web",
       "ops/docker/Dockerfile.web.dev",
       "ops/docker/Dockerfile.worker",
+      "ops/docker/nginx.conf",
       "ops/grafana/provisioning/dashboards/dashboards.yml",
       "ops/grafana/provisioning/datasources/datasources.yml",
       "ops/helm/cloudlens/Chart.yaml",
@@ -1487,11 +1442,7 @@
       "ops/docker/Dockerfile.web.dev",
       "ops/docker/Dockerfile.worker"
     ],
-    "dockerfiles_without_non_root_user": [
-      "ops/docker/Dockerfile.api",
-      "ops/docker/Dockerfile.web",
-      "ops/docker/Dockerfile.worker"
-    ],
+    "dockerfiles_without_non_root_user": [],
     "compose_services": [
       "docker-compose.yml:postgres",
       "docker-compose.yml:redis",
@@ -1570,32 +1521,34 @@
       "cloudlens.tasks.verify_remediation"
     ],
     "beat_schedule_examples": [
-      "workers/cloudlens_workers/celery_app.py:32: beat_scheduler=\"workers.cloudlens_workers.scheduler.DatabaseBeatScheduler\","
+      "workers/cloudlens_workers/celery_app.py:34: beat_scheduler=\"workers.cloudlens_workers.scheduler.DatabaseBeatScheduler\","
     ]
   },
   "api_web": {
-    "route_count": 282,
+    "route_count": 306,
     "routes_by_prefix": {
       "/api/v1/masterdata": 29,
+      "/api/v1/connectors": 19,
       "/api/v1/control-tower": 19,
       "/api/v1/alerts": 18,
       "/api/v1/system": 17,
       "/api/v1/imports": 16,
       "/api/v1/auth": 15,
-      "/api/v1/connectors": 14,
       "/api/v1/policies": 14,
       "/api/v1/dependencies": 13,
       "/api/v1/statements": 13,
       "/api/v1/admin": 11,
+      "/api/v1/tenants": 11,
+      "/api/v1/budgets": 9,
       "/api/v1/wizard": 9,
       "/api/v1/analytics": 8,
-      "/api/v1/budgets": 8,
       "/api/v1/sync": 8,
       "/api/v1/topology": 7,
       "/api/v1/cost": 6,
       "/api/v1/pricing": 6,
       "/api/v1/rbac": 6,
       "/api/v1/attribution": 5,
+      "/api/v1/business-objects": 5,
       "/api/v1/reports": 5,
       "/api/v1/features": 4,
       "/api/v1/dashboards": 4,
@@ -1604,10 +1557,11 @@
       "/api/v1/hierarchy": 3,
       "/api/v1/inventory": 3,
       "/api/v1/thresholds": 3,
+      "/api/v1/commitments": 2,
       "/api/v1/resource-detail": 2,
       "/": 1,
       "/api/v1/about": 1,
-      "/api/v1/commitments": 1,
+      "/api/v1/config": 1,
       "/ready": 1,
       "/metrics": 1,
       "/api/v1/roles": 1,
@@ -1644,6 +1598,8 @@
       "api/cloudlens_api/routes/bulk_import.py: GET /dry-run/{dry_run_id}/result",
       "api/cloudlens_api/routes/bulk_import.py: POST /{dry_run_id}/apply",
       "api/cloudlens_api/routes/bulk_import.py: GET /history",
+      "api/cloudlens_api/routes/business_objects.py: GET /{entity_type}",
+      "api/cloudlens_api/routes/business_objects.py: PUT /{entity_type}/{object_id}",
       "api/cloudlens_api/routes/calendar.py: GET /calendar",
       "api/cloudlens_api/routes/config.py: GET /features",
       "api/cloudlens_api/routes/config.py: GET /features/{flag_key}/evaluate",
@@ -1653,11 +1609,9 @@
       "api/cloudlens_api/routes/connectors.py: PATCH /{connector_id}",
       "api/cloudlens_api/routes/connectors.py: GET /{connector_id}/jobs",
       "api/cloudlens_api/routes/control_tower.py: GET /audit/tail",
-      "api/cloudlens_api/routes/control_tower.py: POST /actions/{action_name}",
-      "api/cloudlens_api/routes/cost.py: GET /summary",
-      "api/cloudlens_api/routes/cost.py: GET /drill-through"
+      "api/cloudlens_api/routes/control_tower.py: POST /actions/{action_name}"
     ],
-    "routes_without_visible_auth_dependency_count": 124,
+    "routes_without_visible_auth_dependency_count": 128,
     "web_pages": [
       "AboutPage.tsx",
       "AdminConsolePage.tsx",
@@ -1692,54 +1646,59 @@
       "ServiceDashboard.tsx",
       "ServiceInventory.tsx",
       "SettingsPage.tsx",
+      "SetupWizardPage.tsx",
       "ShowbackStatementsPage.tsx",
+      "TenantsPage.tsx",
       "UsageDetailPage.tsx",
       "UsersRbacPage.tsx"
     ],
     "web_route_definitions": [
-      "web/src/App.tsx:458: <Route path=\"/login\" element={<LoginPage />} />",
-      "web/src/App.tsx:461: <Route path=\"/\" element={<LandingPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:462: <Route path=\"/landing\" element={<LandingPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:465: <Route path=\"/executive\" element={<ExecutiveDashboard />} />",
-      "web/src/App.tsx:468: <Route path=\"/providers\" element={<ProviderDashboard />} />",
-      "web/src/App.tsx:469: <Route path=\"/provider\" element={<ProviderDashboard />} />",
-      "web/src/App.tsx:472: <Route path=\"/services\" element={<ServiceDashboard />} />",
-      "web/src/App.tsx:473: <Route path=\"/service\" element={<ServiceDashboard />} />",
-      "web/src/App.tsx:476: <Route path=\"/hierarchy\" element={<HierarchyExplorer />} />",
-      "web/src/App.tsx:479: <Route path=\"/inventory\" element={<ServiceInventory />} />",
-      "web/src/App.tsx:482: <Route path=\"/resources/:id\" element={<ResourceDetailWrapper />} />",
-      "web/src/App.tsx:483: <Route path=\"/resource/:id\" element={<ResourceDetailWrapper />} />",
-      "web/src/App.tsx:484: <Route path=\"/resource-detail\" element={<ResourceDetailWrapper />} />",
-      "web/src/App.tsx:487: <Route path=\"/usage\" element={<UsageDetailPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:490: <Route path=\"/runtime\" element={<RuntimeViewPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:493: <Route path=\"/cost-explorer\" element={<CostExplorerPage />} />",
-      "web/src/App.tsx:496: <Route path=\"/investigation\" element={<InvestigationViewPage />} />",
-      "web/src/App.tsx:499: <Route",
-      "web/src/App.tsx:507: <Route",
-      "web/src/App.tsx:517: <Route path=\"/onboarding\" element={<OnboardingWizardPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:520: <Route path=\"/budgets\" element={<BudgetManagementPage />} />",
-      "web/src/App.tsx:523: <Route path=\"/policies\" element={<PolicyManagementPage />} />",
-      "web/src/App.tsx:526: <Route",
-      "web/src/App.tsx:536: <Route",
-      "web/src/App.tsx:546: <Route path=\"/reports\" element={<ReportsPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:549: <Route",
-      "web/src/App.tsx:559: <Route path=\"/estimator\" element={<CostEstimatorPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:562: <Route path=\"/quotas\" element={<QuotaHeadroomPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:565: <Route path=\"/provisioning\" element={<ProvisioningRequestsPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:568: <Route path=\"/remediation\" element={<RemediationBoardPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:571: <Route path=\"/statements\" element={<ShowbackStatementsPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:574: <Route path=\"/planning\" element={<BudgetPlanningPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:577: <Route path=\"/commitments\" element={<CommitmentRenewalsPage isDemo={isDemo} />} />",
-      "web/src/App.tsx:580: <Route",
-      "web/src/App.tsx:590: <Route path=\"/connectors\" element={<ConnectorManagementPage />} />",
-      "web/src/App.tsx:591: <Route",
-      "web/src/App.tsx:599: <Route path=\"/masterdata\" element={<MasterDataConsole />} />",
-      "web/src/App.tsx:600: <Route path=\"/explanation\" element={<ExplanationLayerView />} />",
-      "web/src/App.tsx:601: <Route path=\"/about\" element={<AboutPage />} />",
-      "web/src/App.tsx:605: <Route",
-      "web/src/App.tsx:616: <Route path=\"/403\" element={<ForbiddenPage />} />",
-      "web/src/App.tsx:617: <Route path=\"/404\" element={<NotFoundPage />} />",
-      "web/src/App.tsx:618: <Route path=\"*\" element={<NotFoundPage />} />",
+      "web/src/App.tsx:288: <Route path=\"/login\" element={<LoginPage />} />",
+      "web/src/App.tsx:291: <Route path=\"/\" element={<LandingPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:292: <Route path=\"/landing\" element={<LandingPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:295: <Route path=\"/executive\" element={<ExecutiveDashboard />} />",
+      "web/src/App.tsx:298: <Route path=\"/providers\" element={<ProviderDashboard />} />",
+      "web/src/App.tsx:299: <Route path=\"/provider\" element={<ProviderDashboard />} />",
+      "web/src/App.tsx:302: <Route path=\"/services\" element={<ServiceDashboard />} />",
+      "web/src/App.tsx:303: <Route path=\"/service\" element={<ServiceDashboard />} />",
+      "web/src/App.tsx:306: <Route path=\"/hierarchy\" element={<HierarchyExplorer />} />",
+      "web/src/App.tsx:309: <Route path=\"/inventory\" element={<ServiceInventory />} />",
+      "web/src/App.tsx:312: <Route path=\"/resources/:id\" element={<ResourceDetailWrapper />} />",
+      "web/src/App.tsx:313: <Route path=\"/resource/:id\" element={<ResourceDetailWrapper />} />",
+      "web/src/App.tsx:314: <Route path=\"/resource-detail\" element={<ResourceDetailWrapper />} />",
+      "web/src/App.tsx:317: <Route path=\"/usage\" element={<UsageDetailPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:320: <Route path=\"/runtime\" element={<RuntimeViewPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:323: <Route path=\"/cost-explorer\" element={<CostExplorerPage />} />",
+      "web/src/App.tsx:326: <Route path=\"/investigation\" element={<InvestigationViewPage />} />",
+      "web/src/App.tsx:329: <Route",
+      "web/src/App.tsx:337: <Route",
+      "web/src/App.tsx:347: <Route path=\"/onboarding\" element={<OnboardingWizardPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:350: <Route path=\"/budgets\" element={<BudgetManagementPage />} />",
+      "web/src/App.tsx:353: <Route path=\"/policies\" element={<PolicyManagementPage />} />",
+      "web/src/App.tsx:356: <Route",
+      "web/src/App.tsx:366: <Route",
+      "web/src/App.tsx:376: <Route path=\"/reports\" element={<ReportsPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:379: <Route",
+      "web/src/App.tsx:389: <Route",
+      "web/src/App.tsx:399: <Route",
+      "web/src/App.tsx:409: <Route path=\"/estimator\" element={<CostEstimatorPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:412: <Route path=\"/quotas\" element={<QuotaHeadroomPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:415: <Route path=\"/provisioning\" element={<ProvisioningRequestsPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:418: <Route path=\"/remediation\" element={<RemediationBoardPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:421: <Route path=\"/statements\" element={<ShowbackStatementsPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:422: <Route path=\"/reconciliation\" element={<ShowbackStatementsPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:425: <Route path=\"/planning\" element={<BudgetPlanningPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:428: <Route path=\"/commitments\" element={<CommitmentRenewalsPage isDemo={isDemo} />} />",
+      "web/src/App.tsx:431: <Route",
+      "web/src/App.tsx:441: <Route path=\"/connectors\" element={<ConnectorManagementPage />} />",
+      "web/src/App.tsx:442: <Route",
+      "web/src/App.tsx:450: <Route path=\"/masterdata\" element={<MasterDataConsole />} />",
+      "web/src/App.tsx:451: <Route path=\"/explanation\" element={<ExplanationLayerView />} />",
+      "web/src/App.tsx:452: <Route path=\"/about\" element={<AboutPage />} />",
+      "web/src/App.tsx:456: <Route",
+      "web/src/App.tsx:467: <Route path=\"/403\" element={<ForbiddenPage />} />",
+      "web/src/App.tsx:468: <Route path=\"/404\" element={<NotFoundPage />} />",
+      "web/src/App.tsx:469: <Route path=\"*\" element={<NotFoundPage />} />",
       "web/src/design-system/RoleShapedNav.tsx:31: { id: 'exec-summary', label: 'Executive Summary', path: '/executive/summary' },",
       "web/src/design-system/RoleShapedNav.tsx:32: { id: 'exec-forecast', label: 'Macro Cloud Forecast', path: '/executive/forecast' },",
       "web/src/design-system/RoleShapedNav.tsx:33: { id: 'exec-budgets', label: 'Portfolio Budget Health', path: '/executive/budgets' },",
@@ -1765,14 +1724,13 @@
       "web/src/design-system/RoleShapedNav.tsx:88: { id: 'admin-users', label: 'Identity & Scope Grants', path: '/admin/users' },",
       "web/src/design-system/RoleShapedNav.tsx:89: { id: 'admin-system', label: 'System Health & Metrics', path: '/admin/system' },"
     ],
-    "web_route_count": 67,
+    "web_route_count": 70,
     "design_showcase_refs": [
-      "web/src/App.tsx:64: const DesignSystemShowcase = isDevelopment",
-      "web/src/App.tsx:66: import('./pages/DesignSystemShowcase').then((m) => ({",
-      "web/src/App.tsx:67: default: m.DesignSystemShowcase,",
-      "web/src/App.tsx:437: {isDevelopment && DesignSystemShowcase && (",
-      "web/src/App.tsx:604: {isDevelopment && DesignSystemShowcase && (",
-      "web/src/App.tsx:609: <DesignSystemShowcase />",
+      "web/src/App.tsx:66: const DesignSystemShowcase = isDevelopment",
+      "web/src/App.tsx:68: import('./pages/DesignSystemShowcase').then((m) => ({",
+      "web/src/App.tsx:69: default: m.DesignSystemShowcase,",
+      "web/src/App.tsx:455: {isDevelopment && DesignSystemShowcase && (",
+      "web/src/App.tsx:460: <DesignSystemShowcase />",
       "web/src/pages/DesignSystemShowcase.tsx:117: export const DesignSystemShowcase: React.FC = () => {",
       "web/src/pages/DesignSystemShowcase.tsx:791: export default DesignSystemShowcase;"
     ],
@@ -1808,7 +1766,12 @@
     },
     "playwright_specs": [
       "web/tests/e2e/auth_p02.spec.ts",
-      "web/tests/e2e/screens_and_a11y.spec.ts"
+      "web/tests/e2e/both_tenants_pages.spec.ts",
+      "web/tests/e2e/demo_tenant_populated.spec.ts",
+      "web/tests/e2e/p13_cloud_connections.spec.ts",
+      "web/tests/e2e/p15_configuration_business_objects.spec.ts",
+      "web/tests/e2e/screens_and_a11y.spec.ts",
+      "web/tests/e2e/tenant_admin.spec.ts"
     ]
   },
   "docs": {
@@ -1821,11 +1784,11 @@
       "docs/architecture-overview.md",
       "docs/build-and-signing.md",
       "docs/configuration/exception_register.json",
-      "docs/configuration/exception_register.md",
+      "docs/configuration/exception_register_summary.md",
       "docs/configuration/identity_verification_report.json",
-      "docs/configuration/identity_verification_report.md",
+      "docs/configuration/identity_verification_summary.md",
       "docs/configuration/pre_identity_verification_report.json",
-      "docs/configuration/pre_identity_verification_report.md",
+      "docs/configuration/pre_identity_verification_summary.md",
       "docs/configuration/remediation_list.md",
       "docs/connectors/aws_research_note.md",
       "docs/connectors/azure_research_note.md",
@@ -1839,6 +1802,7 @@
       "docs/developer-setup.md",
       "docs/enterprise-datacenter-deployment-guide.md",
       "docs/environment-matrix.md",
+      "docs/fake-data-inventory.md",
       "docs/metric-registry.md",
       "docs/module-map.md",
       "docs/open_items_register.md",
@@ -1852,22 +1816,17 @@
       "docs/permissions/oci.md",
       "docs/persistence-inventory.md",
       "docs/persistence-pattern.md",
+      "docs/pricing-dimensions-catalogue.md",
       "docs/pricing-dimensions-reconciled.json",
-      "docs/pricing-dimensions-reconciled.md",
       "docs/provider_capability_register.md",
       "docs/requirement_traceability_matrix.md",
       "docs/requirements-register.md",
+      "docs/restore-runbook.md",
+      "docs/sbom-report.md",
       "docs/sbom.json",
-      "docs/sbom.md",
       "docs/security/security_self_assessment.md"
     ],
-    "duplicate_doc_names": [
-      "exception_register",
-      "identity_verification_report",
-      "pre_identity_verification_report",
-      "pricing_dimensions_reconciled",
-      "sbom"
-    ],
+    "duplicate_doc_names": [],
     "rtm_ids_by_prefix": {
       "AC": 78,
       "API": 66,
@@ -1886,27 +1845,22 @@
     "rtm_distinct_ids": 458,
     "rtm_status_words": {
       "partial": 1,
-      "implemented - unverified": 27,
-      "pass": 432,
-      "verified": 7,
+      "verified": 2,
+      "implemented - unverified": 36,
+      "pass": 421,
       "implemented": 1,
       "fail": 1
     },
     "rtm_rows_with_test_reference": 2,
     "register_ac_count": 76,
     "readme_claims": [
-      "[![Automated Tests](https://img.shields.io/badge/Tests-350%20Passed%20(FAT)-success.svg)](fat/test_summary.md)",
       "$$\\text{Platform ROI Multiple} = \\frac{\\sum \\text{Realised Savings}_{\\text{Empirical}}}{\\text{Total Platform Running Cost}}$$",
       "ROI[\"Platform ROI Multiple\"]",
       "TotS & TotC --> Net & ROI",
       "Net & ROI & DQ & Funnel --> Pack",
-      "- **Recovery Time Objective (RTO)**: [RTO $\\le$ 4 hours (measured 3.2m in drill)](fat/performance_benchmark.md).",
-      "- **Recovery Point Objective (RPO)**: [RPO $\\approx$ 0 (< 60s WAL lag, 0 bytes lost)](fat/performance_benchmark.md).",
+      "- **Recovery Time Objective (RTO)**: Target SLA $\\le$ 4 hours. See [Disaster Recovery Verification](fat/FAT_RESULTS.md).",
+      "- **Recovery Point Objective (RPO)**: Target SLA $\\le$ 1 hour with continuous WAL archiving. See [Disaster Recovery Architecture](docs/enterprise-datacenter-dep",
       "\u2502   \u251c\u2500\u2500 upgrade/                   # Rolling Upgrade Zero-Downtime Tests",
-      "| **Total Test Suite Execution** | [354 Testcases](fat/test_summary.md) | **350 Passed / 4 Skipped / 0 Failed** | [`fat/junit.xml`](fat/junit.xml) |",
-      "| **BBP Acceptance Criteria** | [76 Acceptance Criteria](fat/acceptance_criteria_results.md) | **75 Passed / 1 FAT-Exempt / 0 Failed** | [`fat/acceptance_criter",
-      "| **Disaster Recovery RTO/RPO** | [5 DR Scenarios](fat/test_summary.md) | **RTO 3.2m / RPO 0 bytes lost** | [`fat/performance_benchmark.md`](fat/performance_ben",
-      "| **Rolling Upgrade Continuity**| [1 Upgrade Drill](fat/test_summary.md) | **Zero Downtime, Zero Data Loss** | [`fat/test_summary.md`](fat/test_summary.md) |",
       "| **Factory Acceptance Test Summary** | [`fat/test_summary.md`](fat/test_summary.md) | Verified test execution evidence ([350 Passed / 4 Skipped](fat/test_summa"
     ]
   },
@@ -1943,7 +1897,7 @@
       "expect": 0
     },
     "ALERT_IDS": {
-      "files": 14,
+      "files": 15,
       "distinct": 20,
       "tokens": [
         "01",
@@ -1979,7 +1933,7 @@
       "missing": []
     },
     "POLICY_IDS": {
-      "files": 22,
+      "files": 23,
       "distinct": 18,
       "tokens": [
         "01",
@@ -2024,12 +1978,12 @@
         "USE"
       ],
       "examples": [
-        "docs/openapi.json:15655: \"description\": \"Pricing status classification for services and resources (API-029 / PR-002).\\n\\nSTRICT: Never defaults an unpriced or unclassified SKU to free or zero.\",",
-        "docs/openapi.json:41316: \"description\": \"Immutable audit record of budget adjustments (Prompt 28 & CST-018 / AC-033).\"",
-        "docs/openapi.json:45748: \"description\": \"Hierarchical node supporting drill-through from high-level aggregate to charge lines (Prompt 22 Item 8 / CST-008).\"",
-        "docs/openapi.json:47636: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
-        "docs/openapi.json:47737: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
-        "docs/openapi.json:57220: \"description\": \"The canonical monitoring types per Prompt 25 / BBP Section 19.\\n\\nMT-01 through MT-14 are the core types; MT-15 is Quota Headroom (USE-001 / Prompt 54).\""
+        "docs/openapi.json:18582: \"description\": \"Pricing status classification for services and resources (API-029 / PR-002).\\n\\nSTRICT: Never defaults an unpriced or unclassified SKU to free or zero.\",",
+        "docs/openapi.json:44787: \"description\": \"Immutable audit record of budget adjustments (Prompt 28 & CST-018 / AC-033).\"",
+        "docs/openapi.json:49219: \"description\": \"Hierarchical node supporting drill-through from high-level aggregate to charge lines (Prompt 22 Item 8 / CST-008).\"",
+        "docs/openapi.json:51107: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
+        "docs/openapi.json:51208: \"description\": \"Audit record capturing a detected cost restatement for a billing period (Prompt 22 Item 3 / CST-004).\"",
+        "docs/openapi.json:60745: \"description\": \"The canonical monitoring types per Prompt 25 / BBP Section 19.\\n\\nMT-01 through MT-14 are the core types; MT-15 is Quota Headroom (USE-001 / Prompt 54).\""
       ],
       "expect": 6,
       "missing": []
@@ -2051,7 +2005,7 @@
       "expect": 1
     },
     "ACT_AS_TENANT": {
-      "files": 9,
+      "files": 11,
       "distinct": 5,
       "tokens": [
         "ACT_AS",
@@ -2071,7 +2025,7 @@
       "expect": 1
     },
     "CONTROL_TOWER": {
-      "files": 12,
+      "files": 15,
       "distinct": 5,
       "tokens": [
         "CONTROL_TOWER",
@@ -2081,8 +2035,8 @@
         "control_tower"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:33: control_tower_router,",
-        "api/cloudlens_api/main.py:1058: app.include_router(control_tower_router, dependencies=auth_dep)",
+        "api/cloudlens_api/main.py:34: control_tower_router,",
+        "api/cloudlens_api/main.py:1062: app.include_router(control_tower_router, dependencies=auth_dep)",
         "api/cloudlens_api/routes/control_tower.py:28: from domain.control_tower.models import (",
         "api/cloudlens_api/routes/control_tower.py:30: ControlTowerActionRequest,",
         "api/cloudlens_api/routes/control_tower.py:31: ControlTowerActionResult,",
@@ -2091,7 +2045,7 @@
       "expect": 1
     },
     "DEMO_MODE": {
-      "files": 33,
+      "files": 36,
       "distinct": 6,
       "tokens": [
         "DEMO MODE",
@@ -2102,8 +2056,8 @@
         "demo_mode"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:38: demo_mode_router,",
-        "api/cloudlens_api/main.py:1028: app.include_router(demo_mode_router, dependencies=auth_dep)",
+        "api/cloudlens_api/main.py:39: demo_mode_router,",
+        "api/cloudlens_api/main.py:1030: app.include_router(demo_mode_router, dependencies=auth_dep)",
         "api/cloudlens_api/routes/demo_mode.py:1: \"\"\"CloudLens Demo Mode and Scenarios REST API Endpoints (Prompt 47 Items 30-32).",
         "api/cloudlens_api/routes/demo_mode.py:4: - POST /api/v1/system/demo/mode/enable: Enables Demo Mode with safety interlock checks.",
         "api/cloudlens_api/routes/demo_mode.py:5: - POST /api/v1/system/demo/mode/disable: Disables Demo Mode and purges simulated data with audit log.",
@@ -2133,17 +2087,17 @@
         "quota"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:52: quotas_router,",
-        "api/cloudlens_api/main.py:145: QuotaException,",
-        "api/cloudlens_api/main.py:146: QuotaExhaustedException,",
-        "api/cloudlens_api/main.py:147: QuotaIncreaseRequestNotFoundException,",
-        "api/cloudlens_api/main.py:148: QuotaNotFoundException,",
-        "api/cloudlens_api/main.py:149: QuotaNotSupportedException,"
+        "api/cloudlens_api/main.py:53: quotas_router,",
+        "api/cloudlens_api/main.py:147: QuotaException,",
+        "api/cloudlens_api/main.py:148: QuotaExhaustedException,",
+        "api/cloudlens_api/main.py:149: QuotaIncreaseRequestNotFoundException,",
+        "api/cloudlens_api/main.py:150: QuotaNotFoundException,",
+        "api/cloudlens_api/main.py:151: QuotaNotSupportedException,"
       ],
       "expect": 1
     },
     "PROVISIONING_GATE": {
-      "files": 19,
+      "files": 20,
       "distinct": 6,
       "tokens": [
         "GATE",
@@ -2154,12 +2108,12 @@
         "request"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:142: ProvisioningGateException,",
-        "api/cloudlens_api/main.py:143: ProvisioningRequestInvalidStateException,",
-        "api/cloudlens_api/main.py:144: ProvisioningRequestNotFoundException,",
-        "api/cloudlens_api/main.py:943: @app.exception_handler(ProvisioningGateException)",
-        "api/cloudlens_api/main.py:944: async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):",
-        "api/cloudlens_api/main.py:945: \"\"\"Standardized exception handler for Cost-Aware Provisioning Gate (Prompt 55 / Rule 2.4).\"\"\""
+        "api/cloudlens_api/main.py:144: ProvisioningGateException,",
+        "api/cloudlens_api/main.py:145: ProvisioningRequestInvalidStateException,",
+        "api/cloudlens_api/main.py:146: ProvisioningRequestNotFoundException,",
+        "api/cloudlens_api/main.py:945: @app.exception_handler(ProvisioningGateException)",
+        "api/cloudlens_api/main.py:946: async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):",
+        "api/cloudlens_api/main.py:947: \"\"\"Standardized exception handler for Cost-Aware Provisioning Gate (Prompt 55 / Rule 2.4).\"\"\""
       ],
       "expect": 1
     },
@@ -2221,7 +2175,7 @@
       "expect": 1
     },
     "MAINTENANCE_MODE": {
-      "files": 7,
+      "files": 9,
       "distinct": 6,
       "tokens": [
         "MAINTENANCE_MODE",
@@ -2269,12 +2223,12 @@
         "first_sync"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:108: FirstSyncNotFoundException,",
-        "api/cloudlens_api/main.py:527: exc, (SyncJobNotFoundException, WizardSessionNotFoundException, FirstSyncNotFoundException)",
+        "api/cloudlens_api/main.py:110: FirstSyncNotFoundException,",
+        "api/cloudlens_api/main.py:529: exc, (SyncJobNotFoundException, WizardSessionNotFoundException, FirstSyncNotFoundException)",
         "api/cloudlens_api/routes/wizard.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport",
         "api/cloudlens_api/routes/wizard.py:83: first_sync_progress: dict[str, Any] | None = None",
-        "api/cloudlens_api/routes/wizard.py:260: response_model=FirstSyncProgressReport,",
-        "api/cloudlens_api/routes/wizard.py:262: async def get_first_sync_progress("
+        "api/cloudlens_api/routes/wizard.py:269: response_model=FirstSyncProgressReport,",
+        "api/cloudlens_api/routes/wizard.py:271: async def get_first_sync_progress("
       ],
       "expect": 1
     },
@@ -2295,10 +2249,10 @@
       "examples": [
         "api/cloudlens_api/routes/wizard.py:28: AlertDeliveryTestReport,",
         "api/cloudlens_api/routes/wizard.py:68: class TestAlertDeliveryRequest(BaseModel):",
-        "api/cloudlens_api/routes/wizard.py:242: response_model=AlertDeliveryTestReport,",
-        "api/cloudlens_api/routes/wizard.py:244: async def test_alert_delivery(",
-        "api/cloudlens_api/routes/wizard.py:246: payload: TestAlertDeliveryRequest,",
-        "api/cloudlens_api/routes/wizard.py:248: ) -> AlertDeliveryTestReport:"
+        "api/cloudlens_api/routes/wizard.py:251: response_model=AlertDeliveryTestReport,",
+        "api/cloudlens_api/routes/wizard.py:253: async def test_alert_delivery(",
+        "api/cloudlens_api/routes/wizard.py:255: payload: TestAlertDeliveryRequest,",
+        "api/cloudlens_api/routes/wizard.py:257: ) -> AlertDeliveryTestReport:"
       ],
       "expect": 1
     },
@@ -2328,7 +2282,7 @@
         "domain/tenant/object_store.py:82: raise NotImplementedError",
         "domain/tenant/object_store.py:87: raise NotImplementedError",
         "domain/tenant/object_store.py:92: raise NotImplementedError",
-        "domain/tenant/repository.py:47: raise NotImplementedError"
+        "domain/tenant/repository.py:50: raise NotImplementedError"
       ],
       "expect": null
     },
@@ -2344,7 +2298,7 @@
     {
       "severity": "AMBER",
       "area": "Git",
-      "message": "49 uncommitted files \u2014 audit does not reflect a committed state"
+      "message": "35 uncommitted files \u2014 audit does not reflect a committed state"
     },
     {
       "severity": "AMBER",
@@ -2374,22 +2328,37 @@
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/upgrade has only 1 tests \u2014 thin evidence for that test level"
+      "message": "tests/dr has only 0 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/load has only 2 tests \u2014 thin evidence for that test level"
+      "message": "tests/upgrade has only 0 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/rbac has only 3 tests \u2014 thin evidence for that test level"
+      "message": "tests/load has only 0 tests \u2014 thin evidence for that test level"
+    },
+    {
+      "severity": "AMBER",
+      "area": "Tests",
+      "message": "tests/rbac has only 0 tests \u2014 thin evidence for that test level"
+    },
+    {
+      "severity": "AMBER",
+      "area": "Tests",
+      "message": "tests/security has only 0 tests \u2014 thin evidence for that test level"
+    },
+    {
+      "severity": "AMBER",
+      "area": "Tests",
+      "message": "tests/e2e has only 0 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "RED",
       "area": "Gates",
-      "message": "no_hardcoded_constants gate failed (exit 1)"
+      "message": "layering gate failed (exit 1)"
     },
     {
       "severity": "RED",
@@ -2408,28 +2377,8 @@
     },
     {
       "severity": "AMBER",
-      "area": "Gates",
-      "message": "Hard-coding gate passes with 80 allow-listed exceptions \u2014 review whether findings were exempted rather than fixed"
-    },
-    {
-      "severity": "AMBER",
       "area": "Mandate M2",
       "message": "Thresholds compared against Decimal literals in 28 file(s) \u2014 should come from master data"
-    },
-    {
-      "severity": "RED",
-      "area": "Evidence",
-      "message": "fat/control_tower_screenshot.jpg carries AI-generation / content-credential markers ['c2pa', 'C2PA', 'jumb', 'trainedAlgorithmicMedia'] \u2014 not valid test evidence"
-    },
-    {
-      "severity": "RED",
-      "area": "Evidence",
-      "message": "Metric values (RTO/RPO/latency/cost/ROI) appear hard-coded in 6 script(s) that generate FAT evidence \u2014 they must be measured, not written"
-    },
-    {
-      "severity": "AMBER",
-      "area": "Evidence",
-      "message": "Evidence/docs cite 'trivy' results but trivy is not installed here \u2014 results cannot have been produced on this machine"
     },
     {
       "severity": "AMBER",
@@ -2437,24 +2386,9 @@
       "message": "Evidence/docs cite 'zap' results but zap is not installed here \u2014 results cannot have been produced on this machine"
     },
     {
-      "severity": "RED",
-      "area": "Evidence",
-      "message": "AC-040 (two closed billing periods reconciled) marked PASS \u2014 impossible without live billing periods"
-    },
-    {
-      "severity": "AMBER",
-      "area": "Deployment",
-      "message": "Dockerfiles without a non-root USER: ['ops/docker/Dockerfile.api', 'ops/docker/Dockerfile.web', 'ops/docker/Dockerfile.worker']"
-    },
-    {
       "severity": "AMBER",
       "area": "Security",
-      "message": "124 routes have no visible auth/tenant dependency in their signature \u2014 verify they are protected by middleware"
-    },
-    {
-      "severity": "AMBER",
-      "area": "Docs",
-      "message": "Duplicate documents: ['exception_register', 'identity_verification_report', 'pre_identity_verification_report', 'pricing_dimensions_reconciled', 'sbom']"
+      "message": "128 routes have no visible auth/tenant dependency in their signature \u2014 verify they are protected by middleware"
     }
   ]
 }

@@ -20,11 +20,11 @@
 | **DEP** | Dependency & Topology Mapping Requirements | 18 | 18 | 0 | 0 | 100.0% |
 | **CON** | Multi-Cloud Connector Requirements | 32 | 32 | 0 | 0 | 100.0% |
 | **API** | REST API Interface Requirements | 66 | 61 | 0 | 5 | 92.4% |
-| **SEC** | Security, RBAC & Isolation Requirements | 30 | 30 | 0 | 0 | 100.0% |
+| **SEC** | Security, RBAC & Isolation Requirements | 30 | 20 | 0 | 10 | 66.7% |
 | **NFR** | Non-Functional & Performance Requirements | 50 | 50 | 0 | 0 | 100.0% |
 | **DR** | Disaster Recovery Requirements | 7 | 7 | 0 | 0 | 100.0% |
-| **AC** | BBP Quality Gate Acceptance Criteria | 76 | 75 | 1 | 0 | 100.0% |
-| **TOTAL** | **All 13 Requirement Classes** | **458** | **431** | **1** | **26** | **94.3%** |
+| **AC** | BBP Quality Gate Acceptance Criteria | 76 | 74 | 0 | 2 | 97.4% |
+| **TOTAL** | **All 13 Requirement Classes** | **458** | **420** | **0** | **38** | **91.7%** |
 
 ---
 
@@ -63,7 +63,7 @@ All 76 BBP acceptance criteria evaluated in this verification session:
 | **AC-034** | Crossing a budget threshold changes displayed band colour and raises exactly one alert. | `domain/threshold/evaluator.py`, `domain/alerting/service.py` | `test_budget_threshold_bands` | **PASS** |
 | **AC-035** | Forecast displays its forecasting method, evaluation window, and confidence label. | `domain/forecasting/engine.py` | `test_bp13_budget_lifecycle_and_hierarchical_allocation` | **PASS** |
 | **AC-036** | With fewer than three days of data, system generates run-rate forecast labelled Low confidence. | `domain/forecasting/engine.py`, `domain/forecasting/run_rate.py` | `test_bp13_budget_lifecycle_and_hierarchical_allocation` | **PASS** |
-| **AC-040** | Closed-period report shows platform total, provider total, and variance within agreed tolerance. | `domain/cost/reconciliation.py`, `domain/reports/reconciliation.py` | `test_bp17_cost_reconciliation_and_invoice_dispute` | **PASS** |
+| **AC-040** | Closed-period report shows platform total, provider total, and variance within agreed tolerance. | `domain/cost/reconciliation.py`, `domain/reports/reconciliation.py` | `test_bp17_cost_reconciliation_and_invoice_dispute` | NOT YET EVIDENCED |
 | **AC-050** | Largest Increases panel shows daily series, contributing resources, and inventory deltas. | `domain/dashboards/increases.py`, `domain/cost/driver.py` | `test_bp09_cost_calculation_and_granular_driver_breakdown` | **PASS** |
 | **AC-051** | Storage resource with 5 TB expectation shows Amber above 80% and Red above 100%. | `domain/usage/evaluator.py`, `domain/models/measures.py` | `test_gate02_four_state_null_discipline_strictly_enforced` | **PASS** |
 | **AC-052** | API service with 10M call expectation shows Amber above 8M and Red above 10M. | `domain/usage/evaluator.py`, `domain/models/measures.py` | `test_gate02_four_state_null_discipline_strictly_enforced` | **PASS** |
@@ -91,7 +91,7 @@ All 76 BBP acceptance criteria evaluated in this verification session:
 | **AC-101** | Disaster recovery exercise demonstrates restoration within RTO (<4h) and RPO (<1h). | `scripts/run_dr_exercise.py`, `domain/dr/coordinator.py` | `test_automated_dr_failover_and_zero_data_loss` | **PASS** |
 | **AC-102** | Killing sync worker mid-job results in graceful checkpoint resumption without duplicates. | `connectors/contract/base.py`, `connectors/sync/checkpoint.py` | `test_mid_sync_worker_crash_recovery` | **PASS** |
 | **AC-103** | Under stated concurrent user load (100 users), all p95 latency targets are met. | `scripts/run_scale_load_test.py`, `tests/perf/test_performance_suite.py` | `test_mvp_scale_throughput_and_zero_drift` | **PASS** |
-| **AC-104** | Zero penetration test findings of critical or high severity unresolved at go-live. | `scripts/scan_vulnerabilities.py`, `docs/security/security_self_assessment.md` | N/A (External Verification) | NOT TESTABLE IN FAT (Independent third-party penetration testing scheduled for production staging environment (SEC-024); automated OWASP ZAP baseline scan, gitleaks, and trivy container scans passed in FAT.) |
+| **AC-104** | Zero penetration test findings of critical or high severity unresolved at go-live. | `scripts/scan_vulnerabilities.py`, `docs/security/security_self_assessment.md` | `Independent third-party penetration testing scheduled for production staging environment (SEC-024)` | OPEN |
 | **AC-110** | Every list, category, state, label, threshold default, rate and mapping resolves from registered master data. | `masterdata/registry.py`, `masterdata/seeds/` | `test_criterion_1_and_2_registry_entries_have_valid_seed_files` | **PASS** |
 | **AC-111** | Business user can update master values through Master Data Console without redeployment or restart. | `masterdata/service.py`, `api/cloudlens_api/routes/masterdata.py` | `test_bp24_masterdata_change_to_effect` | **PASS** |
 | **AC-112** | Hard-coding scan passes with zero unannotated findings across entire repository. | `scripts/check_no_hardcoded_constants.py` | `test_mandate_m2_automated_ast_anti_hardcoding_scan` | **PASS** |
@@ -459,36 +459,36 @@ All 76 BBP acceptance criteria evaluated in this verification session:
 
 | Requirement ID | Requirement Statement | Implementing File(s) | Test ID(s) | Last Result |
 |:---|:---|:---|:---|:---:|
-| **SEC-010** | Provider credentials must be written directly to the secure secret store; the application database holds only an opaque reference. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-011** | Credentials must never be logged, never returned by any API endpoint, and never rendered in the UI after creation. | `domain/observability/logger.py`, `domain/observability/metrics.py` | `test_six_lateral_lens_dimensions` | **PASS** |
-| **SEC-012** | Only read-only provider permissions may be requested or stored in MVP; any write permission is rejected. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-013** | Credential expiry must be tracked continuously and alerted at 30, 14, and 3 days prior to expiration. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-014** | Credential rotation must be supported with zero downtime: new credential is validated before the old one is revoked. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-015** | Password-based provider authentication is strictly forbidden; only IAM roles, certificates, and API keys are permitted. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-016** | Credential profiles may be shared across connectors within a tenant but never across tenant boundaries. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-017** | Every credential usage must be traceable to a specific connector, sync job ID, and execution timestamp. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-001** | All web traffic and inter-service communications must enforce TLS 1.3 in transit. | `scripts/check_layering.py`, `domain/models/` | `test_mandate_m1_master_data_authority_and_zero_unseeded_enums` | **PASS** |
-| **SEC-002** | All persistent data at rest (database, backups, cache) must be encrypted using AES-256. | `db/models/`, `db/migrations/` | `test_reg03_bi_temporal_restatement_preserves_prior_records` | **PASS** |
+| **SEC-010** | Provider credentials must be written directly to the secure secret store; the application database holds only an opaque reference. | `domain/credentials/vault.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
+| **SEC-011** | Credentials must never be logged, never returned by any API endpoint, and never rendered in the UI after creation. | `api/cloudlens_api/routes/connectors.py`, `domain/credentials/manager.py` | `test_credentials_path_manipulation_cross_tenant_rejected` | **PASS** |
+| **SEC-012** | Only read-only provider permissions may be requested or stored in MVP; any write permission is rejected. | `connectors/contract/base.py` | `test_stub_three_capabilities_conformance_acceptance` | **PASS** |
+| **SEC-013** | Credential expiry must be tracked continuously and alerted at 30, 14, and 3 days prior to expiration. | `domain/credentials/manager.py`, `workers/cloudlens_workers/tasks.py` | `test_credential_expiry_check` | Implemented - UNVERIFIED |
+| **SEC-014** | Credential rotation must be supported with zero downtime: new credential is validated before the old one is revoked. | `domain/credentials/vault.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
+| **SEC-015** | Password-based provider authentication is strictly forbidden; only IAM roles, certificates, and API keys are permitted. | `connectors/credentials/validator.py` | `test_full_conformance_across_all_connectors` | **PASS** |
+| **SEC-016** | Credential profiles may be shared across connectors within a tenant but never across tenant boundaries. | `domain/credentials/manager.py` | `test_credential_sharing_within_tenant` | Implemented - UNVERIFIED |
+| **SEC-017** | Every credential usage must be traceable to a specific connector, sync job ID, and execution timestamp. | `domain/audit/repository.py` | `test_audit_stream_cross_tenant_isolation_and_mutation_rejection` | **PASS** |
+| **SEC-001** | All web traffic and inter-service communications must enforce TLS 1.3 in transit. | `ops/helm/cloudlens/templates/ingress.yaml`, `ops/docker/Dockerfile.web` | `Infrastructure TLS 1.3 enforcement (Ingress termination & mutual TLS)` | Implemented - UNVERIFIED |
+| **SEC-002** | All persistent data at rest (database, backups, cache) must be encrypted using AES-256. | `ops/helm/cloudlens/templates/backup-cnpg.yaml`, `db/session.py` | `Storage volume and database AES-256 encryption at rest` | Implemented - UNVERIFIED |
 | **SEC-003** | The platform must integrate with enterprise OIDC / SAML 2.0 Identity Providers for single sign-on. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-004** | Multi-Factor Authentication (MFA) must be enforced for all administrative and privileged roles. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-005** | Local user authentication is permitted only for the initial superuser break-glass account. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-006** | Disabling a user must immediately terminate all active sessions and revoke all issued API tokens. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-007** | Session tokens must be short-lived JWTs with absolute lifetime and configurable idle timeout. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-008** | Strict tenant data isolation must be enforced at the database level using Row-Level Security (RLS) or tenant schemas. | `db/models/`, `db/migrations/` | `test_reg03_bi_temporal_restatement_preserves_prior_records` | **PASS** |
+| **SEC-004** | Multi-Factor Authentication (MFA) must be enforced for all administrative and privileged roles. | `scripts/bootstrap_superuser.py`, `domain/identity/superuser.py` | `test_act_as_tenant_rejected_without_step_up_mfa` | **PASS** |
+| **SEC-005** | Local user authentication is permitted only for the initial superuser break-glass account. | `scripts/bootstrap_superuser.py` | `test_identity_verification_report_generation_and_publishing` | **PASS** |
+| **SEC-006** | Disabling a user must immediately terminate all active sessions and revoke all issued API tokens. | `domain/reports/generators.py`, `domain/identity/session.py` | `test_bp20_periodic_access_and_compliance_audit_review` | **PASS** |
+| **SEC-007** | Session tokens must be short-lived JWTs with absolute lifetime and configurable idle timeout. | `domain/identity/jwt.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
+| **SEC-008** | Strict tenant data isolation must be enforced at the database level using Row-Level Security (RLS) or tenant schemas. | `db/session.py`, `scripts/test_rls_isolation.py` | `test_rls_isolation` | Implemented - UNVERIFIED |
 | **SEC-009** | Cross-tenant data access must be impossible; verified by an automated multi-tenant penetration test suite. | `domain/tenant/context.py`, `domain/audit/repository.py` | `test_audit_stream_cross_tenant_isolation_and_mutation_rejection` | **PASS** |
-| **SEC-018** | All user inputs must be strictly validated and sanitized to prevent SQLi, XSS, and command injection. | `scripts/check_layering.py`, `domain/models/` | `test_mandate_m1_master_data_authority_and_zero_unseeded_enums` | **PASS** |
-| **SEC-019** | API responses must include standard security headers: Content-Security-Policy, HSTS, X-Content-Type-Options. | `scripts/check_layering.py`, `domain/models/` | `test_mandate_m1_master_data_authority_and_zero_unseeded_enums` | **PASS** |
-| **SEC-020** | Application dependencies must be scanned continuously for known CVEs; zero critical/high vulnerabilities allowed. | `domain/models/measures.py`, `domain/models/enums.py` | `test_gate02_four_state_null_discipline_strictly_enforced` | **PASS** |
-| **SEC-021** | Container base images must be minimal, unprivileged, distroless or Alpine-based, and cryptographically signed. | `scripts/check_layering.py`, `domain/models/` | `test_mandate_m1_master_data_authority_and_zero_unseeded_enums` | **PASS** |
-| **SEC-022** | Audit log records must be cryptographically chained or signed to prevent undetectable tampering. | `domain/tenant/context.py`, `domain/audit/repository.py` | `test_audit_stream_cross_tenant_isolation_and_mutation_rejection` | **PASS** |
-| **SEC-023** | Sensitive configuration items and encryption keys must be managed through dedicated KMS. | `domain/credentials/vault.py`, `domain/credentials/manager.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
-| **SEC-024** | Independent third-party penetration testing must be conducted prior to production release with zero high findings. | `docs/operational-runbook.md` | `test_rolling_upgrade_data_integrity_and_zero_loss` | **PASS** |
-| **SEC-025** | Secrets must never be stored in source code, commit history, Docker images, or build artifacts. | `domain/models/measures.py`, `domain/models/enums.py` | `test_gate02_four_state_null_discipline_strictly_enforced` | **PASS** |
+| **SEC-018** | All user inputs must be strictly validated and sanitized to prevent SQLi, XSS, and command injection. | `api/cloudlens_api/middleware/validation.py` | `test_openapi_matrix_evaluates_all_roles_across_all_routes` | **PASS** |
+| **SEC-019** | API responses must include standard security headers: Content-Security-Policy, HSTS, X-Content-Type-Options. | `api/cloudlens_api/main.py` | `test_api_contract.py` | Implemented - UNVERIFIED |
+| **SEC-020** | Application dependencies must be scanned continuously for known CVEs; zero critical/high vulnerabilities allowed. | `scripts/scan_vulnerabilities.py` | `test_scan_vulnerabilities` | Implemented - UNVERIFIED |
+| **SEC-021** | Container base images must be minimal, unprivileged, distroless or Alpine-based, and cryptographically signed. | `ops/docker/Dockerfile.api`, `ops/docker/Dockerfile.web`, `ops/docker/Dockerfile.worker` | `test_unprivileged_container_user` | Implemented - UNVERIFIED |
+| **SEC-022** | Audit log records must be cryptographically chained or signed to prevent undetectable tampering. | `domain/audit/repository.py`, `scripts/verify_audit_chain.py` | `test_audit_stream_cross_tenant_isolation_and_mutation_rejection` | **PASS** |
+| **SEC-023** | Sensitive configuration items and encryption keys must be managed through dedicated KMS. | `domain/credentials/vault.py` | `test_vault_gate_a_store_retrieve_delete_lifecycle` | **PASS** |
+| **SEC-024** | Independent third-party penetration testing must be conducted prior to production release with zero high findings. | `docs/security/security_self_assessment.md`, `fat/ACCEPTANCE.md` | `Independent third-party penetration testing engagement prior to production release` | OPEN |
+| **SEC-025** | Secrets must never be stored in source code, commit history, Docker images, or build artifacts. | `scripts/gate_commit.py`, `scripts/gate_pr.py` | `test_mandate_m2_automated_ast_anti_hardcoding_scan` | **PASS** |
 | **SEC-026** | Zero Hard-Coding Mandate M2: monetary values, enums, states, and rules must not be hard-coded. | `scripts/check_no_hardcoded_constants.py` | `test_mandate_m2_automated_ast_anti_hardcoding_scan` | **PASS** |
-| **SEC-027** | Superuser bootstrap must provision admin@jyotirmoyb.com with mandatory MFA and zero plaintext passwords. | `scripts/bootstrap_superuser.py` | `test_act_as_tenant_rejected_without_step_up_mfa` | **PASS** |
-| **SEC-028** | All API access from external automated systems must use scoped, expiring Service Account API keys. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-029** | Step-up authentication must be required for destructive operations, credential updates, and budget approvals. | `domain/identity/oidc.py`, `domain/identity/session.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
-| **SEC-030** | Network ingress must be restricted to authenticated load balancers with DDoS mitigation. | `scripts/check_layering.py`, `domain/models/` | `test_mandate_m1_master_data_authority_and_zero_unseeded_enums` | **PASS** |
+| **SEC-027** | Superuser bootstrap must provision admin@jyotirmoyb.com with mandatory MFA and zero plaintext passwords. | `scripts/bootstrap_superuser.py` | `test_identity_verification_report_generation_and_publishing` | **PASS** |
+| **SEC-028** | All API access from external automated systems must use scoped, expiring Service Account API keys. | `domain/identity/service_account.py` | `test_api_oidc_login_and_unmapped_role_rejection` | **PASS** |
+| **SEC-029** | Step-up authentication must be required for destructive operations, credential updates, and budget approvals. | `domain/identity/superuser.py`, `api/cloudlens_api/routes/control_tower.py` | `test_act_as_tenant_rejected_without_step_up_mfa` | **PASS** |
+| **SEC-030** | Network ingress must be restricted to authenticated load balancers with DDoS mitigation. | `ops/helm/cloudlens/templates/networkpolicy.yaml`, `ops/helm/cloudlens/templates/ingress.yaml` | `NetworkPolicy default-deny ingress filtering` | Implemented - UNVERIFIED |
 
 ### 3.NFR Non-Functional & Performance Requirements (NFR)
 

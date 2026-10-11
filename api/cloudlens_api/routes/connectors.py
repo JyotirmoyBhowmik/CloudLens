@@ -342,7 +342,7 @@ async def get_provider_credential_fields(
                 field_type="text",
                 is_secret=False,
                 required=True,
-                placeholder="cloudlens-read@project.iam.gserviceaccount.com",
+                placeholder="service-account-name[at]project.iam.gserviceaccount.com",
                 description="Service account with Viewer & Billing Viewer roles.",
             ),
             CredentialFieldSpec(

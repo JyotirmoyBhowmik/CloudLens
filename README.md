@@ -1,7 +1,7 @@
 # CloudLens: Enterprise Multi-Cloud Governance, Inventory & FinOps Platform
 
 [![Build Status](https://img.shields.io/badge/Build-Passing%20(v1.1)-brightgreen.svg)](docs/build-and-signing.md)
-[![Automated Tests](https://img.shields.io/badge/Tests-350%20Passed%20(FAT)-success.svg)](fat/test_summary.md)
+[![Automated Tests](https://img.shields.io/badge/Tests-Passing-success.svg)](fat/junit.xml)
 [![BBP v1.1](https://img.shields.io/badge/BBP-458%20Requirements%20Traceable-blue.svg)](docs/requirement_traceability_matrix.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](pyproject.toml)
@@ -372,8 +372,8 @@ flowchart TD
 
 ### 3.9 High Availability & 35-Day PITR Disaster Recovery
 
-- **Recovery Time Objective (RTO)**: [RTO $\le$ 4 hours (measured 3.2m in drill)](fat/performance_benchmark.md).
-- **Recovery Point Objective (RPO)**: [RPO $\approx$ 0 (< 60s WAL lag, 0 bytes lost)](fat/performance_benchmark.md).
+- **Recovery Time Objective (RTO)**: Target SLA $\le$ 4 hours. See [Disaster Recovery Verification](fat/FAT_RESULTS.md).
+- **Recovery Point Objective (RPO)**: Target SLA $\le$ 1 hour with continuous WAL archiving. See [Disaster Recovery Architecture](docs/enterprise-datacenter-deployment-guide.md#4-disaster-recovery--backup-architecture-35-day-pitr).
 - **Automated Backup Architecture**:
   - Daily physical base backup scheduled at `00:00 UTC` with [35-Day PITR Retention](docs/enterprise-datacenter-deployment-guide.md#4-disaster-recovery--backup-architecture-35-day-pitr) via CloudNativePG and Barman archiving to MinIO.
   - Continuous WAL segment streaming with sync lag $< 60\text{ seconds}$.
@@ -489,13 +489,13 @@ All test executions are evidenced by committed machine artifacts in [`fat/`](fat
 
 | Verification Category | Executed Test Cases | Status | Evidence Artifact Link |
 |:---|:---:|:---:|:---|
-| **Total Test Suite Execution** | [354 Testcases](fat/test_summary.md) | **350 Passed / 4 Skipped / 0 Failed** | [`fat/junit.xml`](fat/junit.xml) |
-| **Requirements Traceability** | [458 Requirements](docs/requirement_traceability_matrix.md) | **431 Verified / 1 FAT-Exempt / 26 Unverified** | [`docs/requirement_traceability_matrix.md`](docs/requirement_traceability_matrix.md) |
-| **BBP Acceptance Criteria** | [76 Acceptance Criteria](fat/acceptance_criteria_results.md) | **75 Passed / 1 FAT-Exempt / 0 Failed** | [`fat/acceptance_criteria_results.md`](fat/acceptance_criteria_results.md) |
-| **Performance & Latency SLAs** | [14 Performance SLAs](fat/performance_benchmark.md) | **100% Targets Met** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md) |
-| **Disaster Recovery RTO/RPO** | [5 DR Scenarios](fat/test_summary.md) | **RTO 3.2m / RPO 0 bytes lost** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md) |
-| **Rolling Upgrade Continuity**| [1 Upgrade Drill](fat/test_summary.md) | **Zero Downtime, Zero Data Loss** | [`fat/test_summary.md`](fat/test_summary.md) |
-| **Mandates M1, M2, M3** | [3 Mandate Suites](fat/test_summary.md) | **100% Strict Compliance** | [`fat/test_summary.md`](fat/test_summary.md) |
+| **Total Test Suite Execution** | [Automated Test Suite](fat/test_summary.md) | **Passing** | [`fat/junit.xml`](fat/junit.xml) |
+| **Requirements Traceability** | [458 Requirements](docs/requirement_traceability_matrix.md) | **Traceable** | [`docs/requirement_traceability_matrix.md`](docs/requirement_traceability_matrix.md) |
+| **BBP Acceptance Criteria** | [76 Acceptance Criteria](fat/ACCEPTANCE.md) | **Evaluated** | [`fat/ACCEPTANCE.md`](fat/ACCEPTANCE.md) |
+| **Performance & Latency SLAs** | [Performance Benchmarks](fat/performance_benchmark.md) | **Evaluated** | [`fat/performance_benchmark.md`](fat/performance_benchmark.md) |
+| **Disaster Recovery Exercises** | [Disaster Recovery Procedures](fat/FAT_RESULTS.md) | **UNVERIFIED** | [`fat/FAT_RESULTS.md`](fat/FAT_RESULTS.md) |
+| **Rolling Upgrade Continuity**| [Rolling Upgrade Drill](fat/FAT_RESULTS.md) | **UNVERIFIED** | [`fat/FAT_RESULTS.md`](fat/FAT_RESULTS.md) |
+| **Mandates M1, M2, M3** | [Mandate Enforcement](fat/test_summary.md) | **Strict Compliance** | [`fat/test_summary.md`](fat/test_summary.md) |
 
 ### Static Quality Gates Summary:
 1. **Architectural Layering Scan**: `python scripts/check_layering.py` $\implies$ **PASS** (Zero provider SDK imports outside `connectors/`).

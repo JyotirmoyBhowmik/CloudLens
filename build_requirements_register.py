@@ -4499,8 +4499,8 @@ with open(md_register_path, "w", encoding="utf-8") as f:
 
 print(f"Generated Markdown register: {md_register_path}")
 
-# 2. docs/pricing-dimensions-reconciled.md
-md_dimensions_path = os.path.join(DOCS_DIR, "pricing-dimensions-reconciled.md")
+# 2. docs/pricing-dimensions-catalogue.md
+md_dimensions_path = os.path.join(DOCS_DIR, "pricing-dimensions-catalogue.md")
 with open(md_dimensions_path, "w", encoding="utf-8") as f:
     f.write("# Reconciled Pricing Dimension Catalogue (29 Dimensions)\n\n")
     f.write(

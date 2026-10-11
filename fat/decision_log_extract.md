@@ -47,6 +47,9 @@ This document consolidates every Report Back block across the 62 build prompts o
 | **ADR-025** | Software Bill of Materials (SBOM) CycloneDX Standard | Prompt 43, 44 | ACCEPTED | Supply Chain Security |
 | **ADR-026** | BBP Nine Roles, Platform Observer Capability & RBAC Matrix | Prompt R-ROLES | ACCEPTED | Security & RBAC |
 | **ADR-027** | Unified Observability, Metrics Registry, Distributed Tracing & Alertmanager | Prompt R-OBS | ACCEPTED | Observability & SRE |
+| **ADR-028** | Backend-for-Frontend (BFF) Auth with HttpOnly Secure Cookies & Double-Submit CSRF | Prompt P02 | ACCEPTED | Web App Security |
+| **ADR-029** | Dynamic REST API Data Hooks & Zero-Literal Front-End Contract | Prompt P10 | ACCEPTED | API-UI Contract |
+| **ADR-030** | Fixed Collapsible Navigation Sidebar, Responsive Top Bar & Specification Label Scrubbing | Prompt P11 | ACCEPTED | User Experience & IA |
 
 ---
 
@@ -124,6 +127,45 @@ This document consolidates every Report Back block across the 62 build prompts o
   5. Provisioned 10 Grafana dashboards (Operations, Security, Pipeline, Capacity, Cost of Collection, etc.) with Keycloak OIDC SSO role mapping (`SUPER_ADMIN`/`PLATFORM_ADMIN` -> Admin/Editor, `AUDITOR` -> Viewer) and zero local passwords in files.
   6. Configured versioned Alertmanager threshold rules with automated routing to `admin@jyotirmoyb.com` via Mailpit SMTP relay, and a `Watchdog` dead-man's switch heartbeat.
 - **Consequences**: Complete visibility into platform health, security events, and performance with zero plain-text credential leaks and proven alert lifecycle delivery.
+
+### ADR-028: Backend-for-Frontend (BFF) Auth with HttpOnly Secure Cookies & Double-Submit CSRF (Prompt P02)
+- **Context**: The web application requires robust authentication and session handling across 28 screens without exposing raw JWTs to client-side storage (`localStorage` / `sessionStorage`), which are vulnerable to Cross-Site Scripting (XSS) exfiltration. Single Page App (SPA) token storage with `oidc-client-ts` was evaluated against the Backend-for-Frontend (BFF) cookie architecture.
+- **Decision**: Implemented the **Backend-for-Frontend (BFF)** pattern:
+  1. **Zero Client Storage of Tokens**: Tokens (`cloudlens_access_token`) are strictly set as `httpOnly`, `Secure`, `SameSite=Lax` cookies by the API backend during OIDC authorization code exchange (`/auth/oidc/callback`), login, or tenant switching (`/auth/switch-tenant`). Client JavaScript never has access to the raw cryptographic signature or token secret.
+  2. **Double-Submit CSRF Defense**: Mutating operations (`POST`, `PUT`, `PATCH`, `DELETE`) require a matching `X-CSRF-Token` header derived from the non-httpOnly `cloudlens_csrf_token` cookie. Bearer token requests (used by machine clients and automated API integration tests) bypass CSRF checks as browsers do not attach `Authorization` headers cross-origin.
+  3. **Unified API Client**: A single `apiClient` / `apiFetch` abstraction wraps browser requests with `credentials: 'include'`, automatically handling `401 Unauthorized` (re-authenticating to `/login`) and `403 Forbidden` (routing to the `/403` page).
+  4. **Dynamic Context Surface**: Calling `GET /api/v1/auth/me` populates the user profile, active roles, granted capabilities, and authorized tenants. Menus and route guards adapt strictly to the API response rather than client-side hardcoded role literals.
+- **Consequences**: Complete defense-in-depth against XSS token exfiltration and CSRF attacks. Full compliance with the Prompt P02 constraint forbidding token storage in `localStorage` or `sessionStorage`.
+
+### ADR-029: Dynamic REST API Data Hooks & Zero-Literal Front-End Contract (Prompt P10)
+- **Context**: Several administrative and FinOps screens historically contained static array mockups (`DEMO_`, `INITIAL_`) or lacked first-class REST endpoints for specific aggregates (Commitment Renewals, Planning Workspaces). Enterprise production standards demand strict dynamic typing generated from OpenAPI specifications (`openapi-typescript`), zero client-side business literals, and deterministic empty/loading/error states.
+- **Decision**:
+  1. **OpenAPI-Driven Typed Client**: Generated `web/src/api/schema.ts` directly from `docs/openapi.json` using `openapi-typescript` and wrapped in a reactive `useApiData` hook managing `loading`, `error`, `empty`, and `refetch` states.
+  2. **Dedicated Read Endpoints Added**:
+     - `GET /api/v1/commitments`: Added to `calendar_router` backed by `CommitmentService` to expose active and expiring provider commitments.
+     - `GET /api/v1/budgets/plans`: Added to `budgets_router` backed by `BudgetService` to supply planning scenario workspaces.
+  3. **Zero-Literal UI Contract**: Eliminated all embedded hardcoded arrays across `web/src/pages/`. When database collections are empty (fresh production tenant), components render an accessible `EmptyState` with an actionable CTA; on seeded demo tenants, data renders strictly from PostgreSQL.
+  4. **Explainable Number Provenance**: Integrated provenance metadata popovers (`sourceConnection`, `dataset`, `period`, `retrievedAt`) on financial figures via `ExplainableNumber`.
+- **Consequences**: Complete contract fidelity between backend repository layer and web UI, full adherence to `scripts/check_web_literals.mjs`, and clean dual-tenant verification (empty on production, populated on demo).
+
+### ADR-030: Fixed Collapsible Navigation Sidebar, Responsive Top Bar & Specification Label Scrubbing (Prompt P11)
+- **Context**: Prior application headers featured an overloaded single-tier horizontal navigation bar, mixed specification/build identifiers (`S-xx`, `Prompt n`, `BBP Section nn`, `Addendum B`, `Mandate M3`, `IMP-01`), and lacked persistence for compact screen layouts. Navigation must provide standard fixed left sidebar grouping (240px wide, collapsible to 68px with state remembered in `localStorage`), a clean utility top bar (logo, tenant switcher, search with `Ctrl+K`, health badge, user profile, breadcrumbs, drawer below 1024px), and zero user-visible specification/prompt codes.
+- **Decision**:
+  1. **Fixed Left Sidebar (`web/src/components/Sidebar.tsx`)**:
+     - Seven canonical groups: `OVERVIEW`, `CLOUD ESTATE`, `COST`, `USAGE`, `GOVERNANCE`, `FINANCE`, `ADMINISTRATION`.
+     - Items gated by capability permissions (`platform.observe`, `admin:access`, `iam:manage`, `audit:read`, etc.).
+     - Collapsible to 68px icon rail via `#sidebar-collapse-toggle-btn`; state remembered in `localStorage['cloudlens_sidebar_collapsed']`.
+     - Preserves WCAG 2.1 AA 4.5:1 color contrast on group section labels.
+  2. **Responsive Top Bar (`web/src/components/TopBar.tsx`)**:
+     - Includes `CL CloudLens` brand mark, API version pill, dynamic two-tier breadcrumbs (`Section > Page`), global `Ctrl+K` search input, real-time API health status indicator, tenant switcher dropdown (`#tenant-switcher`), user identity pill (`#header-user-display`), and Sign Out button (`#header-signout-btn`).
+     - At viewports below 1024px, the desktop sidebar collapses into an accessible mobile slide-over drawer triggered by a hamburger button.
+  3. **Specification Label Scrubbing**:
+     - Scrubbed all user-visible internal build and specification tokens (`BBP`, `Prompt n`, `Addendum`, `Track [A-Z]`, `S-nn`, `IMP-nn`, `FR-nnn`, `Mandate M3`, `Authoritative`, `PRODUCTION HEAD`, `Enterprise Production Standard`) across 28 screens and UI banners.
+  4. **Dynamic About Screen (`web/src/pages/AboutPage.tsx`)**:
+     - Removed hardcoded build version, commit SHA, and migration heads; now renders strictly from the `/api/v1/about` REST API with full loading, error, and empty state support.
+  5. **Theme Token Boundary**:
+     - Verified zero modification to `web/src/design-system/tokens.ts` (`git diff tokens.ts` empty).
+- **Consequences**: Enterprise production UI appearance with clean information architecture, zero internal spec artifacts visible to end users, responsive support from 800px to 3840px, and zero horizontal scrollbar on standard desktop viewports (1366px and 1920px).
 
 ---
 

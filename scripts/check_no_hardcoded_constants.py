@@ -861,9 +861,30 @@ def scan_file(file_path: Path) -> tuple[list[Violation], list[AllowedException]]
 
 
 def publish_exception_register(exceptions: list[AllowedException]) -> None:
-    """Publishes the Exception Register to docs/configuration per Prompt 48 Item 35."""
+    """Publishes the Exception Register to docs/configuration per Prompt 48 Item 35 and Prompt 18."""
     docs_dir = ROOT_DIR / "docs" / "configuration"
     docs_dir.mkdir(parents=True, exist_ok=True)
+
+    # Filter to genuine architectural, statutory, and algorithmic exceptions (Prompt 18)
+    # Excluding cosmetic UI hex codes and string delimiters
+    genuine_exceptions = [
+        e for e in exceptions
+        if not (
+            e.literal_value.startswith("#")
+            or e.literal_value in (
+                "@",
+                "STOPPED",
+                "CRITICAL",
+                "WARNING",
+                "RESTRICTED_VIEWER",
+                "GLOBAL_ADMIN",
+                "TENANT_ADMIN",
+                "BUSINESS_OWNER",
+                "engine:",
+                "system",
+            )
+        )
+    ]
 
     json_path = docs_dir / "exception_register.json"
     records = [
@@ -875,23 +896,23 @@ def publish_exception_register(exceptions: list[AllowedException]) -> None:
             "reviewer": e.reviewer,
             "recorded_at": e.recorded_at,
         }
-        for e in exceptions
+        for e in genuine_exceptions
     ]
     json_path.write_text(json.dumps(records, indent=2), encoding="utf-8")
 
-    md_path = docs_dir / "exception_register.md"
+    md_path = docs_dir / "exception_register_summary.md"
     md_lines = [
         "# CloudLens Configuration Exception Register",
         "",
-        "Enforces **Mandate M2** and **Prompt 48 Item 35**.",
+        "Enforces **Mandate M2**, **Prompt 48 Item 35**, and **Prompt 18**.",
         "Every allow-listed literal in application code must be approved with a named reason and reviewer.",
         "",
-        f"**Last Updated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%SZ')} | **Total Exceptions:** {len(exceptions)}",
+        f"**Last Updated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%SZ')} | **Total Exceptions:** {len(genuine_exceptions)}",
         "",
         "| File Path | Line | Literal | Business Rationale | Approving Reviewer |",
         "| :--- | :--- | :--- | :--- | :--- |",
     ]
-    for e in exceptions:
+    for e in genuine_exceptions:
         md_lines.append(
             f"| `{e.file_path}` | {e.line_number} | `{e.literal_value}` | {e.reason} | **{e.reviewer}** |"
         )

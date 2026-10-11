@@ -1,6 +1,9 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe -m ruff check . --statistics
-exit=0 duration=2.5s
+exit=1 duration=0.3s
 
 --- STDOUT ---
+8	W291	trailing-whitespace
+Found 8 errors.
+No fixes available (8 hidden fixes can be enabled with the `--unsafe-fixes` option).
 
 --- STDERR ---

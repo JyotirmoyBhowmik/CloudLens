@@ -2,74 +2,64 @@ $ git status --porcelain
 exit=0 duration=0.1s
 
 --- STDOUT ---
- M api/cloudlens_api/conventions/idempotency.py
- M api/cloudlens_api/conventions/rate_limit.py
+ M README.md
+ M api/cloudlens_api/routes/connectors.py
  M audit_output/AUDIT_REPORT.md
  M audit_output/audit_full.json
  M audit_output/raw/gate_layering.txt
  M audit_output/raw/gate_no_hardcoded_constants.txt
  M audit_output/raw/gate_ruff.txt
  M audit_output/raw/gate_ruff_F.txt
+ M audit_output/raw/git_ahead.txt
  M audit_output/raw/git_count.txt
  M audit_output/raw/git_head.txt
  M audit_output/raw/git_log.txt
+ M audit_output/raw/git_remote.txt
  M audit_output/raw/git_shortstat.txt
  M audit_output/raw/git_status.txt
  M audit_output/raw/helm_lint.txt
+ M audit_output/raw/img_log_control_tower_screenshot.txt
  M audit_output/raw/pytest_collect.txt
  M audit_output/raw/tool_cosign.txt
  M audit_output/raw/tool_docker.txt
+ M audit_output/raw/tool_gitleaks.txt
  M audit_output/raw/tool_helm.txt
  M audit_output/raw/tool_kubeconform.txt
  M audit_output/raw/tool_kubectl.txt
+ M audit_output/raw/tool_node.txt
  M audit_output/raw/web_typecheck.txt
- M connectors/conformance/kit.py
- M connectors/contract/checkpoint_store.py
- M connectors/contract/raw_landing.py
- M db/session.py
+ M build_requirements_register.py
  M docs/configuration/exception_register.json
- M docs/configuration/exception_register.md
- M domain/abuse/tracker.py
- M domain/analytics/repository.py
- M domain/analytics/watermark.py
- M domain/audit/repository.py
- M domain/budgets/repository.py
- M domain/catalogues/repository.py
- M domain/config/feature_flags_repository.py
- M domain/config/repository.py
- M domain/connectors/repository.py
- M domain/cost/currency_service.py
- M domain/cost/reconciliation/repository.py
- M domain/cost/repository.py
- M domain/credentials/__init__.py
- M domain/credentials/repository.py
- M domain/credentials/store.py
- M domain/forecasting/repository.py
- M domain/identity/repository.py
- M domain/notification/repository.py
- M domain/overrides/repository.py
- M domain/pricing/repository.py
- M domain/rbac/repository.py
- M domain/reports/repository.py
- M domain/sync/repository.py
- M domain/tenant/__init__.py
- M domain/tenant/object_store.py
- M domain/tenant/repository.py
- M domain/thresholds/repository.py
- M domain/wizard/repository.py
- M masterdata/repository.py
- M scripts/check_layering.py
- M tests/fakes/credentials.py
- M tests/fakes/tenant.py
- M tests/unit/test_catalogues.py
- M tests/unit/test_connector_contract.py
- M tests/unit/test_credential_lifecycle.py
- M tests/unit/test_tenant_context_and_audit.py
-?? audit_output/raw/tool_gitleaks.txt
-?? db/migrations/versions/016_persistence_tier5_remaining_modules.py
-?? tests/fakes/analytics.py
-?? tests/fakes/catalogues.py
-?? tests/fakes/reports.py
-?? tests/integration/test_p08_full_restart_scenario.py
+RM docs/configuration/exception_register.md -> docs/configuration/exception_register_summary.md
+R  docs/configuration/identity_verification_report.md -> docs/configuration/identity_verification_summary.md
+R  docs/configuration/pre_identity_verification_report.md -> docs/configuration/pre_identity_verification_summary.md
+R  docs/pricing-dimensions-reconciled.md -> docs/pricing-dimensions-catalogue.md
+ M docs/requirement_traceability_matrix.md
+R  docs/sbom.md -> docs/sbom-report.md
+ M domain/bootstrap/pre_identity.py
+ M domain/bootstrap/superuser.py
+ M fat/ACCEPTANCE.md
+ M fat/FAT_RESULTS.md
+D  fat/control_tower_screenshot.jpg
+ M fat/decision_log_extract.md
+ M fat/exception_register.md
+ M fat/gate_constants.txt
+ M fat/gate_layering.txt
+ M fat/gate_ruff.txt
+ M fat/go_live_readiness.md
+ M scripts/check_no_hardcoded_constants.py
+ M scripts/gate_commit.py
+ M scripts/gate_pr.py
+ M scripts/generate_fat_package.py
+ M scripts/generate_rtm.py
+ M scripts/generate_sbom.py
+ M scripts/run_dr_exercise.py
+ M scripts/run_scale_load_test.py
+ M scripts/verify_all_levels.py
+ M scripts/verify_p13a_live_run.py
+ M scripts/verify_release_readiness.py
+ M scripts/verify_seventeen_levels.py
+ M tests/unit/test_superuser_provisioning.py
+?? scripts/check_image_markers.py
 
 --- STDERR ---

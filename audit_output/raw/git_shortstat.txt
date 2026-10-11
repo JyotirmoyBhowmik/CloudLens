@@ -1,7 +1,40 @@
 $ git log -15 --shortstat --pretty=format:@@%h|%s
-exit=0 duration=0.7s
+exit=0 duration=0.4s
 
 --- STDOUT ---
+@@9ab3c2a|P17: Operational Hardening
+ 11 files changed, 322 insertions(+), 41 deletions(-)
+
+@@c6cdab2|P16: Control Tower With Measured Values Only
+ 5 files changed, 775 insertions(+), 267 deletions(-)
+
+@@15249a0|P15: Configuration Panel and Editable Business Objects
+ 13 files changed, 3716 insertions(+), 264 deletions(-)
+
+@@928016f|P14: Ingestion Pipeline on Schedule
+ 8 files changed, 570 insertions(+), 33 deletions(-)
+
+@@8b6e032|P13: Cloud Connections UI — Real Read-Only Integration
+ 17 files changed, 2332 insertions(+), 1148 deletions(-)
+
+@@9b80f8a|P13A: Real Cloud Connectors (Replace Fixtures with Provider APIs)
+ 25 files changed, 1999 insertions(+), 1102 deletions(-)
+
+@@76daa55|P12: Tenant Administration and First-Run Setup
+ 20 files changed, 3905 insertions(+), 102 deletions(-)
+
+@@9c6b162|P11: Left Sidebar and Clean Labels
+ 39 files changed, 1281 insertions(+), 615 deletions(-)
+
+@@9206beb|P10: Wire Every Web Page to the API
+ 31 files changed, 58604 insertions(+), 5382 deletions(-)
+
+@@18fc177|P09: Blank Application — Remove All Embedded Data
+ 47 files changed, 2589 insertions(+), 1988 deletions(-)
+
+@@3ffbbb5|P08: Persistence Tier 5 — Remaining Modules and In-Memory Removal
+ 69 files changed, 4665 insertions(+), 1654 deletions(-)
+
 @@117ebe7|P07: Persistence Tier 4 — Governance and Estate
  34 files changed, 8512 insertions(+), 1630 deletions(-)
 
@@ -13,38 +46,5 @@ exit=0 duration=0.7s
 
 @@879128b|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
  33 files changed, 5497 insertions(+), 257 deletions(-)
-
-@@245362b|P03: Persistence Foundation
- 13 files changed, 1134 insertions(+), 62 deletions(-)
-
-@@64aa427|P02: Real Sign-in in the Web App
- 22 files changed, 1324 insertions(+), 208 deletions(-)
-
-@@b5d5107|P01B: Authentication Integrity — Login, Keys and Every Write Route
- 21 files changed, 1269 insertions(+), 369 deletions(-)
-
-@@3f93b54|P01: Close Every Header-Based Identity Bypass
- 21 files changed, 1055 insertions(+), 400 deletions(-)
-
-@@bb7020f|P00: Baseline Environment and Real-Database Testing
- 10 files changed, 531 insertions(+), 43 deletions(-)
-
-@@0f7fb1a|chore(audit): upload audit_output artifacts and root audit_full.json
- 35 files changed, 53803 insertions(+), 2 deletions(-)
-
-@@4e60e9d|chore(audit): update configuration reports and ignore audit_full.json
- 7 files changed, 98 insertions(+), 97 deletions(-)
-
-@@e3b3f74|Add files via upload
- 1 file changed, 919 insertions(+)
-
-@@205761a|chore(audit): update exception register timestamps
- 2 files changed, 85 insertions(+), 85 deletions(-)
-
-@@e3549ad|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification
- 3 files changed, 19 insertions(+), 6 deletions(-)
-
-@@2db198c|feat(r-final): complete re-audit, fat package assembly, baseline delta, and go-live readiness
- 35 files changed, 2847 insertions(+), 133 deletions(-)
 
 --- STDERR ---

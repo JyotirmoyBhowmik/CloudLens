@@ -456,7 +456,7 @@ class PreIdentityBootstrapService:
         docs_dir.mkdir(parents=True, exist_ok=True)
 
         json_path = docs_dir / "pre_identity_verification_report.json"
-        md_path = docs_dir / "pre_identity_verification_report.md"
+        md_path = docs_dir / "pre_identity_verification_summary.md"
 
         json_path.write_text(
             report.model_dump_json(indent=2),

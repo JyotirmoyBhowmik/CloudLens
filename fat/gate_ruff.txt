@@ -1,6 +1,7 @@
 $ ruff check . --statistics
-exit=0
+exit=1
 
 STDOUT:
+8	W291	[*] trailing-whitespace
 
 STDERR:

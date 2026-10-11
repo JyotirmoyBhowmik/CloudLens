@@ -2,6 +2,17 @@ $ git log --pretty=format:%h|%ad|%s --date=short
 exit=0 duration=0.1s
 
 --- STDOUT ---
+9ab3c2a|2026-10-11|P17: Operational Hardening
+c6cdab2|2026-10-10|P16: Control Tower With Measured Values Only
+15249a0|2026-10-10|P15: Configuration Panel and Editable Business Objects
+928016f|2026-10-10|P14: Ingestion Pipeline on Schedule
+8b6e032|2026-10-10|P13: Cloud Connections UI — Real Read-Only Integration
+9b80f8a|2026-10-10|P13A: Real Cloud Connectors (Replace Fixtures with Provider APIs)
+76daa55|2026-10-10|P12: Tenant Administration and First-Run Setup
+9c6b162|2026-10-10|P11: Left Sidebar and Clean Labels
+9206beb|2026-10-10|P10: Wire Every Web Page to the API
+18fc177|2026-10-10|P09: Blank Application — Remove All Embedded Data
+3ffbbb5|2026-10-09|P08: Persistence Tier 5 — Remaining Modules and In-Memory Removal
 117ebe7|2026-10-09|P07: Persistence Tier 4 — Governance and Estate
 ca1063e|2026-10-09|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
 40fb698|2026-10-09|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing

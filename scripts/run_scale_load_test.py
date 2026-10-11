@@ -85,7 +85,7 @@ class ScaleLoadBenchmarkRunner:
         return {"target": target, "measured": f"{p95:.2f}ms", "pass_fail": status, "raw": p95}
 
     def benchmark_nfr_011_bulk_cost_ingestion_throughput(self) -> dict[str, Any]:
-        """NFR-011: Bulk cost ingestion throughput must process >= 10,000 records/sec."""
+        """NFR-011: Bulk ingestion throughput benchmark."""
         batch_size = 25_000
         facts = [
             FocusCostFact(
@@ -185,7 +185,7 @@ class ScaleLoadBenchmarkRunner:
         return {"target": target, "measured": f"{p95:.2f}ms", "pass_fail": status, "raw": p95}
 
     def benchmark_nfr_016_db_read_replica_latency(self) -> dict[str, Any]:
-        """NFR-016: Database read replica average query latency <= 50ms."""
+        """NFR-016: Database read replica query response time benchmarking."""
         latencies: list[float] = []
         for i in range(100):
             t0 = time.perf_counter()
@@ -194,7 +194,8 @@ class ScaleLoadBenchmarkRunner:
 
         avg_lat = sum(latencies) / len(latencies)
         target = "<= 50.00ms"
-        status = "PASS" if avg_lat <= 50.0 else "FAIL"
+        max_allowed_ms = 50.0
+        status = "PASS" if avg_lat <= max_allowed_ms else "FAIL"
         return {"target": target, "measured": f"{avg_lat:.2f}ms", "pass_fail": status, "raw": avg_lat}
 
     def benchmark_nfr_017_export_generation_duration(self) -> dict[str, Any]:
@@ -211,7 +212,7 @@ class ScaleLoadBenchmarkRunner:
         return {"target": target, "measured": f"{extrapolated_seconds:.2f}s", "pass_fail": status, "raw": extrapolated_seconds}
 
     def benchmark_nfr_018_worker_queue_latency(self) -> dict[str, Any]:
-        """NFR-018: Background worker queue latency <= 5.0 seconds under peak sync load."""
+        """NFR-018: Background worker queue dispatch response time benchmarking."""
         latencies: list[float] = []
         for _ in range(50):
             t0 = time.perf_counter()
@@ -221,7 +222,8 @@ class ScaleLoadBenchmarkRunner:
 
         p95 = percentile(latencies, 95.0)
         target = "<= 5.00s"
-        status = "PASS" if p95 <= 5.0 else "FAIL"
+        max_allowed_s = 5.0
+        status = "PASS" if p95 <= max_allowed_s else "FAIL"
         return {"target": target, "measured": f"{p95:.3f}s", "pass_fail": status, "raw": p95}
 
     def benchmark_nfr_019_pre_deployment_cost_calculation(self) -> dict[str, Any]:

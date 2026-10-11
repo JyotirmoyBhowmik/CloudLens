@@ -30,8 +30,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 def load_junit_results(junit_path: Path) -> dict[str, str]:
     """Parse junit.xml and map test identifier to status ('PASS', 'FAIL', 'SKIPPED')."""
     if not junit_path.exists():
-        print(f"Warning: {junit_path} does not exist. All tests will be marked UNVERIFIED.")
-        return {}
+        fat_junit = REPO_ROOT / "fat" / "junit.xml"
+        if fat_junit.exists():
+            junit_path = fat_junit
+        else:
+            print(f"Warning: {junit_path} does not exist. All tests will be marked UNVERIFIED.")
+            return {}
 
     tree = ET.parse(junit_path)
     root = tree.getroot()
@@ -208,6 +212,7 @@ AC_MAP: dict[str, dict] = {
     "AC-040": {
         "files": ["domain/cost/reconciliation.py", "domain/reports/reconciliation.py"],
         "tests": ["test_bp17_cost_reconciliation_and_invoice_dispute"],
+        "status": "NOT YET EVIDENCED",
     },
     "AC-050": {
         "files": ["domain/dashboards/increases.py", "domain/cost/driver.py"],
@@ -319,7 +324,8 @@ AC_MAP: dict[str, dict] = {
     },
     "AC-104": {
         "files": ["scripts/scan_vulnerabilities.py", "docs/security/security_self_assessment.md"],
-        "tests": ["NOT_TESTABLE_IN_FAT: Independent third-party penetration testing scheduled for production staging environment (SEC-024); automated OWASP ZAP baseline scan, gitleaks, and trivy container scans passed in FAT."],
+        "tests": ["Independent third-party penetration testing scheduled for production staging environment (SEC-024)"],
+        "status": "OPEN",
     },
     "AC-110": {
         "files": ["masterdata/registry.py", "masterdata/seeds/"],
@@ -503,6 +509,134 @@ DR_MAP: dict[str, dict] = {
     },
 }
 
+# Security, RBAC & Isolation Requirements (SEC-001 to SEC-030)
+SEC_MAP: dict[str, dict] = {
+    "SEC-001": {
+        "files": ["ops/helm/cloudlens/templates/ingress.yaml", "ops/docker/Dockerfile.web"],
+        "tests": ["Infrastructure TLS 1.3 enforcement (Ingress termination & mutual TLS)"],
+        "status": "Implemented - UNVERIFIED",
+    },
+    "SEC-002": {
+        "files": ["ops/helm/cloudlens/templates/backup-cnpg.yaml", "db/session.py"],
+        "tests": ["Storage volume and database AES-256 encryption at rest"],
+        "status": "Implemented - UNVERIFIED",
+    },
+    "SEC-003": {
+        "files": ["domain/identity/oidc.py", "domain/identity/session.py"],
+        "tests": ["test_api_oidc_login_and_unmapped_role_rejection"],
+    },
+    "SEC-004": {
+        "files": ["scripts/bootstrap_superuser.py", "domain/identity/superuser.py"],
+        "tests": ["test_act_as_tenant_rejected_without_step_up_mfa"],
+    },
+    "SEC-005": {
+        "files": ["scripts/bootstrap_superuser.py"],
+        "tests": ["test_identity_verification_report_generation_and_publishing"],
+    },
+    "SEC-006": {
+        "files": ["domain/reports/generators.py", "domain/identity/session.py"],
+        "tests": ["test_bp20_periodic_access_and_compliance_audit_review"],
+    },
+    "SEC-007": {
+        "files": ["domain/identity/jwt.py", "domain/identity/session.py"],
+        "tests": ["test_api_oidc_login_and_unmapped_role_rejection"],
+    },
+    "SEC-008": {
+        "files": ["db/session.py", "scripts/test_rls_isolation.py"],
+        "tests": ["test_rls_isolation"],
+    },
+    "SEC-009": {
+        "files": ["domain/tenant/context.py", "domain/audit/repository.py"],
+        "tests": ["test_audit_stream_cross_tenant_isolation_and_mutation_rejection"],
+    },
+    "SEC-010": {
+        "files": ["domain/credentials/vault.py"],
+        "tests": ["test_vault_gate_a_store_retrieve_delete_lifecycle"],
+    },
+    "SEC-011": {
+        "files": ["api/cloudlens_api/routes/connectors.py", "domain/credentials/manager.py"],
+        "tests": ["test_credentials_path_manipulation_cross_tenant_rejected"],
+    },
+    "SEC-012": {
+        "files": ["connectors/contract/base.py"],
+        "tests": ["test_stub_three_capabilities_conformance_acceptance"],
+    },
+    "SEC-013": {
+        "files": ["domain/credentials/manager.py", "workers/cloudlens_workers/tasks.py"],
+        "tests": ["test_credential_expiry_check"],
+    },
+    "SEC-014": {
+        "files": ["domain/credentials/vault.py"],
+        "tests": ["test_vault_gate_a_store_retrieve_delete_lifecycle"],
+    },
+    "SEC-015": {
+        "files": ["connectors/credentials/validator.py"],
+        "tests": ["test_full_conformance_across_all_connectors"],
+    },
+    "SEC-016": {
+        "files": ["domain/credentials/manager.py"],
+        "tests": ["test_credential_sharing_within_tenant"],
+    },
+    "SEC-017": {
+        "files": ["domain/audit/repository.py"],
+        "tests": ["test_audit_stream_cross_tenant_isolation_and_mutation_rejection"],
+    },
+    "SEC-018": {
+        "files": ["api/cloudlens_api/middleware/validation.py"],
+        "tests": ["test_openapi_matrix_evaluates_all_roles_across_all_routes"],
+    },
+    "SEC-019": {
+        "files": ["api/cloudlens_api/main.py"],
+        "tests": ["test_api_contract.py"],
+    },
+    "SEC-020": {
+        "files": ["scripts/scan_vulnerabilities.py"],
+        "tests": ["test_scan_vulnerabilities"],
+    },
+    "SEC-021": {
+        "files": ["ops/docker/Dockerfile.api", "ops/docker/Dockerfile.web", "ops/docker/Dockerfile.worker"],
+        "tests": ["test_unprivileged_container_user"],
+    },
+    "SEC-022": {
+        "files": ["domain/audit/repository.py", "scripts/verify_audit_chain.py"],
+        "tests": ["test_audit_stream_cross_tenant_isolation_and_mutation_rejection"],
+    },
+    "SEC-023": {
+        "files": ["domain/credentials/vault.py"],
+        "tests": ["test_vault_gate_a_store_retrieve_delete_lifecycle"],
+    },
+    "SEC-024": {
+        "files": ["docs/security/security_self_assessment.md", "fat/ACCEPTANCE.md"],
+        "tests": ["Independent third-party penetration testing engagement prior to production release"],
+        "status": "OPEN",
+    },
+    "SEC-025": {
+        "files": ["scripts/gate_commit.py", "scripts/gate_pr.py"],
+        "tests": ["test_mandate_m2_automated_ast_anti_hardcoding_scan"],
+    },
+    "SEC-026": {
+        "files": ["scripts/check_no_hardcoded_constants.py"],
+        "tests": ["test_mandate_m2_automated_ast_anti_hardcoding_scan"],
+    },
+    "SEC-027": {
+        "files": ["scripts/bootstrap_superuser.py"],
+        "tests": ["test_identity_verification_report_generation_and_publishing"],
+    },
+    "SEC-028": {
+        "files": ["domain/identity/service_account.py"],
+        "tests": ["test_api_oidc_login_and_unmapped_role_rejection"],
+    },
+    "SEC-029": {
+        "files": ["domain/identity/superuser.py", "api/cloudlens_api/routes/control_tower.py"],
+        "tests": ["test_act_as_tenant_rejected_without_step_up_mfa"],
+    },
+    "SEC-030": {
+        "files": ["ops/helm/cloudlens/templates/networkpolicy.yaml", "ops/helm/cloudlens/templates/ingress.yaml"],
+        "tests": ["NetworkPolicy default-deny ingress filtering"],
+        "status": "Implemented - UNVERIFIED",
+    },
+}
+
 # Owning prompt heuristic mappings
 PROMPT_HEURISTIC_MAP = {
     "Prompt 01": (["scripts/check_layering.py", "domain/models/"], ["test_mandate_m1_master_data_authority_and_zero_unseeded_enums"]),
@@ -592,6 +726,9 @@ def resolve_requirement(
         files = mapping.get("files", [])
         tests = mapping.get("tests", [])
 
+        if "status" in mapping:
+            return ", ".join(f"`{f}`" for f in files), ", ".join(f"`{t}`" for t in tests), mapping["status"]
+
         if tests and tests[0].startswith("NOT_TESTABLE_IN_FAT:"):
             reason = tests[0].split("NOT_TESTABLE_IN_FAT:")[1].strip()
             return ", ".join(f"`{f}`" for f in files), "N/A (External Verification)", f"NOT TESTABLE IN FAT ({reason})"
@@ -617,6 +754,41 @@ def resolve_requirement(
         files_str = ", ".join(f"`{f}`" for f in files) if files else "`domain/`"
         tests_str = ", ".join(f"`{t}`" for t in tests) if tests else "None"
         return files_str, tests_str, status_str
+
+    # 1b. SEC explicit map
+    if rid in SEC_MAP:
+        mapping = SEC_MAP[rid]
+        files = mapping.get("files", [])
+        tests = mapping.get("tests", [])
+
+        if "status" in mapping:
+            return ", ".join(f"`{f}`" for f in files), ", ".join(f"`{t}`" for t in tests), mapping["status"]
+
+        all_passed = True
+        matched_any = False
+        for t in tests:
+            status = junit_results.get(t)
+            if status:
+                matched_any = True
+                if status != "PASS":
+                    all_passed = False
+            else:
+                all_passed = False
+
+        if matched_any and all_passed:
+            status_str = "PASS"
+        elif matched_any and not all_passed:
+            status_str = "FAIL"
+        else:
+            status_str = "Implemented - UNVERIFIED"
+
+        files_str = ", ".join(f"`{f}`" for f in files) if files else "`domain/`"
+        tests_str = ", ".join(f"`{t}`" for t in tests) if tests else "None"
+        return files_str, tests_str, status_str
+
+    # Do not apply generic prompt heuristics to SEC requirements
+    if rid.startswith("SEC-"):
+        return "`domain/`", "None", "Implemented - UNVERIFIED"
 
     # 2. BR explicit map
     if rid in BR_MAP:
@@ -692,7 +864,9 @@ def resolve_requirement(
 
 def generate_rtm() -> str:
     """Generate Markdown RTM string."""
-    junit_path = REPO_ROOT / "junit.xml"
+    junit_path = REPO_ROOT / "fat" / "junit.xml"
+    if not junit_path.exists():
+        junit_path = REPO_ROOT / "junit.xml"
     junit_results = load_junit_results(junit_path)
     reqs = load_requirements()
 

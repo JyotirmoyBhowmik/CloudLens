@@ -132,7 +132,7 @@ TWENTY_LEVELS: list[LevelTarget] = [
         14,
         "Disaster Recovery Exercise",
         [PYTHON_EXE, "scripts/run_dr_exercise.py"],
-        "Automated restore, failover, verification within RTO <= 4h, RPO <= 1h",
+        "Automated restore, failover, and verification within operational SLA targets",
     ),
     LevelTarget(
         15,

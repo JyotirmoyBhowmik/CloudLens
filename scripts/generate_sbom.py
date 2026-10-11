@@ -15,7 +15,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = PROJECT_ROOT / "docs"
 SBOM_JSON_PATH = DOCS_DIR / "sbom.json"
-SBOM_MD_PATH = DOCS_DIR / "sbom.md"
+SBOM_MD_PATH = DOCS_DIR / "sbom-report.md"
 
 
 def get_installed_packages() -> list[dict]:

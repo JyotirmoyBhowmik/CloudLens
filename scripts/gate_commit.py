@@ -53,6 +53,7 @@ def main() -> None:
         ("Ruff Linter", [py_exe, "scripts/run.py", "ruff", "check", "."]),
         ("Ruff Format Check", [py_exe, "scripts/run.py", "ruff", "format", "--check", "."]),
         ("Mypy Static Type Checking", [py_exe, "scripts/run.py", "mypy", "."]),
+        ("Image Provenance and AI Marker Gate", [py_exe, "scripts/check_image_markers.py"]),
         ("Unit Test Suite", [py_exe, "scripts/run.py", "pytest", "tests/unit"]),
     ]
 

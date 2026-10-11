@@ -1,5 +1,5 @@
 $ kubeconform -v
-exit=0 duration=3.3s
+exit=0 duration=0.1s
 
 --- STDOUT ---
 v0.8.0

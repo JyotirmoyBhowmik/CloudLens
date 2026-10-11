@@ -357,7 +357,7 @@ def test_identity_verification_report_generation_and_publishing():
 
     # Verify report files on disk
     json_path = service._report_output_dir / "identity_verification_report.json"
-    md_path = service._report_output_dir / "identity_verification_report.md"
+    md_path = service._report_output_dir / "identity_verification_summary.md"
     assert json_path.exists()
     assert md_path.exists()
 

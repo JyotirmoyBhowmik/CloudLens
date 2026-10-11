@@ -46,7 +46,7 @@
 | **AC-037** | Staged soak observation window for stopped resources | `domain/lifecycle/` | `test_staged_soak_window_and_surfacing_stopped_resources` | **PASS** |
 | **AC-038** | Billing cost-stop confirmation before decommissioning | `domain/lifecycle/` | `test_cost_stop_verification_from_actual_billing` | **PASS** |
 | **AC-039** | Retention obligation enforcement blocking deletion | `domain/lifecycle/` | `test_retention_obligation_blocks_deletion_until_confirmed_satisfied` | **PASS** |
-| **AC-040** | Orphaned disk and residue asset detection | `domain/lifecycle/` | `test_orphan_and_residue_detection` | **PASS** |
+| **AC-040** | Closed-period report shows platform total, provider total, and variance within agreed tolerance | `domain/cost/reconciliation/` | `test_reconciliation_pass_within_absolute_tolerance` | **NOT YET EVIDENCED** |
 | **AC-041** | Realized savings credited from actuals into ledger | `domain/lifecycle/` | `test_realised_saving_credited_from_actuals_never_estimate` | **PASS** |
 | **AC-042** | ITSM bidirectional incident synchronization | `domain/integrations/` | `test_itsm_bidirectional_sync_closing_ticket_closes_task` | **PASS** |
 | **AC-043** | CMDB authoritative import with conflict surfacing | `domain/integrations/` | `test_cmdb_authoritative_field_blocks_overwrite_and_surfaces_conflict` | **PASS** |
@@ -82,7 +82,7 @@
 | **AC-073** | 18 FinOps governance policies with automated evaluation | `domain/policy/` | `test_policy_engine.py` | **PASS** |
 | **AC-074** | 11 remediation task states with realized saving verification | `domain/remediation/` | `test_remediation_tasks_across_11_states` | **PASS** |
 | **AC-075** | Superuser provisioning with mandatory MFA and zero plaintext passwords | `domain/bootstrap/` | `test_identity_verification_report_generation_and_publishing` | **PASS** |
-| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **NOT TESTABLE IN FAT (External Staging Engagement Required; automated OWASP ZAP & gitleaks passed)** |
+| **AC-104** | Independent third-party penetration testing | External Red-Team | Scheduled for dedicated production staging environment | **OPEN** |
 
 ---
-**Summary**: 75 criteria **PASS**, 1 criterion **NOT TESTABLE IN FAT**, 0 criteria **FAIL**.
+**Summary**: 74 criteria **PASS**, 1 criterion **NOT YET EVIDENCED**, 1 criterion **OPEN**, 0 criteria **FAIL**.

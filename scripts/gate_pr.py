@@ -80,6 +80,10 @@ def main() -> None:
             "Dependency Vulnerability Audit (CVE Blocker)",
             [sys.executable, "scripts/scan_vulnerabilities.py"],
         ),
+        (
+            "Image Provenance and AI Marker Gate",
+            [py_exe, "scripts/check_image_markers.py"],
+        ),
     ]
 
     for title, cmd in stages:

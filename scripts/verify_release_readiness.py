@@ -119,7 +119,7 @@ def check_high_availability_and_dr() -> tuple[bool, str]:
     if res_upg.returncode != 0:
         return False, "Rolling upgrade zero downtime test failed"
 
-    return True, "RTO <= 4h, RPO <= 1h, zero data loss, rolling upgrade verified"
+    return True, "Disaster recovery SLAs met, zero data loss, rolling upgrade verified"
 
 
 def check_monetary_precision_and_nulls() -> tuple[bool, str]:
