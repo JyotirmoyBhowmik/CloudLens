@@ -43,4 +43,3 @@ def list_active_features() -> list[dict[str, Any]]:
         return []
     with open(seed_path, "r", encoding="utf-8") as f:
         return json.load(f)
-

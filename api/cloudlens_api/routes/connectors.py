@@ -66,7 +66,15 @@ def sanitize_connector_config(config: dict[str, Any] | None) -> dict[str, Any]:
     if not config:
         return {}
     safe: dict[str, Any] = {}
-    banned_keywords = ("secret", "password", "private", "token", "credential", "auth_key", "signing_key")
+    banned_keywords = (
+        "secret",
+        "password",
+        "private",
+        "token",
+        "credential",
+        "auth_key",
+        "signing_key",
+    )
     for k, v in config.items():
         k_lower = str(k).lower()
         if k_lower == "credentials":
@@ -89,7 +97,9 @@ def assert_simulator_allowed(tenant_context: TenantContext, provider_str: str) -
     if "simulator" in p_low or "mock" in p_low or "stub" in p_low:
         t_repo = get_tenant_repository()
         t_entity = t_repo.get_sync(tenant_context.tenant_id)
-        if not t_entity or (t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"):
+        if not t_entity or (
+            t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Simulator connectors are strictly restricted to DEMO tenants.",
@@ -129,12 +139,18 @@ class ConnectorResponse(BaseModel):
     scopes: list[str] = Field(default_factory=list, description="Monitored accounts/subscriptions")
     status: str = Field(..., description="Current operational status")
     lifecycle_state: ConnectorLifecycleState
-    last_success_at: str | None = Field(default=None, description="Timestamp of latest successful ingestion")
-    next_run_at: str | None = Field(default=None, description="Next scheduled run time or frequency")
+    last_success_at: str | None = Field(
+        default=None, description="Timestamp of latest successful ingestion"
+    )
+    next_run_at: str | None = Field(
+        default=None, description="Next scheduled run time or frequency"
+    )
     credential_profile_id: str | None = None
     declared_capabilities: list[str] = Field(default_factory=list)
     verified_capabilities: list[str] = Field(default_factory=list)
-    config: dict[str, Any] = Field(default_factory=dict, description="Safe sanitized connector configuration")
+    config: dict[str, Any] = Field(
+        default_factory=dict, description="Safe sanitized connector configuration"
+    )
 
 
 class StateTransitionRequest(BaseModel):
@@ -172,7 +188,9 @@ class RotateCredentialPayload(BaseModel):
 
     credential_type: CredentialType = CredentialType.ROLE_ARN
     credentials: dict[str, Any] = Field(..., description="New credential secret payload")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Safe configuration metadata")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Safe configuration metadata"
+    )
     expires_at: datetime | None = None
 
 
@@ -222,7 +240,9 @@ def _entity_to_response(c: ConnectorEntity, tenant_context: TenantContext) -> Co
         name=c.name,
         provider=c.provider.value if hasattr(c.provider, "value") else str(c.provider),
         scopes=scopes,
-        status=c.lifecycle_state.value if hasattr(c.lifecycle_state, "value") else str(c.lifecycle_state),
+        status=c.lifecycle_state.value
+        if hasattr(c.lifecycle_state, "value")
+        else str(c.lifecycle_state),
         lifecycle_state=c.lifecycle_state,
         last_success_at=last_success,
         next_run_at=next_run,
@@ -502,7 +522,9 @@ async def test_connector_connection(
             detail=f"Connector '{connector_id}' not found in tenant.",
         )
 
-    p_str = (record.provider.value if hasattr(record.provider, "value") else str(record.provider)).lower()
+    p_str = (
+        record.provider.value if hasattr(record.provider, "value") else str(record.provider)
+    ).lower()
     assert_simulator_allowed(tenant_context, p_str)
 
     ref = PermissionReferenceService.get_reference(record.provider)
@@ -683,7 +705,9 @@ async def delete_connector(
         target_state=ConnectorLifecycleState.DELETED,
         reason=f"Soft deleted by {tenant_context.user_id}",
     )
-    repo.update_lifecycle_state(connector_id, ConnectorLifecycleState.DELETED, tenant_context=tenant_context)
+    repo.update_lifecycle_state(
+        connector_id, ConnectorLifecycleState.DELETED, tenant_context=tenant_context
+    )
 
     # Emit Audit Event
     try:
@@ -798,7 +822,9 @@ async def list_connector_raw_landings(
     )
 
 
-@router.post("/{connector_id}/transition", response_model=ConnectorResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{connector_id}/transition", response_model=ConnectorResponse, status_code=status.HTTP_200_OK
+)
 async def transition_connector_lifecycle(
     connector_id: str,
     payload: StateTransitionRequest,
@@ -836,7 +862,9 @@ class ConnectorUpdateRequest(BaseModel):
 
     name: str | None = Field(default=None, description="Updated display name")
     scopes: list[str] | None = Field(default=None, description="Updated target scopes")
-    config: dict[str, Any] | None = Field(default=None, description="Updated non-sensitive configuration")
+    config: dict[str, Any] | None = Field(
+        default=None, description="Updated non-sensitive configuration"
+    )
 
 
 @router.patch("/{connector_id}", response_model=ConnectorResponse, status_code=status.HTTP_200_OK)
@@ -900,7 +928,9 @@ async def trigger_connector_sync(
             detail=f"Connector '{connector_id}' not found in tenant.",
         )
 
-    p_str = (record.provider.value if hasattr(record.provider, "value") else str(record.provider)).lower()
+    p_str = (
+        record.provider.value if hasattr(record.provider, "value") else str(record.provider)
+    ).lower()
     assert_simulator_allowed(tenant_context, p_str)
 
     connector = resolve_connector(connector_id=connector_id, tenant_context=tenant_context)

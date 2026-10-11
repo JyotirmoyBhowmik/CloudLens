@@ -177,7 +177,9 @@ class SqlHierarchyRepository:
         if tenant_context:
             async with get_tenant_session(tenant_context.tenant_id) as sess:
                 res = await sess.execute(
-                    text("SELECT * FROM resources WHERE tenant_id = :tid ORDER BY created_at DESC LIMIT :limit;"),
+                    text(
+                        "SELECT * FROM resources WHERE tenant_id = :tid ORDER BY created_at DESC LIMIT :limit;"
+                    ),
                     {"tid": tenant_context.tenant_id, "limit": limit},
                 )
                 rows = res.fetchall()
@@ -194,9 +196,13 @@ class SqlHierarchyRepository:
     def list_resources(
         self, *, tenant_context: TenantContext | None = None, limit: int = 1000
     ) -> builtins.list[InventoryResource35]:
-        return self._run_async(self.list_resources_async(tenant_context=tenant_context, limit=limit))
+        return self._run_async(
+            self.list_resources_async(tenant_context=tenant_context, limit=limit)
+        )
 
-    async def delete_resource_async(self, resource_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_resource_async(
+        self, resource_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
                 text("DELETE FROM resources WHERE id = :id AND tenant_id = :tid;"),
@@ -206,7 +212,9 @@ class SqlHierarchyRepository:
             return (res.rowcount or 0) > 0
 
     def delete_resource(self, resource_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_resource_async(resource_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_resource_async(resource_id, tenant_context=tenant_context)
+        )
 
     # Saved Views
     async def save_saved_view_async(
@@ -247,7 +255,9 @@ class SqlHierarchyRepository:
     ) -> SavedInventoryView | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM hierarchy_saved_views WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM hierarchy_saved_views WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": view_id, "tid": tenant_context.tenant_id},
             )
             row = res.fetchone()
@@ -265,7 +275,9 @@ class SqlHierarchyRepository:
     ) -> builtins.list[SavedInventoryView]:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM hierarchy_saved_views WHERE tenant_id = :tid ORDER BY name ASC;"),
+                text(
+                    "SELECT * FROM hierarchy_saved_views WHERE tenant_id = :tid ORDER BY name ASC;"
+                ),
                 {"tid": tenant_context.tenant_id},
             )
             rows = res.fetchall()

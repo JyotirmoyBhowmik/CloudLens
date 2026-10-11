@@ -49,8 +49,7 @@ class PricingRepository(Protocol):
 
     def add_or_update(
         self, record: PricingRecord
-    ) -> tuple[PricingRecord, PricingChangeRecord | None]:
-        ...
+    ) -> tuple[PricingRecord, PricingChangeRecord | None]: ...
 
     def get_active_rate(
         self,
@@ -60,8 +59,7 @@ class PricingRepository(Protocol):
         dimension: str,
         rate_type: RateType | str = RateType.LIST,
         tenant_id: str | None = None,
-    ) -> PricingRecord | None:
-        ...
+    ) -> PricingRecord | None: ...
 
     def get_rate_at_timestamp(
         self,
@@ -72,8 +70,7 @@ class PricingRepository(Protocol):
         timestamp: datetime,
         rate_type: RateType | str = RateType.LIST,
         tenant_id: str | None = None,
-    ) -> PricingRecord | None:
-        ...
+    ) -> PricingRecord | None: ...
 
     def record_unknown_sku(
         self,
@@ -81,13 +78,11 @@ class PricingRepository(Protocol):
         sku: str,
         tenant_id: str | None = None,
         occurred_at: datetime | None = None,
-    ) -> UnknownSkuRecord:
-        ...
+    ) -> UnknownSkuRecord: ...
 
     def list_unknown_skus(
         self, provider: str | None = None, tenant_id: str | None = None, status: str | None = None
-    ) -> list[UnknownSkuRecord]:
-        ...
+    ) -> list[UnknownSkuRecord]: ...
 
     def list_changes(
         self,
@@ -95,13 +90,11 @@ class PricingRepository(Protocol):
         tenant_id: str | None = None,
         since: datetime | None = None,
         sku: str | None = None,
-    ) -> list[PricingChangeRecord]:
-        ...
+    ) -> list[PricingChangeRecord]: ...
 
     def list_all_active(
         self, provider: str | None = None, tenant_id: str | None = None
-    ) -> list[PricingRecord]:
-        ...
+    ) -> list[PricingRecord]: ...
 
     def list_catalog(
         self,
@@ -116,8 +109,7 @@ class PricingRepository(Protocol):
         tenant_id: str | None = None,
         page: int = 1,
         page_size: int = 50,
-    ) -> tuple[list[PricingRecord], int]:
-        ...
+    ) -> tuple[list[PricingRecord], int]: ...
 
 
 class SqlPricingRepository:
@@ -175,7 +167,9 @@ class SqlPricingRepository:
             old_unit_price=float(m["old_rate"]) if m.get("old_rate") is not None else 0.0,
             new_unit_price=float(m["new_rate"]) if m.get("new_rate") is not None else 0.0,
             price_delta=round(float(m.get("new_rate") or 0.0) - float(m.get("old_rate") or 0.0), 6),
-            percentage_change=float(m["percentage_change"]) if m.get("percentage_change") is not None else 0.0,
+            percentage_change=float(m["percentage_change"])
+            if m.get("percentage_change") is not None
+            else 0.0,
             effective_date=m.get("changed_at") or m.get("effective_date") or datetime.now(UTC),
             change_type=m.get("change_reason") or m.get("change_type") or "UPDATE",
             detected_at=m.get("changed_at") or m.get("created_at") or datetime.now(UTC),
@@ -190,7 +184,11 @@ class SqlPricingRepository:
             sku = (record.service_sku or "").strip().lower()
             reg = record.region.strip().lower()
             dim = record.pricing_dimension.strip().upper()
-            rt = record.rate_type.value if hasattr(record.rate_type, "value") else str(record.rate_type).upper()
+            rt = (
+                record.rate_type.value
+                if hasattr(record.rate_type, "value")
+                else str(record.rate_type).upper()
+            )
 
             async with get_tenant_session(tid) as session:
                 # 1. Look for existing active record
@@ -205,7 +203,9 @@ class SqlPricingRepository:
                       AND is_active = TRUE
                     LIMIT 1;
                 """)
-                res = await session.execute(query, {"tid": tid, "p": p, "sku": sku, "reg": reg, "dim": dim, "rt": rt})
+                res = await session.execute(
+                    query, {"tid": tid, "p": p, "sku": sku, "reg": reg, "dim": dim, "rt": rt}
+                )
                 row = res.first()
 
                 if not row:
@@ -251,13 +251,21 @@ class SqlPricingRepository:
                 is_allowance_changed = active_record.free_allowance != record.free_allowance
 
                 if not (is_price_changed or is_tier_changed or is_allowance_changed):
-                    refreshed = active_record.model_copy(update={"retrieved_at": record.retrieved_at})
+                    refreshed = active_record.model_copy(
+                        update={"retrieved_at": record.retrieved_at}
+                    )
                     upd = text("""
                         UPDATE pricing_records
                         SET attributes = CAST(:payload AS jsonb)
                         WHERE id = :id;
                     """)
-                    await session.execute(upd, {"id": refreshed.id, "payload": json.dumps(refreshed.model_dump(mode="json"))})
+                    await session.execute(
+                        upd,
+                        {
+                            "id": refreshed.id,
+                            "payload": json.dumps(refreshed.model_dump(mode="json")),
+                        },
+                    )
                     await session.commit()
                     return refreshed, None
 
@@ -323,7 +331,9 @@ class SqlPricingRepository:
                     if active_record.unit_price > 0
                     else 0.0
                 )
-                change_type = "INCREASE" if new_record.unit_price > active_record.unit_price else "DECREASE"
+                change_type = (
+                    "INCREASE" if new_record.unit_price > active_record.unit_price else "DECREASE"
+                )
                 change_record = PricingChangeRecord(
                     tenant_id=new_record.tenant_id,
                     provider=new_record.provider,
@@ -403,7 +413,9 @@ class SqlPricingRepository:
                     ORDER BY tenant_id NULLS LAST
                     LIMIT 1;
                 """)
-                res = await session.execute(query, {"tid": tenant_id, "p": p, "s": s, "reg": reg, "dim": dim, "rt": rt})
+                res = await session.execute(
+                    query, {"tid": tenant_id, "p": p, "s": s, "reg": reg, "dim": dim, "rt": rt}
+                )
                 row = res.first()
                 return self._row_to_record(row) if row else None
 
@@ -440,7 +452,18 @@ class SqlPricingRepository:
                     ORDER BY tenant_id NULLS LAST, effective_from DESC
                     LIMIT 1;
                 """)
-                res = await session.execute(query, {"tid": tenant_id, "p": p, "s": s, "reg": reg, "dim": dim, "rt": rt, "ts": timestamp})
+                res = await session.execute(
+                    query,
+                    {
+                        "tid": tenant_id,
+                        "p": p,
+                        "s": s,
+                        "reg": reg,
+                        "dim": dim,
+                        "rt": rt,
+                        "ts": timestamp,
+                    },
+                )
                 row = res.first()
                 return self._row_to_record(row) if row else None
 
@@ -469,7 +492,9 @@ class SqlPricingRepository:
                         last_seen_at = :now
                     RETURNING id, tenant_id, provider, native_identifier, occurrence_count, first_seen_at, last_seen_at;
                 """)
-                res = await session.execute(q, {"id": gid, "tid": tid, "p": p, "sku": s, "now": now})
+                res = await session.execute(
+                    q, {"id": gid, "tid": tid, "p": p, "sku": s, "now": now}
+                )
                 row = res.fetchone()
                 return UnknownSkuRecord(
                     tenant_id=row.tenant_id,

@@ -171,4 +171,6 @@ class TestLiveSandboxVerificationMode:
         assert len(resources) > 0
         for item in resources:
             assert isinstance(item, dict)
-            assert any(k in item for k in ("InstanceId", "ResourceArn", "resource_id", "id", "name"))
+            assert any(
+                k in item for k in ("InstanceId", "ResourceArn", "resource_id", "id", "name")
+            )

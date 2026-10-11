@@ -61,8 +61,12 @@ class TestPlanningSuite:
             review_window_end=now + dt.timedelta(days=40),
             approval_deadline=now + dt.timedelta(days=45),
             participating_scopes=[
-                PlanningScope(scope_type="BUSINESS_UNIT", scope_id="BU_RETAIL", owner_id="lead-retail"),
-                PlanningScope(scope_type="BUSINESS_UNIT", scope_id="BU_WEALTH", owner_id="lead-wealth"),
+                PlanningScope(
+                    scope_type="BUSINESS_UNIT", scope_id="BU_RETAIL", owner_id="lead-retail"
+                ),
+                PlanningScope(
+                    scope_type="BUSINESS_UNIT", scope_id="BU_WEALTH", owner_id="lead-wealth"
+                ),
             ],
             default_basis=PlanningBasisType.PRIOR_YEAR_ACTUAL,
         )
@@ -74,8 +78,18 @@ class TestPlanningSuite:
     ) -> None:
         """A budget owner can submit pre-populated proposal and revise it during the window."""
         items = [
-            PlanLineItem(service_category="COMPUTE", service_name="EC2 / EKS", proposed_amount=Decimal("45000.00"), rationale="Cluster scaling"),
-            PlanLineItem(service_category="STORAGE", service_name="S3 / EBS", proposed_amount=Decimal("15000.00"), rationale="Data lake retention"),
+            PlanLineItem(
+                service_category="COMPUTE",
+                service_name="EC2 / EKS",
+                proposed_amount=Decimal("45000.00"),
+                rationale="Cluster scaling",
+            ),
+            PlanLineItem(
+                service_category="STORAGE",
+                service_name="S3 / EBS",
+                proposed_amount=Decimal("15000.00"),
+                rationale="Data lake retention",
+            ),
         ]
         sub = service.submit_bottom_up(
             cycle_id=active_cycle.cycle_id,
@@ -340,4 +354,3 @@ class TestPlanningSuite:
             service.convert_plan_to_budget(sub.submission_id)
         assert "must be approved before conversion to operative budget" in str(exc_info.value)
         assert exc_info.value.error_code == "PLANNING_ERROR"
-

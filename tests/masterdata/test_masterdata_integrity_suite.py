@@ -41,7 +41,9 @@ class TestMasterDataIntegritySuite:
         svc = MasterDataService(auto_seed=True)
         return svc
 
-    def test_criterion_1_and_2_registry_entries_have_valid_seed_files(self, service: MasterDataService) -> None:
+    def test_criterion_1_and_2_registry_entries_have_valid_seed_files(
+        self, service: MasterDataService
+    ) -> None:
         """Criteria 1 & 2: Every registry entry has a seed file and every seed file parses."""
         registries = list_registered_masters()
         assert len(registries) >= 20, "Expected at least 20 registered system masters"
@@ -51,7 +53,9 @@ class TestMasterDataIntegritySuite:
         assert seed_report.total_records_processed > 0
         assert seed_report.errors == []
 
-    def test_criterion_3_bidirectional_enum_to_master_parity(self, service: MasterDataService) -> None:
+    def test_criterion_3_bidirectional_enum_to_master_parity(
+        self, service: MasterDataService
+    ) -> None:
         """Criterion 3: Every code enumeration matches its master bidirectionally."""
         bridge = EnumerationBridge(master_service=service)
         result = bridge.validate(raise_on_failure=False)
@@ -65,9 +69,13 @@ class TestMasterDataIntegritySuite:
         for rec in all_records:
             if rec.parent_code:
                 parent = service.get_record(rec.master_type, rec.parent_code)
-                assert parent is not None, f"Orphan record found: {rec.code} has missing parent {rec.parent_code}"
+                assert parent is not None, (
+                    f"Orphan record found: {rec.code} has missing parent {rec.parent_code}"
+                )
 
-    def test_criterion_5_seeding_is_deterministic_and_idempotent(self, service: MasterDataService) -> None:
+    def test_criterion_5_seeding_is_deterministic_and_idempotent(
+        self, service: MasterDataService
+    ) -> None:
         """Criterion 5: Seeding is deterministic and idempotent across repeated executions."""
         report1 = service.seed_system_masters()
         report2 = service.seed_system_masters()
@@ -76,7 +84,9 @@ class TestMasterDataIntegritySuite:
         # Subsequent seeding should result in 0 mutations (all unchanged)
         assert report2.created_count == 0
 
-    def test_criterion_6_effective_dated_point_in_time_resolution(self, service: MasterDataService) -> None:
+    def test_criterion_6_effective_dated_point_in_time_resolution(
+        self, service: MasterDataService
+    ) -> None:
         """Criterion 6: Effective-dated resolution returns the exact version in force at a past date."""
         # Offset-naive UTC timestamp matching internal datetime.utcnow()
         current_time = dt.datetime.utcnow()
@@ -86,10 +96,14 @@ class TestMasterDataIntegritySuite:
         assert record.is_active is True
         assert record.effective_from <= current_time
 
-    def test_criterion_7_referenced_master_value_cannot_be_deleted(self, service: MasterDataService) -> None:
+    def test_criterion_7_referenced_master_value_cannot_be_deleted(
+        self, service: MasterDataService
+    ) -> None:
         """Criterion 7: A referenced master value cannot be deleted/deactivated (referential integrity)."""
         # Set a mock live reference to simulate an active resource using 'AWS'
-        service.set_mock_live_reference("CLOUD_PROVIDER", "AWS", {"CloudAccount": 4, "Resource": 250})
+        service.set_mock_live_reference(
+            "CLOUD_PROVIDER", "AWS", {"CloudAccount": 4, "Resource": 250}
+        )
 
         where_used = service.check_reference_integrity("CLOUD_PROVIDER", "AWS")
         assert where_used.is_in_use is True

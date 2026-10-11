@@ -19,7 +19,9 @@ from sqlalchemy import text
 async def main():
     # 1. Clean and seed test rows using superuser
     async with get_tenant_session() as s:
-        await s.execute(text("DELETE FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B');"))
+        await s.execute(
+            text("DELETE FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B');")
+        )
         await s.execute(
             text("""
                 INSERT INTO tenant_settings (tenant_id, settings, updated_at)
@@ -37,7 +39,9 @@ async def main():
         # Query as Tenant A
         await s.execute(text("SELECT set_config('app.current_tenant_id', 'tenant-A', true);"))
         res_a = await s.execute(
-            text("SELECT tenant_id FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B') ORDER BY tenant_id;")
+            text(
+                "SELECT tenant_id FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B') ORDER BY tenant_id;"
+            )
         )
         rows_a = [r[0] for r in res_a.fetchall()]
         print("QUERY AS TENANT-A:", rows_a)
@@ -45,7 +49,9 @@ async def main():
         # Query as Tenant B
         await s.execute(text("SELECT set_config('app.current_tenant_id', 'tenant-B', true);"))
         res_b = await s.execute(
-            text("SELECT tenant_id FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B') ORDER BY tenant_id;")
+            text(
+                "SELECT tenant_id FROM tenant_settings WHERE tenant_id IN ('tenant-A', 'tenant-B') ORDER BY tenant_id;"
+            )
         )
         rows_b = [r[0] for r in res_b.fetchall()]
         print("QUERY AS TENANT-B:", rows_b)
@@ -53,7 +59,9 @@ async def main():
         # Assert isolation invariant
         assert rows_a == ["tenant-A"], f"Tenant A isolation failed: got {rows_a}"
         assert rows_b == ["tenant-B"], f"Tenant B isolation failed: got {rows_b}"
-        print("[RLS RAW-SQL PROOF SUCCESS] Invariant holds: Tenant A cannot read Tenant B, Tenant B cannot read Tenant A.")
+        print(
+            "[RLS RAW-SQL PROOF SUCCESS] Invariant holds: Tenant A cannot read Tenant B, Tenant B cannot read Tenant A."
+        )
 
 
 if __name__ == "__main__":

@@ -78,6 +78,7 @@ class AWSConnector(BaseCloudConnector):
         if cred_ref and str(cred_ref).startswith("vault://"):
             try:
                 from domain.credentials.store import get_secret_store
+
                 vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
                 if isinstance(vault_secret, dict):
                     cfg["credentials"] = {**(cfg.get("credentials") or {}), **vault_secret}

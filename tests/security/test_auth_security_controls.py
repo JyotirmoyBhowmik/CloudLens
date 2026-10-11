@@ -72,7 +72,10 @@ def test_api_oidc_login_and_unmapped_role_rejection(client: TestClient):
                 "groups": ["Unknown-Group"],
             },
         )
-    assert "no mapped platform roles" in str(exc_info.value).lower() or "unmapped" in str(exc_info.value).lower()
+    assert (
+        "no mapped platform roles" in str(exc_info.value).lower()
+        or "unmapped" in str(exc_info.value).lower()
+    )
 
     # Check alert was recorded in identity service
     unmapped_alerts = [a for a in svc.alerts if a.alert_type == "UNMAPPED_ROLE_ACCESS_DENIED"]

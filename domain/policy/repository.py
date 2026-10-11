@@ -43,7 +43,9 @@ class PolicyRepository(Protocol):
         limit: int = 50,
         offset: int = 0,
     ) -> list[PolicyDefinition]: ...
-    def save(self, entity: PolicyDefinition, *, tenant_context: TenantContext) -> PolicyDefinition: ...
+    def save(
+        self, entity: PolicyDefinition, *, tenant_context: TenantContext
+    ) -> PolicyDefinition: ...
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
     def save_policy(
@@ -94,9 +96,7 @@ class PolicyRepository(Protocol):
         tenant_context: TenantContext,
         status: FindingLifecycleStatus | None = None,
     ) -> int: ...
-    def delete_finding(
-        self, finding_id: str, *, tenant_context: TenantContext
-    ) -> bool: ...
+    def delete_finding(self, finding_id: str, *, tenant_context: TenantContext) -> bool: ...
     def save_exemption(
         self, exemption: PolicyExemption, *, tenant_context: TenantContext
     ) -> PolicyExemption: ...
@@ -189,7 +189,9 @@ class SqlPolicyRepository:
     ) -> PolicyDefinition | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM policy_history WHERE policy_id = :pid AND version = :ver AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM policy_history WHERE policy_id = :pid AND version = :ver AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"pid": policy_id, "ver": version, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -198,7 +200,9 @@ class SqlPolicyRepository:
     def get_policy_version(
         self, policy_id: str, version: int, *, tenant_context: TenantContext
     ) -> PolicyDefinition | None:
-        return self._run_async(self.get_policy_version_async(policy_id, version, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_policy_version_async(policy_id, version, tenant_context=tenant_context)
+        )
 
     async def save_policy_async(
         self, policy: PolicyDefinition, *, tenant_context: TenantContext
@@ -231,8 +235,12 @@ class SqlPolicyRepository:
                     "id": policy.id,
                     "tid": tid,
                     "name": policy.name,
-                    "rule_type": str(getattr(policy, "rule_type", getattr(policy, "category", "DECLARATIVE"))),
-                    "severity": policy.severity.value if hasattr(policy.severity, "value") else str(policy.severity),
+                    "rule_type": str(
+                        getattr(policy, "rule_type", getattr(policy, "category", "DECLARATIVE"))
+                    ),
+                    "severity": policy.severity.value
+                    if hasattr(policy.severity, "value")
+                    else str(policy.severity),
                     "params": json.dumps(getattr(policy, "parameters", {})),
                     "created_at": policy.created_at,
                     "version": policy.version,
@@ -312,9 +320,13 @@ class SqlPolicyRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> list[PolicyDefinition]:
-        enabled_only = bool(filter_params.get("enabled_only")) if isinstance(filter_params, dict) else False
+        enabled_only = (
+            bool(filter_params.get("enabled_only")) if isinstance(filter_params, dict) else False
+        )
         category = filter_params.get("category") if isinstance(filter_params, dict) else None
-        res = self.list_policies(tenant_context=tenant_context, enabled_only=enabled_only, category=category)
+        res = self.list_policies(
+            tenant_context=tenant_context, enabled_only=enabled_only, category=category
+        )
         return res[offset : offset + limit]
 
     async def delete_policy_async(self, policy_id: str, *, tenant_context: TenantContext) -> bool:
@@ -373,10 +385,18 @@ class SqlPolicyRepository:
                     "tid": tid,
                     "pid": finding.policy_id,
                     "eid": finding.entity_id,
-                    "st": finding.lifecycle_status.value if hasattr(finding.lifecycle_status, "value") else str(finding.lifecycle_status),
-                    "sev": finding.severity.value if hasattr(finding.severity, "value") else str(finding.severity),
-                    "cat": finding.category.value if hasattr(finding.category, "value") else str(finding.category),
-                    "mode": finding.mode.value if hasattr(finding.mode, "value") else str(finding.mode),
+                    "st": finding.lifecycle_status.value
+                    if hasattr(finding.lifecycle_status, "value")
+                    else str(finding.lifecycle_status),
+                    "sev": finding.severity.value
+                    if hasattr(finding.severity, "value")
+                    else str(finding.severity),
+                    "cat": finding.category.value
+                    if hasattr(finding.category, "value")
+                    else str(finding.category),
+                    "mode": finding.mode.value
+                    if hasattr(finding.mode, "value")
+                    else str(finding.mode),
                     "payload": json.dumps(finding.model_dump(mode="json")),
                     "created_at": getattr(finding, "created_at", finding.first_detected_at),
                     "last_eval": finding.last_evaluated_at,
@@ -531,11 +551,11 @@ class SqlPolicyRepository:
         tenant_context: TenantContext,
         status: FindingLifecycleStatus | None = None,
     ) -> int:
-        return self._run_async(self.count_findings_async(tenant_context=tenant_context, status=status))
+        return self._run_async(
+            self.count_findings_async(tenant_context=tenant_context, status=status)
+        )
 
-    async def delete_finding_async(
-        self, finding_id: str, *, tenant_context: TenantContext
-    ) -> bool:
+    async def delete_finding_async(self, finding_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
                 text("DELETE FROM policy_findings WHERE id = :id AND tenant_id = :tid;"),
@@ -544,9 +564,7 @@ class SqlPolicyRepository:
             await sess.commit()
             return (res.rowcount or 0) > 0
 
-    def delete_finding(
-        self, finding_id: str, *, tenant_context: TenantContext
-    ) -> bool:
+    def delete_finding(self, finding_id: str, *, tenant_context: TenantContext) -> bool:
         return self._run_async(self.delete_finding_async(finding_id, tenant_context=tenant_context))
 
     # --------------------------------------------------------------------------
@@ -596,7 +614,9 @@ class SqlPolicyRepository:
     ) -> PolicyExemption | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM policy_exemptions WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM policy_exemptions WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": exemption_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -605,7 +625,9 @@ class SqlPolicyRepository:
     def get_exemption(
         self, exemption_id: str, *, tenant_context: TenantContext
     ) -> PolicyExemption | None:
-        return self._run_async(self.get_exemption_async(exemption_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_exemption_async(exemption_id, tenant_context=tenant_context)
+        )
 
     async def list_exemptions_async(
         self,
@@ -648,7 +670,9 @@ class SqlPolicyRepository:
             )
         )
 
-    async def delete_exemption_async(self, exemption_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_exemption_async(
+        self, exemption_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
                 text("DELETE FROM policy_exemptions WHERE id = :id AND tenant_id = :tid;"),
@@ -658,7 +682,9 @@ class SqlPolicyRepository:
             return res.rowcount > 0
 
     def delete_exemption(self, exemption_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_exemption_async(exemption_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_exemption_async(exemption_id, tenant_context=tenant_context)
+        )
 
 
 # Singleton instance & factory

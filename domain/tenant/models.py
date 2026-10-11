@@ -29,12 +29,20 @@ class Tenant(CanonicalEntity):
     code: str = Field(default="", description="Unique uppercase tenant code (e.g. 'SNPL_PROD')")
     name: str = Field(..., description="Tenant organization display name")
     type: TenantType = Field(default=TenantType.PRODUCTION, description="Tenant environment type")
-    reporting_currency: str = Field(default="USD", description="Default reporting currency ISO code")
-    fiscal_year_start: int = Field(default=1, ge=1, le=12, description="Fiscal year start month (1-12)")
+    reporting_currency: str = Field(
+        default="USD", description="Default reporting currency ISO code"
+    )
+    fiscal_year_start: int = Field(
+        default=1, ge=1, le=12, description="Fiscal year start month (1-12)"
+    )
     iana_timezone: str = Field(default="UTC", description="IANA Time Zone identifier (e.g. 'UTC')")
     retention_profile: str = Field(default="STANDARD", description="Data retention policy profile")
-    status: TenantStatus = Field(default=TenantStatus.ACTIVE, description="Lifecycle operational status")
-    suspension_reason: str | None = Field(default=None, description="Reason recorded when tenant is suspended")
+    status: TenantStatus = Field(
+        default=TenantStatus.ACTIVE, description="Lifecycle operational status"
+    )
+    suspension_reason: str | None = Field(
+        default=None, description="Reason recorded when tenant is suspended"
+    )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC), description="Creation timestamp in UTC"
     )
@@ -47,9 +55,9 @@ class Tenant(CanonicalEntity):
         if not self.code and self.id:
             raw_id = self.id
             if raw_id.startswith("tenant-"):
-                self.code = raw_id[len("tenant-"):].replace("-", "_").upper()
+                self.code = raw_id[len("tenant-") :].replace("-", "_").upper()
             elif raw_id.startswith("ten-"):
-                self.code = raw_id[len("ten-"):].replace("-", "_").upper()
+                self.code = raw_id[len("ten-") :].replace("-", "_").upper()
             else:
                 self.code = raw_id.replace("-", "_").upper()
         return self

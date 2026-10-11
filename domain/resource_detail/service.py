@@ -1,4 +1,3 @@
-
 """Domain Service for Resource Detail, Cost Exploration, Usage, Runtime and Investigation (Prompt 39).
 
 Enforces:
@@ -1352,7 +1351,9 @@ class ResourceDetailService:
         """Dynamically synthesizes complete 15-panel detail for any resource in inventory."""
         current_cost = Decimal(str(raw_res.monthly_cost))
         actual_cost = Decimal(str(round(float(current_cost) * 0.95, 2)))
-        estimated_cost = Decimal(str(round(float(current_cost) * 0.90, 2)))  # no-hardcode-allow: reason="Derivation multiplier for estimated cost", reviewer="Prompt-48-Audit"
+        estimated_cost = Decimal(
+            str(round(float(current_cost) * 0.90, 2))
+        )  # no-hardcode-allow: reason="Derivation multiplier for estimated cost", reviewer="Prompt-48-Audit"
         forecast_cost = Decimal(str(round(float(current_cost) * 1.05, 2)))
         budget_amount = Decimal(str(round(float(current_cost) * 1.10, 2)))
         variance = forecast_cost - budget_amount
@@ -1539,9 +1540,15 @@ class ResourceDetailService:
                 {"month": "2026-10", "amount": float(current_cost)},
             ],
             forecast_confidence_interval={
-                "p10": forecast_cost * Decimal("0.95"),  # no-hardcode-allow: reason="Confidence interval multiplier", reviewer="Prompt-48-Audit"
+                "p10": forecast_cost
+                * Decimal(
+                    "0.95"
+                ),  # no-hardcode-allow: reason="Confidence interval multiplier", reviewer="Prompt-48-Audit"
                 "p50": forecast_cost,
-                "p90": forecast_cost * Decimal("1.05"),  # no-hardcode-allow: reason="Confidence interval multiplier", reviewer="Prompt-48-Audit"
+                "p90": forecast_cost
+                * Decimal(
+                    "1.05"
+                ),  # no-hardcode-allow: reason="Confidence interval multiplier", reviewer="Prompt-48-Audit"
             },
             audit_trail=[],
             fifteen_questions=FifteenQuestionsSummary(
@@ -1768,7 +1775,9 @@ class ResourceDetailService:
         """Retrieves itemized contributing charge lines with financial details."""
         # 1. Enforce permission: financial-detail permission check
         # In multi-tenant environments, if user has restricted roles without financial drill-down, deny:
-        if tenant_context.roles and "RESTRICTED_VIEWER" in tenant_context.roles:  # no-hardcode-allow: reason="Restricted viewer role permission boundary check", reviewer="Prompt-48-Audit"
+        if (
+            tenant_context.roles and "RESTRICTED_VIEWER" in tenant_context.roles
+        ):  # no-hardcode-allow: reason="Restricted viewer role permission boundary check", reviewer="Prompt-48-Audit"
             raise FinancialDetailAccessDeniedException()
 
         # 2. Check if tenant has any resources in hierarchy
@@ -2017,7 +2026,9 @@ class ResourceDetailService:
             if not self._is_scope_accessible(res.scope_id, tenant_context):
                 continue
             managed_count += 1
-            if res.runtime_state == "STOPPED":  # no-hardcode-allow: reason="Runtime stopped state check", reviewer="Prompt-48-Audit"
+            if (
+                res.runtime_state == "STOPPED"
+            ):  # no-hardcode-allow: reason="Runtime stopped state check", reviewer="Prompt-48-Audit"
                 compliant_count += 1
             elif res.id == "res-az-vm-01":
                 out_of_schedule_count += 1
@@ -2076,4 +2087,3 @@ def reset_resource_detail_service() -> None:
     global _service_instance
     with _service_lock:
         _service_instance = None
-

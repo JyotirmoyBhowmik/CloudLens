@@ -49,16 +49,18 @@ class FreshnessSLAService:
 
                 is_met = compliance_pct >= self._target_percentage
 
-                matrix.append({
-                    "provider": prov,
-                    "capability": cap,
-                    "freshness_target_hours": lag_hours,
-                    "measured_hours": measured_hours,
-                    "compliant_hours": compliant_hours,
-                    "compliance_percentage": compliance_pct,
-                    "target_sla_percentage": self._target_percentage,
-                    "status": "MET" if is_met else "BREACHED",
-                })
+                matrix.append(
+                    {
+                        "provider": prov,
+                        "capability": cap,
+                        "freshness_target_hours": lag_hours,
+                        "measured_hours": measured_hours,
+                        "compliant_hours": compliant_hours,
+                        "compliance_percentage": compliance_pct,
+                        "target_sla_percentage": self._target_percentage,
+                        "status": "MET" if is_met else "BREACHED",
+                    }
+                )
 
                 overall_compliant_hours += compliant_hours
                 total_tracked_hours += measured_hours
@@ -72,7 +74,9 @@ class FreshnessSLAService:
             "window_days": window_days,
             "target_sla_percentage": self._target_percentage,
             "platform_compliance_percentage": platform_compliance_pct,
-            "overall_status": "MET" if platform_compliance_pct >= self._target_percentage else "BREACHED",
+            "overall_status": "MET"
+            if platform_compliance_pct >= self._target_percentage
+            else "BREACHED",
             "recipient_email": self._recipient,
             "provider_capability_matrix": matrix,
             "total_capabilities_evaluated": len(matrix),

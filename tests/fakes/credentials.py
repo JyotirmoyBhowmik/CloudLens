@@ -17,17 +17,26 @@ class InMemoryCredentialRepository:
     def __init__(self) -> None:
         self._profiles: dict[str, CredentialProfile] = {}
 
-    async def get(self, profile_id: str, session: AsyncSession | None = None) -> CredentialProfile | None:
+    async def get(
+        self, profile_id: str, session: AsyncSession | None = None
+    ) -> CredentialProfile | None:
         return self._profiles.get(profile_id)
 
-    async def save(self, profile: CredentialProfile, session: AsyncSession | None = None) -> CredentialProfile:
+    async def save(
+        self, profile: CredentialProfile, session: AsyncSession | None = None
+    ) -> CredentialProfile:
         if not profile.secret_ref.startswith("vault://"):
-            raise ValueError(f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'")
+            raise ValueError(
+                f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'"
+            )
         self._profiles[profile.id] = profile
         return profile
 
     async def list_for_tenant(
-        self, tenant_id: str, provider: ProviderType | None = None, session: AsyncSession | None = None
+        self,
+        tenant_id: str,
+        provider: ProviderType | None = None,
+        session: AsyncSession | None = None,
     ) -> list[CredentialProfile]:
         profiles = [p for p in self._profiles.values() if p.tenant_id == tenant_id]
         if provider:
@@ -42,7 +51,9 @@ class InMemoryCredentialRepository:
 
     def save_sync(self, profile: CredentialProfile) -> CredentialProfile:
         if not profile.secret_ref.startswith("vault://"):
-            raise ValueError(f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'")
+            raise ValueError(
+                f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'"
+            )
         self._profiles[profile.id] = profile
         return profile
 
@@ -95,7 +106,9 @@ class InMemorySecretStore(SecretStore):
         secret_data: dict[str, Any],
     ) -> str:
         if not secret_data:
-            raise SecretStoreUnavailableException("Cannot store empty credential payload in SecretStore.")
+            raise SecretStoreUnavailableException(
+                "Cannot store empty credential payload in SecretStore."
+            )
 
         ref_uri = self._build_reference_uri(tenant_id, profile_id, version)
         with self._lock:

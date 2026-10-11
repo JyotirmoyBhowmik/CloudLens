@@ -33,20 +33,26 @@ def main() -> None:
 
     pytest_args = [sys.executable, "-m", "pytest"]
     if args.mode == "fixture":
-        pytest_args.extend([
-            "tests/connectors/test_connector_test_kit.py::TestFixtureBasedContractMode",
-            "-v",
-        ])
+        pytest_args.extend(
+            [
+                "tests/connectors/test_connector_test_kit.py::TestFixtureBasedContractMode",
+                "-v",
+            ]
+        )
     elif args.mode == "sandbox":
-        pytest_args.extend([
-            "tests/connectors/test_connector_test_kit.py::TestLiveSandboxVerificationMode",
-            "-v",
-        ])
+        pytest_args.extend(
+            [
+                "tests/connectors/test_connector_test_kit.py::TestLiveSandboxVerificationMode",
+                "-v",
+            ]
+        )
     else:
-        pytest_args.extend([
-            "tests/connectors/test_connector_test_kit.py",
-            "-v",
-        ])
+        pytest_args.extend(
+            [
+                "tests/connectors/test_connector_test_kit.py",
+                "-v",
+            ]
+        )
 
     res = subprocess.run(pytest_args, cwd=str(ROOT_DIR))
     if res.returncode == 0:

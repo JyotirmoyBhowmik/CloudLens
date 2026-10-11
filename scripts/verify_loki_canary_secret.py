@@ -44,9 +44,7 @@ def push_log_to_loki(log_line: str, tenant: str, service: str, correlation_id: s
                     "service": service,
                     "correlation_id": correlation_id,
                 },
-                "values": [
-                    [ts_ns, log_line]
-                ]
+                "values": [[ts_ns, log_line]],
             }
         ]
     }
@@ -63,6 +61,7 @@ def push_log_to_loki(log_line: str, tenant: str, service: str, correlation_id: s
 
 def query_loki(query_str: str) -> list[str]:
     import urllib.parse
+
     url = f"{LOKI_QUERY_URL}?query={urllib.parse.quote(query_str)}"
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req, timeout=5) as resp:
@@ -101,8 +100,12 @@ def main():
     print(formatted_log)
 
     # Pre-ship verification: Assert canary secrets NOT in formatted line
-    assert canary_aws_key not in formatted_log, "CRITICAL: Raw AWS key leaked into formatted log line!"
-    assert canary_password not in formatted_log, "CRITICAL: Raw password leaked into formatted log line!"
+    assert canary_aws_key not in formatted_log, (
+        "CRITICAL: Raw AWS key leaked into formatted log line!"
+    )
+    assert canary_password not in formatted_log, (
+        "CRITICAL: Raw password leaked into formatted log line!"
+    )
     assert "[REDACTED_AWS_KEY]" in formatted_log
     assert "password=[REDACTED]" in formatted_log
 
@@ -116,7 +119,7 @@ def main():
     )
 
     # 3. Query Loki and verify
-    print("Querying Loki for log stream {service=\"cloudlens-api\", tenant=\"tenant-canary-proof\"}...")
+    print('Querying Loki for log stream {service="cloudlens-api", tenant="tenant-canary-proof"}...')
     time.sleep(1)
     entries = query_loki('{service="cloudlens-api", tenant="tenant-canary-proof"}')
     print(f"Retrieved {len(entries)} log entries from Loki.")
@@ -125,10 +128,14 @@ def main():
         print("Loki Entry:", entry)
         # MUST NOT contain canary secrets
         assert canary_aws_key not in entry, f"LEAK DETECTED: {canary_aws_key} found in Loki entry!"
-        assert canary_password not in entry, f"LEAK DETECTED: {canary_password} found in Loki entry!"
+        assert canary_password not in entry, (
+            f"LEAK DETECTED: {canary_password} found in Loki entry!"
+        )
 
     # Verify that the redacted line was stored and returned
-    assert any("[REDACTED_AWS_KEY]" in e for e in entries), "Redacted entry missing from Loki query results!"
+    assert any("[REDACTED_AWS_KEY]" in e for e in entries), (
+        "Redacted entry missing from Loki query results!"
+    )
 
     print("\n>>> CANARY PROOF PASSED: Canary secret ABSENT from Loki; redaction verified! <<<")
 

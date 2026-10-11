@@ -106,7 +106,9 @@ def test_beat_leader_lock_prevents_duplicate_runs():
 
 
 @pytest.mark.parametrize("task_name", ALL_21_TASKS)
-def test_canonical_task_execution(task_name: str, demo_tenant_payload: dict, demo_tenant_context: TenantContext):
+def test_canonical_task_execution(
+    task_name: str, demo_tenant_payload: dict, demo_tenant_context: TenantContext
+):
     """Verify that each of the 21 background tasks executes cleanly and records a SyncJob."""
     task_fn = getattr(tasks, f"{task_name}_task")
     res = task_fn(tenant_context_payload=demo_tenant_payload)
@@ -125,8 +127,12 @@ def test_canonical_task_execution(task_name: str, demo_tenant_payload: dict, dem
 
 def test_task_concurrency_lock():
     """Verify TaskConcurrencyLock prevents concurrent execution of the same task per connector."""
-    lock_1 = TaskConcurrencyLock(tenant_id="test-tenant", connector_id="aws-1", capability_or_task="ingest_cost")
-    lock_2 = TaskConcurrencyLock(tenant_id="test-tenant", connector_id="aws-1", capability_or_task="ingest_cost")
+    lock_1 = TaskConcurrencyLock(
+        tenant_id="test-tenant", connector_id="aws-1", capability_or_task="ingest_cost"
+    )
+    lock_2 = TaskConcurrencyLock(
+        tenant_id="test-tenant", connector_id="aws-1", capability_or_task="ingest_cost"
+    )
 
     acquired_1 = lock_1.acquire()
     assert acquired_1 is True
@@ -143,8 +149,11 @@ def test_task_concurrency_lock():
     lock_2.release()
 
 
-def test_dead_letter_quarantine_on_retry_exhaustion(demo_tenant_payload: dict, demo_tenant_context: TenantContext):
+def test_dead_letter_quarantine_on_retry_exhaustion(
+    demo_tenant_payload: dict, demo_tenant_context: TenantContext
+):
     """Verify that task failing on max_retries transitions to dead-letter quarantine."""
+
     def _faulty_execution(tc: TenantContext, job: Any) -> int:
         raise RuntimeError("Fatal upstream connectivity failure")
 

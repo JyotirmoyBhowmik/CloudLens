@@ -24,21 +24,24 @@ from domain.models.enums import ProviderType
 
 class CommitmentType(StrEnum):
     """Types of cloud commitment instruments."""
+
     SAVINGS_PLAN = "SAVINGS_PLAN"
     RESERVED_INSTANCE = "RESERVED_INSTANCE"
     COMMITTED_USE_DISCOUNT = "COMMITTED_USE_DISCOUNT"  # GCP CUD
-    RESERVED_CAPACITY = "RESERVED_CAPACITY"          # OCI / Azure
+    RESERVED_CAPACITY = "RESERVED_CAPACITY"  # OCI / Azure
 
 
 class CommitmentAssessment(StrEnum):
     """Diagnostic assessment of commitment performance."""
-    OVER_COMMITMENT = "OVER_COMMITMENT"    # High coverage, poor utilization -> waste
+
+    OVER_COMMITMENT = "OVER_COMMITMENT"  # High coverage, poor utilization -> waste
     UNDER_COMMITMENT = "UNDER_COMMITMENT"  # Low coverage, high utilization -> missed savings
-    OPTIMAL = "OPTIMAL"                    # Balanced utilization and coverage
+    OPTIMAL = "OPTIMAL"  # Balanced utilization and coverage
 
 
 class RenewalAction(StrEnum):
     """Formal renewal recommendation actions."""
+
     RENEW_SAME = "RENEW_SAME"
     RENEW_HIGHER = "RENEW_HIGHER"
     RENEW_LOWER = "RENEW_LOWER"
@@ -50,6 +53,7 @@ class RenewalAction(StrEnum):
 
 class HistoricalTrend(BaseModel):
     """Historical coverage and utilization data point."""
+
     period: str
     coverage_ratio: Decimal
     utilization_ratio: Decimal
@@ -65,6 +69,7 @@ class HistoricalTrend(BaseModel):
 
 class CommitmentEntity(BaseModel):
     """Registered cloud commitment contract."""
+
     commitment_id: str
     tenant_id: str
     provider: ProviderType
@@ -90,6 +95,7 @@ class CommitmentEntity(BaseModel):
 
 class CommitmentCoverageAnalysis(BaseModel):
     """Detailed coverage, utilization, and financial saving metrics."""
+
     commitment_id: str
     provider: ProviderType
     commitment_type: CommitmentType
@@ -131,6 +137,7 @@ class CommitmentCoverageAnalysis(BaseModel):
 
 class RenewalPipelineItem(BaseModel):
     """Commitment in renewal decision window ranked by financial exposure."""
+
     commitment_id: str
     provider: ProviderType
     commitment_type: CommitmentType
@@ -151,6 +158,7 @@ class RenewalPipelineItem(BaseModel):
 
 class WhatIfOption(BaseModel):
     """What-if renewal option priced against workload."""
+
     action: RenewalAction
     description: str
     projected_annual_cost: Decimal
@@ -172,6 +180,7 @@ class WhatIfOption(BaseModel):
 
 class RenewalRecommendation(BaseModel):
     """Explainable, evidence-backed recommendation."""
+
     commitment_id: str
     recommended_action: RenewalAction
     recommended_commitment_amount: Decimal
@@ -190,6 +199,7 @@ class RenewalRecommendation(BaseModel):
 
 class CommitmentDecisionRecord(BaseModel):
     """Immutable audit record of renewal decision."""
+
     decision_id: str = Field(default_factory=lambda: f"cdec-{uuid.uuid4().hex[:8]}")
     commitment_id: str
     tenant_id: str
@@ -204,6 +214,7 @@ class CommitmentDecisionRecord(BaseModel):
 
 class PostExpiryImpact(BaseModel):
     """Verification of financial impact after a commitment has lapsed."""
+
     commitment_id: str
     lapsed_at: dt.datetime
     evaluation_period: str
@@ -214,7 +225,9 @@ class PostExpiryImpact(BaseModel):
     incident_raised: bool = False
     incident_details: str | None = None
 
-    @field_validator("on_demand_rate_cost", "previous_committed_cost", "on_demand_increase", mode="before")
+    @field_validator(
+        "on_demand_rate_cost", "previous_committed_cost", "on_demand_increase", mode="before"
+    )
     @classmethod
     def _coerce_impact(cls, v: Any) -> Decimal:
         if isinstance(v, Decimal):
@@ -224,6 +237,7 @@ class PostExpiryImpact(BaseModel):
 
 class PortfolioSummary(BaseModel):
     """Enterprise-wide portfolio view across all cloud providers."""
+
     total_commitments: int
     total_annual_committed_value: Decimal
     overall_coverage_ratio: Decimal
@@ -235,6 +249,7 @@ class PortfolioSummary(BaseModel):
 
 class ExpiryAlertRecord(BaseModel):
     """Alert and remediation task record emitted when entering decision window."""
+
     alert_id: str = Field(default_factory=lambda: f"alt-exp-{uuid.uuid4().hex[:8]}")
     commitment_id: str
     tenant_id: str
@@ -251,4 +266,3 @@ class ExpiryAlertRecord(BaseModel):
         if isinstance(v, Decimal):
             return v
         return Decimal(str(v)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-

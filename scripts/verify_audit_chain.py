@@ -24,7 +24,9 @@ from domain.audit.service import get_audit_service
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify cryptographic hash chain of audit records.")
+    parser = argparse.ArgumentParser(
+        description="Verify cryptographic hash chain of audit records."
+    )
     parser.add_argument(
         "--tenant",
         default="demo-corp",

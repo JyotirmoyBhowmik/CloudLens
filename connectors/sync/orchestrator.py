@@ -67,9 +67,15 @@ class SyncOrchestrator:
     """Enterprise Sync Orchestration Engine implementing all 7 sync types and reliability guarantees."""
 
     def __init__(self, job_repo: SyncJobRepository | None = None) -> None:
-        self._job_repo = job_repo or get_sync_job_repository()
+        self._job_repo_override = job_repo
         self._data_validator = get_data_validator()
         self._audit_service = get_audit_service()
+
+    @property
+    def _job_repo(self) -> SyncJobRepository:
+        if self._job_repo_override is not None:
+            return self._job_repo_override
+        return get_sync_job_repository()
 
     def compute_idempotency_key(
         self,
@@ -598,8 +604,16 @@ class SyncOrchestrator:
 
 
 # Global singleton sync orchestrator
-_sync_orchestrator = SyncOrchestrator()
+_sync_orchestrator: SyncOrchestrator | None = None
 
 
 def get_sync_orchestrator() -> SyncOrchestrator:
+    global _sync_orchestrator
+    if _sync_orchestrator is None:
+        _sync_orchestrator = SyncOrchestrator()
     return _sync_orchestrator
+
+
+def reset_sync_orchestrator(orchestrator: SyncOrchestrator | None = None) -> None:
+    global _sync_orchestrator
+    _sync_orchestrator = orchestrator

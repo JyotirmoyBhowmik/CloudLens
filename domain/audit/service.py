@@ -39,6 +39,7 @@ class AuditService:
             self.repository = repository
         else:
             from domain.audit.repository import get_audit_repository
+
             self.repository = get_audit_repository()
         self._lock = threading.Lock()
 
@@ -251,6 +252,7 @@ class AuditService:
     def format_cef_event(self, event: AuditEvent) -> str:
         """Formats an AuditEvent into standard Common Event Format (CEF) syslog (IMP-03)."""
         from masterdata.improvement_features import get_feature_config
+
         cfg = get_feature_config("IMP_03_AUDIT_SIEM")
         vendor = cfg.get("siem_device_vendor", "CloudLens")
         product = cfg.get("siem_device_product", "Platform")
@@ -259,7 +261,9 @@ class AuditService:
 
         # Severity mapping: Audit events map 1-10
         severity = 7 if "SECURITY" in event.action or "TAMPER" in event.action else 4
-        ev_type = event.event_type.value if hasattr(event.event_type, "value") else str(event.event_type)
+        ev_type = (
+            event.event_type.value if hasattr(event.event_type, "value") else str(event.event_type)
+        )
 
         ext_parts = [
             f"suser={event.actor_id}",
@@ -286,6 +290,7 @@ class AuditService:
         import hmac
         import os
         from masterdata.improvement_features import get_feature_config
+
         cfg = get_feature_config("IMP_03_AUDIT_SIEM")
         bucket = cfg.get("minio_bucket", "cloudlens-audit-exports")
 
@@ -296,7 +301,9 @@ class AuditService:
         serialized_events = [
             {
                 "id": e.id,
-                "event_type": e.event_type.value if hasattr(e.event_type, "value") else str(e.event_type),
+                "event_type": e.event_type.value
+                if hasattr(e.event_type, "value")
+                else str(e.event_type),
                 "actor_id": e.actor_id,
                 "actor_roles": e.actor_roles,
                 "action": e.action,
@@ -313,7 +320,8 @@ class AuditService:
 
         payload_bytes = json.dumps(serialized_events, sort_keys=True).encode("utf-8")
         audit_hmac_material = (
-            signing_key or os.getenv("CLOUDLENS_AUDIT_SIGNING_KEY", "cloudlens-audit-hmac-master-key")
+            signing_key
+            or os.getenv("CLOUDLENS_AUDIT_SIGNING_KEY", "cloudlens-audit-hmac-master-key")
         ).encode("utf-8")
         signature = hmac.new(audit_hmac_material, payload_bytes, hashlib.sha256).hexdigest()
         bundle_hash = hashlib.sha256(payload_bytes).hexdigest()
@@ -356,7 +364,11 @@ class AuditService:
         """Cryptographically verifies the SHA-256 hash chain for an entire tenant audit stream (IMP-03)."""
         events = list(self.repository._tenant_streams.get(tenant_id, []))
         if not events:
-            return {"valid": True, "verified_count": 0, "message": "Empty audit stream is trivially valid."}
+            return {
+                "valid": True,
+                "verified_count": 0,
+                "message": "Empty audit stream is trivially valid.",
+            }
 
         for idx, event in enumerate(events):
             prev_event = events[idx - 1] if idx > 0 else None
@@ -401,7 +413,6 @@ class AuditService:
         }
 
 
-
 _GLOBAL_AUDIT_SERVICE: AuditService | None = None
 _AUDIT_LOCK = threading.Lock()
 
@@ -439,4 +450,3 @@ def export_daily_audit_signed(
 def verify_audit_hash_chain(tenant_id: str | None = None) -> dict[str, Any]:
     """Convenience helper to verify audit hash chain (IMP-03)."""
     return get_audit_service().verify_audit_hash_chain(tenant_id)
-

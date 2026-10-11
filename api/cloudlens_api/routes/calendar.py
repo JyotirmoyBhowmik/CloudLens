@@ -49,11 +49,15 @@ def list_commitments(
         {
             "id": c.commitment_id,
             "provider": c.provider.value if hasattr(c.provider, "value") else str(c.provider),
-            "type": c.commitment_type.value if hasattr(c.commitment_type, "value") else str(c.commitment_type),
+            "type": c.commitment_type.value
+            if hasattr(c.commitment_type, "value")
+            else str(c.commitment_type),
             "scope": c.scope_id,
             "termMonths": c.term_months,
             "hourlyCommitment": float(c.hourly_committed_rate),
-            "monthlySavings": float(c.annual_committed_cost / 12) if c.annual_committed_cost else 0.0,
+            "monthlySavings": float(c.annual_committed_cost / 12)
+            if c.annual_committed_cost
+            else 0.0,
             "utilizationPct": 98.4,
             "coveragePct": 76.2,
             "expirationDate": c.expiry_date.isoformat(),

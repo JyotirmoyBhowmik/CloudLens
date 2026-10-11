@@ -58,7 +58,9 @@ async def test_rls_raw_sql_tenant_a_cannot_read_b():
         )
 
         res_a = await session.execute(
-            text("SELECT tenant_id, settings->>'reporting_currency' FROM tenant_settings ORDER BY tenant_id;")
+            text(
+                "SELECT tenant_id, settings->>'reporting_currency' FROM tenant_settings ORDER BY tenant_id;"
+            )
         )
         rows_a = res_a.fetchall()
 
@@ -74,7 +76,9 @@ async def test_rls_raw_sql_tenant_a_cannot_read_b():
         )
 
         res_b = await session.execute(
-            text("SELECT tenant_id, settings->>'reporting_currency' FROM tenant_settings ORDER BY tenant_id;")
+            text(
+                "SELECT tenant_id, settings->>'reporting_currency' FROM tenant_settings ORDER BY tenant_id;"
+            )
         )
         rows_b = res_b.fetchall()
 
@@ -84,15 +88,17 @@ async def test_rls_raw_sql_tenant_a_cannot_read_b():
         assert rows_b[0][1] == "EUR"
 
         # 4. SET LOCAL app.current_tenant_id = '' (Unauthenticated / invalid context)
-        await session.execute(
-            text("SELECT set_config('app.current_tenant_id', '', true);")
-        )
+        await session.execute(text("SELECT set_config('app.current_tenant_id', '', true);"))
 
         res_empty = await session.execute(
             text("SELECT tenant_id FROM tenant_settings WHERE tenant_id IN (:ta, :tb);"),
             {"ta": tenant_a, "tb": tenant_b},
         )
         rows_empty = res_empty.fetchall()
-        assert len(rows_empty) == 0, f"Expected 0 rows for empty tenant context, got {len(rows_empty)}"
+        assert len(rows_empty) == 0, (
+            f"Expected 0 rows for empty tenant context, got {len(rows_empty)}"
+        )
 
-    print("\n[RLS RAW-SQL PROOF] Verified: Tenant A cannot read Tenant B; Tenant B cannot read Tenant A.")
+    print(
+        "\n[RLS RAW-SQL PROOF] Verified: Tenant A cannot read Tenant B; Tenant B cannot read Tenant A."
+    )

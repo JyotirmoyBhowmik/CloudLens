@@ -99,7 +99,9 @@ class QuarterlyReviewPackGenerator:
         )
 
         for comp in data_quality.components:
-            details_str = ", ".join(f"{k}={v}" for k, v in list(comp.inspectable_details.items())[:3])
+            details_str = ", ".join(
+                f"{k}={v}" for k, v in list(comp.inspectable_details.items())[:3]
+            )
             doc_lines.append(
                 f"| `{comp.component_name}` | {comp.score:.1f}% | {int(comp.weight * 100)}% | {details_str or 'Compliant'} |"
             )
@@ -142,7 +144,9 @@ class QuarterlyReviewPackGenerator:
                 ]
             )
             for g in gaps:
-                doc_lines.append(f"- **Finding:** {g.get('finding', 'N/A')} — **Action:** {g.get('action', 'N/A')}")
+                doc_lines.append(
+                    f"- **Finding:** {g.get('finding', 'N/A')} — **Action:** {g.get('action', 'N/A')}"
+                )
 
         doc_lines.extend(
             [

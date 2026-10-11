@@ -882,8 +882,8 @@ def get_quota_service() -> QuotaService:
     return _quota_service
 
 
-def reset_quota_service() -> None:
+def reset_quota_service(repo: QuotaRepository | None = None) -> None:
     """Resets singleton QuotaService and Repository for clean test fixtures."""
     global _quota_service
     _quota_service = None
-    reset_quota_repository()
+    reset_quota_repository(repo)

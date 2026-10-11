@@ -1,10 +1,12 @@
 import os
 import sys
 import time
+
 sys.path.insert(0, os.getcwd())
 
 from domain.control_tower.service import get_control_tower_service
 from domain.control_tower.models import PanelStatus
+
 
 def verify_stopped_worker_turns_red():
     svc = get_control_tower_service()
@@ -44,7 +46,10 @@ def verify_stopped_worker_turns_red():
     print(f"   Metrics: {p_recovered.metrics}")
     assert p_recovered.status in (PanelStatus.GREEN, PanelStatus.AMBER)
 
-    print("\nVERIFICATION COMPLETE: Stopped worker turns tile RED immediately (within < 1s, < 60s limit).")
+    print(
+        "\nVERIFICATION COMPLETE: Stopped worker turns tile RED immediately (within < 1s, < 60s limit)."
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     verify_stopped_worker_turns_red()

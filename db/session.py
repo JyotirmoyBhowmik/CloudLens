@@ -9,11 +9,12 @@ Enforces:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import sys
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -78,6 +79,7 @@ def get_async_engine() -> AsyncEngine:
     """Returns async SQLAlchemy engine configured with connection pooling, bound to current event loop."""
     global _async_engine, _engines_by_loop
     import asyncio
+
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -130,6 +132,7 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
     """Returns async session factory bound to the current event loop."""
     global _async_session_factory, _factories_by_loop
     import asyncio
+
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -196,13 +199,18 @@ async def get_db_session(
     - Commits on success, rolls back on error, ensures deterministic cleanup.
     """
     effective_tid = None
-    if request is not None and hasattr(request, "state") and hasattr(request.state, "tenant_context"):
+    if (
+        request is not None
+        and hasattr(request, "state")
+        and hasattr(request.state, "tenant_context")
+    ):
         tc = request.state.tenant_context
         if tc:
             effective_tid = getattr(tc, "effective_tenant_id", None)
 
     if not effective_tid:
         from domain.observability import current_tenant_id
+
         effective_tid = current_tenant_id.get(None)
 
     async with get_tenant_session(effective_tid) as session:
@@ -328,4 +336,3 @@ def run_async(coro: Any, timeout: float = 10.0) -> Any:
     loop = get_sync_bridge_loop()
     future = asyncio.run_coroutine_threadsafe(coro, loop)
     return future.result(timeout=timeout)
-

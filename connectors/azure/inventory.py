@@ -76,7 +76,9 @@ class AzureInventoryService:
 
                 query = "Resources | project id, name, type, location, resourceGroup, subscriptionId, tags, properties"
                 options = QueryRequestOptions(
-                    skip_token=pagination.continuation_token if pagination and pagination.continuation_token else None,
+                    skip_token=pagination.continuation_token
+                    if pagination and pagination.continuation_token
+                    else None,
                     result_format="objectArray",
                 )
                 request = QueryRequest(query=query, options=options)

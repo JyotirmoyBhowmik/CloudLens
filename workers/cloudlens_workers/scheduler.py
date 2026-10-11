@@ -80,11 +80,17 @@ class DatabaseBeatScheduler(Scheduler):
             records = mdm.list_records("CONNECTOR_SCHEDULE")
             for rec in records:
                 attrs = rec.attributes or {}
-                task_key = attrs.get("capability_or_task") or rec.code.lower().removeprefix("sched_")
+                task_key = attrs.get("capability_or_task") or rec.code.lower().removeprefix(
+                    "sched_"
+                )
                 task_name = CAPABILITY_TASK_MAP.get(task_key) or f"cloudlens.tasks.{task_key}"
                 interval_secs = attrs.get("interval_seconds")
                 interval_minutes = int(attrs.get("interval_minutes", 60))
-                sched_delta = timedelta(seconds=int(interval_secs)) if interval_secs else timedelta(minutes=interval_minutes)
+                sched_delta = (
+                    timedelta(seconds=int(interval_secs))
+                    if interval_secs
+                    else timedelta(minutes=interval_minutes)
+                )
                 target_tenant = attrs.get("tenant_id") or default_tenant
                 target_connector = attrs.get("connector_id")
 
@@ -114,7 +120,11 @@ class DatabaseBeatScheduler(Scheduler):
             for sched in active_schedules:
                 if not sched.is_enabled:
                     continue
-                cap_val = sched.capability.value if hasattr(sched.capability, "value") else str(sched.capability)
+                cap_val = (
+                    sched.capability.value
+                    if hasattr(sched.capability, "value")
+                    else str(sched.capability)
+                )
                 task_name = CAPABILITY_TASK_MAP.get(cap_val, "cloudlens.tasks.ingest_cost")
                 entry_name = f"connector_{sched.connector_id}_{cap_val}"
                 sched_delta = (
@@ -146,20 +156,28 @@ class DatabaseBeatScheduler(Scheduler):
         db_schedules = self.load_database_schedules()
         self.update_from_dict(db_schedules)
         self._last_schedule_sync = time.time()
-        logger.info("Loaded %d database-backed schedule entries into Celery Beat.", len(self.schedule))
+        logger.info(
+            "Loaded %d database-backed schedule entries into Celery Beat.", len(self.schedule)
+        )
 
     def tick(self) -> float:
         """Performs scheduler tick if and only if holding the distributed leader lock."""
         # 1. Leader election check
         if not self.leader_lock.acquire_or_renew():
             # Standby instance: sleep without dispatching any tasks
-            logger.debug("Beat instance %s is in STANDBY mode. Suppressing task dispatches.", self.leader_lock.instance_id)
+            logger.debug(
+                "Beat instance %s is in STANDBY mode. Suppressing task dispatches.",
+                self.leader_lock.instance_id,
+            )
             return 5.0  # no-hardcode-allow: reason="Standby sleep backoff interval seconds", reviewer="Prompt-48-Audit"
 
         # 1.5 Global Maintenance Mode check (IMP-01)
         from domain.maintenance.service import get_maintenance_mode_service
+
         if get_maintenance_mode_service().is_global_maintenance():
-            logger.info("Global Maintenance Mode is active. Celery beat task dispatching is paused.")
+            logger.info(
+                "Global Maintenance Mode is active. Celery beat task dispatching is paused."
+            )
             return 10.0  # no-hardcode-allow: reason="Maintenance mode beat sleep backoff seconds", reviewer="Prompt-48-Audit"
 
         # 2. Leader active: reload schedules if periodic refresh interval elapsed

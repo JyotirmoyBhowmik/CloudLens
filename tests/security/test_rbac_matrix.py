@@ -212,17 +212,26 @@ def test_auditor_can_observe_but_every_operate_action_returns_403():
 
     # 1. Authorize checks: observe is True, operate and act_as are False
     obs_decision = rbac_svc.authorize(
-        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.observe"
+        user_id="aud-1",
+        tenant_id="t1",
+        role_codes=[auditor_role],
+        permission_code="platform.observe",
     )
     assert obs_decision.allowed is True, "AUDITOR must have platform.observe capability"
 
     op_decision = rbac_svc.authorize(
-        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.operate"
+        user_id="aud-1",
+        tenant_id="t1",
+        role_codes=[auditor_role],
+        permission_code="platform.operate",
     )
     assert op_decision.allowed is False, "AUDITOR must NOT have platform.operate capability"
 
     act_decision = rbac_svc.authorize(
-        user_id="aud-1", tenant_id="t1", role_codes=[auditor_role], permission_code="platform.act_as"
+        user_id="aud-1",
+        tenant_id="t1",
+        role_codes=[auditor_role],
+        permission_code="platform.act_as",
     )
     assert act_decision.allowed is False, "AUDITOR must NOT have platform.act_as capability"
 
@@ -259,21 +268,30 @@ def test_auditor_can_observe_but_every_operate_action_returns_403():
         },
         headers=auditor_headers,
     )
-    assert op_res_override.status_code == 403, f"Expected 403 on override operate, got {op_res_override.status_code}"
+    assert op_res_override.status_code == 403, (
+        f"Expected 403 on override operate, got {op_res_override.status_code}"
+    )
 
     op_res_act_as = client.post(
         "/api/v1/admin/act-as",
-        json={"tenant_id": "tenant-other", "reason": "Unauthorized act-as attempt for 403 verification"},
+        json={
+            "tenant_id": "tenant-other",
+            "reason": "Unauthorized act-as attempt for 403 verification",
+        },
         headers=auditor_headers,
     )
-    assert op_res_act_as.status_code == 403, f"Expected 403 on act-as operate, got {op_res_act_as.status_code}"
+    assert op_res_act_as.status_code == 403, (
+        f"Expected 403 on act-as operate, got {op_res_act_as.status_code}"
+    )
 
     op_res_step_up = client.post(
         "/api/v1/admin/step-up",
         json={"password": "any-password"},
         headers=auditor_headers,
     )
-    assert op_res_step_up.status_code == 403, f"Expected 403 on step-up operate, got {op_res_step_up.status_code}"
+    assert op_res_step_up.status_code == 403, (
+        f"Expected 403 on step-up operate, got {op_res_step_up.status_code}"
+    )
 
 
 # ==============================================================================
@@ -582,4 +600,3 @@ def test_http_endpoint_filter_demo_with_disclosure():
     assert disc["hidden_count"] == 1
     assert disc["total_unfiltered_count"] == 2
     assert disc["disclosure_notice"] is not None
-

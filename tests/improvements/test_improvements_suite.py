@@ -82,6 +82,7 @@ def reset_all_services():
 # IMP-01: MAINTENANCE MODE
 # ==============================================================================
 
+
 def test_imp01_maintenance_mode_lifecycle_and_blocking(client: TestClient):
     """Verifies maintenance mode blocks mutating operations with 503 Problem Details and allows GETs."""
     maint_service = get_maintenance_mode_service()
@@ -121,6 +122,7 @@ def test_imp01_maintenance_mode_lifecycle_and_blocking(client: TestClient):
 # ==============================================================================
 # IMP-02: SESSION MANAGEMENT
 # ==============================================================================
+
 
 def test_imp02_session_inventory_and_revocation():
     """Verifies session listing, revocation of single session, and all sessions for user."""
@@ -175,6 +177,7 @@ def test_imp02_session_inventory_and_revocation():
 # ==============================================================================
 # IMP-03: AUDIT EXPORT & SIEM FORWARDING & HASH-CHAIN VERIFY
 # ==============================================================================
+
 
 def test_imp03_audit_export_siem_and_hash_chain():
     """Verifies ArcSight CEF event formatting, daily signed export, and hash-chain verification."""
@@ -248,10 +251,10 @@ def test_imp03_verify_audit_chain_script():
     assert "STATUS:        PASS" in result.stdout
 
 
-
 # ==============================================================================
 # IMP-04: BACKUP / RESTORE SELF-SERVICE CHECK
 # ==============================================================================
+
 
 def test_imp04_backup_restore_self_service():
     """Verifies automated restore test to isolated schema and Control Tower panel reflection."""
@@ -280,6 +283,7 @@ def test_imp04_backup_restore_self_service():
 # IMP-05: SYNTHETIC JOURNEY MONITOR
 # ==============================================================================
 
+
 def test_imp05_synthetic_journey_monitor():
     """Verifies 4-step synthetic journey execution, SLA compliance check, and metric emission."""
     monitor = get_synthetic_journey_monitor()
@@ -297,6 +301,7 @@ def test_imp05_synthetic_journey_monitor():
 # ==============================================================================
 # IMP-06: IN-APP RELEASE & CHANGE LOG
 # ==============================================================================
+
 
 def test_imp06_release_and_changelog_api(client: TestClient):
     """Verifies /api/v1/about endpoint returns version, commit SHA, migration head, and notes."""
@@ -319,6 +324,7 @@ def test_imp06_release_and_changelog_api(client: TestClient):
 # ==============================================================================
 # IMP-07: RATE-LIMIT & ABUSE DASHBOARD
 # ==============================================================================
+
 
 def test_imp07_abuse_tracker_and_lockout(client: TestClient):
     """Verifies rate-limit tracking, auth failure lockout after 5 attempts, and abuse panel."""
@@ -352,6 +358,7 @@ def test_imp07_abuse_tracker_and_lockout(client: TestClient):
 # IMP-08: DATA FRESHNESS SLA REPORT
 # ==============================================================================
 
+
 def test_imp08_data_freshness_sla_report():
     """Verifies weekly SLA evaluation per provider/capability and email report payload."""
     sla_service = get_freshness_sla_service()
@@ -371,6 +378,7 @@ def test_imp08_data_freshness_sla_report():
 # ==============================================================================
 # IMP-09: CONFIGURATION SNAPSHOT AND DIFF
 # ==============================================================================
+
 
 def test_imp09_config_snapshot_diff_and_import(tmp_path: Path):
     """Verifies configuration snapshot export, diffing between environments, and import."""
@@ -423,6 +431,7 @@ def test_imp09_config_snapshot_script(tmp_path: Path):
 # IMP-10: LICENCE & COMMITMENT CALENDAR
 # ==============================================================================
 
+
 def test_imp10_commitment_calendar_api(client: TestClient):
     """Verifies 5-stream aggregation in calendar view and /commitments/calendar endpoint."""
     res = client.get("/api/v1/commitments/calendar")
@@ -453,6 +462,7 @@ def test_imp10_commitment_calendar_api(client: TestClient):
 # PHASE 2: SAFETY INTERLOCK
 # ==============================================================================
 
+
 def test_phase2_items_remain_pending_confirmation():
     """Verifies IMP-11 and IMP-12 are strictly flagged as Phase 2 PENDING_CONFIRMATION."""
     features = list_active_features()
@@ -470,4 +480,3 @@ def test_phase2_items_remain_pending_confirmation():
     imp11_cfg = get_feature_config("IMP_11_COLLAB_ALERTS")
     assert imp11_cfg is not None
     assert imp11_cfg.get("requires_confirmation") is True
-

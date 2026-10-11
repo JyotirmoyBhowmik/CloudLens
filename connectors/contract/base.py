@@ -327,11 +327,17 @@ class BaseCloudConnector(ABC):
         """Permission validation matching Prompt 47 test fixture signature."""
         if self.has_capability(ConnectorCapability.VALIDATE_PERMISSIONS):
             result = await self.validate_permissions()
+            msg = (
+                result.raw_details.get("error", "Authentication rejected by provider API.")
+                if not result.valid
+                else "Valid"
+            )
             return {
                 "valid": result.valid,
                 "provider": result.provider,
                 "capabilities": result.capabilities,
                 "missing_permissions": result.missing_permissions,
+                "message": msg,
             }
         return {
             "valid": True,

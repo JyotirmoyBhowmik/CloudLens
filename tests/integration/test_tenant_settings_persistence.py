@@ -68,7 +68,9 @@ async def test_reference_restart_proof_survives_process_restart():
     # Step 6: Verify direct raw PostgreSQL query matches
     async with get_tenant_session() as session:
         raw_res = await session.execute(
-            text("SELECT settings->>'reporting_currency', settings->'approval_limits'->>'auto_approval_limit_amount' FROM tenant_settings WHERE tenant_id = :tid;"),
+            text(
+                "SELECT settings->>'reporting_currency', settings->'approval_limits'->>'auto_approval_limit_amount' FROM tenant_settings WHERE tenant_id = :tid;"
+            ),
             {"tid": test_tenant_id},
         )
         row = raw_res.fetchone()
@@ -76,7 +78,9 @@ async def test_reference_restart_proof_survives_process_restart():
         assert row[0] == "GBP"
         assert float(row[1]) == 7500.0
 
-    print("\n[REFERENCE RESTART PROOF] Verified: Tenant settings successfully persisted in PostgreSQL and survived restart.")
+    print(
+        "\n[REFERENCE RESTART PROOF] Verified: Tenant settings successfully persisted in PostgreSQL and survived restart."
+    )
 
 
 def test_production_start_refuses_inmemory():
@@ -99,7 +103,9 @@ def test_production_start_refuses_inmemory():
 
         assert excinfo.value.code == 1
 
-        print("\n[STARTUP GUARD PROOF] Verified: Production start strictly refused InMemory repository and exited code 1.")
+        print(
+            "\n[STARTUP GUARD PROOF] Verified: Production start strictly refused InMemory repository and exited code 1."
+        )
     finally:
         if orig_env is not None:
             os.environ["CLOUDLENS_ENV"] = orig_env

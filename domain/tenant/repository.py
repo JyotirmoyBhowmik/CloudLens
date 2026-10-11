@@ -36,13 +36,20 @@ class TenantAwareRepository(ABC, Generic[T]):
         if not tenant_context or not tenant_context.tenant_id:
             from domain.models.exceptions import MissingTenantContextException
 
-            raise MissingTenantContextException("Missing required tenant context in repository call.")
-        if self._tenant_id and self._tenant_id != tenant_context.tenant_id:
+            raise MissingTenantContextException(
+                "Missing required tenant context in repository call."
+            )
+        bound_tid = getattr(self, "_tenant_id", None)
+        if bound_tid and bound_tid != tenant_context.tenant_id:
             from domain.models.exceptions import CrossTenantViolationException
 
             raise CrossTenantViolationException(
-                f"Repository bound to tenant '{self._tenant_id}' cannot execute for tenant '{tenant_context.tenant_id}'."
+                f"Repository bound to tenant '{bound_tid}' cannot execute for tenant '{tenant_context.tenant_id}'."
             )
+
+    def _validate_tenant_context(self, tenant_context: TenantContext) -> None:
+        """Alias for _validate_tenant ensuring test fake and interface parity."""
+        self._validate_tenant(tenant_context)
 
     @abstractmethod
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> T | None:
@@ -94,20 +101,15 @@ class TenantRepository(Protocol):
         """Deletes a tenant record."""
         ...
 
-    def get_sync(self, tenant_id: str) -> Tenant | None:
-        ...
+    def get_sync(self, tenant_id: str) -> Tenant | None: ...
 
-    def get_by_code_sync(self, code: str) -> Tenant | None:
-        ...
+    def get_by_code_sync(self, code: str) -> Tenant | None: ...
 
-    def list_sync(self) -> list[Tenant]:
-        ...
+    def list_sync(self) -> list[Tenant]: ...
 
-    def save_sync(self, tenant: Tenant) -> Tenant:
-        ...
+    def save_sync(self, tenant: Tenant) -> Tenant: ...
 
-    def delete_sync(self, tenant_id: str) -> bool:
-        ...
+    def delete_sync(self, tenant_id: str) -> bool: ...
 
 
 class SqlTenantRepository:
@@ -238,7 +240,9 @@ class SqlTenantRepository:
                 "fiscal_year_start": tenant.fiscal_year_start,
                 "iana_timezone": tenant.iana_timezone,
                 "retention_profile": tenant.retention_profile,
-                "status": tenant.status.value if hasattr(tenant.status, "value") else str(tenant.status),
+                "status": tenant.status.value
+                if hasattr(tenant.status, "value")
+                else str(tenant.status),
                 "suspension_reason": tenant.suspension_reason,
             },
         )

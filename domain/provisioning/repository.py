@@ -133,7 +133,9 @@ class SqlProvisioningRepository:
                     name = EXCLUDED.name,
                     estimate_payload = EXCLUDED.estimate_payload;
             """)
-            created_dt = _to_datetime(getattr(estimate, "created_at", None)) or dt.datetime.now(dt.timezone.utc)
+            created_dt = _to_datetime(getattr(estimate, "created_at", None)) or dt.datetime.now(
+                dt.timezone.utc
+            )
             await sess.execute(
                 query,
                 {
@@ -197,7 +199,9 @@ class SqlProvisioningRepository:
                     updated_at = EXCLUDED.updated_at;
             """)
             req_id = getattr(request, "requester_id", getattr(request, "owner_id", "unknown"))
-            created_dt = _to_datetime(getattr(request, "created_at", None)) or dt.datetime.now(dt.timezone.utc)
+            created_dt = _to_datetime(getattr(request, "created_at", None)) or dt.datetime.now(
+                dt.timezone.utc
+            )
             updated_dt = _to_datetime(getattr(request, "updated_at", None)) or created_dt
             await sess.execute(
                 query,
@@ -218,7 +222,9 @@ class SqlProvisioningRepository:
     def save_request(self, request: ProvisioningRequest) -> ProvisioningRequest:
         return self._run_async(self.save_request_async(request))
 
-    async def get_request_async(self, tenant_id: str, request_id: str) -> ProvisioningRequest | None:
+    async def get_request_async(
+        self, tenant_id: str, request_id: str
+    ) -> ProvisioningRequest | None:
         async with get_tenant_session(tenant_id) as sess:
             query = text("""
                 SELECT * FROM provisioning_requests
@@ -260,7 +266,9 @@ class SqlProvisioningRepository:
         status: str | None = None,
         scope_code: str | None = None,
     ) -> list[ProvisioningRequest]:
-        return self._run_async(self.list_requests_async(tenant_id, status=status, scope_code=scope_code))
+        return self._run_async(
+            self.list_requests_async(tenant_id, status=status, scope_code=scope_code)
+        )
 
     # 3. Gate Trigger Rules
     async def save_gate_rule_async(self, tenant_id: str, rule: GateTriggerRule) -> GateTriggerRule:

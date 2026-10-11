@@ -24,7 +24,9 @@ _in_memory_lock_guard = threading.Lock()
 
 def get_redis_client() -> Any | None:
     """Attempts to connect to Redis using environment configuration."""
-    redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "redis://localhost:6379/0"
+    redis_url = (
+        os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "redis://localhost:6379/0"
+    )
     try:
         import redis
 
@@ -32,7 +34,9 @@ def get_redis_client() -> Any | None:
         client.ping()
         return client
     except Exception as exc:
-        logger.debug("Redis unavailable at %s: %s. Using in-memory concurrency locks.", redis_url, exc)
+        logger.debug(
+            "Redis unavailable at %s: %s. Using in-memory concurrency locks.", redis_url, exc
+        )
         return None
 
 
@@ -64,7 +68,11 @@ class TaskConcurrencyLock:
                 self.acquired = bool(res)
                 return self.acquired
             except Exception as exc:
-                logger.warning("Redis error acquiring task lock %s: %s; falling back to in-memory lock.", self.lock_key, exc)
+                logger.warning(
+                    "Redis error acquiring task lock %s: %s; falling back to in-memory lock.",
+                    self.lock_key,
+                    exc,
+                )
 
         # In-memory lock fallback
         now = time.time()
@@ -138,7 +146,9 @@ class BeatLeaderLock:
             try:
                 if self._is_leader:
                     # Renew existing leadership: SET lock_key instance_id XX EX ttl
-                    res = self._redis.set(self.lock_key, self.instance_id, xx=True, ex=self.ttl_seconds)
+                    res = self._redis.set(
+                        self.lock_key, self.instance_id, xx=True, ex=self.ttl_seconds
+                    )
                     if res:
                         self._is_leader = True
                         return True
@@ -150,7 +160,11 @@ class BeatLeaderLock:
                 self._is_leader = bool(res)
                 return self._is_leader
             except Exception as exc:
-                logger.warning("Redis leader lock error on %s: %s. Falling back to local lock.", self.lock_key, exc)
+                logger.warning(
+                    "Redis leader lock error on %s: %s. Falling back to local lock.",
+                    self.lock_key,
+                    exc,
+                )
 
         # In-memory fallback
         now = time.time()

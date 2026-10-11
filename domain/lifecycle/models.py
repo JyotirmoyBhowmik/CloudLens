@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class LifecycleState(StrEnum):
     """The 10 canonical lifecycle states governing cloud resources."""
+
     REQUESTED = "REQUESTED"
     PROVISIONED = "PROVISIONED"
     ACTIVE = "ACTIVE"
@@ -39,6 +40,7 @@ class LifecycleState(StrEnum):
 
 class OrphanResourceType(StrEnum):
     """Classification of orphaned cloud residue left behind after incomplete decommissioning."""
+
     UNATTACHED_DISK = "UNATTACHED_DISK"
     UNUSED_IP_ADDRESS = "UNUSED_IP_ADDRESS"
     ORPHAN_SNAPSHOT = "ORPHAN_SNAPSHOT"
@@ -48,13 +50,18 @@ class OrphanResourceType(StrEnum):
 
 class DependencyAcknowledgement(BaseModel):
     """Cross-team sign-off acknowledging downstream impact of decommissioning."""
+
     dependency_id: str
     source_resource_id: str
     dependent_resource_id: str
-    dependency_type: str = Field(..., description="Type of dependency, e.g. NETWORK, SERVICE_CALL, DATABASE")
+    dependency_type: str = Field(
+        ..., description="Type of dependency, e.g. NETWORK, SERVICE_CALL, DATABASE"
+    )
     dependent_owner_team: str
     proposer_owner_team: str
-    provenance: str = Field(default="PROMPT_32_GRAPH", description="Source or discovery provenance of dependency edge")
+    provenance: str = Field(
+        default="PROMPT_32_GRAPH", description="Source or discovery provenance of dependency edge"
+    )
     confidence: Decimal = Field(default=Decimal("1.00"))
     is_cross_team: bool = False
     is_acknowledged: bool = False
@@ -71,8 +78,11 @@ class DependencyAcknowledgement(BaseModel):
 
 class RetentionObligation(BaseModel):
     """Statutory or compliance data retention hold recorded against a resource."""
+
     obligation_id: str = Field(default_factory=lambda: f"ret-{uuid.uuid4().hex[:8]}")
-    retention_basis: str = Field(..., description="Legal basis, e.g. SEC-Rule-17a-4, GDPR-7YR, TAX-AUDIT")
+    retention_basis: str = Field(
+        ..., description="Legal basis, e.g. SEC-Rule-17a-4, GDPR-7YR, TAX-AUDIT"
+    )
     mandatory_until: dt.datetime
     is_satisfied: bool = False
     satisfied_by: str | None = None
@@ -82,6 +92,7 @@ class RetentionObligation(BaseModel):
 
 class LifecycleResource(BaseModel):
     """Resource tracking state, transitions, and decommissioning history."""
+
     resource_id: str
     tenant_id: str
     owner_team: str
@@ -106,6 +117,7 @@ class LifecycleResource(BaseModel):
 
 class DecommissioningRequest(BaseModel):
     """Formal decommissioning request entering Prompt 50 workflow."""
+
     request_id: str = Field(default_factory=lambda: f"dcom-{uuid.uuid4().hex[:8]}")
     programme_id: str | None = None
     resource_ids: list[str]
@@ -130,6 +142,7 @@ class DecommissioningRequest(BaseModel):
 
 class StoppedResourceSurfaced(BaseModel):
     """Resource surfaced because it remained stopped past its soak window without deletion."""
+
     resource_id: str
     owner_team: str
     stopped_at: dt.datetime
@@ -147,6 +160,7 @@ class StoppedResourceSurfaced(BaseModel):
 
 class OrphanResidueItem(BaseModel):
     """Detected orphan or cloud residue resource."""
+
     residue_id: str = Field(default_factory=lambda: f"res-{uuid.uuid4().hex[:8]}")
     resource_id: str
     residue_type: OrphanResourceType
@@ -165,6 +179,7 @@ class OrphanResidueItem(BaseModel):
 
 class DecommissioningProgramme(BaseModel):
     """Named programme grouping multiple resources for strategic decommissioning."""
+
     programme_id: str = Field(default_factory=lambda: f"prog-{uuid.uuid4().hex[:8]}")
     tenant_id: str
     name: str
@@ -184,6 +199,7 @@ class DecommissioningProgramme(BaseModel):
 
 class DecommissioningProgrammeView(BaseModel):
     """Aggregated programme progress and savings report."""
+
     programme_id: str
     name: str
     total_resources: int

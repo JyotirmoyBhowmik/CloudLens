@@ -52,6 +52,7 @@ class TokenRevocationRegistry:
     def repository(self):
         if self._repository is None:
             from domain.identity.repository import get_identity_repository
+
             self._repository = get_identity_repository()
         return self._repository
 
@@ -149,15 +150,13 @@ class TokenKeyManager:
     def get_jwks(self) -> dict[str, Any]:
         """Returns the public JWKS document."""
         return {
-            "keys": [
-                entry["public_jwk"]
-                for entry in self._keys.values()
-                if "public_jwk" in entry
-            ]
+            "keys": [entry["public_jwk"] for entry in self._keys.values() if "public_jwk" in entry]
         }
 
     @staticmethod
-    def _generate_rsa_key_pair(kid_prefix: str = "cloudlens-key") -> tuple[str, str, str, dict[str, Any]]:
+    def _generate_rsa_key_pair(
+        kid_prefix: str = "cloudlens-key",
+    ) -> tuple[str, str, str, dict[str, Any]]:
         """Generates a 2048-bit RSA key pair, returning (kid, priv_pem, pub_pem, jwk)."""
         priv = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         priv_pem = priv.private_bytes(
@@ -165,10 +164,14 @@ class TokenKeyManager:
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
         ).decode("utf-8")
-        pub_pem = priv.public_key().public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        ).decode("utf-8")
+        pub_pem = (
+            priv.public_key()
+            .public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            .decode("utf-8")
+        )
         nums = priv.public_key().public_numbers()
 
         def _to_b64u(n: int) -> str:
@@ -200,7 +203,11 @@ class TokenKeyManager:
         }
         self._active_kid = new_kid
         self._persist_keys()
-        logger.info("Rotated platform signing key to active_kid '%s'. Total keys: %d", new_kid, len(self._keys))
+        logger.info(
+            "Rotated platform signing key to active_kid '%s'. Total keys: %d",
+            new_kid,
+            len(self._keys),
+        )
         return new_kid
 
     def _persist_keys(self) -> None:
@@ -381,7 +388,9 @@ class CryptographicTokenEngine:
     ) -> None:
         self._key_manager = key_manager or get_default_key_manager()
         self._revocation = revocation_registry or TokenRevocationRegistry()
-        self._issuer = issuer or os.getenv("OIDC_ISSUER", "https://auth.cloudlens.internal/oauth2/default")
+        self._issuer = issuer or os.getenv(
+            "OIDC_ISSUER", "https://auth.cloudlens.internal/oauth2/default"
+        )
         self._audience = audience or os.getenv("OIDC_AUDIENCE", "cloudlens-api")
 
     @property
@@ -443,7 +452,12 @@ class CryptographicTokenEngine:
                 token_str,
                 pub_pem,
                 algorithms=["RS256"],
-                options={"verify_exp": False, "verify_nbf": False, "verify_aud": False, "verify_iss": False},
+                options={
+                    "verify_exp": False,
+                    "verify_nbf": False,
+                    "verify_aud": False,
+                    "verify_iss": False,
+                },
             )
         except jwt.InvalidSignatureError as e:
             raise TokenInvalidException("Token cryptographic signature verification failed.") from e
@@ -463,14 +477,20 @@ class CryptographicTokenEngine:
 
         # Issuer check (iss)
         iss = payload.get("iss")
-        check_iss = expected_issuer or (self._issuer if (expected_issuer is not None or (iss and iss == self._issuer)) else None)
+        check_iss = expected_issuer or (
+            self._issuer if (expected_issuer is not None or (iss and iss == self._issuer)) else None
+        )
         if iss and expected_issuer and iss != expected_issuer:
-            raise TokenInvalidException(f"Token issuer '{iss}' does not match expected '{expected_issuer}'.")
+            raise TokenInvalidException(
+                f"Token issuer '{iss}' does not match expected '{expected_issuer}'."
+            )
 
         # Audience check (aud)
         aud = payload.get("aud")
         if aud and expected_audience and aud != expected_audience:
-            raise TokenInvalidException(f"Token audience '{aud}' does not match expected '{expected_audience}'.")
+            raise TokenInvalidException(
+                f"Token audience '{aud}' does not match expected '{expected_audience}'."
+            )
 
         # Revocation check
         jti = payload.get("jti", "")

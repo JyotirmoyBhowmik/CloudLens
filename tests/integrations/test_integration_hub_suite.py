@@ -176,9 +176,7 @@ class TestIntegrationHubSuite:
         assert creds["client_id"] == "snow-123"
         assert creds["client_secret"] == "super-secret-pw"
 
-    def test_resilience_rate_limiting_enforcement(
-        self, sandbox: IntegrationSandbox
-    ) -> None:
+    def test_resilience_rate_limiting_enforcement(self, sandbox: IntegrationSandbox) -> None:
         """Rate limit strictly guards against outbound flooding."""
         cfg = sandbox.create_sandbox_config(
             IntegrationType.ITSM,

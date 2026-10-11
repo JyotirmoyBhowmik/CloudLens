@@ -132,7 +132,9 @@ class ProvisioningGateService:
         e_id = estimate_id or f"est-{uuid.uuid4().hex[:8]}"
 
         domain = os.getenv("CLOUDLENS_DOMAIN", "cloudlens.local")
-        fallback_email = tc.user_id if "@" in tc.user_id else f"{tc.user_id}@{domain}"  # no-hardcode-allow: reason="Check if user identifier contains email domain delimiter", reviewer="Prompt-48-Audit"
+        fallback_email = (
+            tc.user_id if "@" in tc.user_id else f"{tc.user_id}@{domain}"
+        )  # no-hardcode-allow: reason="Check if user identifier contains email domain delimiter", reviewer="Prompt-48-Audit"
         estimate = SavedEstimate(
             estimate_id=e_id,
             tenant_id=tc.tenant_id,

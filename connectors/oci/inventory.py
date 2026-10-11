@@ -35,6 +35,7 @@ class OCIInventoryService:
         """Constructs an OCI ResourceSearchClient if credentials are configured."""
         try:
             import oci
+
             creds = self.config.get("credentials") or {}
             if creds.get("user") and creds.get("key_content") and creds.get("fingerprint"):
                 config_dict = {
@@ -61,12 +62,19 @@ class OCIInventoryService:
         if client is not None:
             try:
                 import oci
+
                 search_details = oci.resource_search.models.StructuredSearchDetails(
                     query="query all resources",
                     matching_context_type="NONE",
                 )
-                tok = pagination.continuation_token if pagination and pagination.continuation_token else None
-                response = client.search_resources(search_details, page=tok, limit=pagination.page_size if pagination else 100)
+                tok = (
+                    pagination.continuation_token
+                    if pagination and pagination.continuation_token
+                    else None
+                )
+                response = client.search_resources(
+                    search_details, page=tok, limit=pagination.page_size if pagination else 100
+                )
                 for item in response.data.items or []:
                     rtype = item.resource_type
                     cat = KNOWN_OCI_TYPE_MAPPINGS.get(rtype, ServiceCategory.OTHER.value)
@@ -88,8 +96,7 @@ class OCIInventoryService:
 
         if scope_id and scope_id not in ("root", "global", "", self.tenancy_id):
             records = [
-                r for r in records
-                if r.compartment_id == scope_id or r.resource_id == scope_id
+                r for r in records if r.compartment_id == scope_id or r.resource_id == scope_id
             ]
 
         raw_dicts = [r.model_dump() for r in records]

@@ -132,7 +132,9 @@ class SqlQuotaRepository:
     # Quota Operations
     # =========================================================================
 
-    async def get_async(self, entity_id: str, *, tenant_context: TenantContext) -> QuotaEntity | None:
+    async def get_async(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> QuotaEntity | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 SELECT * FROM quotas
@@ -164,7 +166,9 @@ class SqlQuotaRepository:
                 provider = filter_params.get("provider")
                 if provider:
                     sql.append("AND provider = :provider")
-                    params["provider"] = provider.value if hasattr(provider, "value") else str(provider)
+                    params["provider"] = (
+                        provider.value if hasattr(provider, "value") else str(provider)
+                    )
 
                 service_code = filter_params.get("service_code")
                 if service_code:
@@ -188,11 +192,25 @@ class SqlQuotaRepository:
                 scope_type = filter_params.get("scope_type")
                 if scope_type:
                     st_val = scope_type.value if hasattr(scope_type, "value") else str(scope_type)
-                    items = [q for q in items if (q.scope_type.value if hasattr(q.scope_type, "value") else str(q.scope_type)) == st_val]
+                    items = [
+                        q
+                        for q in items
+                        if (
+                            q.scope_type.value
+                            if hasattr(q.scope_type, "value")
+                            else str(q.scope_type)
+                        )
+                        == st_val
+                    ]
                 status = filter_params.get("status")
                 if status:
                     stat_val = status.value if hasattr(status, "value") else str(status)
-                    items = [q for q in items if (q.status.value if hasattr(q.status, "value") else str(q.status)) == stat_val]
+                    items = [
+                        q
+                        for q in items
+                        if (q.status.value if hasattr(q.status, "value") else str(q.status))
+                        == stat_val
+                    ]
                 is_manual = filter_params.get("is_manual")
                 if is_manual is not None:
                     items = [q for q in items if q.is_manual == is_manual]
@@ -208,13 +226,22 @@ class SqlQuotaRepository:
         offset: int = 0,
     ) -> builtins.list[QuotaEntity]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
-    async def save_async(self, entity: QuotaEntity, *, tenant_context: TenantContext) -> QuotaEntity:
+    async def save_async(
+        self, entity: QuotaEntity, *, tenant_context: TenantContext
+    ) -> QuotaEntity:
         entity.tenant_id = tenant_context.tenant_id
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            prov_val = entity.provider.value if hasattr(entity.provider, "value") else str(entity.provider)
+            prov_val = (
+                entity.provider.value if hasattr(entity.provider, "value") else str(entity.provider)
+            )
             query = text("""
                 INSERT INTO quotas (
                     id, tenant_id, provider, service_code, quota_code, scope_id,
@@ -278,7 +305,9 @@ class SqlQuotaRepository:
                 provider = filter_params.get("provider")
                 if provider:
                     sql.append("AND provider = :provider")
-                    params["provider"] = provider.value if hasattr(provider, "value") else str(provider)
+                    params["provider"] = (
+                        provider.value if hasattr(provider, "value") else str(provider)
+                    )
                 service_code = filter_params.get("service_code")
                 if service_code:
                     sql.append("AND service_code = :service_code")
@@ -291,7 +320,9 @@ class SqlQuotaRepository:
             return res.scalar() or 0
 
     def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int:
-        return self._run_async(self.count_async(tenant_context=tenant_context, filter_params=filter_params))
+        return self._run_async(
+            self.count_async(tenant_context=tenant_context, filter_params=filter_params)
+        )
 
     async def find_by_code_async(
         self,
@@ -310,7 +341,12 @@ class SqlQuotaRepository:
             """)
             res = await sess.execute(
                 query,
-                {"tid": tenant_context.tenant_id, "prov": prov_val, "code": quota_code, "sid": scope_id},
+                {
+                    "tid": tenant_context.tenant_id,
+                    "prov": prov_val,
+                    "code": quota_code,
+                    "sid": scope_id,
+                },
             )
             row = res.fetchone()
             if not row:
@@ -327,7 +363,10 @@ class SqlQuotaRepository:
     ) -> QuotaEntity | None:
         return self._run_async(
             self.find_by_code_async(
-                provider=provider, quota_code=quota_code, scope_id=scope_id, tenant_context=tenant_context
+                provider=provider,
+                quota_code=quota_code,
+                scope_id=scope_id,
+                tenant_context=tenant_context,
             )
         )
 
@@ -374,7 +413,9 @@ class SqlQuotaRepository:
         *,
         tenant_context: TenantContext,
     ) -> QuotaIncreaseRequest:
-        return self._run_async(self.save_increase_request_async(request, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_increase_request_async(request, tenant_context=tenant_context)
+        )
 
     async def get_increase_request_async(
         self,
@@ -400,7 +441,9 @@ class SqlQuotaRepository:
         *,
         tenant_context: TenantContext,
     ) -> QuotaIncreaseRequest | None:
-        return self._run_async(self.get_increase_request_async(request_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_increase_request_async(request_id, tenant_context=tenant_context)
+        )
 
     async def list_increase_requests_async(
         self,
@@ -425,7 +468,9 @@ class SqlQuotaRepository:
         tenant_context: TenantContext,
         quota_id: str | None = None,
     ) -> builtins.list[QuotaIncreaseRequest]:
-        return self._run_async(self.list_increase_requests_async(tenant_context=tenant_context, quota_id=quota_id))
+        return self._run_async(
+            self.list_increase_requests_async(tenant_context=tenant_context, quota_id=quota_id)
+        )
 
     # =========================================================================
     # Remediation Tasks Operations
@@ -467,7 +512,9 @@ class SqlQuotaRepository:
         *,
         tenant_context: TenantContext,
     ) -> QuotaRemediationTask:
-        return self._run_async(self.save_remediation_task_async(task, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_remediation_task_async(task, tenant_context=tenant_context)
+        )
 
     async def get_remediation_task_async(
         self,
@@ -493,7 +540,9 @@ class SqlQuotaRepository:
         *,
         tenant_context: TenantContext,
     ) -> QuotaRemediationTask | None:
-        return self._run_async(self.get_remediation_task_async(task_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_remediation_task_async(task_id, tenant_context=tenant_context)
+        )
 
     async def list_remediation_tasks_async(
         self,
@@ -518,7 +567,9 @@ class SqlQuotaRepository:
         tenant_context: TenantContext,
         quota_id: str | None = None,
     ) -> builtins.list[QuotaRemediationTask]:
-        return self._run_async(self.list_remediation_tasks_async(tenant_context=tenant_context, quota_id=quota_id))
+        return self._run_async(
+            self.list_remediation_tasks_async(tenant_context=tenant_context, quota_id=quota_id)
+        )
 
 
 _quota_repository: QuotaRepository | None = None

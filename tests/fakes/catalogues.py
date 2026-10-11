@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from domain.catalogues.models import (
@@ -26,6 +26,12 @@ from domain.catalogues.seeds import (
     SEED_SERVICES,
     SEED_UNITS,
 )
+
+
+def _norm_dt(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    return dt.replace(tzinfo=None) if dt.tzinfo else dt
 
 
 class InMemoryCatalogueRepository:
@@ -88,12 +94,14 @@ class InMemoryCatalogueRepository:
     ) -> ServiceMappingDTO | None:
         p_norm = provider.strip().lower()
         n_norm = native_service_name.strip().lower()
-        target_time = as_of or datetime.utcnow()
+        target_time = _norm_dt(as_of or datetime.now(UTC))
 
         for sm in self._service_mappings:
             if sm.provider.lower() == p_norm and sm.native_service_name.lower() == n_norm:
-                if sm.effective_from <= target_time and (
-                    sm.effective_to is None or sm.effective_to > target_time
+                eff_from = _norm_dt(sm.effective_from)
+                eff_to = _norm_dt(sm.effective_to)
+                if (eff_from is None or eff_from <= target_time) and (
+                    eff_to is None or eff_to > target_time
                 ):
                     return sm
         return None
@@ -113,12 +121,14 @@ class InMemoryCatalogueRepository:
     ) -> ResourceTypeDTO | None:
         p_norm = provider.strip().lower()
         n_norm = native_type_name.strip().lower()
-        target_time = as_of or datetime.utcnow()
+        target_time = _norm_dt(as_of or datetime.now(UTC))
 
         for rt in self._resource_types:
             if rt.provider.lower() == p_norm and rt.native_type_name.lower() == n_norm:
-                if rt.effective_from <= target_time and (
-                    rt.effective_to is None or rt.effective_to > target_time
+                eff_from = _norm_dt(rt.effective_from)
+                eff_to = _norm_dt(rt.effective_to)
+                if (eff_from is None or eff_from <= target_time) and (
+                    eff_to is None or eff_to > target_time
                 ):
                     return rt
         return None
@@ -134,10 +144,12 @@ class InMemoryCatalogueRepository:
         entries = self._units.get(sym_key, [])
         if not entries:
             return None
-        target_time = as_of or datetime.utcnow()
+        target_time = _norm_dt(as_of or datetime.now(UTC))
         for u in entries:
-            if u.effective_from <= target_time and (
-                u.effective_to is None or u.effective_to > target_time
+            eff_from = _norm_dt(u.effective_from)
+            eff_to = _norm_dt(u.effective_to)
+            if (eff_from is None or eff_from <= target_time) and (
+                eff_to is None or eff_to > target_time
             ):
                 return u
         return entries[-1]
@@ -158,10 +170,12 @@ class InMemoryCatalogueRepository:
         entries = self._metrics.get(code, [])
         if not entries:
             return None
-        target_time = as_of or datetime.utcnow()
+        target_time = _norm_dt(as_of or datetime.now(UTC))
         for m in entries:
-            if m.effective_from <= target_time and (
-                m.effective_to is None or m.effective_to > target_time
+            eff_from = _norm_dt(m.effective_from)
+            eff_to = _norm_dt(m.effective_to)
+            if (eff_from is None or eff_from <= target_time) and (
+                eff_to is None or eff_to > target_time
             ):
                 return m
         return entries[-1]
@@ -180,10 +194,12 @@ class InMemoryCatalogueRepository:
         entries = self._pricing_dimensions.get(code, [])
         if not entries:
             return None
-        target_time = as_of or datetime.utcnow()
+        target_time = _norm_dt(as_of or datetime.now(UTC))
         for d in entries:
-            if d.effective_from <= target_time and (
-                d.effective_to is None or d.effective_to > target_time
+            eff_from = _norm_dt(d.effective_from)
+            eff_to = _norm_dt(d.effective_to)
+            if (eff_from is None or eff_from <= target_time) and (
+                eff_to is None or eff_to > target_time
             ):
                 return d
         return entries[-1]
@@ -216,13 +232,13 @@ class InMemoryCatalogueRepository:
                 and existing.native_identifier.lower() == native_identifier.lower()
             ):
                 existing.occurrence_count += 1
-                existing.last_seen_at = datetime.utcnow()
+                existing.last_seen_at = datetime.now(UTC)
                 if context:
                     existing.context_payload.update(context)
                 return existing
 
         gap_id = f"gap-{uuid.uuid4().hex[:12]}"
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         new_gap = CatalogueGapDTO(
             id=gap_id,
             tenant_id=tenant_id,
@@ -260,5 +276,5 @@ class InMemoryCatalogueRepository:
         gap.status = GapStatus.RESOLVED
         gap.resolution_notes = resolution_notes
         gap.resolved_by = resolved_by
-        gap.resolved_at = datetime.utcnow()
+        gap.resolved_at = datetime.now(UTC)
         return gap

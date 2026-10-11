@@ -130,8 +130,8 @@ class FeatureAdoptionService:
                 dormant.append(item)
 
         total_enabled = len(active) + len(dormant)
-        dormancy_rate = (
-            round((len(dormant) / total_enabled * 100.0) if total_enabled > 0 else 0.0, 1)
+        dormancy_rate = round(
+            (len(dormant) / total_enabled * 100.0) if total_enabled > 0 else 0.0, 1
         )
 
         report = FeatureAdoptionReport(

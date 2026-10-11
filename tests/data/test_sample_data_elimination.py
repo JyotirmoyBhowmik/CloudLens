@@ -85,8 +85,12 @@ def test_fresh_non_demo_tenant_openapi_get_endpoints_sweep(client: TestClient):
             if domain in body_text:
                 forbidden_matches.append((path, domain))
 
-    assert scanned_endpoints >= 100, f"Expected to scan at least 100 GET list endpoints, found {scanned_endpoints}"
-    assert not forbidden_matches, f"Found forbidden sample domains in endpoint responses: {forbidden_matches}"
+    assert scanned_endpoints >= 100, (
+        f"Expected to scan at least 100 GET list endpoints, found {scanned_endpoints}"
+    )
+    assert not forbidden_matches, (
+        f"Found forbidden sample domains in endpoint responses: {forbidden_matches}"
+    )
 
 
 def test_governance_resolver_raises_governance_exception_without_master_data(monkeypatch):
@@ -94,6 +98,7 @@ def test_governance_resolver_raises_governance_exception_without_master_data(mon
     from masterdata.service import get_master_data_service
 
     md = get_master_data_service()
+
     # Mock list_records to return empty list, simulating missing/unresolvable master data
     def _empty_records(*_args: object, **_kwargs: object) -> list[object]:
         return []
@@ -120,7 +125,9 @@ def test_gate_script_passes_in_enforce_mode():
         capture_output=True,
         text=True,
     )
-    assert res.returncode == 0, f"Gate failed in enforce mode:\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
+    assert res.returncode == 0, (
+        f"Gate failed in enforce mode:\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}"
+    )
     assert "[PASS]" in res.stdout
 
 

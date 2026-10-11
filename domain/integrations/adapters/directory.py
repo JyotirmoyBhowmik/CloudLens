@@ -160,8 +160,7 @@ class IdentityDirectoryAdapter(BaseIntegrationAdapter):
                         tenant_id=tenant_context.tenant_id,
                         former_owner_email=leaver_email,
                         former_owner_name=leaver_profile.display_name,
-                        termination_date=leaver_profile.termination_date
-                        or dt.datetime.now(dt.UTC),
+                        termination_date=leaver_profile.termination_date or dt.datetime.now(dt.UTC),
                         affected_resource_ids=owned_resources,
                         affected_scopes=owned_scopes,
                     )

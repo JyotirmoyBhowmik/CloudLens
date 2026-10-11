@@ -33,11 +33,15 @@ class TenantSettingsRepository(Protocol):
         """Retrieves tenant settings profile, returning default configuration if record absent."""
         ...
 
-    async def save(self, settings: TenantSettings, session: AsyncSession | None = None) -> TenantSettings:
+    async def save(
+        self, settings: TenantSettings, session: AsyncSession | None = None
+    ) -> TenantSettings:
         """Persists or replaces full tenant settings profile."""
         ...
 
-    async def update(self, tenant_id: str, new_settings: dict[str, Any], session: AsyncSession | None = None) -> TenantSettings:
+    async def update(
+        self, tenant_id: str, new_settings: dict[str, Any], session: AsyncSession | None = None
+    ) -> TenantSettings:
         """Deep-merges update dictionary into tenant settings and persists updated record."""
         ...
 
@@ -84,7 +88,9 @@ class SqlTenantSettingsRepository:
         async with get_tenant_session(tenant_id) as sess:
             return await self._get_with_session(tenant_id, sess)
 
-    async def _save_with_session(self, settings: TenantSettings, session: AsyncSession) -> TenantSettings:
+    async def _save_with_session(
+        self, settings: TenantSettings, session: AsyncSession
+    ) -> TenantSettings:
         settings_json = json.dumps(settings.model_dump(mode="json"))
         query = text("""
             INSERT INTO tenant_settings (tenant_id, settings, updated_at)
@@ -97,7 +103,9 @@ class SqlTenantSettingsRepository:
         await session.execute(query, {"tid": settings.tenant_id, "settings": settings_json})
         return settings
 
-    async def save(self, settings: TenantSettings, session: AsyncSession | None = None) -> TenantSettings:
+    async def save(
+        self, settings: TenantSettings, session: AsyncSession | None = None
+    ) -> TenantSettings:
         if session is not None:
             return await self._save_with_session(settings, session)
         async with get_tenant_session(settings.tenant_id) as sess:
@@ -138,7 +146,7 @@ class SqlTenantSettingsRepository:
         return self._run_async(self.update(tenant_id, new_settings))
 
 
-_sql_repo_instance: SqlTenantSettingsRepository | None = None
+_sql_repo_instance: TenantSettingsRepository | None = None
 
 
 def get_tenant_settings_repository() -> TenantSettingsRepository:
@@ -153,7 +161,9 @@ def get_tenant_settings_repository() -> TenantSettingsRepository:
     return _sql_repo_instance
 
 
-def reset_tenant_settings_repository(repo: TenantSettingsRepository | None = None) -> TenantSettingsRepository:
+def reset_tenant_settings_repository(
+    repo: TenantSettingsRepository | None = None,
+) -> TenantSettingsRepository:
     """Resets tenant settings repository singleton for testing."""
     global _sql_repo_instance
     _sql_repo_instance = repo

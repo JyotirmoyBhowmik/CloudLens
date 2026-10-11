@@ -47,7 +47,9 @@ class TenantModel(Base):
     reporting_currency = Column(String(3), nullable=False, default="USD")
     fiscal_year_start = Column(Integer, nullable=False, server_default="1", default=1)
     iana_timezone = Column(String(64), nullable=False, server_default="UTC", default="UTC")
-    retention_profile = Column(String(64), nullable=False, server_default="STANDARD", default="STANDARD")
+    retention_profile = Column(
+        String(64), nullable=False, server_default="STANDARD", default="STANDARD"
+    )
     status = Column(String(32), nullable=False, server_default="ACTIVE", default="ACTIVE")
     suspension_reason = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

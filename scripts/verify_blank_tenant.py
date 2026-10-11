@@ -86,7 +86,17 @@ def check_no_positive_money(obj: Any, path: str, failures: list[str]) -> None:
     if isinstance(obj, dict):
         for k, v in obj.items():
             current_path = f"{path}.{k}" if path else k
-            if k in ("amount", "total_cost", "cost", "monthly_cost", "budget_amount", "actual_spend", "forecast_spend", "prior_amount", "delta_amount"):
+            if k in (
+                "amount",
+                "total_cost",
+                "cost",
+                "monthly_cost",
+                "budget_amount",
+                "actual_spend",
+                "forecast_spend",
+                "prior_amount",
+                "delta_amount",
+            ):
                 if v is not None:
                     try:
                         d_val = Decimal(str(v))
@@ -94,8 +104,21 @@ def check_no_positive_money(obj: Any, path: str, failures: list[str]) -> None:
                             failures.append(f"{current_path} has positive monetary value: {d_val}")
                     except Exception:
                         pass
-            elif k in ("items", "movements", "breaches", "anomalies", "points", "resources", "nodes", "children") and isinstance(v, list):
-                if len(v) > 0 and "pricing" not in current_path.lower() and "rate" not in current_path.lower():
+            elif k in (
+                "items",
+                "movements",
+                "breaches",
+                "anomalies",
+                "points",
+                "resources",
+                "nodes",
+                "children",
+            ) and isinstance(v, list):
+                if (
+                    len(v) > 0
+                    and "pricing" not in current_path.lower()
+                    and "rate" not in current_path.lower()
+                ):
                     for idx, item in enumerate(v):
                         check_no_positive_money(item, f"{current_path}[{idx}]", failures)
             else:
@@ -142,7 +165,9 @@ async def async_main() -> int:
     }
 
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test", timeout=30.0) as client:
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://test", timeout=30.0
+    ) as client:
         for path, methods in sorted(paths.items()):
             if "get" not in methods:
                 continue
@@ -176,7 +201,9 @@ async def async_main() -> int:
                 continue
             elif resp.status_code in (404, 400, 422):
                 # Acceptable for entity-specific ID routes that don't exist in blank tenant
-                print(f"  [PASS] {url} -> HTTP {resp.status_code} (Clean entity miss in blank tenant)")
+                print(
+                    f"  [PASS] {url} -> HTTP {resp.status_code} (Clean entity miss in blank tenant)"
+                )
                 continue
             elif resp.status_code != 200:
                 print(f"  [WARN] {url} -> HTTP {resp.status_code}")
@@ -206,7 +233,9 @@ async def async_main() -> int:
                     for list_key in ("resources", "items", "records", "tasks", "findings", "nodes"):
                         if list_key in data and isinstance(data[list_key], list):
                             if len(data[list_key]) > 0 and not is_system_catalog(url):
-                                route_failures.append(f"Field '{list_key}' returned {len(data[list_key])} items (expected 0)")
+                                route_failures.append(
+                                    f"Field '{list_key}' returned {len(data[list_key])} items (expected 0)"
+                                )
 
                     # Check data freshness in dashboards
                     if "data_freshness" in data and isinstance(data["data_freshness"], dict):

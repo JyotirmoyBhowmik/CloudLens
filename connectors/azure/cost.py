@@ -67,6 +67,7 @@ class AzureCostService:
 
         try:
             from azure.storage.blob import BlobServiceClient
+
             blob_service = BlobServiceClient.from_connection_string(conn_str)
             container_client = blob_service.get_container_client(container_name)
             for blob in container_client.list_blobs(name_starts_with=prefix):

@@ -581,7 +581,9 @@ class SuperuserProvisioningService:
         if action in ("control_tower:observe", "control_tower:read", "platform.observe"):
             return None
         if endpoint and endpoint.startswith("/api/v1/control-tower"):
-            if not endpoint.startswith("/api/v1/control-tower/actions") and (method == "GET" or not method):
+            if not endpoint.startswith("/api/v1/control-tower/actions") and (
+                method == "GET" or not method
+            ):
                 return None
 
         corr_id = correlation_id or str(uuid.uuid4())
@@ -590,7 +592,6 @@ class SuperuserProvisioningService:
         max_routine_days = int(master_attrs.get("max_routine_days", 3))
 
         today_str = activity_date or datetime.now(UTC).strftime("%Y-%m-%d")
-
 
         if self._last_routine_date != today_str:
             self._routine_days_count += 1
@@ -783,4 +784,3 @@ def reset_superuser_service() -> None:
     """Resets shared SuperuserProvisioningService singleton."""
     global _superuser_service
     _superuser_service = None
-

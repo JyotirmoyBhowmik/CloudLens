@@ -54,7 +54,11 @@ def resolve_connector(
             provider_val = getattr(entity, "provider", "aws")
             ent_config = getattr(entity, "config", {}) or {}
 
-        provider_str = provider_val.value.lower() if hasattr(provider_val, "value") else str(provider_val).lower()
+        provider_str = (
+            provider_val.value.lower()
+            if hasattr(provider_val, "value")
+            else str(provider_val).lower()
+        )
         config = {**ent_config, **config}
     else:
         # Infer provider from connector_id if not found in repo
@@ -70,15 +74,20 @@ def resolve_connector(
 
     # Resolve credentials via OpenBao by vault:// reference or credential_profile_id
     cred_profile_id = (
-        entity.get("credential_profile_id")
-        if isinstance(entity, dict)
-        else getattr(entity, "credential_profile_id", None)
-    ) if entity is not None else None
+        (
+            entity.get("credential_profile_id")
+            if isinstance(entity, dict)
+            else getattr(entity, "credential_profile_id", None)
+        )
+        if entity is not None
+        else None
+    )
 
     cred_ref = config.get("credential_ref") or config.get("secret_ref")
     if cred_profile_id and not cred_ref:
         try:
             from domain.credentials.repository import get_credential_repository
+
             cred_repo = get_credential_repository()
             profile = cred_repo.get_sync(cred_profile_id)
             if profile and profile.secret_ref:
@@ -89,6 +98,7 @@ def resolve_connector(
     if cred_ref and str(cred_ref).startswith("vault://"):
         try:
             from domain.credentials.store import get_secret_store
+
             vault_secret = get_secret_store().get_secret(str(cred_ref), tenant_id=tenant_id)
             if isinstance(vault_secret, dict):
                 config["credentials"] = {**(config.get("credentials") or {}), **vault_secret}
@@ -100,6 +110,7 @@ def resolve_connector(
     is_demo = False
     try:
         from domain.tenant.repository import get_tenant_repository
+
         tenant_repo = get_tenant_repository()
         t_entity = tenant_repo.get_sync(tenant_id) if hasattr(tenant_repo, "get_sync") else None
         if t_entity:
@@ -112,6 +123,7 @@ def resolve_connector(
     # Stub Connector for unit/contract tests
     if "stub" in provider_str:
         from connectors.stub.connector import StubConnector
+
         return StubConnector(
             connector_id=connector_id,
             tenant_id=tenant_id,
@@ -119,7 +131,9 @@ def resolve_connector(
         )
 
     # Simulator strictly restricted to DEMO tenants (API 403 / PermissionError)
-    if not is_demo and ("simulator" in provider_str or "mock" in provider_str or "stub" in provider_str):
+    if not is_demo and (
+        "simulator" in provider_str or "mock" in provider_str or "stub" in provider_str
+    ):
         raise PermissionError(
             f"Tenant '{tenant_id}' is not DEMO. Simulator and fixture connectors are strictly restricted to DEMO tenants."
         )
@@ -127,6 +141,7 @@ def resolve_connector(
     # If DEMO tenant explicitly requested simulator
     if is_demo and ("simulator" in provider_str or "mock" in provider_str):
         from connectors.simulator.connector import ProviderSimulatorConnector
+
         return ProviderSimulatorConnector(
             connector_id=connector_id,
             tenant_id=tenant_id,
@@ -143,4 +158,3 @@ def resolve_connector(
         return OCIConnector(connector_id=connector_id, tenant_id=tenant_id, config=config)
     else:
         return AWSConnector(connector_id=connector_id, tenant_id=tenant_id, config=config)
-

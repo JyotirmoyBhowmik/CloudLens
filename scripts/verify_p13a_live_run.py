@@ -172,10 +172,17 @@ def setup_aws_live_s3_data(
         Body=parquet_bytes,
         ContentType="application/octet-stream",
     )
-    logger.info("Successfully provisioned live S3 CUR 2.0 Parquet export: s3://%s/%s (%d bytes)", bucket_name, key, len(parquet_bytes))
+    logger.info(
+        "Successfully provisioned live S3 CUR 2.0 Parquet export: s3://%s/%s (%d bytes)",
+        bucket_name,
+        key,
+        len(parquet_bytes),
+    )
 
 
-def register_aws_connector(tenant_context: TenantContext, connector_id: str, account_id: str, bucket_name: str, prefix: str):
+def register_aws_connector(
+    tenant_context: TenantContext, connector_id: str, account_id: str, bucket_name: str, prefix: str
+):
     """Registers an authoritative AWS connector with live S3 endpoint configuration."""
     from domain.connectors.models import ConnectorEntity
     from domain.connectors.repository import get_connector_repository
@@ -211,7 +218,9 @@ def register_aws_connector(tenant_context: TenantContext, connector_id: str, acc
         },
     )
     repo.save(entity, tenant_context=tenant_context)
-    logger.info("Registered live AWS connector '%s' in tenant '%s'", connector_id, tenant_context.tenant_id)
+    logger.info(
+        "Registered live AWS connector '%s' in tenant '%s'", connector_id, tenant_context.tenant_id
+    )
 
 
 def register_empty_aws_connector(tenant_context: TenantContext, connector_id: str, account_id: str):
@@ -270,26 +279,46 @@ async def query_db_proof(tenant_id: str):
     """Queries PostgreSQL directly to print row counts and one full row from resources and cost_fact."""
     async with get_tenant_session(tenant_id) as session:
         # 1. Query resources table
-        res_count = (await session.execute(
-            text("SELECT count(*) FROM resources WHERE tenant_id = :tid"),
-            {"tid": tenant_id},
-        )).scalar()
+        res_count = (
+            await session.execute(
+                text("SELECT count(*) FROM resources WHERE tenant_id = :tid"),
+                {"tid": tenant_id},
+            )
+        ).scalar()
 
-        res_row = (await session.execute(
-            text("SELECT id, tenant_id, native_id, name, provider, service_id, region_id, pricing_status FROM resources WHERE tenant_id = :tid LIMIT 1"),
-            {"tid": tenant_id},
-        )).mappings().first()
+        res_row = (
+            (
+                await session.execute(
+                    text(
+                        "SELECT id, tenant_id, native_id, name, provider, service_id, region_id, pricing_status FROM resources WHERE tenant_id = :tid LIMIT 1"
+                    ),
+                    {"tid": tenant_id},
+                )
+            )
+            .mappings()
+            .first()
+        )
 
         # 2. Query cost_fact table
-        cost_count = (await session.execute(
-            text("SELECT count(*) FROM cost_fact WHERE tenant_id = :tid"),
-            {"tid": tenant_id},
-        )).scalar()
+        cost_count = (
+            await session.execute(
+                text("SELECT count(*) FROM cost_fact WHERE tenant_id = :tid"),
+                {"tid": tenant_id},
+            )
+        ).scalar()
 
-        cost_row = (await session.execute(
-            text("SELECT id, tenant_id, billing_period_start, charge_category, service_id, billed_cost, billing_currency FROM cost_fact WHERE tenant_id = :tid LIMIT 1"),
-            {"tid": tenant_id},
-        )).mappings().first()
+        cost_row = (
+            (
+                await session.execute(
+                    text(
+                        "SELECT id, tenant_id, billing_period_start, charge_category, service_id, billed_cost, billing_currency FROM cost_fact WHERE tenant_id = :tid LIMIT 1"
+                    ),
+                    {"tid": tenant_id},
+                )
+            )
+            .mappings()
+            .first()
+        )
 
         return {
             "res_count": res_count,
@@ -332,7 +361,9 @@ def main():
         connector_id=empty_conn_id,
     )
     empty_row_count = empty_cost_res.get("rows_ingested", -1)
-    print(f"Empty sync result: status={empty_cost_res.get('status')}, rows_ingested={empty_row_count}")
+    print(
+        f"Empty sync result: status={empty_cost_res.get('status')}, rows_ingested={empty_row_count}"
+    )
     assert empty_row_count == 0, f"Expected 0 ingested rows, got {empty_row_count}"
 
     print(f"[PASS] Empty run reports 0 rows (no 'else 24' fallback)")

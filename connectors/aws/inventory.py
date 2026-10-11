@@ -39,6 +39,7 @@ class AWSInventoryService:
     def _get_boto3_client(self, service_name: str, region_name: str | None = None) -> Any:
         """Constructs an AWS SDK client using connector configuration."""
         import boto3
+
         creds = self.config.get("credentials") or {}
         kwargs: dict[str, Any] = {}
         if self.config.get("endpoint_url"):
@@ -94,7 +95,11 @@ class AWSInventoryService:
         try:
             # 2. Discover resources via Resource Groups Tagging API
             tagging = self._get_boto3_client("resourcegroupstaggingapi")
-            tok = pagination.continuation_token if pagination and pagination.continuation_token else ""
+            tok = (
+                pagination.continuation_token
+                if pagination and pagination.continuation_token
+                else ""
+            )
             tag_resp = tagging.get_resources(PaginationToken=tok)
             for mapping in tag_resp.get("ResourceTagMappingList", []):
                 arn = mapping.get("ResourceARN", "")
@@ -126,10 +131,17 @@ class AWSInventoryService:
             logger.debug("Tagging API discovery note: %s", exc)
 
         # Filter by scope if requested
-        if scope_id and scope_id not in ("root", "scope-root") and not scope_id.startswith("scope-"):
+        if (
+            scope_id
+            and scope_id not in ("root", "scope-root")
+            and not scope_id.startswith("scope-")
+        ):
             records = [
-                r for r in records
-                if scope_id in r.get("arn", "") or scope_id in r.get("account_id", "") or scope_id in r.get("resource_id", "")
+                r
+                for r in records
+                if scope_id in r.get("arn", "")
+                or scope_id in r.get("account_id", "")
+                or scope_id in r.get("resource_id", "")
             ]
 
         page_size = pagination.page_size if pagination else len(records)

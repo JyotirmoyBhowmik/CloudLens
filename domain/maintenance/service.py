@@ -54,7 +54,9 @@ class MaintenanceModeService:
     ) -> dict[str, Any]:
         """Toggles maintenance mode globally or for a specific tenant."""
         now_str = datetime.now(UTC).isoformat()
-        reason_str = reason or self._config.get("default_message", "Scheduled platform maintenance.")
+        reason_str = reason or self._config.get(
+            "default_message", "Scheduled platform maintenance."
+        )
 
         with self._lock:
             if tenant_id:
@@ -91,7 +93,11 @@ class MaintenanceModeService:
             is_active = self._global_maintenance or (
                 bool(tenant_id and self._tenant_maintenance.get(tenant_id, False))
             )
-            maintenance_scope = f"tenant:{tenant_id}" if (tenant_id and self._tenant_maintenance.get(tenant_id)) else "global"
+            maintenance_scope = (
+                f"tenant:{tenant_id}"
+                if (tenant_id and self._tenant_maintenance.get(tenant_id))
+                else "global"
+            )
             return {
                 "active": is_active,
                 "global_active": self._global_maintenance,

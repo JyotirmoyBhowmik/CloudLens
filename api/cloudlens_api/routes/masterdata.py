@@ -305,7 +305,9 @@ async def list_master_records(
     as_of: datetime | None = Query(None, description="Point-in-time timestamp"),
     include_inactive: bool = Query(False, description="Include deactivated versions"),
     search: str | None = Query(None, description="Filter records by code or name"),
-    sort: str | None = Query(None, description="Sort property e.g. code, -display_name, sort_order"),
+    sort: str | None = Query(
+        None, description="Sort property e.g. code, -display_name, sort_order"
+    ),
     limit: int = Query(500, ge=1, le=1000, description="Max record limit"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     x_tenant_id: str | None = Header(None, alias="X-Tenant-ID"),
@@ -320,7 +322,13 @@ async def list_master_records(
         )
         if search:
             s = search.lower().strip()
-            items = [r for r in items if s in r.code.lower() or s in r.display_name.lower() or (r.description and s in r.description.lower())]
+            items = [
+                r
+                for r in items
+                if s in r.code.lower()
+                or s in r.display_name.lower()
+                or (r.description and s in r.description.lower())
+            ]
 
         if sort:
             desc = sort.startswith("-")
@@ -388,7 +396,11 @@ async def create_master_record(
                 tenant_context=tc,
                 event_type=AuditEventType.CONFIG_CHANGED,
                 actor=caller_id,
-                payload={"master_type": master_type, "code": payload.code, "name": payload.display_name},
+                payload={
+                    "master_type": master_type,
+                    "code": payload.code,
+                    "name": payload.display_name,
+                },
                 action="MASTER_DATA_CREATED",
                 resource_type="MASTER_DATA",
                 resource_id=f"{master_type}:{payload.code}",
@@ -448,7 +460,12 @@ async def update_master_record(
                 tenant_context=tc,
                 event_type=AuditEventType.CONFIG_CHANGED,
                 actor=caller_id,
-                payload={"master_type": master_type, "code": code, "version": updated.version, "reason": payload.change_reason},
+                payload={
+                    "master_type": master_type,
+                    "code": code,
+                    "version": updated.version,
+                    "reason": payload.change_reason,
+                },
                 action="MASTER_DATA_UPDATED",
                 resource_type="MASTER_DATA",
                 resource_id=f"{master_type}:{code}",

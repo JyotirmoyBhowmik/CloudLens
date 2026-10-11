@@ -2579,4 +2579,3 @@ class PlanningException(DomainModelException):
     ) -> None:
         super().__init__(message, error_code=error_code)
         self.status_code = status_code
-

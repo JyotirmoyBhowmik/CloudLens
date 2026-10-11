@@ -42,8 +42,12 @@ def generate_comparison_markdown(
 
     a("# CloudLens Audit Comparison: Baseline vs Final")
     a("")
-    a(f"- **Baseline Commit**: `{base.get('git', {}).get('head', '7831aa5')[:12]}` ({base.get('generated_utc', 'N/A')} UTC)")
-    a(f"- **Final Audit Commit**: `{final.get('git', {}).get('head', 'HEAD')[:12]}` ({final.get('generated_utc', 'N/A')} UTC)")
+    a(
+        f"- **Baseline Commit**: `{base.get('git', {}).get('head', '7831aa5')[:12]}` ({base.get('generated_utc', 'N/A')} UTC)"
+    )
+    a(
+        f"- **Final Audit Commit**: `{final.get('git', {}).get('head', 'HEAD')[:12]}` ({final.get('generated_utc', 'N/A')} UTC)"
+    )
     a("")
     a("---")
     a("")
@@ -60,16 +64,22 @@ def generate_comparison_markdown(
     # Files & LOC
     b_files = base.get("tree", {}).get("total", {}).get("files", 0)
     f_files = final.get("tree", {}).get("total", {}).get("files", 0)
-    a(f"| **Total Code Files** | {b_files:,} | {f_files:,} | {format_delta_int(b_files, f_files)} | Architecture Growth |")
+    a(
+        f"| **Total Code Files** | {b_files:,} | {f_files:,} | {format_delta_int(b_files, f_files)} | Architecture Growth |"
+    )
 
     b_loc = base.get("tree", {}).get("total", {}).get("loc", 0)
     f_loc = final.get("tree", {}).get("total", {}).get("loc", 0)
-    a(f"| **Total Non-Blank LOC** | {b_loc:,} | {f_loc:,} | {format_delta_int(b_loc, f_loc)} | Substantive Features |")
+    a(
+        f"| **Total Non-Blank LOC** | {b_loc:,} | {f_loc:,} | {format_delta_int(b_loc, f_loc)} | Substantive Features |"
+    )
 
     # Tests collected
     b_tc = base.get("tests", {}).get("collected", 0)
     f_tc = final.get("tests", {}).get("collected", 0)
-    a(f"| **Pytest Collected Tests** | {b_tc:,} | {f_tc:,} | {format_delta_int(b_tc, f_tc)} | Expanded Test Suite |")
+    a(
+        f"| **Pytest Collected Tests** | {b_tc:,} | {f_tc:,} | {format_delta_int(b_tc, f_tc)} | Expanded Test Suite |"
+    )
 
     # Tests executed
     b_j = base.get("tests", {}).get("junit_totals", {})
@@ -78,7 +88,9 @@ def generate_comparison_markdown(
     f_pass = f_j.get("passed", "N/A")
     b_fail = b_j.get("failures", "N/A")
     f_fail = f_j.get("failures", "N/A")
-    pass_delta = format_delta_int(b_pass if isinstance(b_pass, int) else None, f_pass if isinstance(f_pass, int) else None)
+    pass_delta = format_delta_int(
+        b_pass if isinstance(b_pass, int) else None, f_pass if isinstance(f_pass, int) else None
+    )
     a(f"| **Passing Tests** | {b_pass} | {f_pass} | {pass_delta} | 100% Passing |")
     a(f"| **Failing Tests** | {b_fail} | {f_fail} | -1 | **ZERO FAILURES** |")
 
@@ -93,28 +105,46 @@ def generate_comparison_markdown(
     f_ruff = f_gates.get("ruff", {}).get("exit", "N/A")
     a(f"| **Layering Gate Exit** | exit {b_layer} | exit {f_layer} | 0 | PASS |")
     a(f"| **Constant Check Gate Exit** | exit {b_const} | exit {f_const} | 0 | PASS |")
-    a(f"| **Ruff Linter Gate Exit** | exit {b_ruff} | exit {f_ruff} | -1 | **ALL GATES PASS (exit 0)** |")
+    a(
+        f"| **Ruff Linter Gate Exit** | exit {b_ruff} | exit {f_ruff} | -1 | **ALL GATES PASS (exit 0)** |"
+    )
 
     # API routes & Web views
     b_routes = base.get("api", {}).get("route_decorator_count", 0)
     f_routes = final.get("api", {}).get("route_decorator_count", 0)
-    a(f"| **API Route Decorators** | {b_routes} | {f_routes} | {format_delta_int(b_routes, f_routes)} | Comprehensive Surface |")
+    a(
+        f"| **API Route Decorators** | {b_routes} | {f_routes} | {format_delta_int(b_routes, f_routes)} | Comprehensive Surface |"
+    )
 
     b_views = base.get("web", {}).get("view_file_count", 0)
     f_views = final.get("web", {}).get("view_file_count", 0)
-    a(f"| **Web UI Views / Pages** | {b_views} | {f_views} | {format_delta_int(b_views, f_views)} | 27 Views + CT Complete |")
+    a(
+        f"| **Web UI Views / Pages** | {b_views} | {f_views} | {format_delta_int(b_views, f_views)} | 27 Views + CT Complete |"
+    )
 
     # Superuser literal in code
-    b_su = base.get("grep", {}).get("SUPERUSER_LITERAL_IN_CODE", {}).get("hit_count_capped_examples", 0)
-    f_su = final.get("grep", {}).get("SUPERUSER_LITERAL_IN_CODE", {}).get("hit_count_capped_examples", 0)
-    a(f"| **Superuser Literal in Code** | {b_su} hits | {f_su} hits | -{b_su} | **ZERO LITERALS IN CODE** |")
+    b_su = (
+        base.get("grep", {})
+        .get("SUPERUSER_LITERAL_IN_CODE", {})
+        .get("hit_count_capped_examples", 0)
+    )
+    f_su = (
+        final.get("grep", {})
+        .get("SUPERUSER_LITERAL_IN_CODE", {})
+        .get("hit_count_capped_examples", 0)
+    )
+    a(
+        f"| **Superuser Literal in Code** | {b_su} hits | {f_su} hits | -{b_su} | **ZERO LITERALS IN CODE** |"
+    )
 
     a("")
     a("---")
     a("")
     a("## Section 1: Codebase Size & Directory Growth")
     a("")
-    a("| Directory | Baseline LOC | Final LOC | LOC Delta | Baseline Files | Final Files | Files Delta |")
+    a(
+        "| Directory | Baseline LOC | Final LOC | LOC Delta | Baseline Files | Final Files | Files Delta |"
+    )
     a("| :--- | :---: | :---: | :---: | :---: | :---: | :---: |")
 
     b_dirs = base.get("tree", {}).get("by_top_level", {})
@@ -123,7 +153,9 @@ def generate_comparison_markdown(
     for d in all_top:
         b_d = b_dirs.get(d, {"loc": 0, "files": 0})
         f_d = f_dirs.get(d, {"loc": 0, "files": 0})
-        a(f"| **{d}/** | {b_d['loc']:,} | {f_d['loc']:,} | {format_delta_int(b_d['loc'], f_d['loc'])} | {b_d['files']} | {f_d['files']} | {format_delta_int(b_d['files'], f_d['files'])} |")
+        a(
+            f"| **{d}/** | {b_d['loc']:,} | {f_d['loc']:,} | {format_delta_int(b_d['loc'], f_d['loc'])} | {b_d['files']} | {f_d['files']} | {format_delta_int(b_d['files'], f_d['files'])} |"
+        )
 
     a("")
     a("---")
@@ -131,8 +163,12 @@ def generate_comparison_markdown(
     a("## Section 2: Quality Gates Delta")
     a("")
     a(f"- **scripts/check_layering.py**: Baseline exit `{b_layer}`, Final exit `{f_layer}`.")
-    a(f"- **scripts/check_no_hardcoded_constants.py**: Baseline exit `{b_const}`, Final exit `{f_const}`.")
-    a(f"- **ruff check .**: Baseline exit `{b_ruff}` (failed with 125 errors), Final exit `{f_ruff}` (**PASSED cleanly**).")
+    a(
+        f"- **scripts/check_no_hardcoded_constants.py**: Baseline exit `{b_const}`, Final exit `{f_const}`."
+    )
+    a(
+        f"- **ruff check .**: Baseline exit `{b_ruff}` (failed with 125 errors), Final exit `{f_ruff}` (**PASSED cleanly**)."
+    )
     a("")
     a("---")
     a("")
@@ -163,9 +199,15 @@ def generate_comparison_markdown(
     a("")
     b_docs = base.get("docs", {})
     f_docs = final.get("docs", {})
-    a(f"- **Distinct Requirements Tracked**: Baseline `{b_docs.get('rtm_distinct_requirement_ids', 0)}` $\\to$ Final `{f_docs.get('rtm_distinct_requirement_ids', 0)}`")
-    a(f"- **Missing ACs (001-104)**: Baseline `{len(b_docs.get('rtm_ac_missing_001_104', []))}` $\\to$ Final `{len(f_docs.get('rtm_ac_missing_001_104', []))}`")
-    a(f"- **Missing ACs (110-127)**: Baseline `{len(b_docs.get('rtm_ac_missing_110_127', []))}` $\\to$ Final `{len(f_docs.get('rtm_ac_missing_110_127', []))}`")
+    a(
+        f"- **Distinct Requirements Tracked**: Baseline `{b_docs.get('rtm_distinct_requirement_ids', 0)}` $\\to$ Final `{f_docs.get('rtm_distinct_requirement_ids', 0)}`"
+    )
+    a(
+        f"- **Missing ACs (001-104)**: Baseline `{len(b_docs.get('rtm_ac_missing_001_104', []))}` $\\to$ Final `{len(f_docs.get('rtm_ac_missing_001_104', []))}`"
+    )
+    a(
+        f"- **Missing ACs (110-127)**: Baseline `{len(b_docs.get('rtm_ac_missing_110_127', []))}` $\\to$ Final `{len(f_docs.get('rtm_ac_missing_110_127', []))}`"
+    )
     a(f"- **Status Words in Matrix**: `{final.get('docs', {}).get('rtm_status_words', {})}`")
     a("")
     a("---")
@@ -175,9 +217,13 @@ def generate_comparison_markdown(
     a(f"- **Total Tests Collected**: `{b_tc}` $\\to$ `{f_tc}` (+{f_tc - b_tc} newly added tests)")
     a(f"- **Test Execution Outcomes**:")
     a(f"  - **Passed**: `{b_pass}` $\\to$ `{f_pass}`")
-    a(f"  - **Failed**: `{b_fail}` (was `test_bp25_bulk_import_to_rollback`) $\\to$ `{f_fail}` (**0 failures**)")
+    a(
+        f"  - **Failed**: `{b_fail}` (was `test_bp25_bulk_import_to_rollback`) $\\to$ `{f_fail}` (**0 failures**)"
+    )
     a(f"  - **Skipped**: `{b_j.get('skipped', 0)}` $\\to$ `{f_j.get('skipped', 0)}`")
-    a(f"  - **Test Suite Run Duration**: `{base.get('tests', {}).get('run_duration_s', 'N/A')}s` $\\to$ `{final.get('tests', {}).get('run_duration_s', 'N/A')}s`")
+    a(
+        f"  - **Test Suite Run Duration**: `{base.get('tests', {}).get('run_duration_s', 'N/A')}s` $\\to$ `{final.get('tests', {}).get('run_duration_s', 'N/A')}s`"
+    )
     a("")
     a("---")
     a("Generated by `scripts/compare_audits.py`.")

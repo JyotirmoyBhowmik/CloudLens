@@ -48,24 +48,28 @@ class RollingUpgradeCoordinator:
                 try:
                     facts = self.repo.get_all_facts(tenant_context=self.tenant_context)
                     lat_ms = (time.perf_counter() - t0) * 1000.0
-                    self.probe_log.append({
-                        "sequence": seq,
-                        "timestamp": now_str,
-                        "status_code": 200,
-                        "status": "UP",
-                        "latency_ms": round(lat_ms, 3),
-                        "record_count": len(facts),
-                    })
+                    self.probe_log.append(
+                        {
+                            "sequence": seq,
+                            "timestamp": now_str,
+                            "status_code": 200,
+                            "status": "UP",
+                            "latency_ms": round(lat_ms, 3),
+                            "record_count": len(facts),
+                        }
+                    )
                 except Exception as ex:
                     lat_ms = (time.perf_counter() - t0) * 1000.0
-                    self.probe_log.append({
-                        "sequence": seq,
-                        "timestamp": now_str,
-                        "status_code": 503,
-                        "status": "DOWN",
-                        "latency_ms": round(lat_ms, 3),
-                        "error": str(ex),
-                    })
+                    self.probe_log.append(
+                        {
+                            "sequence": seq,
+                            "timestamp": now_str,
+                            "status_code": 503,
+                            "status": "DOWN",
+                            "latency_ms": round(lat_ms, 3),
+                            "error": str(ex),
+                        }
+                    )
                 seq += 1
                 time.sleep(interval_ms / 1000.0)
 
@@ -180,10 +184,14 @@ class TestRollingUpgradeSuite:
         # Pre-upgrade facts must be 100% identical cent-for-cent
         retained_v1_facts = [f for f in all_post_facts if f.id.startswith("fact-v1-")]
         assert len(retained_v1_facts) == v1_records
-        post_reconciled_v1_total = sum((f.billed_cost.value for f in retained_v1_facts), Decimal("0.00"))
+        post_reconciled_v1_total = sum(
+            (f.billed_cost.value for f in retained_v1_facts), Decimal("0.00")
+        )
         variance = abs(post_reconciled_v1_total - pre_upgrade_total)
 
-        assert variance == Decimal("0.00"), f"Discrepancy detected! Pre: {pre_upgrade_total}, Post: {post_reconciled_v1_total}"
+        assert variance == Decimal("0.00"), (
+            f"Discrepancy detected! Pre: {pre_upgrade_total}, Post: {post_reconciled_v1_total}"
+        )
 
         # Extended metadata on Release N verified
         retained_v2_facts = [f for f in all_post_facts if f.id.startswith("fact-v2-")]

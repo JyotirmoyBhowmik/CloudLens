@@ -702,6 +702,7 @@ class TestThresholdAPIContracts:
     @pytest.fixture
     def auth_headers(self) -> dict[str, str]:
         from domain.identity.service import get_identity_service
+
         token = get_identity_service().token_engine.issue_access_token(
             user_id="usr-api-01",
             tenant_id="tenant-api-01",

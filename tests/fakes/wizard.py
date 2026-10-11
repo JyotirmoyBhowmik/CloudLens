@@ -17,8 +17,12 @@ class InMemoryWizardRepository(TenantAwareRepository[WizardSession]):
     is_in_memory: bool = True
 
     def __init__(self) -> None:
+        super().__init__()
         self._lock = threading.Lock()
         self._sessions: dict[tuple[str, str], WizardSession] = {}
+
+    def _validate_tenant_context(self, tenant_context: TenantContext) -> None:
+        self._validate_tenant(tenant_context)
 
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> WizardSession | None:
         self._validate_tenant_context(tenant_context)

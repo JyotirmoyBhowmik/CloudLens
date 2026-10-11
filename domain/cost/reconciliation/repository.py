@@ -46,8 +46,9 @@ logger = logging.getLogger(__name__)
 class ReconciliationRepository(Protocol):
     """Authoritative protocol for Reconciliation reports, investigations, and estimates."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> ReconciliationReport | None:
-        ...
+    def get(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> ReconciliationReport | None: ...
 
     def list(
         self,
@@ -56,35 +57,29 @@ class ReconciliationRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[ReconciliationReport]:
-        ...
+    ) -> list[ReconciliationReport]: ...
 
     def save(
         self, entity: ReconciliationReport, *, tenant_context: TenantContext
-    ) -> ReconciliationReport:
-        ...
+    ) -> ReconciliationReport: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def save_investigation_item(
         self,
         item: ReconciliationInvestigationItem,
         *,
         tenant_context: TenantContext,
-    ) -> ReconciliationInvestigationItem:
-        ...
+    ) -> ReconciliationInvestigationItem: ...
 
     def get_investigation_item(
         self,
         item_id: str,
         *,
         tenant_context: TenantContext,
-    ) -> ReconciliationInvestigationItem | None:
-        ...
+    ) -> ReconciliationInvestigationItem | None: ...
 
     def list_investigation_items(
         self,
@@ -92,8 +87,7 @@ class ReconciliationRepository(Protocol):
         tenant_context: TenantContext,
         status: InvestigationStatus | None = None,
         provider: str | None = None,
-    ) -> list[ReconciliationInvestigationItem]:
-        ...
+    ) -> list[ReconciliationInvestigationItem]: ...
 
     def update_investigation_item(
         self,
@@ -102,8 +96,7 @@ class ReconciliationRepository(Protocol):
         notes: str | None = None,
         *,
         tenant_context: TenantContext,
-    ) -> ReconciliationInvestigationItem:
-        ...
+    ) -> ReconciliationInvestigationItem: ...
 
     def get_history(
         self,
@@ -111,32 +104,28 @@ class ReconciliationRepository(Protocol):
         tenant_context: TenantContext,
         provider: str | None = None,
         scope_id: str | None = None,
-    ) -> list[ReconciliationReport]:
-        ...
+    ) -> list[ReconciliationReport]: ...
 
     def save_estimate_vs_actual(
         self,
         item: EstimateVsActualItem,
         *,
         tenant_context: TenantContext,
-    ) -> EstimateVsActualItem:
-        ...
+    ) -> EstimateVsActualItem: ...
 
     def list_estimate_vs_actual(
         self,
         *,
         tenant_context: TenantContext,
         billing_period: str | None = None,
-    ) -> list[EstimateVsActualItem]:
-        ...
+    ) -> list[EstimateVsActualItem]: ...
 
     def prevent_cost_adjustment(
         self,
         cost_fact_id: str,
         *,
         tenant_context: TenantContext,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class SqlReconciliationRepository:
@@ -156,6 +145,7 @@ class SqlReconciliationRepository:
             return ReconciliationReport.model_validate(raw)
 
         from domain.cost.reconciliation.models import ReconciliationStatus, VarianceClassification
+
         return ReconciliationReport(
             id=m["id"],
             tenant_id=m["tenant_id"],
@@ -182,6 +172,7 @@ class SqlReconciliationRepository:
             return ReconciliationInvestigationItem.model_validate(raw)
 
         from domain.cost.reconciliation.models import InvestigationPriority, VarianceClassification
+
         return ReconciliationInvestigationItem(
             id=m["id"],
             report_id=m["report_id"],
@@ -209,6 +200,7 @@ class SqlReconciliationRepository:
             return EstimateVsActualItem.model_validate(raw)
 
         from domain.cost.reconciliation.models import EstimationBias
+
         return EstimateVsActualItem(
             id=m["id"],
             tenant_id=m["tenant_id"],
@@ -227,7 +219,9 @@ class SqlReconciliationRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM reconciliation_reports WHERE id = :id AND tenant_id = :tid;"),
+                    text(
+                        "SELECT * FROM reconciliation_reports WHERE id = :id AND tenant_id = :tid;"
+                    ),
                     {"id": entity_id, "tid": tid},
                 )
                 row = res.first()
@@ -391,7 +385,9 @@ class SqlReconciliationRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM reconciliation_investigations WHERE id = :id AND tenant_id = :tid;"),
+                    text(
+                        "SELECT * FROM reconciliation_investigations WHERE id = :id AND tenant_id = :tid;"
+                    ),
                     {"id": item_id, "tid": tid},
                 )
                 row = res.first()

@@ -34,9 +34,13 @@ class InMemoryCheckpointStore:
         status: str = "IN_PROGRESS",
     ) -> JobCheckpoint:
         if not tenant_context or not tenant_context.tenant_id:
-            raise MissingTenantContextException("Cannot save checkpoint without authenticated TenantContext.")
+            raise MissingTenantContextException(
+                "Cannot save checkpoint without authenticated TenantContext."
+            )
         if page_number < 1:
-            raise PaginationCheckpointException(f"Invalid page_number {page_number}. Page numbers must be >= 1.")
+            raise PaginationCheckpointException(
+                f"Invalid page_number {page_number}. Page numbers must be >= 1."
+            )
 
         key = (tenant_context.tenant_id, job_id, capability.value)
         now = datetime.now(UTC)
@@ -68,7 +72,9 @@ class InMemoryCheckpointStore:
         job_id: str,
         capability: str | ConnectorCapability,
     ) -> JobCheckpoint | None:
-        cap_val = capability.value if isinstance(capability, ConnectorCapability) else str(capability)
+        cap_val = (
+            capability.value if isinstance(capability, ConnectorCapability) else str(capability)
+        )
         key = (tenant_id, job_id, cap_val)
         with self._lock:
             return self._checkpoints.get(key)
@@ -80,7 +86,9 @@ class InMemoryCheckpointStore:
         capability: ConnectorCapability,
     ) -> JobCheckpoint | None:
         if not tenant_context or not tenant_context.tenant_id:
-            raise MissingTenantContextException("Cannot retrieve checkpoint without authenticated TenantContext.")
+            raise MissingTenantContextException(
+                "Cannot retrieve checkpoint without authenticated TenantContext."
+            )
         return self.get_checkpoint(tenant_context.tenant_id, job_id, capability)
 
     def mark_completed(

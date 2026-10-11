@@ -154,6 +154,7 @@ class IntegrationSandbox:
 
     def get_seed_directory_users(self) -> list[DirectoryUserProfile]:
         """Provides realistic synthetic corporate directory dataset with active users and leavers."""
+
         def _sb_email(user: str) -> str:
             domain = "enterprise.internal"
             return f"{user}@{domain}"
@@ -191,6 +192,7 @@ class IntegrationSandbox:
 
     def get_seed_cmdb_applications(self) -> list[dict[str, Any]]:
         """Provides realistic CMDB application configuration items."""
+
         def _sb_email(user: str) -> str:
             domain = "enterprise.internal"
             return f"{user}@{domain}"

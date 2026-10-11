@@ -67,6 +67,7 @@ class AWSCostService:
     def _get_s3_client(self) -> Any:
         """Constructs an AWS S3 client using connector configuration."""
         import boto3
+
         creds = self.config.get("credentials") or {}
         kwargs: dict[str, Any] = {}
         if self.config.get("s3_endpoint_url"):
@@ -120,20 +121,29 @@ class AWSCostService:
             end_time = raw_item.get("lineItem/UsageEndDate", "2026-09-01T01:00:00Z")
 
         unblended_cost_val = raw_item.get(
-            "lineItem/UnblendedCost", raw_item.get("UnblendedCost", raw_item.get("unblended_cost", 0.0))
+            "lineItem/UnblendedCost",
+            raw_item.get("UnblendedCost", raw_item.get("unblended_cost", 0.0)),
         )
         usage_qty_val = raw_item.get(
-            "lineItem/UsageQuantity", raw_item.get("UsageQuantity", raw_item.get("usage_quantity", 0.0))
+            "lineItem/UsageQuantity",
+            raw_item.get("UsageQuantity", raw_item.get("usage_quantity", 0.0)),
         )
         unblended_rate_val = raw_item.get(
-            "lineItem/UnblendedRate", raw_item.get("UnblendedRate", raw_item.get("unblended_rate", 0.0))
+            "lineItem/UnblendedRate",
+            raw_item.get("UnblendedRate", raw_item.get("unblended_rate", 0.0)),
         )
 
         return AWSCostRecord(
-            line_item_id=str(raw_item.get("identity/LineItemId", raw_item.get("line_item_id", "aws-line-auto"))),
+            line_item_id=str(
+                raw_item.get("identity/LineItemId", raw_item.get("line_item_id", "aws-line-auto"))
+            ),
             payer_account_id=str(raw_item.get("bill/PayerAccountId", self.management_account_id)),
-            usage_account_id=str(raw_item.get("lineItem/UsageAccountId", self.management_account_id)),
-            product_code=str(raw_item.get("lineItem/ProductCode", raw_item.get("ProductCode", "AmazonEC2"))),
+            usage_account_id=str(
+                raw_item.get("lineItem/UsageAccountId", self.management_account_id)
+            ),
+            product_code=str(
+                raw_item.get("lineItem/ProductCode", raw_item.get("ProductCode", "AmazonEC2"))
+            ),
             usage_type=str(raw_item.get("lineItem/UsageType", raw_item.get("UsageType", ""))),
             operation=str(raw_item.get("lineItem/Operation", raw_item.get("Operation", ""))),
             resource_id=str(raw_item.get("lineItem/ResourceId", raw_item.get("ResourceId", ""))),
@@ -157,17 +167,20 @@ class AWSCostService:
 
         if key.endswith(".parquet") or key.endswith(".snappy.parquet"):
             import pyarrow.parquet as pq
+
             table = pq.read_table(io.BytesIO(body))
             return table.to_pylist()
         elif key.endswith(".json") or key.endswith(".json.gz"):
             if key.endswith(".gz"):
                 import gzip
+
                 body = gzip.decompress(body)
             data = json.loads(body.decode("utf-8"))
             return data if isinstance(data, list) else [data]
         elif key.endswith(".csv") or key.endswith(".csv.gz"):
             if key.endswith(".gz"):
                 import gzip
+
                 body = gzip.decompress(body)
             reader = csv.DictReader(io.StringIO(body.decode("utf-8")))
             return list(reader)
@@ -205,7 +218,9 @@ class AWSCostService:
                 if key.endswith((".parquet", ".json", ".csv", ".json.gz", ".csv.gz")):
                     raw_items = self._read_s3_export_data(s3, bucket, key)
                     for raw in raw_items:
-                        usage_acc = str(raw.get("lineItem/UsageAccountId", raw.get("UsageAccountId", "")))
+                        usage_acc = str(
+                            raw.get("lineItem/UsageAccountId", raw.get("UsageAccountId", ""))
+                        )
                         if account_id and usage_acc and usage_acc != account_id:
                             continue
                         parsed = self._parse_cur_record(raw, is_estimated=False)
@@ -237,6 +252,7 @@ class AWSCostService:
         records: list[dict[str, Any]] = []
         try:
             import boto3
+
             creds = self.config.get("credentials") or {}
             kwargs: dict[str, Any] = {}
             if self.config.get("endpoint_url"):

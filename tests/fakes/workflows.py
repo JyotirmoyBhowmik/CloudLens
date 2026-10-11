@@ -46,9 +46,15 @@ class InMemoryWorkflowRepository:
                 items = [r for r in items if r.state == st or r.state.value == str(st)]
             if "request_type" in filter_params and filter_params["request_type"]:
                 rt = filter_params["request_type"]
-                items = [r for r in items if r.request_type == rt or r.request_type.upper() == str(rt).upper()]
+                items = [
+                    r
+                    for r in items
+                    if r.request_type == rt or r.request_type.upper() == str(rt).upper()
+                ]
             if "requester_id" in filter_params and filter_params["requester_id"]:
-                items = [r for r in items if r.requester.requester_id == filter_params["requester_id"]]
+                items = [
+                    r for r in items if r.requester.requester_id == filter_params["requester_id"]
+                ]
         items.sort(key=lambda r: r.created_at, reverse=True)
         return items[offset : offset + limit]
 
@@ -63,7 +69,9 @@ class InMemoryWorkflowRepository:
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         return (tenant_context.tenant_id, entity_id) in self._requests
 
-    def save_request(self, req: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+    def save_request(
+        self, req: WorkflowRequest, *, tenant_context: TenantContext
+    ) -> WorkflowRequest:
         return self.save(req, tenant_context=tenant_context)
 
     def get_request(self, req_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
@@ -86,7 +94,9 @@ class InMemoryWorkflowRepository:
             fp["request_type"] = request_type
         if requester_id:
             fp["requester_id"] = requester_id
-        return self.list(tenant_context=tenant_context, filter_params=fp, limit=limit, offset=offset)
+        return self.list(
+            tenant_context=tenant_context, filter_params=fp, limit=limit, offset=offset
+        )
 
     def save_definition(
         self, definition: WorkflowDefinition, *, tenant_context: TenantContext
@@ -103,7 +113,9 @@ class InMemoryWorkflowRepository:
         d = self._definitions.get((t_id, def_id)) or self._definitions.get((t_id, def_id.upper()))
         if d:
             return d
-        return self._definitions.get(("SYSTEM", def_id)) or self._definitions.get(("SYSTEM", def_id.upper()))
+        return self._definitions.get(("SYSTEM", def_id)) or self._definitions.get(
+            ("SYSTEM", def_id.upper())
+        )
 
     def list_definitions(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]:
         t_id = tenant_context.tenant_id

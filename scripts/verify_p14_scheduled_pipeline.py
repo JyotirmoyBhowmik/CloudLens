@@ -53,7 +53,9 @@ def verify_scheduler_loading():
 
     sched_key = "master_SCHED_LIVE_REAL_COST"
     if sched_key not in schedules:
-        raise AssertionError(f"Master schedule '{sched_key}' was not found in scheduler dictionary: {list(schedules.keys())}")
+        raise AssertionError(
+            f"Master schedule '{sched_key}' was not found in scheduler dictionary: {list(schedules.keys())}"
+        )
 
     entry = schedules[sched_key]
     print(f"Loaded schedule entry key: {sched_key}")
@@ -62,8 +64,12 @@ def verify_scheduler_loading():
     print(f"  Args:     {entry['args']}")
 
     assert entry["task"] == "cloudlens.tasks.ingest_cost", f"Unexpected task: {entry['task']}"
-    assert entry["schedule"].total_seconds() <= 60, f"Expected short interval, got {entry['schedule']}"
-    print("[PASS] Beat Scheduler reads schedule from Master Data with short interval (no cron literals).")
+    assert entry["schedule"].total_seconds() <= 60, (
+        f"Expected short interval, got {entry['schedule']}"
+    )
+    print(
+        "[PASS] Beat Scheduler reads schedule from Master Data with short interval (no cron literals)."
+    )
     return entry
 
 
@@ -79,9 +85,13 @@ def run_scheduled_cycle(cycle_num: int, entry: dict) -> dict:
         tenant_context_payload=tenant_payload,
         connector_id=connector_id,
     )
-    print(f"Cycle #{cycle_num} completed: status={result.get('status')}, job_id={result.get('job_id')}, rows_ingested={result.get('rows_ingested')}")
+    print(
+        f"Cycle #{cycle_num} completed: status={result.get('status')}, job_id={result.get('job_id')}, rows_ingested={result.get('rows_ingested')}"
+    )
     assert result.get("status") == "COMPLETED", f"Expected COMPLETED status, got: {result}"
-    assert result.get("rows_ingested", 0) > 0, f"Expected > 0 rows ingested, got: {result.get('rows_ingested')}"
+    assert result.get("rows_ingested", 0) > 0, (
+        f"Expected > 0 rows ingested, got: {result.get('rows_ingested')}"
+    )
     return result
 
 
@@ -116,13 +126,15 @@ def list_minio_objects(tenant_id: str, connector_id: str) -> list[dict]:
     contents = resp.get("Contents", [])
     out = []
     for item in contents:
-        out.append({
-            "bucket": "raw-landing",
-            "key": item["Key"],
-            "full_path": f"raw-landing/{item['Key']}",
-            "size_bytes": item["Size"],
-            "last_modified": item["LastModified"].isoformat(),
-        })
+        out.append(
+            {
+                "bucket": "raw-landing",
+                "key": item["Key"],
+                "full_path": f"raw-landing/{item['Key']}",
+                "size_bytes": item["Size"],
+                "last_modified": item["LastModified"].isoformat(),
+            }
+        )
     return out
 
 
@@ -133,11 +145,15 @@ async def _query_sql_sums(tenant_id: str):
         cost_fact_sum = (await session.execute(q_fact, {"tid": tenant_id})).scalar()
 
         # 2. Materialized sum from agg_cost_scope_day
-        q_agg = text("SELECT COALESCE(SUM(billed_cost), 0) FROM agg_cost_scope_day WHERE tenant_id = :tid;")
+        q_agg = text(
+            "SELECT COALESCE(SUM(billed_cost), 0) FROM agg_cost_scope_day WHERE tenant_id = :tid;"
+        )
         agg_day_sum = (await session.execute(q_agg, {"tid": tenant_id})).scalar()
 
         # Find latest billing period
-        q_period = text("SELECT billing_period_start FROM cost_fact WHERE tenant_id = :tid ORDER BY billing_period_start DESC LIMIT 1;")
+        q_period = text(
+            "SELECT billing_period_start FROM cost_fact WHERE tenant_id = :tid ORDER BY billing_period_start DESC LIMIT 1;"
+        )
         period_row = (await session.execute(q_period, {"tid": tenant_id})).scalar()
 
     return {
@@ -199,10 +215,16 @@ def main():
     jobs = run_async(query_sync_jobs_proof(tenant_id, connector_id))
     print(f"Total sync_job records found for connector '{connector_id}': {len(jobs)}")
     for i, j in enumerate(jobs[:2], 1):
-        print(f"  Run #{i}: ID={j['id']}, Status={j['status']}, SyncType={j['sync_type']}, Rows={j['rows_ingested']}, Started={j['started_at']}, Completed={j['completed_at']}")
+        print(
+            f"  Run #{i}: ID={j['id']}, Status={j['status']}, SyncType={j['sync_type']}, Rows={j['rows_ingested']}, Started={j['started_at']}, Completed={j['completed_at']}"
+        )
 
-    completed_runs = [j for j in jobs if j["status"] == SyncJobStatus.COMPLETED or j["status"] == "COMPLETED"]
-    assert len(completed_runs) >= 2, f"Expected at least 2 completed runs in sync_jobs, got {len(completed_runs)}"
+    completed_runs = [
+        j for j in jobs if j["status"] == SyncJobStatus.COMPLETED or j["status"] == "COMPLETED"
+    ]
+    assert len(completed_runs) >= 2, (
+        f"Expected at least 2 completed runs in sync_jobs, got {len(completed_runs)}"
+    )
     print("[PASS] Two runs verified in sync_job table via direct SQL query.")
 
     # 4. PROOF 2: MinIO objects listed
@@ -210,11 +232,17 @@ def main():
     print("DONE WHEN [2]: MINIO OBJECTS LISTED")
     print("=" * 80)
     minio_objs = list_minio_objects(tenant_id, connector_id)
-    print(f"Total objects found in MinIO bucket 'raw-landing' for '{tenant_id}/{connector_id}': {len(minio_objs)}")
+    print(
+        f"Total objects found in MinIO bucket 'raw-landing' for '{tenant_id}/{connector_id}': {len(minio_objs)}"
+    )
     for obj in minio_objs:
-        print(f"  Object: {obj['full_path']} ({obj['size_bytes']} bytes, modified {obj['last_modified']})")
+        print(
+            f"  Object: {obj['full_path']} ({obj['size_bytes']} bytes, modified {obj['last_modified']})"
+        )
 
-    assert len(minio_objs) >= 2, f"Expected at least 2 landed objects in MinIO bucket 'raw-landing', got {len(minio_objs)}"
+    assert len(minio_objs) >= 2, (
+        f"Expected at least 2 landed objects in MinIO bucket 'raw-landing', got {len(minio_objs)}"
+    )
     print("[PASS] Raw provider landing objects verified in MinIO object storage.")
 
     # 5. PROOF 3: Dashboard figures equal SQL aggregates
@@ -227,13 +255,17 @@ def main():
     print(f"  Executive Dashboard Total Spend:      ${comparison['dashboard_total']:.2f}")
 
     assert comparison["cost_fact_sum"] > Decimal("0.00"), "cost_fact sum is 0.00"
-    assert round(comparison["cost_fact_sum"], 2) == round(comparison["agg_cost_scope_day_sum"], 2), (
+    assert round(comparison["cost_fact_sum"], 2) == round(
+        comparison["agg_cost_scope_day_sum"], 2
+    ), (
         f"cost_fact sum ({comparison['cost_fact_sum']}) != agg_cost_scope_day sum ({comparison['agg_cost_scope_day_sum']})"
     )
     assert round(comparison["dashboard_total"], 2) == round(comparison["cost_fact_sum"], 2), (
         f"Dashboard total ({comparison['dashboard_total']}) != SQL aggregate ({comparison['cost_fact_sum']})"
     )
-    print(f"[PASS] Dashboard figure (${comparison['dashboard_total']:.2f}) strictly equals SQL aggregate (${comparison['cost_fact_sum']:.2f}).")
+    print(
+        f"[PASS] Dashboard figure (${comparison['dashboard_total']:.2f}) strictly equals SQL aggregate (${comparison['cost_fact_sum']:.2f})."
+    )
 
     print("\n" + "=" * 80)
     print("ALL DONE WHEN CRITERIA VERIFIED SUCCESSFULLY")

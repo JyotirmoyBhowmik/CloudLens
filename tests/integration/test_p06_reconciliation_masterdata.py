@@ -36,7 +36,7 @@ def test_reconciliation_engine_no_literal_and_register_reduced() -> None:
     tree = ast.parse(source, filename=str(engine_file))
 
     # Verify no inline '# no-hardcode-allow' on investigation severity variance threshold
-    assert "no-hardcode-allow: reason=\"Investigation severity variance threshold\"" not in source, (
+    assert 'no-hardcode-allow: reason="Investigation severity variance threshold"' not in source, (
         "Inline allow-list exception for severity variance threshold must be removed from engine.py!"
     )
 

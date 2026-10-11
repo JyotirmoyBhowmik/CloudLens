@@ -214,9 +214,19 @@ class SqlSyncJobRepository:
         self, entity: SyncJob, tenant_context: TenantContext, session: AsyncSession
     ) -> SyncJob:
         now = datetime.now(UTC)
-        conn_type_val = entity.connector_type.value if hasattr(entity.connector_type, "value") else str(entity.connector_type)
-        sync_type_val = entity.sync_type.value if hasattr(entity.sync_type, "value") else str(entity.sync_type)
-        cap_val = entity.capability.value if (entity.capability and hasattr(entity.capability, "value")) else (str(entity.capability) if entity.capability else None)
+        conn_type_val = (
+            entity.connector_type.value
+            if hasattr(entity.connector_type, "value")
+            else str(entity.connector_type)
+        )
+        sync_type_val = (
+            entity.sync_type.value if hasattr(entity.sync_type, "value") else str(entity.sync_type)
+        )
+        cap_val = (
+            entity.capability.value
+            if (entity.capability and hasattr(entity.capability, "value"))
+            else (str(entity.capability) if entity.capability else None)
+        )
         status_val = entity.status.value if hasattr(entity.status, "value") else str(entity.status)
 
         req_json = json.dumps(entity.scopes_requested)
@@ -283,7 +293,9 @@ class SqlSyncJobRepository:
         session: AsyncSession | None = None,
     ) -> builtins.list[SyncJob]:
         if session is not None:
-            return await self._list_with_session(tenant_context, filter_params, limit, offset, session)
+            return await self._list_with_session(
+                tenant_context, filter_params, limit, offset, session
+            )
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             return await self._list_with_session(tenant_context, filter_params, limit, offset, sess)
 
@@ -339,7 +351,11 @@ class SqlSyncJobRepository:
             return res.rowcount > 0
 
     async def get_by_idempotency_key_async(
-        self, idempotency_key: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        idempotency_key: str,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> SyncJob | None:
         query = text("""
             SELECT id, tenant_id, connector_type, scope_id, connector_id,
@@ -407,7 +423,12 @@ class SqlSyncJobRepository:
         offset: int = 0,
     ) -> builtins.list[SyncJob]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
     def save(self, entity: SyncJob, *, tenant_context: TenantContext) -> SyncJob:
@@ -423,7 +444,9 @@ class SqlSyncJobRepository:
     def get_by_idempotency_key(
         self, idempotency_key: str, *, tenant_context: TenantContext
     ) -> SyncJob | None:
-        return self._run_async(self.get_by_idempotency_key_async(idempotency_key, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_by_idempotency_key_async(idempotency_key, tenant_context=tenant_context)
+        )
 
     def get_latest_successful(
         self,
@@ -433,7 +456,9 @@ class SqlSyncJobRepository:
         tenant_context: TenantContext,
     ) -> SyncJob | None:
         return self._run_async(
-            self.get_latest_successful_async(connector_id, capability, tenant_context=tenant_context)
+            self.get_latest_successful_async(
+                connector_id, capability, tenant_context=tenant_context
+            )
         )
 
 
@@ -504,12 +529,24 @@ class SqlQuarantineRepository:
             return self._row_to_record(row) if row else None
 
     async def save_async(
-        self, entity: QuarantineRecord, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: QuarantineRecord,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> QuarantineRecord:
         entity.tenant_id = tenant_context.tenant_id
         now = datetime.now(UTC)
-        cap_val = entity.capability.value if hasattr(entity.capability, "value") else str(entity.capability)
-        reason_val = entity.quarantine_reason.value if hasattr(entity.quarantine_reason, "value") else str(entity.quarantine_reason)
+        cap_val = (
+            entity.capability.value
+            if hasattr(entity.capability, "value")
+            else str(entity.capability)
+        )
+        reason_val = (
+            entity.quarantine_reason.value
+            if hasattr(entity.quarantine_reason, "value")
+            else str(entity.quarantine_reason)
+        )
         status_val = entity.status.value if hasattr(entity.status, "value") else str(entity.status)
         summary_json = json.dumps(entity.payload_summary)
 
@@ -620,7 +657,12 @@ class SqlQuarantineRepository:
         offset: int = 0,
     ) -> builtins.list[QuarantineRecord]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
     def save(self, entity: QuarantineRecord, *, tenant_context: TenantContext) -> QuarantineRecord:
@@ -702,12 +744,20 @@ class SqlConnectorScheduleRepository:
             return self._row_to_schedule(row) if row else None
 
     async def save_async(
-        self, entity: ConnectorSchedule, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: ConnectorSchedule,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> ConnectorSchedule:
         entity.tenant_id = tenant_context.tenant_id
         now = datetime.now(UTC)
         entity.updated_at = now
-        cap_val = entity.capability.value if hasattr(entity.capability, "value") else str(entity.capability)
+        cap_val = (
+            entity.capability.value
+            if hasattr(entity.capability, "value")
+            else str(entity.capability)
+        )
 
         query = text("""
             INSERT INTO connector_schedules (
@@ -858,10 +908,17 @@ class SqlConnectorScheduleRepository:
         offset: int = 0,
     ) -> builtins.list[ConnectorSchedule]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
-    def save(self, entity: ConnectorSchedule, *, tenant_context: TenantContext) -> ConnectorSchedule:
+    def save(
+        self, entity: ConnectorSchedule, *, tenant_context: TenantContext
+    ) -> ConnectorSchedule:
         return self._run_async(self.save_async(entity, tenant_context=tenant_context))
 
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
@@ -879,13 +936,17 @@ class SqlConnectorScheduleRepository:
         tenant_context: TenantContext,
     ) -> ConnectorSchedule | None:
         return self._run_async(
-            self.get_by_connector_and_capability_async(connector_id, capability, tenant_context=tenant_context)
+            self.get_by_connector_and_capability_async(
+                connector_id, capability, tenant_context=tenant_context
+            )
         )
 
     def list_for_connector(
         self, connector_id: str, *, tenant_context: TenantContext
     ) -> builtins.list[ConnectorSchedule]:
-        return self.list(tenant_context=tenant_context, filter_params={"connector_id": connector_id})
+        return self.list(
+            tenant_context=tenant_context, filter_params={"connector_id": connector_id}
+        )
 
     def list_all_enabled(self) -> builtins.list[ConnectorSchedule]:
         return self._run_async(self.list_all_enabled_async())
@@ -903,7 +964,9 @@ class SqlFirstSyncProgressRepository:
         raw_stages = row[6] or []
         if isinstance(raw_stages, str):
             raw_stages = json.loads(raw_stages)
-        stages = [FirstSyncStage.model_validate(s) if isinstance(s, dict) else s for s in raw_stages]
+        stages = [
+            FirstSyncStage.model_validate(s) if isinstance(s, dict) else s for s in raw_stages
+        ]
 
         return FirstSyncProgressReport(
             id=row[0],
@@ -966,7 +1029,11 @@ class SqlFirstSyncProgressRepository:
             return self._row_to_report(row) if row else None
 
     async def get_by_connector_id_async(
-        self, connector_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        connector_id: str,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> FirstSyncProgressReport | None:
         query = text("""
             SELECT id, tenant_id, session_id, connector_id, initial_sync_job_id,
@@ -989,12 +1056,18 @@ class SqlFirstSyncProgressRepository:
             return self._row_to_report(row) if row else None
 
     async def save_async(
-        self, entity: FirstSyncProgressReport, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: FirstSyncProgressReport,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> FirstSyncProgressReport:
         entity.tenant_id = tenant_context.tenant_id
         now = datetime.now(UTC)
         entity.updated_at = now
-        stages_json = json.dumps([s.model_dump(mode="json") if hasattr(s, "model_dump") else s for s in entity.stages])
+        stages_json = json.dumps(
+            [s.model_dump(mode="json") if hasattr(s, "model_dump") else s for s in entity.stages]
+        )
 
         query = text("""
             INSERT INTO first_sync_progress (
@@ -1082,18 +1155,24 @@ class SqlFirstSyncProgressRepository:
             return res.rowcount > 0
 
     # Sync interfaces
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> FirstSyncProgressReport | None:
+    def get(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> FirstSyncProgressReport | None:
         return self._run_async(self.get_async(entity_id, tenant_context=tenant_context))
 
     def get_by_session_id(
         self, session_id: str, *, tenant_context: TenantContext
     ) -> FirstSyncProgressReport | None:
-        return self._run_async(self.get_by_session_id_async(session_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_by_session_id_async(session_id, tenant_context=tenant_context)
+        )
 
     def get_by_connector_id(
         self, connector_id: str, *, tenant_context: TenantContext
     ) -> FirstSyncProgressReport | None:
-        return self._run_async(self.get_by_connector_id_async(connector_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_by_connector_id_async(connector_id, tenant_context=tenant_context)
+        )
 
     def list(
         self,
@@ -1104,7 +1183,12 @@ class SqlFirstSyncProgressRepository:
         offset: int = 0,
     ) -> builtins.list[FirstSyncProgressReport]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
     def save(
@@ -1181,7 +1265,11 @@ def reset_sync_repositories(
     schedules: Any = None,
     progress: Any = None,
 ) -> None:
-    global _sync_job_repo_instance, _quarantine_repo_instance, _sched_repo_instance, _first_sync_repo_instance
+    global \
+        _sync_job_repo_instance, \
+        _quarantine_repo_instance, \
+        _sched_repo_instance, \
+        _first_sync_repo_instance
     _sync_job_repo_instance = sync_jobs
     _quarantine_repo_instance = quarantine
     _sched_repo_instance = schedules

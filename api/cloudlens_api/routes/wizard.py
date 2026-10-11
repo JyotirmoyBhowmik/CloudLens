@@ -245,7 +245,6 @@ async def complete_wizard(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(p_err)) from p_err
 
 
-
 @router.post(
     "/sessions/{session_id}/test-alert-delivery",
     response_model=AlertDeliveryTestReport,

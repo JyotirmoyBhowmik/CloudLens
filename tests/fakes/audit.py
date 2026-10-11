@@ -24,6 +24,10 @@ class InMemoryAuditRepository(TenantAwareRepository[AuditEvent]):
         self._tenant_streams: dict[str, list[AuditEvent]] = {}
         self._index: dict[tuple[str, str], AuditEvent] = {}
 
+    def _validate_tenant_context(self, tenant_context: TenantContext) -> None:
+        if not tenant_context or not tenant_context.tenant_id:
+            raise ValueError("Operation requires valid TenantContext with non-empty tenant_id.")
+
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> AuditEvent | None:
         self._validate_tenant_context(tenant_context)
         with self._lock:

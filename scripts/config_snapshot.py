@@ -23,7 +23,9 @@ from domain.config.snapshot_engine import get_config_snapshot_engine
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="CloudLens Configuration Snapshot & Promotion Tool")
+    parser = argparse.ArgumentParser(
+        description="CloudLens Configuration Snapshot & Promotion Tool"
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # export
@@ -50,7 +52,9 @@ def main() -> int:
         out_path = Path(args.out)
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(snapshot, f, indent=2)
-        print(f"[EXPORT OK] Exported {snapshot['masters_count']} masters to {out_path} (SHA: {snapshot['bundle_sha256'][:16]}...)")
+        print(
+            f"[EXPORT OK] Exported {snapshot['masters_count']} masters to {out_path} (SHA: {snapshot['bundle_sha256'][:16]}...)"
+        )
         return 0
 
     elif args.command == "diff":
@@ -71,7 +75,9 @@ def main() -> int:
         with open(args.file, "r", encoding="utf-8") as f:
             snap = json.load(f)
         res = engine.import_snapshot(snap, dry_run=args.dry_run)
-        print(f"[IMPORT {res['status']}] {res['imported_masters_count']} masters processed. Dry-run: {res['dry_run']}")
+        print(
+            f"[IMPORT {res['status']}] {res['imported_masters_count']} masters processed. Dry-run: {res['dry_run']}"
+        )
         return 0
 
     return 0

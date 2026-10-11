@@ -36,7 +36,11 @@ def check_images(target_dirs: list[str]) -> list[str]:
                 content = img_path.read_bytes()
                 # Check first 64KB as well as full content if small
                 head = content[:65536]
-                found_markers = [m.decode("utf-8", errors="ignore") for m in FORBIDDEN_MARKERS if m in head or m in content]
+                found_markers = [
+                    m.decode("utf-8", errors="ignore")
+                    for m in FORBIDDEN_MARKERS
+                    if m in head or m in content
+                ]
                 if found_markers:
                     violations.append(
                         f"{img_path.relative_to(ROOT_DIR)} carries forbidden AI/C2PA markers: {found_markers}"
@@ -48,7 +52,10 @@ def main() -> None:
     print(">>> Verifying image provenance and scanning for AI/C2PA markers in fat/ and docs/...")
     violations = check_images(["fat", "docs"])
     if violations:
-        print("[FAIL] AI-generation / C2PA marker violations detected in test/evidence images:", file=sys.stderr)
+        print(
+            "[FAIL] AI-generation / C2PA marker violations detected in test/evidence images:",
+            file=sys.stderr,
+        )
         for v in violations:
             print(f"  - {v}", file=sys.stderr)
         sys.exit(1)

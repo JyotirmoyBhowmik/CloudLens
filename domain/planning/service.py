@@ -231,16 +231,22 @@ class PlanningService:
             raise TargetNotFoundException(cycle_id, scope_id)
         return self._targets[key]
 
-    def calculate_target_gap(self, cycle_id: str, scope_type: str, scope_id: str) -> TargetGapReport:
+    def calculate_target_gap(
+        self, cycle_id: str, scope_type: str, scope_id: str
+    ) -> TargetGapReport:
         target = self.get_top_down_target(cycle_id, scope_id)
 
         # Sum of bottom-up submissions for this scope and any child scopes
         matching_subs = [
-            s for s in self._submissions.values()
-            if s.cycle_id == cycle_id and (s.scope_id == scope_id or s.scope_id.startswith(f"{scope_id}:"))
+            s
+            for s in self._submissions.values()
+            if s.cycle_id == cycle_id
+            and (s.scope_id == scope_id or s.scope_id.startswith(f"{scope_id}:"))
         ]
         bottom_up_sum = sum((s.proposed_amount for s in matching_subs), Decimal("0.00"))
-        gap = (bottom_up_sum - target.target_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        gap = (bottom_up_sum - target.target_amount).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         is_unfavourable = gap > Decimal("0.00")
 
         breakdowns = [
@@ -314,20 +320,22 @@ class PlanningService:
                 impact_delta = asm.fixed_delta.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
                 projected = projected + impact_delta
 
-            impacts.append({
-                "assumption_id": asm.assumption_id,
-                "type": asm.assumption_type.value,
-                "description": asm.description,
-                "delta": str(impact_delta),
-            })
+            impacts.append(
+                {
+                    "assumption_id": asm.assumption_id,
+                    "type": asm.assumption_type.value,
+                    "description": asm.description,
+                    "delta": str(impact_delta),
+                }
+            )
 
         absolute_delta = (projected - scenario.baseline_amount).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_EVEN
         )
         if scenario.baseline_amount > Decimal("0.00"):
-            percentage_delta = ((absolute_delta / scenario.baseline_amount) * Decimal("100.00")).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_EVEN
-            )
+            percentage_delta = (
+                (absolute_delta / scenario.baseline_amount) * Decimal("100.00")
+            ).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
         else:
             percentage_delta = Decimal("0.00")
 
@@ -341,7 +349,9 @@ class PlanningService:
             assumption_impacts=impacts,
         )
 
-    def compare_scenarios(self, cycle_id: str, scenario_ids: list[str]) -> list[ScenarioEvaluationResult]:
+    def compare_scenarios(
+        self, cycle_id: str, scenario_ids: list[str]
+    ) -> list[ScenarioEvaluationResult]:
         """Performs side-by-side comparison across multiple alternative what-if scenarios."""
         results: list[ScenarioEvaluationResult] = []
         for sid in scenario_ids:
@@ -388,7 +398,9 @@ class PlanningService:
         sub = self.get_submission(submission_id)
         cycle = self.get_cycle(sub.cycle_id)
         actual_dec = Decimal(str(actual_spend)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        variance = (actual_dec - sub.proposed_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        variance = (actual_dec - sub.proposed_amount).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
 
         if sub.proposed_amount > Decimal("0.00"):
             abs_err = abs(variance)
@@ -416,7 +428,9 @@ class PlanningService:
 
         total_submitted = sum((s.proposed_amount for s in cycle_subs), Decimal("0.00"))
         total_targets = sum((t.target_amount for t in targets), Decimal("0.00"))
-        net_gap = (total_submitted - total_targets).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        net_gap = (total_submitted - total_targets).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
 
         return {
             "pack_title": f"Executive Financial Planning Pack: {cycle.name}",

@@ -51,7 +51,14 @@ def check_security_controls() -> tuple[bool, str]:
         return False, "Security self-assessment report missing"
 
     # Run security test suite
-    cmd = [PYTHON_EXE, "-m", "pytest", "tests/security/test_tenant_isolation_suite.py", "tests/security/test_auth_security_controls.py", "-q"]
+    cmd = [
+        PYTHON_EXE,
+        "-m",
+        "pytest",
+        "tests/security/test_tenant_isolation_suite.py",
+        "tests/security/test_auth_security_controls.py",
+        "-q",
+    ]
     res = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
     if res.returncode != 0:
         return False, f"Security tests failed: {res.stderr or res.stdout}"
@@ -91,7 +98,15 @@ def check_master_data_authority() -> tuple[bool, str]:
 
 def check_demo_mode_isolation() -> tuple[bool, str]:
     """Mandate M3 Demo Mode Isolation."""
-    cmd = [PYTHON_EXE, "-m", "pytest", "tests/mandates/test_mandates_verification_suite.py", "-k", "test_mandate_m3", "-q"]
+    cmd = [
+        PYTHON_EXE,
+        "-m",
+        "pytest",
+        "tests/mandates/test_mandates_verification_suite.py",
+        "-k",
+        "test_mandate_m3",
+        "-q",
+    ]
     res = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
     if res.returncode != 0:
         return False, "Demo mode isolation test failed"
@@ -129,7 +144,13 @@ def check_monetary_precision_and_nulls() -> tuple[bool, str]:
     if res_cov.returncode != 0:
         return False, "100% monetary coverage check failed"
 
-    null_cmd = [PYTHON_EXE, "-m", "pytest", "tests/data_validation/test_data_validation_suite.py", "-q"]
+    null_cmd = [
+        PYTHON_EXE,
+        "-m",
+        "pytest",
+        "tests/data_validation/test_data_validation_suite.py",
+        "-q",
+    ]
     res_null = subprocess.run(null_cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
     if res_null.returncode != 0:
         return False, "4-state null discipline test failed"
@@ -152,7 +173,13 @@ def check_operational_runbook() -> tuple[bool, str]:
     if not runbook_path.exists():
         return False, "docs/operational-runbook.md missing"
     content = runbook_path.read_text(encoding="utf-8")
-    for term in ["Blue-Green", "Rollback", "Credential Compromise", "Reconciliation Failure", "Disaster Recovery"]:
+    for term in [
+        "Blue-Green",
+        "Rollback",
+        "Credential Compromise",
+        "Reconciliation Failure",
+        "Disaster Recovery",
+    ]:
         if term.lower() not in content.lower():
             return False, f"Runbook missing section: {term}"
     return True, "Operational runbook contains all mandatory incident & operational procedures"

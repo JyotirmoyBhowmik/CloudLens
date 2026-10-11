@@ -865,7 +865,6 @@ class ReportGenerationEngine:
         summary = {"events_extracted": 2, "chain_integrity_verified": True}
         return cols, rows, summary
 
-
     # ==========================================================================
     # Builders for 5 Pricing-Specific Reports
     # ==========================================================================

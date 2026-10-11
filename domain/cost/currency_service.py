@@ -35,16 +35,14 @@ logger = logging.getLogger(__name__)
 class CurrencyConversionService(Protocol):
     """Authoritative protocol for currency conversion."""
 
-    def register_rate(self, rate_record: CurrencyExchangeRate) -> None:
-        ...
+    def register_rate(self, rate_record: CurrencyExchangeRate) -> None: ...
 
     def get_effective_rate(
         self,
         from_currency: str,
         to_currency: str,
         as_of_date: date,
-    ) -> CurrencyExchangeRate | None:
-        ...
+    ) -> CurrencyExchangeRate | None: ...
 
     def convert_at_query_time(
         self,
@@ -54,8 +52,7 @@ class CurrencyConversionService(Protocol):
         as_of_date: date | None = None,
         presentation_basis: CostPresentationBasis = CostPresentationBasis.BILLED,
         basis: CostPresentationBasis | None = None,
-    ) -> ConvertedCostFigure:
-        ...
+    ) -> ConvertedCostFigure: ...
 
 
 class SqlCurrencyConversionService:

@@ -656,35 +656,8 @@ class PermissionCatalogue:
             self._repo = repository
         else:
             from domain.rbac.repository import get_rbac_repository
+
             self._repo = get_rbac_repository()
-
-    @property
-    def repository(self):
-        return self._repo
-
-    @property
-    def _custom_roles(self):
-        cat = self
-        class _CustomRolesProxy(dict):
-            def get(self, key, default=None):
-                tenant_id, role_code = key
-                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
-                return r if r is not None else default
-            def __getitem__(self, key):
-                tenant_id, role_code = key
-                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
-                if r is None:
-                    raise KeyError(key)
-                return r
-            def __setitem__(self, key, role_def):
-                cat._repo.save_custom_role_sync(role_def)
-            def __contains__(self, key):
-                tenant_id, role_code = key
-                return cat._repo.get_custom_role_sync(tenant_id, role_code) is not None
-            def items(self):
-                roles = cat._repo.list_custom_roles_sync("tenant-primary") + cat._repo.list_custom_roles_sync("global")
-                return [((r.tenant_id or "global", r.code), r) for r in roles]
-        return _CustomRolesProxy()
 
         # Populate permissions catalogue
         for p_data in CANONICAL_PERMISSIONS:
@@ -713,6 +686,42 @@ class PermissionCatalogue:
                 requires_mfa=r_data["requires_mfa"],
             )
             self._roles[role_code] = role_def
+
+    @property
+    def repository(self):
+        return self._repo
+
+    @property
+    def _custom_roles(self):
+        cat = self
+
+        class _CustomRolesProxy(dict):
+            def get(self, key, default=None):
+                tenant_id, role_code = key
+                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
+                return r if r is not None else default
+
+            def __getitem__(self, key):
+                tenant_id, role_code = key
+                r = cat._repo.get_custom_role_sync(tenant_id, role_code)
+                if r is None:
+                    raise KeyError(key)
+                return r
+
+            def __setitem__(self, key, role_def):
+                cat._repo.save_custom_role_sync(role_def)
+
+            def __contains__(self, key):
+                tenant_id, role_code = key
+                return cat._repo.get_custom_role_sync(tenant_id, role_code) is not None
+
+            def items(self):
+                roles = cat._repo.list_custom_roles_sync(
+                    "tenant-primary"
+                ) + cat._repo.list_custom_roles_sync("global")
+                return [((r.tenant_id or "global", r.code), r) for r in roles]
+
+        return _CustomRolesProxy()
 
     def list_permissions(self) -> list[Permission]:
         """Returns all permissions defined in the catalogue."""
@@ -796,10 +805,19 @@ class PermissionCatalogue:
         return roles
 
 
-# Global Singleton PermissionCatalogue
-_catalogue = PermissionCatalogue()
+_catalogue: PermissionCatalogue | None = None
 
 
 def get_permission_catalogue() -> PermissionCatalogue:
     """Returns the shared PermissionCatalogue singleton."""
+    global _catalogue
+    if _catalogue is None:
+        _catalogue = PermissionCatalogue()
+    return _catalogue
+
+
+def reset_permission_catalogue(repo: Any = None) -> PermissionCatalogue:
+    """Resets the shared PermissionCatalogue singleton for test isolation."""
+    global _catalogue
+    _catalogue = PermissionCatalogue(repository=repo)
     return _catalogue

@@ -73,7 +73,13 @@ class InMemoryQuotaRepository:
             if is_manual is not None:
                 results = [q for q in results if q.is_manual == is_manual]
 
-        results.sort(key=lambda q: (q.provider.value if hasattr(q.provider, "value") else str(q.provider), q.service_code, q.quota_code))
+        results.sort(
+            key=lambda q: (
+                q.provider.value if hasattr(q.provider, "value") else str(q.provider),
+                q.service_code,
+                q.quota_code,
+            )
+        )
         return results[offset : offset + limit]
 
     def save(self, entity: QuotaEntity, *, tenant_context: TenantContext) -> QuotaEntity:

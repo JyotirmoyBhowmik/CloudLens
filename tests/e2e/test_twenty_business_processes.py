@@ -41,6 +41,7 @@ from domain.budgets.models import (
     BudgetScopeType,
 )
 from domain.budgets.repository import BudgetRepository
+from tests.fakes.budgets import InMemoryBudgetRepository
 from domain.budgets.service import BudgetService
 from domain.bulk_import.engine import BulkImportEngine
 from domain.bulk_import.models import ImportMode
@@ -48,7 +49,9 @@ from domain.cost.focus_mapper import FocusMapper
 from domain.cost.reconciliation.engine import CostReconciliationEngine
 from domain.cost.reconciliation.models import RunReconciliationRequest
 from domain.cost.reconciliation.repository import ReconciliationRepository
+from tests.fakes.reconciliation import InMemoryReconciliationRepository
 from domain.cost.repository import CostFactRepository
+from tests.fakes.cost import InMemoryCostFactRepository
 from domain.dependency.models import TypedEntityRef
 from domain.models.enums import (
     AuditEventType,
@@ -85,6 +88,7 @@ from domain.topology.models import TopologyEdge, TopologyNode
 from domain.usage.collector import UsageCollector
 from domain.usage.models import MonitoringType, UsageIngestRequest
 from domain.usage.repository import UsageRepository
+from tests.fakes.usage import InMemoryUsageRepository
 from masterdata.service import MasterDataService
 
 
@@ -123,7 +127,12 @@ class TestTwentyBusinessProcessesSuite:
         self, tenant_context: TenantContext
     ) -> None:
         """BP-02: Validates connecting AWS, Azure, GCP, and OCI with credential verification."""
-        for profile in (SimulatorProfile.AWS, SimulatorProfile.AZURE, SimulatorProfile.GCP, SimulatorProfile.OCI):
+        for profile in (
+            SimulatorProfile.AWS,
+            SimulatorProfile.AZURE,
+            SimulatorProfile.GCP,
+            SimulatorProfile.OCI,
+        ):
             connector = ProviderSimulatorConnector(
                 connector_id=f"conn-bp02-{profile.value}",
                 tenant_id=tenant_context.tenant_id,
@@ -157,9 +166,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-04: Metadata & Ownership Attribution
     # --------------------------------------------------------------------------
-    def test_bp04_metadata_and_ownership_attribution(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp04_metadata_and_ownership_attribution(self, tenant_context: TenantContext) -> None:
         """BP-04: Evaluates attribution priority rules to determine technical and business owner."""
         resource_tags = {
             "owner": "data-platform-team",
@@ -225,7 +232,7 @@ class TestTwentyBusinessProcessesSuite:
         self, tenant_context: TenantContext
     ) -> None:
         """BP-07: Ingests hourly compute telemetry enforcing cardinality discipline."""
-        repo = UsageRepository()
+        repo = InMemoryUsageRepository()
         collector = UsageCollector(repository=repo)
         now = datetime.now(UTC)
 
@@ -254,7 +261,7 @@ class TestTwentyBusinessProcessesSuite:
         self, tenant_context: TenantContext
     ) -> None:
         """BP-08: Ingests billed charge lines preserving unblended costs and timestamps."""
-        cost_repo = CostFactRepository()
+        cost_repo = InMemoryCostFactRepository()
         raw_rows = [
             {
                 "ChargePeriodStart": "2026-08-01T00:00:00Z",
@@ -343,7 +350,7 @@ class TestTwentyBusinessProcessesSuite:
         self, tenant_context: TenantContext
     ) -> None:
         """BP-13: Creates budget, verifies threshold notches, and tracks utilization."""
-        budget_repo = BudgetRepository()
+        budget_repo = InMemoryBudgetRepository()
         budget_service = BudgetService(repository=budget_repo)
 
         req = BudgetCreateRequest(
@@ -492,8 +499,8 @@ class TestTwentyBusinessProcessesSuite:
         self, tenant_context: TenantContext
     ) -> None:
         """BP-17: Reconciles platform normalized totals against provider invoice billed amounts."""
-        cost_repo = CostFactRepository()
-        recon_repo = ReconciliationRepository()
+        cost_repo = InMemoryCostFactRepository()
+        recon_repo = InMemoryReconciliationRepository()
         engine = CostReconciliationEngine(reconciliation_repo=recon_repo, cost_repo=cost_repo)
 
         req = RunReconciliationRequest(
@@ -578,9 +585,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-21: Provisioning Gate Pre-Flight Quota & Budget Decision (Addendum B)
     # --------------------------------------------------------------------------
-    def test_bp21_provisioning_gate_decision(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp21_provisioning_gate_decision(self, tenant_context: TenantContext) -> None:
         """BP-21: Evaluates prospective infrastructure change against budget and quota ceilings."""
         gate_service = ProvisioningGateService()
         estimate = gate_service.save_estimate(
@@ -622,9 +627,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-22: Remediation Task Lifecycle, Verified Closure & Reopening (Addendum A)
     # --------------------------------------------------------------------------
-    def test_bp22_remediation_task_closure_and_reopen(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp22_remediation_task_closure_and_reopen(self, tenant_context: TenantContext) -> None:
         """BP-22: Advances remediation task through assignment, resolution, verification, and reopen."""
         remediation_service = RemediationService()
         task_req = TaskCreateRequest(
@@ -642,7 +645,10 @@ class TestTwentyBusinessProcessesSuite:
 
         # Transition: Assign -> In Progress -> Resolved
         remediation_service.transition_state(
-            task.id, TaskState.IN_PROGRESS, actor="dev-owner@acme.com", tenant_context=tenant_context
+            task.id,
+            TaskState.IN_PROGRESS,
+            actor="dev-owner@acme.com",
+            tenant_context=tenant_context,
         )
         resolved_task, ver_result = remediation_service.resolve_task(
             task.id,
@@ -701,9 +707,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-24: Master-Data Change to Effect & Point-in-Time Resolution (Addendum A)
     # --------------------------------------------------------------------------
-    def test_bp24_masterdata_change_to_effect(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp24_masterdata_change_to_effect(self, tenant_context: TenantContext) -> None:
         """BP-24: Validates effective-dated master data point-in-time resolution across revisions."""
         md_service = MasterDataService(auto_seed=True)
         now = datetime.now(UTC)
@@ -720,9 +724,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-25: Bulk Import Dry-Run, Provenance & Atomic Rollback (Addendum A)
     # --------------------------------------------------------------------------
-    def test_bp25_bulk_import_to_rollback(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp25_bulk_import_to_rollback(self, tenant_context: TenantContext) -> None:
         """BP-25: Executes dry-run validation, applies bulk import batch, and executes atomic rollback."""
         import_engine = BulkImportEngine()
         csv_content = b"code,display_name,business_unit_code\nCC-101,Core Banking Cost Center,BU_RETAIL_BANKING\nCC-102,Checkout Gateway Cost Center,BU_RETAIL_BANKING\n"
@@ -760,9 +762,7 @@ class TestTwentyBusinessProcessesSuite:
     # --------------------------------------------------------------------------
     # BP-26: Quota Headroom Monitoring & Increase Escalation (Addendum B)
     # --------------------------------------------------------------------------
-    def test_bp26_quota_headroom_to_increase_request(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_bp26_quota_headroom_to_increase_request(self, tenant_context: TenantContext) -> None:
         """BP-26: Probes quota saturation, alerts on headroom breach, and dispatches increase request."""
         quota_service = QuotaService()
         record = quota_service.record_manual_quota(

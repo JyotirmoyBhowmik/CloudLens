@@ -188,11 +188,13 @@ class AuthContext(BaseModel):
         if "*" in self.permissions or capability in self.permissions:
             return True
         from domain.rbac.catalogue import get_permission_catalogue
+
         catalogue = get_permission_catalogue()
         for r in self.roles:
             role_code = r.value if hasattr(r, "value") else str(r)
             role_def = catalogue.get_role(role_code, tenant_id=self.tenant_id)
-            if role_def and (capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions):
+            if role_def and (
+                capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions
+            ):
                 return True
         return False
-

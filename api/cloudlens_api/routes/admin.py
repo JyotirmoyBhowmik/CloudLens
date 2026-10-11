@@ -256,7 +256,9 @@ class ActAsTenantRequest(BaseModel):
     tenant_id: str = Field(..., min_length=1, description="Target tenant ID to assume")
     reason: str = Field(..., min_length=20, description="Mandatory reason (>= 20 characters)")
     mfa_code: str | None = Field(default=None, description="Step-up MFA TOTP code")
-    step_up_token: str | None = Field(default=None, description="Step-up session token from /step-up")
+    step_up_token: str | None = Field(
+        default=None, description="Step-up session token from /step-up"
+    )
 
     @field_validator("reason")
     @classmethod
@@ -429,10 +431,10 @@ def act_as_tenant(
     writes AuditEvent ACT_AS_TENANT_START, and raises a security alert.
     """
     # 1. Require SUPER_ADMIN role
-    is_global_admin = any(
-        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN")
-        for r in tenant_context.roles
-    ) or tenant_context.is_superuser
+    is_global_admin = (
+        any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)
+        or tenant_context.is_superuser
+    )
     if not is_global_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -483,10 +485,13 @@ def act_as_tenant(
     logger.warning(alert_msg)
     try:
         from domain.models.governance import Alert
+
         alert_obj = Alert(
             id=f"alt-sec-{uuid.uuid4().hex[:8]}",
             tenant_id=req.tenant_id,
-            alert_type=AlertType.SECURITY_ALERT if hasattr(AlertType, "SECURITY_ALERT") else "SECURITY_ALERT",
+            alert_type=AlertType.SECURITY_ALERT
+            if hasattr(AlertType, "SECURITY_ALERT")
+            else "SECURITY_ALERT",
             severity=AlertSeverity.HIGH,
             message=alert_msg,
             status=AlertStatus.ACTIVE,

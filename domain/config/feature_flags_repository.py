@@ -33,8 +33,7 @@ class FeatureFlagRepository(Protocol):
 
     async def get_override(
         self, flag_key: str, tenant_id: str | None = None, session: AsyncSession | None = None
-    ) -> bool | None:
-        ...
+    ) -> bool | None: ...
 
     async def set_override(
         self,
@@ -44,24 +43,20 @@ class FeatureFlagRepository(Protocol):
         updated_by: str = "system",
         reason: str = "",
         session: AsyncSession | None = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     async def record_audit(
         self, event: FlagAuditEvent, session: AsyncSession | None = None
-    ) -> None:
-        ...
+    ) -> None: ...
 
     async def get_audit_log(
         self,
         flag_key: str | None = None,
         tenant_id: str | None = None,
         session: AsyncSession | None = None,
-    ) -> list[FlagAuditEvent]:
-        ...
+    ) -> list[FlagAuditEvent]: ...
 
-    def get_override_sync(self, flag_key: str, tenant_id: str | None = None) -> bool | None:
-        ...
+    def get_override_sync(self, flag_key: str, tenant_id: str | None = None) -> bool | None: ...
 
     def set_override_sync(
         self,
@@ -70,16 +65,13 @@ class FeatureFlagRepository(Protocol):
         tenant_id: str | None = None,
         updated_by: str = "system",
         reason: str = "",
-    ) -> None:
-        ...
+    ) -> None: ...
 
-    def record_audit_sync(self, event: FlagAuditEvent) -> None:
-        ...
+    def record_audit_sync(self, event: FlagAuditEvent) -> None: ...
 
     def get_audit_log_sync(
         self, flag_key: str | None = None, tenant_id: str | None = None
-    ) -> list[FlagAuditEvent]:
-        ...
+    ) -> list[FlagAuditEvent]: ...
 
 
 class SqlFeatureFlagRepository:
@@ -129,10 +121,14 @@ class SqlFeatureFlagRepository:
         session: AsyncSession | None = None,
     ) -> None:
         if session is not None:
-            await self._set_override_with_session(flag_key, enabled, tenant_id, updated_by, reason, session)
+            await self._set_override_with_session(
+                flag_key, enabled, tenant_id, updated_by, reason, session
+            )
             return
         async with get_tenant_session(tenant_id) as sess:
-            await self._set_override_with_session(flag_key, enabled, tenant_id, updated_by, reason, sess)
+            await self._set_override_with_session(
+                flag_key, enabled, tenant_id, updated_by, reason, sess
+            )
             await sess.commit()
 
     async def _set_override_with_session(
@@ -280,7 +276,9 @@ def get_feature_flag_repository() -> FeatureFlagRepository:
     return _feature_flag_repo_instance
 
 
-def reset_feature_flag_repository(repo: FeatureFlagRepository | None = None) -> FeatureFlagRepository:
+def reset_feature_flag_repository(
+    repo: FeatureFlagRepository | None = None,
+) -> FeatureFlagRepository:
     """Resets feature flag repository singleton for testing."""
     global _feature_flag_repo_instance
     _feature_flag_repo_instance = repo

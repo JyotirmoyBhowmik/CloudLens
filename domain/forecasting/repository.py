@@ -38,8 +38,7 @@ logger = logging.getLogger(__name__)
 class ForecastRepository(Protocol):
     """Authoritative protocol for Forecast and Milestone persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> ForecastEntity | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> ForecastEntity | None: ...
 
     def list(
         self,
@@ -48,20 +47,15 @@ class ForecastRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[ForecastEntity]:
-        ...
+    ) -> list[ForecastEntity]: ...
 
-    def save(self, entity: ForecastEntity, *, tenant_context: TenantContext) -> ForecastEntity:
-        ...
+    def save(self, entity: ForecastEntity, *, tenant_context: TenantContext) -> ForecastEntity: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int:
-        ...
+    def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int: ...
 
     def find_active_by_scope(
         self,
@@ -70,8 +64,7 @@ class ForecastRepository(Protocol):
         period_end: date,
         *,
         tenant_context: TenantContext,
-    ) -> ForecastEntity | None:
-        ...
+    ) -> ForecastEntity | None: ...
 
     def find_by_period_overlap(
         self,
@@ -79,16 +72,14 @@ class ForecastRepository(Protocol):
         end_date: date,
         *,
         tenant_context: TenantContext,
-    ) -> list[ForecastEntity]:
-        ...
+    ) -> list[ForecastEntity]: ...
 
     def save_milestone(
         self,
         snapshot: ForecastMilestoneSnapshot,
         *,
         tenant_context: TenantContext,
-    ) -> ForecastMilestoneSnapshot:
-        ...
+    ) -> ForecastMilestoneSnapshot: ...
 
     def list_milestones(
         self,
@@ -96,11 +87,9 @@ class ForecastRepository(Protocol):
         period_identifier: str | None = None,
         scope_id: str | None = None,
         tenant_context: TenantContext,
-    ) -> list[ForecastMilestoneSnapshot]:
-        ...
+    ) -> list[ForecastMilestoneSnapshot]: ...
 
-    def clear_tenant_data(self, *, tenant_context: TenantContext) -> None:
-        ...
+    def clear_tenant_data(self, *, tenant_context: TenantContext) -> None: ...
 
 
 class SqlForecastRepository:
@@ -126,6 +115,7 @@ class SqlForecastRepository:
             ForecastMethodResult,
             ForecastPeriod,
         )
+
         return ForecastEntity(
             id=m["id"],
             tenant_id=m["tenant_id"],
@@ -140,8 +130,12 @@ class SqlForecastRepository:
                 ForecastMethodResult(
                     method=ForecastMethod(m["method"]),
                     predicted_cost=float(m["predicted_cost"]),
-                    lower_bound=float(m["lower_bound"]) if m.get("lower_bound") is not None else float(m["predicted_cost"]),
-                    upper_bound=float(m["upper_bound"]) if m.get("upper_bound") is not None else float(m["predicted_cost"]),
+                    lower_bound=float(m["lower_bound"])
+                    if m.get("lower_bound") is not None
+                    else float(m["predicted_cost"]),
+                    upper_bound=float(m["upper_bound"])
+                    if m.get("upper_bound") is not None
+                    else float(m["predicted_cost"]),
                     confidence=ConfidenceLabel(m["confidence_label"]),
                 )
             ],
@@ -158,6 +152,7 @@ class SqlForecastRepository:
             return ForecastMilestoneSnapshot.model_validate(raw)
 
         from domain.forecasting.models import AccuracyMilestone, BiasDirection
+
         return ForecastMilestoneSnapshot(
             id=m["id"],
             forecast_id=m["forecast_id"],
@@ -168,8 +163,12 @@ class SqlForecastRepository:
             period_start=date(2026, 1, 1),
             period_end=date(2026, 1, 31),
             checkpoint_date=date(2026, 1, 15),
-            actual_spend_to_date=float(m.get("actual_spend") or m.get("actual_spend_to_date") or 0.0),
-            projected_period_close=float(m.get("predicted_spend") or m.get("projected_period_close") or 0.0),
+            actual_spend_to_date=float(
+                m.get("actual_spend") or m.get("actual_spend_to_date") or 0.0
+            ),
+            projected_period_close=float(
+                m.get("predicted_spend") or m.get("projected_period_close") or 0.0
+            ),
             variance_amount=float(m.get("variance_amount") or 0.0),
             percentage_error=float(m.get("variance_pct") or 0.0),
             bias_direction=BiasDirection(m.get("bias_direction") or "BALANCED"),
@@ -426,8 +425,12 @@ class SqlForecastRepository:
         async def _clear():
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
-                await session.execute(text("DELETE FROM forecast_milestones WHERE tenant_id = :tid;"), {"tid": tid})
-                await session.execute(text("DELETE FROM forecasts WHERE tenant_id = :tid;"), {"tid": tid})
+                await session.execute(
+                    text("DELETE FROM forecast_milestones WHERE tenant_id = :tid;"), {"tid": tid}
+                )
+                await session.execute(
+                    text("DELETE FROM forecasts WHERE tenant_id = :tid;"), {"tid": tid}
+                )
                 await session.commit()
 
         self._run_async(_clear())

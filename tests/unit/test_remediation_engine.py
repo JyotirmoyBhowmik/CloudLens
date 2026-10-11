@@ -65,21 +65,27 @@ from domain.tenant.context import TenantContext
 from masterdata.service import get_master_data_service
 
 
+from tests.fakes.alerting import InMemoryAlertRepository
+from tests.fakes.remediation import InMemoryRemediationRepository
+
+
 @pytest.fixture(autouse=True)
 def reset_singletons():
     """Isolate state for each unit test."""
-    reset_remediation_repository()
+    rem_repo = InMemoryRemediationRepository()
+    alert_repo = InMemoryAlertRepository()
+    reset_remediation_repository(rem_repo)
+    reset_alert_repository(alert_repo)
     reset_remediation_service()
     reset_realised_saving_ledger()
     reset_itsm_adapter()
-    reset_alert_repository()
     reset_alert_service()
     yield
-    reset_remediation_repository()
+    reset_remediation_repository(None)
+    reset_alert_repository(None)
     reset_remediation_service()
     reset_realised_saving_ledger()
     reset_itsm_adapter()
-    reset_alert_repository()
     reset_alert_service()
 
 
@@ -968,14 +974,19 @@ class TestITSMAdapter:
 class TestRemediationAPIEndpoints:
     """Validates HTTP REST endpoints for remediation tasks, verification, and accountability."""
 
-    def test_api_remediation_lifecycle_and_verification(self, tenant_ctx: TenantContext):
+    def test_api_remediation_lifecycle_and_verification(
+        self, tenant_ctx: TenantContext, make_auth_token
+    ):
         """End-to-end HTTP API test creating, querying, resolving, and verifying a task."""
         client = TestClient(app)
+        token = make_auth_token(
+            tenant_id=tenant_ctx.tenant_id,
+            user_id=str(tenant_ctx.user_id or "admin"),
+            roles=["ENGINEER", "TENANT_ADMIN"],
+            email=str(tenant_ctx.email or "admin@example.com"),
+        )
         headers: dict[str, str] = {
-            "X-Tenant-ID": str(tenant_ctx.tenant_id),
-            "X-User-ID": str(tenant_ctx.user_id or "admin"),
-            "X-User-Email": str(tenant_ctx.email or "admin@example.com"),
-            "X-User-Roles": "ENGINEER,TENANT_ADMIN",
+            "Authorization": f"Bearer {token}",
         }
 
         # 1. Create Task

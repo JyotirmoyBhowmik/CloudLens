@@ -67,13 +67,20 @@ def _get_schedule_config(task_name: str) -> dict[str, Any]:
     records = mdm.list_records("CONNECTOR_SCHEDULE")
     for rec in records:
         attrs = rec.attributes or {}
-        if attrs.get("capability_or_task") == task_name or rec.code.lower() == f"sched_{task_name}".lower():
+        if (
+            attrs.get("capability_or_task") == task_name
+            or rec.code.lower() == f"sched_{task_name}".lower()
+        ):
             return {
                 "max_retries": int(attrs.get("max_retries", 3)),
                 "lookback_days": int(attrs.get("lookback_days", 0)),
                 "interval_minutes": int(attrs.get("interval_minutes", 60)),
             }
-    return {"max_retries": 3, "lookback_days": 0, "interval_minutes": 60}  # no-hardcode-allow: reason="Fallback defaults when master record absent", reviewer="Prompt-48-Audit"
+    return {
+        "max_retries": 3,
+        "lookback_days": 0,
+        "interval_minutes": 60,
+    }  # no-hardcode-allow: reason="Fallback defaults when master record absent", reviewer="Prompt-48-Audit"
 
 
 def run_canonical_task(
@@ -111,8 +118,17 @@ def run_canonical_task(
             ttl_seconds=300,  # no-hardcode-allow: reason="Task lock safety TTL 5 minutes", reviewer="Prompt-48-Audit"
         )
         if not lock.acquire():
-            logger.info("Task %s is already running for tenant %s (locked). Skipping duplicate run.", task_name, tc.tenant_id)
-            return {"status": "SKIPPED", "reason": "LOCK_HELD", "task": task_name, "tenant_id": tc.tenant_id}
+            logger.info(
+                "Task %s is already running for tenant %s (locked). Skipping duplicate run.",
+                task_name,
+                tc.tenant_id,
+            )
+            return {
+                "status": "SKIPPED",
+                "reason": "LOCK_HELD",
+                "task": task_name,
+                "tenant_id": tc.tenant_id,
+            }
 
         sync_job_repo = get_sync_job_repository()
         audit_service = get_audit_service()
@@ -129,8 +145,17 @@ def run_canonical_task(
         existing_job = sync_job_repo.get_by_idempotency_key(eff_idempotency_key, tenant_context=tc)
         if existing_job and existing_job.status == SyncJobStatus.COMPLETED:
             lock.release()
-            logger.info("Task %s already completed with idempotency key %s. Skipping.", task_name, eff_idempotency_key)
-            return {"status": "IDEMPOTENT_SKIP", "job_id": existing_job.id, "task": task_name, "tenant_id": tc.tenant_id}
+            logger.info(
+                "Task %s already completed with idempotency key %s. Skipping.",
+                task_name,
+                eff_idempotency_key,
+            )
+            return {
+                "status": "IDEMPOTENT_SKIP",
+                "job_id": existing_job.id,
+                "task": task_name,
+                "tenant_id": tc.tenant_id,
+            }
 
         # 3. Create SyncJob in RUNNING state
         job = SyncJob(
@@ -195,7 +220,9 @@ def run_canonical_task(
                     from domain.models.enums import ConnectorLifecycleState
 
                     c_repo = get_connector_repository()
-                    c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.ACTIVE, tenant_context=tc)
+                    c_repo.update_lifecycle_state(
+                        conn_label, ConnectorLifecycleState.ACTIVE, tenant_context=tc
+                    )
                 except Exception as state_err:
                     logger.debug("Failed to set connector ACTIVE on success: %s", state_err)
 
@@ -207,9 +234,9 @@ def run_canonical_task(
                 provider=provider, connector_id=conn_label, outcome="success"
             ).inc()
             if rows_processed > 0:
-                metrics.ingestion_rows_total.labels(
-                    provider=provider, dataset_type=task_name
-                ).inc(rows_processed)
+                metrics.ingestion_rows_total.labels(provider=provider, dataset_type=task_name).inc(
+                    rows_processed
+                )
 
             # 8. End Audit Event
             try:
@@ -267,7 +294,11 @@ def run_canonical_task(
                         action=AuditEventType.SYNC_FAILED.value,
                         resource_type="SyncJob",
                         resource_id=job.id,
-                        details={"task_name": task_name, "error": str(exc), "retry_count": retry_count},
+                        details={
+                            "task_name": task_name,
+                            "error": str(exc),
+                            "retry_count": retry_count,
+                        },
                         correlation_id=tc.correlation_id,
                     ),
                 )
@@ -284,7 +315,9 @@ def run_canonical_task(
                 # Transient failure: mark connector DEGRADED and raise WARNING alert
                 if conn_label and conn_label != "system":
                     try:
-                        c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.DEGRADED, tenant_context=tc)
+                        c_repo.update_lifecycle_state(
+                            conn_label, ConnectorLifecycleState.DEGRADED, tenant_context=tc
+                        )
                     except Exception as s_err:
                         logger.warning("Failed to update connector DEGRADED: %s", s_err)
 
@@ -305,7 +338,13 @@ def run_canonical_task(
                             affected_resource_id=conn_label,
                             evidence=AlertEvidence(
                                 summary=f"Task {task_name} failed (attempt {retry_count + 1}/{max_retries}): {str(exc)}",
-                                records=[{"job_id": job.id, "error": str(exc), "retry_count": retry_count}],
+                                records=[
+                                    {
+                                        "job_id": job.id,
+                                        "error": str(exc),
+                                        "retry_count": retry_count,
+                                    }
+                                ],
                             ),
                         ),
                         tenant_context=tc,
@@ -317,7 +356,9 @@ def run_canonical_task(
                 # Retries exhausted: mark connector FAILED, quarantine with reason, raise CRITICAL alert
                 if conn_label and conn_label != "system":
                     try:
-                        c_repo.update_lifecycle_state(conn_label, ConnectorLifecycleState.FAILED, tenant_context=tc)
+                        c_repo.update_lifecycle_state(
+                            conn_label, ConnectorLifecycleState.FAILED, tenant_context=tc
+                        )
                     except Exception as s_err:
                         logger.warning("Failed to update connector FAILED: %s", s_err)
 
@@ -357,7 +398,13 @@ def run_canonical_task(
                             affected_resource_id=conn_label,
                             evidence=AlertEvidence(
                                 summary=f"Task {task_name} exhausted {max_retries} retries and failed permanently: {str(exc)}",
-                                records=[{"job_id": job.id, "quarantine_id": q_record.id, "error": str(exc)}],
+                                records=[
+                                    {
+                                        "job_id": job.id,
+                                        "quarantine_id": q_record.id,
+                                        "error": str(exc),
+                                    }
+                                ],
                             ),
                         ),
                         tenant_context=tc,
@@ -375,7 +422,11 @@ def run_canonical_task(
                             action=AuditEventType.PAYLOAD_QUARANTINED.value,
                             resource_type="QuarantineRecord",
                             resource_id=q_record.id,
-                            details={"task_name": task_name, "job_id": job.id, "reason": QuarantineReason.RETRIES_EXHAUSTED.value},
+                            details={
+                                "task_name": task_name,
+                                "job_id": job.id,
+                                "reason": QuarantineReason.RETRIES_EXHAUSTED.value,
+                            },
                             correlation_id=tc.correlation_id,
                         ),
                     )
@@ -410,6 +461,7 @@ def ingest_cost_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """1. Ingests cost data on schedule: fetch -> raw MinIO -> FOCUS -> atomic partition replace -> aggregates -> thresholds/policies -> alerts -> freshness."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from decimal import Decimal
         from connectors.factory import resolve_connector
@@ -417,7 +469,11 @@ def ingest_cost_task(
         from domain.cost.repository import get_cost_repository
         from connectors.contract.raw_landing import raw_landing_service
 
-        conn_id = job.connector_id if job.connector_id and job.connector_id != "system" else (connector_id or "conn-aws-prod")
+        conn_id = (
+            job.connector_id
+            if job.connector_id and job.connector_id != "system"
+            else (connector_id or "conn-aws-prod")
+        )
         connector = resolve_connector(conn_id, tenant_context=tc)
 
         start_str = job.period_start.strftime("%Y-%m-%d") if job.period_start else "2026-09-01"
@@ -434,7 +490,9 @@ def ingest_cost_task(
             return 0
 
         # Canonical FOCUS Normalization (Prompt P14 Item 2)
-        prov_name = connector.provider_name.lower() if hasattr(connector, "provider_name") else "aws"
+        prov_name = (
+            connector.provider_name.lower() if hasattr(connector, "provider_name") else "aws"
+        )
         if prov_name == "aws":
             schema_version = "aws_cur_2_0"
         elif prov_name == "azure":
@@ -478,7 +536,9 @@ def ingest_cost_task(
         repo.replace_partition_atomic(period_key, facts, tenant_context=tc)
 
         # 6. Evaluate Thresholds & Policies
-        total_billed = sum((f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0"))
+        total_billed = sum(
+            (f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0")
+        )
         try:
             from domain.thresholds.service import get_threshold_service
 
@@ -527,7 +587,14 @@ def ingest_cost_task(
 
         return len(facts)
 
-    return run_canonical_task("ingest_cost", tenant_context_payload, connector_id, ConnectorCapability.COLLECT_COST_BULK, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "ingest_cost",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.COLLECT_COST_BULK,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.ingest_inventory")
@@ -537,6 +604,7 @@ def ingest_inventory_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """2. Incremental and daily inventory discovery."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         import asyncio
         from connectors.factory import resolve_connector
@@ -544,7 +612,11 @@ def ingest_inventory_task(
         from domain.hierarchy.repository import get_hierarchy_repository
         from connectors.contract.raw_landing import raw_landing_service
 
-        conn_id = job.connector_id if job.connector_id and job.connector_id != "system" else (connector_id or "conn-aws-prod")
+        conn_id = (
+            job.connector_id
+            if job.connector_id and job.connector_id != "system"
+            else (connector_id or "conn-aws-prod")
+        )
         connector = resolve_connector(conn_id, tenant_context=tc)
 
         from db.session import run_async
@@ -568,7 +640,9 @@ def ingest_inventory_task(
 
         repo = get_hierarchy_repository()
         saved_count = 0
-        prov_name = connector.provider_name.upper() if hasattr(connector, "provider_name") else "AWS"
+        prov_name = (
+            connector.provider_name.upper() if hasattr(connector, "provider_name") else "AWS"
+        )
 
         # Ensure discovered service, region, and resource_type entries exist in PostgreSQL for FK constraints
         async def _ensure_catalog_prerequisites():
@@ -597,10 +671,18 @@ def ingest_inventory_task(
                     )
 
                     # 2. Check if resource_type already exists by native_type_name
-                    res_row = (await sess.execute(
-                        text("SELECT id, service_id FROM resource_types WHERE provider = :prov AND native_type_name = :native LIMIT 1"),
-                        {"prov": prov_name.lower(), "native": native_type},
-                    )).mappings().first()
+                    res_row = (
+                        (
+                            await sess.execute(
+                                text(
+                                    "SELECT id, service_id FROM resource_types WHERE provider = :prov AND native_type_name = :native LIMIT 1"
+                                ),
+                                {"prov": prov_name.lower(), "native": native_type},
+                            )
+                        )
+                        .mappings()
+                        .first()
+                    )
 
                     if res_row:
                         resolved_map[native_type] = (res_row["id"], res_row["service_id"])
@@ -679,7 +761,14 @@ def ingest_inventory_task(
 
         return saved_count
 
-    return run_canonical_task("ingest_inventory", tenant_context_payload, connector_id, ConnectorCapability.DISCOVER_RESOURCES, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "ingest_inventory",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.DISCOVER_RESOURCES,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.ingest_usage")
@@ -689,13 +778,24 @@ def ingest_usage_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """3. Telemetry and usage metrics collection."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from domain.usage.service import get_usage_service
+
         svc = get_usage_service()
         mon_types = svc.list_monitoring_types()
-        return len(mon_types) if mon_types else 30  # no-hardcode-allow: reason="Default runtime metrics batch size", reviewer="Prompt-48-Audit"
+        return (
+            len(mon_types) if mon_types else 30
+        )  # no-hardcode-allow: reason="Default runtime metrics batch size", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("ingest_usage", tenant_context_payload, connector_id, ConnectorCapability.COLLECT_USAGE, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "ingest_usage",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.COLLECT_USAGE,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.refresh_pricing")
@@ -705,12 +805,22 @@ def refresh_pricing_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """4. Public and negotiated pricing catalog refresh."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         mdm = get_master_data_service()
         dims = mdm.list_records("PRICING_DIMENSION")
-        return len(dims) if dims else 29  # no-hardcode-allow: reason="The 29 FOCUS reconciled pricing dimensions", reviewer="Prompt-48-Audit"
+        return (
+            len(dims) if dims else 29
+        )  # no-hardcode-allow: reason="The 29 FOCUS reconciled pricing dimensions", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("refresh_pricing", tenant_context_payload, connector_id, ConnectorCapability.COLLECT_PRICING_PUBLIC, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "refresh_pricing",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.COLLECT_PRICING_PUBLIC,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.discover_relationships")
@@ -720,13 +830,24 @@ def discover_relationships_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """5. Dependency and topology graph edge discovery."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from domain.dependency.service import get_dependency_service
+
         dep_svc = get_dependency_service()
         edges = dep_svc.list_edges(tenant_context=tc)
-        return len(edges) if edges else 12  # no-hardcode-allow: reason="Default topology graph edge count", reviewer="Prompt-48-Audit"
+        return (
+            len(edges) if edges else 12
+        )  # no-hardcode-allow: reason="Default topology graph edge count", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("discover_relationships", tenant_context_payload, connector_id, ConnectorCapability.DISCOVER_RELATIONSHIPS, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "discover_relationships",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.DISCOVER_RELATIONSHIPS,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.collect_quota")
@@ -736,12 +857,22 @@ def collect_quota_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """6. Cloud provider service quota headroom and limits collection."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         q_svc = get_quota_service()
         quotas = q_svc.list_quotas(tenant_context=tc)
-        return len(quotas) if quotas else 8  # no-hardcode-allow: reason="Default discovered service quotas count", reviewer="Prompt-48-Audit"
+        return (
+            len(quotas) if quotas else 8
+        )  # no-hardcode-allow: reason="Default discovered service quotas count", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("collect_quota", tenant_context_payload, connector_id, ConnectorCapability.COLLECT_BUDGETS, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "collect_quota",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.COLLECT_BUDGETS,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.evaluate_thresholds")
@@ -751,12 +882,22 @@ def evaluate_thresholds_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """7. Evaluates FinOps budget bands and cost spike rules."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         th_svc = get_threshold_service()
         rules = th_svc.list_rules(tenant_context=tc)
-        return len(rules) if rules else 5  # no-hardcode-allow: reason="Default threshold rules evaluation count", reviewer="Prompt-48-Audit"
+        return (
+            len(rules) if rules else 5
+        )  # no-hardcode-allow: reason="Default threshold rules evaluation count", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("evaluate_thresholds", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "evaluate_thresholds",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.evaluate_policies")
@@ -766,12 +907,22 @@ def evaluate_policies_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """8. Evaluates compliance policies and governance rules."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         pol_svc = get_policy_service()
         policies = pol_svc.list_policies(tenant_context=tc)
-        return len(policies) if policies else 6  # no-hardcode-allow: reason="Default active policy evaluation count", reviewer="Prompt-48-Audit"
+        return (
+            len(policies) if policies else 6
+        )  # no-hardcode-allow: reason="Default active policy evaluation count", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("evaluate_policies", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "evaluate_policies",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.compute_forecasts")
@@ -781,12 +932,17 @@ def compute_forecasts_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """9. Computes spend projections and run-rate forecasts."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         engine = ForecastingEngine(tenant_id=tc.tenant_id)
         today = datetime.now(UTC).date()
         daily_spends = [
-            DailySpendPoint(date=today - timedelta(days=i), amount=100.0)  # no-hardcode-allow: reason="Historical spend point sample", reviewer="Prompt-48-Audit"
-            for i in range(14, 0, -1)  # no-hardcode-allow: reason="14 day baseline window", reviewer="Prompt-48-Audit"
+            DailySpendPoint(
+                date=today - timedelta(days=i), amount=100.0
+            )  # no-hardcode-allow: reason="Historical spend point sample", reviewer="Prompt-48-Audit"
+            for i in range(
+                14, 0, -1
+            )  # no-hardcode-allow: reason="14 day baseline window", reviewer="Prompt-48-Audit"
         ]
         start_date = today.replace(day=1)
         end_date = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
@@ -808,7 +964,14 @@ def compute_forecasts_task(
         )
         return int(proj_val) if proj_val > 0 else 1
 
-    return run_canonical_task("compute_forecasts", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "compute_forecasts",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.escalate_alerts")
@@ -818,12 +981,15 @@ def escalate_alerts_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """10. Evaluates unacknowledged high-severity alert escalations."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         alert_engine = AlertEngine(repository=get_alert_repository())
         escalated = alert_engine.evaluate_escalations(tenant_context=tc)
         return len(escalated)
 
-    return run_canonical_task("escalate_alerts", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "escalate_alerts", tenant_context_payload, connector_id, None, _run, retry_count=retry_count
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.auto_resolve_alerts")
@@ -833,12 +999,20 @@ def auto_resolve_alerts_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """11. Auto-resolves cleared alerts after dwell time."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         alert_engine = AlertEngine(repository=get_alert_repository())
         resolved = alert_engine.evaluate_auto_resolutions(tenant_context=tc)
         return len(resolved)
 
-    return run_canonical_task("auto_resolve_alerts", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "auto_resolve_alerts",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.verify_remediation")
@@ -848,12 +1022,22 @@ def verify_remediation_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """12. Verifies remediation tasks and updates realised savings."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         rem_svc = get_remediation_service()
         tasks = rem_svc.list_tasks(tenant_context=tc)
-        return len(tasks) if tasks else 3  # no-hardcode-allow: reason="Default active remediation tasks verified count", reviewer="Prompt-48-Audit"
+        return (
+            len(tasks) if tasks else 3
+        )  # no-hardcode-allow: reason="Default active remediation tasks verified count", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("verify_remediation", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "verify_remediation",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.revert_overrides")
@@ -863,12 +1047,20 @@ def revert_overrides_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """13. Reverts expired manual and temporary overrides."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         ov_svc = get_override_service()
         reverted = ov_svc.revert_expired_overrides(tenant_context=tc)
         return len(reverted)
 
-    return run_canonical_task("revert_overrides", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "revert_overrides",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.credential_expiry_check")
@@ -878,12 +1070,20 @@ def credential_expiry_check_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """14. Checks credential profiles nearing expiration."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         cred_svc = get_credential_service()
         expiring = cred_svc.check_expiries(tenant_id=tc.tenant_id)
         return len(expiring)
 
-    return run_canonical_task("credential_expiry_check", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "credential_expiry_check",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.reconcile_closed_period")
@@ -893,6 +1093,7 @@ def reconcile_closed_period_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """15. Reconciles finalised billing periods against invoiced totals."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         reconciler = get_cost_reconciliation_engine()
         period = (datetime.now(UTC).date().replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
@@ -900,13 +1101,22 @@ def reconcile_closed_period_task(
             billing_period=period,
             provider="aws",
             scope_id=f"scope-{tc.tenant_id}",
-            provider_authoritative_total=Decimal("1000.00"),  # no-hardcode-allow: reason="Simulated reconciliation invoice control total", reviewer="Prompt-48-Audit"
+            provider_authoritative_total=Decimal(
+                "1000.00"
+            ),  # no-hardcode-allow: reason="Simulated reconciliation invoice control total", reviewer="Prompt-48-Audit"
             bypass_lag_check=True,
         )
         report = reconciler.run_reconciliation(req, tenant_context=tc)
         return 1 if report else 0
 
-    return run_canonical_task("reconcile_closed_period", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "reconcile_closed_period",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.run_analytical_extract")
@@ -916,6 +1126,7 @@ def run_analytical_extract_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """16. Generates analytical extracts and FOCUS views."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         engine = AnalyticsExtractEngine()
         period = datetime.now(UTC).strftime("%Y-%m")
@@ -928,7 +1139,14 @@ def run_analytical_extract_task(
         )
         return manifest.record_count
 
-    return run_canonical_task("run_analytical_extract", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "run_analytical_extract",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.maintain_partitions")
@@ -938,11 +1156,19 @@ def maintain_partitions_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """17. Maintains database monthly table partitions and watermarks."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         # Pre-allocate partitions for next 3 months
         return 3  # no-hardcode-allow: reason="Number of forward-allocated monthly partitions", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("maintain_partitions", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "maintain_partitions",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.apply_retention_and_downsampling")
@@ -952,10 +1178,18 @@ def apply_retention_and_downsampling_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """18. Downsamples raw telemetry and applies data retention lifecycle."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         return 100  # no-hardcode-allow: reason="Aggregated telemetry records downsampled in batch", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("apply_retention_and_downsampling", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "apply_retention_and_downsampling",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.renewal_pipeline")
@@ -965,12 +1199,24 @@ def renewal_pipeline_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """19. Evaluates commitment portfolio renewals and expiration alerts."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         svc = CommitmentService()
-        renewals = svc.get_renewal_pipeline(tenant_id=tc.tenant_id, lead_time_days=60)  # no-hardcode-allow: reason="Standard 60-day renewal lead time", reviewer="Prompt-48-Audit"
-        return len(renewals) if renewals else 4  # no-hardcode-allow: reason="Default active commitment contracts evaluated", reviewer="Prompt-48-Audit"
+        renewals = svc.get_renewal_pipeline(
+            tenant_id=tc.tenant_id, lead_time_days=60
+        )  # no-hardcode-allow: reason="Standard 60-day renewal lead time", reviewer="Prompt-48-Audit"
+        return (
+            len(renewals) if renewals else 4
+        )  # no-hardcode-allow: reason="Default active commitment contracts evaluated", reviewer="Prompt-48-Audit"
 
-    return run_canonical_task("renewal_pipeline", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "renewal_pipeline",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.send_daily_platform_summary")
@@ -980,15 +1226,23 @@ def send_daily_platform_summary_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """20. Aggregates and dispatches daily platform summary for Control Tower."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from domain.control_tower.service import get_control_tower_service
+
         logger.info("Generating and dispatching daily Control Tower summary for platform owner.")
         res = get_control_tower_service().send_daily_platform_summary()
         logger.info("Daily platform summary dispatch result: %s", res)
         return 1
 
-    return run_canonical_task("send_daily_platform_summary", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
-
+    return run_canonical_task(
+        "send_daily_platform_summary",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.heartbeat")
@@ -998,11 +1252,19 @@ def heartbeat_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """21. Worker liveness and health probe heartbeat."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         logger.debug("CloudLens worker heartbeat beacon OK.")
         return 1
 
-    return run_canonical_task("heartbeat", tenant_context_payload, connector_id, ConnectorCapability.HEALTH_STATUS, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "heartbeat",
+        tenant_context_payload,
+        connector_id,
+        ConnectorCapability.HEALTH_STATUS,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 # ==============================================================================
@@ -1017,13 +1279,22 @@ def run_synthetic_journey_monitor_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """Synthetic journey monitor executing end-to-end user transactions (IMP-05)."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from domain.synthetic.journey_monitor import get_synthetic_journey_monitor
+
         res = get_synthetic_journey_monitor().execute_journey()
         logger.info("Synthetic journey result: %s (%sms)", res["status"], res["total_duration_ms"])
         return 1
 
-    return run_canonical_task("run_synthetic_journey_monitor", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "run_synthetic_journey_monitor",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.generate_freshness_sla_report")
@@ -1033,13 +1304,24 @@ def generate_freshness_sla_report_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """Generates and emails weekly data freshness SLA report to platform owner (IMP-08)."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         from domain.reports.freshness_sla import get_freshness_sla_service
+
         res = get_freshness_sla_service().dispatch_weekly_email()
-        logger.info("Weekly data freshness SLA report dispatched: %s", res["report"]["overall_status"])
+        logger.info(
+            "Weekly data freshness SLA report dispatched: %s", res["report"]["overall_status"]
+        )
         return res["report"]["total_capabilities_evaluated"]
 
-    return run_canonical_task("generate_freshness_sla_report", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "generate_freshness_sla_report",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )
 
 
 @celery_app.task(name="cloudlens.tasks.export_daily_audit_bundle")
@@ -1049,11 +1331,24 @@ def export_daily_audit_bundle_task(
     retry_count: int = 0,
 ) -> dict[str, Any]:
     """Produces signed cryptographic daily audit export for MinIO and SIEM forwarding (IMP-03)."""
+
     def _run(tc: TenantContext, job: SyncJob) -> int:
         audit_svc = get_audit_service()
         res = audit_svc.export_daily_audit_signed(tenant_context=tc)
-        logger.info("Daily signed audit export complete for tenant %s: %d records, SHA %s", tc.tenant_id, res["records_count"], res["bundle_sha256"][:12])
+        logger.info(
+            "Daily signed audit export complete for tenant %s: %d records, SHA %s",
+            tc.tenant_id,
+            res["records_count"],
+            res["bundle_sha256"][:12],
+        )
         _ = audit_svc.forward_to_siem(tenant_context=tc)
         return res["records_count"]
 
-    return run_canonical_task("export_daily_audit_bundle", tenant_context_payload, connector_id, None, _run, retry_count=retry_count)
+    return run_canonical_task(
+        "export_daily_audit_bundle",
+        tenant_context_payload,
+        connector_id,
+        None,
+        _run,
+        retry_count=retry_count,
+    )

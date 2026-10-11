@@ -56,10 +56,13 @@ class TenantContext(BaseModel):
         if "*" in self.scope_grants or capability in self.scope_grants:
             return True
         from domain.rbac.catalogue import get_permission_catalogue
+
         catalogue = get_permission_catalogue()
         for role_name in self.roles:
             role_def = catalogue.get_role(role_name, tenant_id=self.tenant_id)
-            if role_def and (capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions):
+            if role_def and (
+                capability in role_def.allowed_permissions or "*" in role_def.allowed_permissions
+            ):
                 return True
         return False
 
@@ -101,4 +104,3 @@ def has_capability(context: Any, capability: str) -> bool:
     if hasattr(context, "has_capability"):
         return context.has_capability(capability)
     return False
-

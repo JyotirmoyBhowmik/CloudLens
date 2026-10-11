@@ -409,7 +409,13 @@ class ScheduleAdherenceResult(CanonicalEntity):
     @model_validator(mode="after")
     def validate_non_compliance_and_color_rules(self) -> ScheduleAdherenceResult:
         """Enforces that Unknown and No Data are NEVER rendered as compliant and NEVER green."""
-        green_hexes = {"#10b981", "#22c55e", "#16a34a", "#15803d", "green"}  # no-hardcode-allow: reason="Disallowed green shade hex values for runtime compliance validation", reviewer="Prompt-48-Audit"
+        green_hexes = {
+            "#10b981",
+            "#22c55e",
+            "#16a34a",
+            "#15803d",
+            "green",
+        }  # no-hardcode-allow: reason="Disallowed green shade hex values for runtime compliance validation", reviewer="Prompt-48-Audit"
         is_unknown_or_nodata = self.runtime_state in (
             RuntimeState.UNKNOWN,
             RuntimeState.NO_DATA,

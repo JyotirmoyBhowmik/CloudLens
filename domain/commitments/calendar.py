@@ -48,23 +48,41 @@ class CommitmentCalendarService:
         # 1. Credential Expiries
         # Simulated based on connector credential store rotation schedule
         cred_items = [
-            {"name": "AWS Production Connector IAM Access Key", "exp": date(2026, 11, 15), "provider": "AWS"},
-            {"name": "Azure Client Secret SPN (App Registration)", "exp": date(2026, 12, 1), "provider": "AZURE"},
-            {"name": "GCP BigQuery Service Account Key", "exp": date(2026, 10, 28), "provider": "GCP"},
+            {
+                "name": "AWS Production Connector IAM Access Key",
+                "exp": date(2026, 11, 15),
+                "provider": "AWS",
+            },
+            {
+                "name": "Azure Client Secret SPN (App Registration)",
+                "exp": date(2026, 12, 1),
+                "provider": "AZURE",
+            },
+            {
+                "name": "GCP BigQuery Service Account Key",
+                "exp": date(2026, 10, 28),
+                "provider": "GCP",
+            },
             {"name": "OCI Tenancy API Signing Key", "exp": date(2026, 12, 31), "provider": "OCI"},
         ]
         for c in cred_items:
             days = (c["exp"] - today).days
-            events.append({
-                "id": f"evt-cred-{c['provider'].lower()}",
-                "stream": "CREDENTIAL_EXPIRY",
-                "title": f"{c['name']} Expiry",
-                "due_date": c["exp"].isoformat(),
-                "days_remaining": days,
-                "urgency": "CRITICAL" if days <= self._critical_threshold else "WARNING" if days <= self._urgency_threshold else "NORMAL",
-                "provider": c["provider"],
-                "details": {"rotation_status": "PENDING_OPERATOR_ROTATION"},
-            })
+            events.append(
+                {
+                    "id": f"evt-cred-{c['provider'].lower()}",
+                    "stream": "CREDENTIAL_EXPIRY",
+                    "title": f"{c['name']} Expiry",
+                    "due_date": c["exp"].isoformat(),
+                    "days_remaining": days,
+                    "urgency": "CRITICAL"
+                    if days <= self._critical_threshold
+                    else "WARNING"
+                    if days <= self._urgency_threshold
+                    else "NORMAL",
+                    "provider": c["provider"],
+                    "details": {"rotation_status": "PENDING_OPERATOR_ROTATION"},
+                }
+            )
 
         # 2. Certificate Expiries
         cert_items = [
@@ -73,15 +91,24 @@ class CommitmentCalendarService:
         ]
         for cert in cert_items:
             days = (cert["exp"] - today).days
-            events.append({
-                "id": f"evt-cert-{abs(hash(cert['domain'])) % 10000}",
-                "stream": "CERT_EXPIRY",
-                "title": f"TLS Certificate Renewal: {cert['domain']}",
-                "due_date": cert["exp"].isoformat(),
-                "days_remaining": days,
-                "urgency": "CRITICAL" if days <= self._critical_threshold else "WARNING" if days <= self._urgency_threshold else "NORMAL",
-                "details": {"subject_cn": cert["domain"], "issuer": "Let's Encrypt / Enterprise Vault CA"},
-            })
+            events.append(
+                {
+                    "id": f"evt-cert-{abs(hash(cert['domain'])) % 10000}",
+                    "stream": "CERT_EXPIRY",
+                    "title": f"TLS Certificate Renewal: {cert['domain']}",
+                    "due_date": cert["exp"].isoformat(),
+                    "days_remaining": days,
+                    "urgency": "CRITICAL"
+                    if days <= self._critical_threshold
+                    else "WARNING"
+                    if days <= self._urgency_threshold
+                    else "NORMAL",
+                    "details": {
+                        "subject_cn": cert["domain"],
+                        "issuer": "Let's Encrypt / Enterprise Vault CA",
+                    },
+                }
+            )
 
         # 3. Commitment Expiries (from commitment.json seed)
         commitments = self._load_seed("commitment.json")
@@ -92,20 +119,26 @@ class CommitmentCalendarService:
                 try:
                     exp_date = date.fromisoformat(exp_str)
                     days = (exp_date - today).days
-                    events.append({
-                        "id": f"evt-cmt-{cmt.get('code', 'c')}",
-                        "stream": "COMMITMENT_EXPIRY",
-                        "title": cmt.get("display_name", "Cloud Commitment"),
-                        "due_date": exp_str,
-                        "days_remaining": days,
-                        "urgency": "CRITICAL" if days <= self._critical_threshold else "WARNING" if days <= self._urgency_threshold else "NORMAL",
-                        "provider": attrs.get("provider_code", "MULTI"),
-                        "details": {
-                            "commitment_type": attrs.get("commitment_type"),
-                            "committed_units": attrs.get("committed_units"),
-                            "unit_symbol": attrs.get("unit_symbol"),
-                        },
-                    })
+                    events.append(
+                        {
+                            "id": f"evt-cmt-{cmt.get('code', 'c')}",
+                            "stream": "COMMITMENT_EXPIRY",
+                            "title": cmt.get("display_name", "Cloud Commitment"),
+                            "due_date": exp_str,
+                            "days_remaining": days,
+                            "urgency": "CRITICAL"
+                            if days <= self._critical_threshold
+                            else "WARNING"
+                            if days <= self._urgency_threshold
+                            else "NORMAL",
+                            "provider": attrs.get("provider_code", "MULTI"),
+                            "details": {
+                                "commitment_type": attrs.get("commitment_type"),
+                                "committed_units": attrs.get("committed_units"),
+                                "unit_symbol": attrs.get("unit_symbol"),
+                            },
+                        }
+                    )
                 except Exception:
                     pass
 
@@ -118,19 +151,25 @@ class CommitmentCalendarService:
                 try:
                     ren_date = date.fromisoformat(ren_str)
                     days = (ren_date - today).days
-                    events.append({
-                        "id": f"evt-lic-{lic.get('code', 'l')}",
-                        "stream": "LICENCE_RENEWAL",
-                        "title": lic.get("display_name", "Software Licence Pack"),
-                        "due_date": ren_str,
-                        "days_remaining": days,
-                        "urgency": "CRITICAL" if days <= self._critical_threshold else "WARNING" if days <= self._urgency_threshold else "NORMAL",
-                        "details": {
-                            "licence_type": attrs.get("licence_type"),
-                            "entitlement_count": attrs.get("entitlement_count"),
-                            "is_byol": attrs.get("is_byol", False),
-                        },
-                    })
+                    events.append(
+                        {
+                            "id": f"evt-lic-{lic.get('code', 'l')}",
+                            "stream": "LICENCE_RENEWAL",
+                            "title": lic.get("display_name", "Software Licence Pack"),
+                            "due_date": ren_str,
+                            "days_remaining": days,
+                            "urgency": "CRITICAL"
+                            if days <= self._critical_threshold
+                            else "WARNING"
+                            if days <= self._urgency_threshold
+                            else "NORMAL",
+                            "details": {
+                                "licence_type": attrs.get("licence_type"),
+                                "entitlement_count": attrs.get("entitlement_count"),
+                                "is_byol": attrs.get("is_byol", False),
+                            },
+                        }
+                    )
                 except Exception:
                     pass
 
@@ -142,15 +181,23 @@ class CommitmentCalendarService:
         ]
         for f in fiscal_items:
             days = (f["due"] - today).days
-            events.append({
-                "id": f"evt-fiscal-{f['due'].strftime('%Y%m')}",
-                "stream": "BUDGET_PERIOD_CLOSE",
-                "title": f["name"],
-                "due_date": f["due"].isoformat(),
-                "days_remaining": days,
-                "urgency": "CRITICAL" if days <= self._critical_threshold else "WARNING" if days <= self._urgency_threshold else "NORMAL",
-                "details": {"action_required": "Statement Variance Finalization & Accrual Reversal"},
-            })
+            events.append(
+                {
+                    "id": f"evt-fiscal-{f['due'].strftime('%Y%m')}",
+                    "stream": "BUDGET_PERIOD_CLOSE",
+                    "title": f["name"],
+                    "due_date": f["due"].isoformat(),
+                    "days_remaining": days,
+                    "urgency": "CRITICAL"
+                    if days <= self._critical_threshold
+                    else "WARNING"
+                    if days <= self._urgency_threshold
+                    else "NORMAL",
+                    "details": {
+                        "action_required": "Statement Variance Finalization & Accrual Reversal"
+                    },
+                }
+            )
 
         # Sort chronologically by due_date
         events.sort(key=lambda x: x["due_date"])
@@ -161,7 +208,9 @@ class CommitmentCalendarService:
         return {
             "calendar_lookahead_days": lookahead,
             "total_upcoming_events": len(horizon_events),
-            "urgent_events_count": len([e for e in horizon_events if e["urgency"] in ("WARNING", "CRITICAL")]),
+            "urgent_events_count": len(
+                [e for e in horizon_events if e["urgency"] in ("WARNING", "CRITICAL")]
+            ),
             "streams_represented": list(set(e["stream"] for e in horizon_events)),
             "events": horizon_events,
             "timestamp": datetime.now(UTC).isoformat(),

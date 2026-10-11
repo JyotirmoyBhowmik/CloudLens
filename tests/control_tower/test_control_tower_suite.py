@@ -61,6 +61,7 @@ def reset_ct_state():
     reset_control_tower_service()
     reset_superuser_service()
     from domain.observability import health_probe
+
     health_probe.reset_overrides()
     health_probe.set_override("secret_store", True)
     yield
@@ -115,7 +116,9 @@ def test_observe_only_user_can_view_all_14_panels(client: TestClient):
 
 def test_observe_only_user_blocked_from_every_action(client: TestClient):
     """AUDITOR (observe-only) receives 403 on every administrative action."""
-    headers = make_test_auth_headers(["AUDITOR"], ["platform.observe"], step_up_token="valid-stepup-token-1234")
+    headers = make_test_auth_headers(
+        ["AUDITOR"], ["platform.observe"], step_up_token="valid-stepup-token-1234"
+    )
 
     actions = [
         "retry-job",
@@ -141,7 +144,9 @@ def test_observe_only_user_blocked_from_every_action(client: TestClient):
                 "step_up_token": "valid-stepup-token-1234",
             },
         )
-        assert res.status_code == 403, f"Action {action} should have been forbidden for AUDITOR: {res.text}"
+        assert res.status_code == 403, (
+            f"Action {action} should have been forbidden for AUDITOR: {res.text}"
+        )
         assert "platform.operate" in res.json().get("detail", "")
 
 
@@ -169,7 +174,9 @@ def test_superuser_action_without_step_up_returns_403(client: TestClient):
 
 def test_superuser_action_with_short_reason_returns_400(client: TestClient):
     """Superuser action with reason < 20 chars returns 400 Bad Request or 422 Unprocessable."""
-    headers = make_test_auth_headers(["SUPER_ADMIN", "PLATFORM_ADMIN"], ["*"], step_up_token="valid-stepup-token-1234")
+    headers = make_test_auth_headers(
+        ["SUPER_ADMIN", "PLATFORM_ADMIN"], ["*"], step_up_token="valid-stepup-token-1234"
+    )
 
     res = client.post(
         "/api/v1/control-tower/actions/force-sync",
@@ -216,7 +223,9 @@ def test_superuser_action_with_stepup_and_reason_executes_and_audits(client: Tes
         email="admin@jyotirmoyb.com",
     )
 
-    reason_text = "Operational justification: Performing emergency database snapshot checkpoint before deploy"
+    reason_text = (
+        "Operational justification: Performing emergency database snapshot checkpoint before deploy"
+    )
     res = client.post(
         "/api/v1/control-tower/actions/trigger-backup",
         headers=headers,
@@ -257,7 +266,9 @@ def test_no_raw_cost_line_or_foreign_email_disclosed(client: TestClient):
     # No sample corporate emails from other tenants
     forbidden_domains = ["@example.com", "@company.com", "@enterprise.com", "@acme.org"]
     for domain in forbidden_domains:
-        assert domain not in text_content, f"Foreign domain '{domain}' found in Control Tower output!"
+        assert domain not in text_content, (
+            f"Foreign domain '{domain}' found in Control Tower output!"
+        )
 
     # No un-aggregated raw record objects
     assert "raw_cost_lines" not in text_content

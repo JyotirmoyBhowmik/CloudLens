@@ -60,7 +60,11 @@ def resolve_route_permission(method: str, path: str, tags: list[str]) -> str:
             return "connectors:sync"
         if "validate" in p or "test" in p:
             return "connectors:validate"
-        return "connectors:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "connectors:read"
+        return (
+            "connectors:write"
+            if method in ("POST", "PUT", "DELETE", "PATCH")
+            else "connectors:read"
+        )
     if "/credentials" in p:
         return "credentials:create" if method in ("POST", "PUT") else "config:read"
     if "/config" in p or "/system" in p:
@@ -82,29 +86,76 @@ def resolve_route_permission(method: str, path: str, tags: list[str]) -> str:
     if "/masterdata" in p:
         if "approve" in p:
             return "masterdata:approve"
-        return "masterdata:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "masterdata:read"
+        return (
+            "masterdata:write"
+            if method in ("POST", "PUT", "DELETE", "PATCH")
+            else "masterdata:read"
+        )
     if "/thresholds" in p:
-        return "thresholds:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "thresholds:read"
+        return (
+            "thresholds:write"
+            if method in ("POST", "PUT", "DELETE", "PATCH")
+            else "thresholds:read"
+        )
     if "/overrides" in p:
         return "overrides:apply"
     if "/policies" in p:
-        return "policies:evaluate" if "evaluate" in p else ("governance:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "governance:read")
-    if any(k in p for k in ("/cost", "/usage", "/statements", "/analytics", "/forecasts", "/attribution")):
+        return (
+            "policies:evaluate"
+            if "evaluate" in p
+            else (
+                "governance:write"
+                if method in ("POST", "PUT", "DELETE", "PATCH")
+                else "governance:read"
+            )
+        )
+    if any(
+        k in p
+        for k in ("/cost", "/usage", "/statements", "/analytics", "/forecasts", "/attribution")
+    ):
         if any(d in p for d in ("drill", "detail", "rate", "unit")):
             return "financial:detail:read"
         if "export" in p:
             return "billing:export"
         return "cost:totals:read" if method == "GET" else "billing:read"
-    if any(k in p for k in ("/inventory", "/hierarchy", "/topology", "/dependencies", "/resource-detail", "/dashboards", "/explanation")):
-        return "inventory:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "inventory:read"
+    if any(
+        k in p
+        for k in (
+            "/inventory",
+            "/hierarchy",
+            "/topology",
+            "/dependencies",
+            "/resource-detail",
+            "/dashboards",
+            "/explanation",
+        )
+    ):
+        return (
+            "inventory:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "inventory:read"
+        )
     if any(k in p for k in ("/alerts", "/remediation", "/workflows")):
-        return "governance:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "governance:read"
-    if any(k in p for k in ("/wizard", "/imports", "/sync", "/runtime", "/storage", "/provisioning-requests")):
-        return "connectors:write" if method in ("POST", "PUT", "DELETE", "PATCH") else "connectors:read"
+        return (
+            "governance:write"
+            if method in ("POST", "PUT", "DELETE", "PATCH")
+            else "governance:read"
+        )
+    if any(
+        k in p
+        for k in ("/wizard", "/imports", "/sync", "/runtime", "/storage", "/provisioning-requests")
+    ):
+        return (
+            "connectors:write"
+            if method in ("POST", "PUT", "DELETE", "PATCH")
+            else "connectors:read"
+        )
     if "/rbac" in p:
         return "roles:read"
     if any(k in p for k in ("/tenants", "/scopes")):
-        return "tenants:settings:write" if method in ("POST", "PUT", "DELETE") else "tenants:settings:read"
+        return (
+            "tenants:settings:write"
+            if method in ("POST", "PUT", "DELETE")
+            else "tenants:settings:read"
+        )
     if any(k in p for k in ("/auth", "/health", "/metrics", "/demo")) or p == "/":
         return "platform.observe"
     return "config:read"
@@ -136,7 +187,9 @@ class TestOpenAPIRBACMatrixSuite:
         evaluator = ScopeGrantEvaluator(catalogue)
 
         routes = get_openapi_routes()
-        assert len(routes) >= 236, f"Expected at least 236 routes from openapi.json, got {len(routes)}"
+        assert len(routes) >= 236, (
+            f"Expected at least 236 routes from openapi.json, got {len(routes)}"
+        )
 
         total_cells = 0
         allowed_count = 0
@@ -368,7 +421,9 @@ class TestOpenAPIRBACMatrixSuite:
                 role_codes=[auditor_role],
                 permission_code=op_perm,
             )
-            assert op_decision.allowed is False, f"AUDITOR must be denied on operate capability '{op_perm}'"
+            assert op_decision.allowed is False, (
+                f"AUDITOR must be denied on operate capability '{op_perm}'"
+            )
             assert op_decision.effect == GrantEffect.DENY
 
     def test_unmapped_idp_group_yields_zero_access_and_raises_alert(self) -> None:
@@ -388,7 +443,8 @@ class TestOpenAPIRBACMatrixSuite:
         assert "possesses no mapped platform roles" in str(exc_info.value)
         # Verify an administrator alert was generated for unmapped group attempt
         alerts = [
-            a for a in identity_svc._alerts
+            a
+            for a in identity_svc._alerts
             if a.alert_type == "UNMAPPED_ROLE_ACCESS_DENIED" and a.tenant_id == "tenant-corp"
         ]
         assert len(alerts) >= 1

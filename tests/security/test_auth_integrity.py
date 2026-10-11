@@ -262,12 +262,14 @@ def test_two_api_processes_accept_each_others_tokens():
     header, payload_b64, sig = token_a.split(".")
     # Decode payload and modify role to elevate privileges
     import base64
+
     payload_json = json.loads(base64.urlsafe_b64decode(payload_b64 + "=="))
     payload_json["sub"] = "evil-hacker"
     tampered_b64 = base64.urlsafe_b64encode(json.dumps(payload_json).encode()).decode().rstrip("=")
     tampered_token = f"{header}.{tampered_b64}.{sig}"
 
     from domain.models.exceptions import TokenInvalidException
+
     with pytest.raises(TokenInvalidException):
         engine_a.extract_auth_context(tampered_token)
 

@@ -42,9 +42,13 @@ class InMemoryPolicyRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> list[PolicyDefinition]:
-        enabled_only = bool(filter_params.get("enabled_only")) if isinstance(filter_params, dict) else False
+        enabled_only = (
+            bool(filter_params.get("enabled_only")) if isinstance(filter_params, dict) else False
+        )
         category = filter_params.get("category") if isinstance(filter_params, dict) else None
-        res = self.list_policies(tenant_context=tenant_context, enabled_only=enabled_only, category=category)
+        res = self.list_policies(
+            tenant_context=tenant_context, enabled_only=enabled_only, category=category
+        )
         return res[offset : offset + limit]
 
     def save(self, entity: PolicyDefinition, *, tenant_context: TenantContext) -> PolicyDefinition:
@@ -165,9 +169,7 @@ class InMemoryPolicyRepository:
         items = self.list_findings(tenant_context=tenant_context, status=status)
         return len(items)
 
-    def delete_finding(
-        self, finding_id: str, *, tenant_context: TenantContext
-    ) -> bool:
+    def delete_finding(self, finding_id: str, *, tenant_context: TenantContext) -> bool:
         return bool(self._findings.pop((tenant_context.tenant_id, finding_id), None))
 
     def save_exemption(

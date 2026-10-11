@@ -78,7 +78,11 @@ class InMemoryProvisioningRepository:
         with self._lock:
             res = [r for (t, _), r in self._requests.items() if t == tenant_id]
             if status:
-                res = [r for r in res if (r.status.value if hasattr(r.status, "value") else str(r.status)) == status]
+                res = [
+                    r
+                    for r in res
+                    if (r.status.value if hasattr(r.status, "value") else str(r.status)) == status
+                ]
             if scope_code:
                 res = [r for r in res if r.target_scope.lower() == scope_code.lower()]
             return res

@@ -12,6 +12,7 @@ from domain.alerting.models import (
     RecipientSubscription,
 )
 from domain.models.enums import AlertLifecycleStatus, ContextualAlertType
+from domain.models.exceptions import MissingTenantContextException
 from domain.tenant.context import TenantContext
 
 
@@ -25,7 +26,12 @@ class InMemoryAlertRepository:
         self._subscriptions: dict[tuple[str, str], RecipientSubscription] = {}
         self._delivery_logs: dict[tuple[str, str], AlertDeliveryLog] = {}
 
+    def _check_context(self, tenant_context: TenantContext) -> None:
+        if tenant_context is None or not getattr(tenant_context, "tenant_id", None):
+            raise MissingTenantContextException("TenantContext is mandatory")
+
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> AlertEntity | None:
+        self._check_context(tenant_context)
         return self._alerts.get((tenant_context.tenant_id, entity_id))
 
     def list(
@@ -36,6 +42,7 @@ class InMemoryAlertRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> list[AlertEntity]:
+        self._check_context(tenant_context)
         all_alerts = [
             alert for (t_id, _), alert in self._alerts.items() if t_id == tenant_context.tenant_id
         ]
@@ -81,6 +88,26 @@ class InMemoryAlertRepository:
                 return a
         return None
 
+    def find_active_by_fingerprint(
+        self, fingerprint: str, *, tenant_context: TenantContext
+    ) -> AlertEntity | None:
+        for (tid, _), a in self._alerts.items():
+            if tid == tenant_context.tenant_id and a.fingerprint == fingerprint:
+                if a.status in (AlertLifecycleStatus.ACTIVE, AlertLifecycleStatus.ACKNOWLEDGED):
+                    return a
+        return None
+
+    def list_active_by_scope(
+        self, scope_id: str, *, tenant_context: TenantContext
+    ) -> list[AlertEntity]:
+        return [
+            a
+            for (tid, _), a in self._alerts.items()
+            if tid == tenant_context.tenant_id
+            and getattr(a, "scope_id", None) == scope_id
+            and a.status in (AlertLifecycleStatus.ACTIVE, AlertLifecycleStatus.ACKNOWLEDGED)
+        ]
+
     def save_subscription(
         self, sub: RecipientSubscription, *, tenant_context: TenantContext
     ) -> RecipientSubscription:
@@ -93,9 +120,7 @@ class InMemoryAlertRepository:
     ) -> RecipientSubscription | None:
         return self._subscriptions.get((tenant_context.tenant_id, sub_id))
 
-    def list_subscriptions(
-        self, *, tenant_context: TenantContext
-    ) -> list[RecipientSubscription]:
+    def list_subscriptions(self, *, tenant_context: TenantContext) -> list[RecipientSubscription]:
         return [s for (tid, _), s in self._subscriptions.items() if tid == tenant_context.tenant_id]
 
     def delete_subscription(self, sub_id: str, *, tenant_context: TenantContext) -> bool:

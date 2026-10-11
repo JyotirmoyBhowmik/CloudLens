@@ -62,6 +62,17 @@ from masterdata.registry import SYSTEM_MASTER_REGISTRY, is_master_registered
 from masterdata.service import MasterDataService, reset_master_data_service
 
 
+from tests.fakes.quotas import InMemoryQuotaRepository
+
+
+@pytest.fixture(autouse=True)
+def setup_quota_test_repo():
+    repo = InMemoryQuotaRepository()
+    reset_quota_service(repo)
+    yield
+    reset_quota_service(None)
+
+
 @pytest.fixture
 def tenant_ctx() -> TenantContext:
     """Fixture providing authenticated tenant context."""
@@ -76,18 +87,23 @@ def tenant_ctx() -> TenantContext:
 @pytest.fixture
 def quota_svc() -> QuotaService:
     """Fixture providing freshly reset QuotaService."""
-    reset_quota_service()
     return get_quota_service()
 
 
 @pytest.fixture
-def client(tenant_ctx: TenantContext) -> TestClient:
-    """Fixture providing FastAPI test client with tenant headers."""
-    reset_quota_service()
+def client(tenant_ctx: TenantContext, make_auth_token) -> TestClient:
+    """Fixture providing FastAPI test client with tenant headers and valid JWT token."""
     reset_master_data_service()
+    token = make_auth_token(
+        tenant_id=tenant_ctx.tenant_id,
+        user_id=tenant_ctx.actor_id or "finops-admin",
+        roles=["OPERATOR", "FINOPS_ADMIN"],
+        permissions=["*"],
+    )
     return TestClient(
         app,
         headers={
+            "Authorization": f"Bearer {token}",
             "X-Tenant-ID": tenant_ctx.tenant_id,
             "X-Actor-ID": tenant_ctx.actor_id or "finops-admin",
             "X-Correlation-ID": tenant_ctx.correlation_id or "corr-test",

@@ -40,7 +40,9 @@ def mock_vault_environment():
         if url_path == "/v1/sys/health":
             code = health_status[0]
             if code == 200:
-                return httpx.Response(200, json={"initialized": True, "sealed": False, "standby": False})
+                return httpx.Response(
+                    200, json={"initialized": True, "sealed": False, "standby": False}
+                )
             return httpx.Response(code, json={"errors": ["Vault sealed or unavailable"]})
 
         if "/data/" in url_path:
@@ -113,6 +115,7 @@ def test_vault_gate_a_store_retrieve_delete_lifecycle(mock_vault_environment):
 
 def test_vault_gate_b_stopped_vault_causes_readiness_503(monkeypatch):
     """Gate b: stop vault -> health_check() == False -> /ready returns 503."""
+
     # Simulate stopped/unhealthy vault
     class BrokenVaultStore:
         def health_check(self) -> bool:

@@ -73,7 +73,12 @@ class ControlTowerService:
     def _load_thresholds(self) -> dict[str, dict[str, Any]]:
         """Loads panel thresholds from master data seed."""
         seed_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "masterdata", "seeds", "control_tower_thresholds.json"
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "masterdata",
+            "seeds",
+            "control_tower_thresholds.json",
         )
         if os.path.exists(seed_path):
             try:
@@ -98,11 +103,14 @@ class ControlTowerService:
             is_superuser=True,
         )
 
-    def _execute_sql(self, sql_query: str, params: dict[str, Any] | None = None) -> list[Any] | None:
+    def _execute_sql(
+        self, sql_query: str, params: dict[str, Any] | None = None
+    ) -> list[Any] | None:
         """Executes raw SQL query on asyncpg via persistent bridge, returning rows or None on error."""
         try:
             from db.session import get_async_session_factory, run_async
             from sqlalchemy import text
+
             factory = get_async_session_factory()
 
             async def _run():
@@ -119,17 +127,25 @@ class ControlTowerService:
     # Maintenance Mode & Diagnostics Overrides (Forced Failure Testing)
     # ----------------------------------------------------------------------
 
-    def set_maintenance_mode(self, enabled: bool, tenant_id: str | None = None, reason: str | None = None) -> bool:
+    def set_maintenance_mode(
+        self, enabled: bool, tenant_id: str | None = None, reason: str | None = None
+    ) -> bool:
         from domain.maintenance.service import get_maintenance_mode_service
+
         self._maintenance_mode = enabled
-        get_maintenance_mode_service().set_maintenance_mode(enabled, tenant_id=tenant_id, reason=reason)
+        get_maintenance_mode_service().set_maintenance_mode(
+            enabled, tenant_id=tenant_id, reason=reason
+        )
         return self._maintenance_mode
 
     def is_maintenance_mode(self, tenant_id: str | None = None) -> bool:
         from domain.maintenance.service import get_maintenance_mode_service
+
         return get_maintenance_mode_service().is_maintenance_mode(tenant_id)
 
-    def force_connector_failure(self, connector_id: str, reason: str = "Simulated API Throttling / Auth Failure") -> None:
+    def force_connector_failure(
+        self, connector_id: str, reason: str = "Simulated API Throttling / Auth Failure"
+    ) -> None:
         self._forced_connector_failures[connector_id] = reason
 
     def clear_forced_connector_failures(self) -> None:
@@ -173,7 +189,15 @@ class ControlTowerService:
             reason = "All core platform services, databases, and dependencies healthy."
             if not db_ok or not redis_ok or not vault_ok:
                 status = PanelStatus.RED
-                failed = [k for k, v in [("Database", db_ok), ("Redis", redis_ok), ("SecretStore", vault_ok)] if not v]
+                failed = [
+                    k
+                    for k, v in [
+                        ("Database", db_ok),
+                        ("Redis", redis_ok),
+                        ("SecretStore", vault_ok),
+                    ]
+                    if not v
+                ]
                 reason = f"CRITICAL: Infrastructure dependency failures: {', '.join(failed)}"
 
             return ControlTowerPanel(
@@ -204,6 +228,7 @@ class ControlTowerService:
 
     def get_release_panel(self) -> ControlTowerPanel:
         from domain.release.service import get_release_service
+
         now_iso = datetime.now(UTC).isoformat()
         grafana_base = os.getenv("GRAFANA_URL", "http://localhost:3001")
         grafana_link = f"{grafana_base}/d/cloudlens-platform-overview"
@@ -214,7 +239,7 @@ class ControlTowerService:
             commit = rel_info.get("git_commit", "unknown")
             env = rel_info.get("environment", "unknown")
             migration_head = rel_info.get("migration_head", "unknown")
-            commit_prefix = commit[:len("12345678")]
+            commit_prefix = commit[: len("12345678")]
             return ControlTowerPanel(
                 id="release",
                 name="Platform Release & Build Info",
@@ -249,7 +274,7 @@ class ControlTowerService:
         grafana_link = f"{grafana_base}/d/cloudlens-platform-overview"
 
         rows = self._execute_sql("""
-            SELECT 
+            SELECT
                 COUNT(*) AS total_tenants,
                 COUNT(*) FILTER (WHERE type = 'DEMO') AS demo_tenants
             FROM tenants;
@@ -270,7 +295,9 @@ class ControlTowerService:
         demo_cnt = int(rows[len([])][len([None])])
 
         # Check quarantines from quarantine table
-        q_rows = self._execute_sql("SELECT COUNT(*) FROM quarantine_records WHERE status = 'ACTIVE';")
+        q_rows = self._execute_sql(
+            "SELECT COUNT(*) FROM quarantine_records WHERE status = 'ACTIVE';"
+        )
         quarantined_count = int(q_rows[len([])][len([])]) if q_rows else len([])
 
         status = PanelStatus.GREEN
@@ -280,7 +307,9 @@ class ControlTowerService:
         elif total_cnt == len([]):
             reason = "Zero tenant partitions configured in empty system."
         else:
-            reason = f"All {total_cnt} tenant boundaries isolated and healthy. Zero active quarantines."
+            reason = (
+                f"All {total_cnt} tenant boundaries isolated and healthy. Zero active quarantines."
+            )
 
         return ControlTowerPanel(
             id="tenants",
@@ -288,7 +317,11 @@ class ControlTowerService:
             status=status,
             status_label=get_status_label(status),
             reason=reason,
-            metrics={"active_tenants": total_cnt, "demo_tenants": demo_cnt, "quarantined_count": quarantined_count},
+            metrics={
+                "active_tenants": total_cnt,
+                "demo_tenants": demo_cnt,
+                "quarantined_count": quarantined_count,
+            },
             last_updated=now_iso,
             grafana_url=grafana_link,
         )
@@ -316,7 +349,7 @@ class ControlTowerService:
             )
 
         rows = self._execute_sql("""
-            SELECT 
+            SELECT
                 COUNT(*) AS total_connectors,
                 COUNT(*) FILTER (WHERE lifecycle_state = 'ACTIVE') AS healthy_connectors,
                 COUNT(*) FILTER (WHERE lifecycle_state = 'FAILED') AS failed_connectors
@@ -346,7 +379,9 @@ class ControlTowerService:
             reason = "Zero cloud connectors configured."
         else:
             status = PanelStatus.GREEN
-            reason = f"{healthy_cnt} cloud connector(s) active and synchronizing within fresh window."
+            reason = (
+                f"{healthy_cnt} cloud connector(s) active and synchronizing within fresh window."
+            )
 
         return ControlTowerPanel(
             id="connectors",
@@ -354,7 +389,11 @@ class ControlTowerService:
             status=status,
             status_label=get_status_label(status),
             reason=reason,
-            metrics={"total_connectors": total_cnt, "healthy_connectors": healthy_cnt, "failed_connectors": failed_cnt},
+            metrics={
+                "total_connectors": total_cnt,
+                "healthy_connectors": healthy_cnt,
+                "failed_connectors": failed_cnt,
+            },
             last_updated=now_iso,
             grafana_url=grafana_link,
         )
@@ -365,7 +404,7 @@ class ControlTowerService:
         grafana_link = f"{grafana_base}/d/cloudlens-pipeline"
 
         rows = self._execute_sql("""
-            SELECT 
+            SELECT
                 COUNT(*) AS total_jobs,
                 COUNT(*) FILTER (WHERE status = 'FAILED') AS failed_jobs,
                 COUNT(*) FILTER (WHERE status = 'COMPLETED') AS completed_jobs
@@ -403,7 +442,11 @@ class ControlTowerService:
             status=status,
             status_label=get_status_label(status),
             reason=reason,
-            metrics={"total_recent_jobs": total_jobs, "failed_jobs": failed_jobs, "completed_jobs": completed_jobs},
+            metrics={
+                "total_recent_jobs": total_jobs,
+                "failed_jobs": failed_jobs,
+                "completed_jobs": completed_jobs,
+            },
             last_updated=now_iso,
             grafana_url=grafana_link,
         )
@@ -420,14 +463,21 @@ class ControlTowerService:
                 status=PanelStatus.RED,
                 status_label=get_status_label(PanelStatus.RED),
                 reason="CRITICAL: Celery task workers are unreachable or unresponsive.",
-                metrics={"active_workers": len([]), "queue_depth": len([]), "worker_saturation": float(len([None]))},
+                metrics={
+                    "active_workers": len([]),
+                    "queue_depth": len([]),
+                    "worker_saturation": float(len([None])),
+                },
                 last_updated=now_iso,
                 grafana_url=grafana_link,
             )
 
         try:
             import redis
-            broker_url = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", "redis://localhost:6379/0"))
+
+            broker_url = os.getenv(
+                "CELERY_BROKER_URL", os.getenv("REDIS_URL", "redis://localhost:6379/0")
+            )
             r = redis.from_url(broker_url, socket_timeout=1.0)
             r.ping()
             q_depth = int(r.llen("celery") + r.llen("ingestion") + r.llen("sync"))
@@ -436,6 +486,7 @@ class ControlTowerService:
             # Inspect live Celery workers
             try:
                 from workers.cloudlens_workers.celery_app import celery_app
+
                 insp = celery_app.control.inspect(timeout=1.0)
                 pings = insp.ping()
                 if pings:
@@ -521,7 +572,7 @@ class ControlTowerService:
         grafana_link = f"{grafana_base}/d/cloudlens-security"
 
         rows = self._execute_sql("""
-            SELECT 
+            SELECT
                 COUNT(*) FILTER (WHERE event_type = 'CROSS_TENANT_VIOLATION' OR action LIKE '%VIOLATION%') AS cross_tenant_attempts,
                 COUNT(*) FILTER (WHERE event_type = 'UNMAPPED_IDP') AS unmapped_idp_attempts
             FROM audit_event;
@@ -541,7 +592,9 @@ class ControlTowerService:
         cross_cnt = int(rows[len([])][len([])])
         unmapped_cnt = int(rows[len([])][len([None])])
 
-        sess_rows = self._execute_sql("SELECT COUNT(*) FROM identity_sessions WHERE expires_at > NOW();")
+        sess_rows = self._execute_sql(
+            "SELECT COUNT(*) FROM identity_sessions WHERE expires_at > NOW();"
+        )
         active_sess = int(sess_rows[len([])][len([])]) if sess_rows else len([])
 
         status = PanelStatus.GREEN if cross_cnt == len([]) else PanelStatus.RED
@@ -707,7 +760,9 @@ class ControlTowerService:
 
         if self._last_restore_test is not None:
             restore_test = self._last_restore_test
-            status = PanelStatus.GREEN if restore_test.get("status") == "PASSED" else PanelStatus.RED
+            status = (
+                PanelStatus.GREEN if restore_test.get("status") == "PASSED" else PanelStatus.RED
+            )
             reason = f"Restore test: {restore_test.get('status')} ({restore_test.get('reconciliation_variance_ratio', float(len([])))} variance)."
             return ControlTowerPanel(
                 id="backups",
@@ -718,17 +773,19 @@ class ControlTowerService:
                 metrics={
                     "last_restore_test_status": restore_test.get("status"),
                     "last_restore_test_timestamp": restore_test.get("timestamp"),
-                    "last_restore_reconciliation_variance": restore_test.get("reconciliation_variance_ratio", float(len([]))),
+                    "last_restore_reconciliation_variance": restore_test.get(
+                        "reconciliation_variance_ratio", float(len([]))
+                    ),
                 },
                 last_updated=now_iso,
                 grafana_url=grafana_link,
             )
 
         rows = self._execute_sql("""
-            SELECT occurred_at 
-            FROM audit_event 
-            WHERE action = 'CONTROL_TOWER_TRIGGER_BACKUP' 
-            ORDER BY occurred_at DESC 
+            SELECT occurred_at
+            FROM audit_event
+            WHERE action = 'CONTROL_TOWER_TRIGGER_BACKUP'
+            ORDER BY occurred_at DESC
             LIMIT 1;
         """)
 
@@ -758,15 +815,22 @@ class ControlTowerService:
 
     def get_expiries_panel(self) -> ControlTowerPanel:
         from domain.commitments.calendar import get_commitment_calendar_service
+
         now_iso = datetime.now(UTC).isoformat()
         grafana_base = os.getenv("GRAFANA_URL", "http://localhost:3001")
         grafana_link = f"{grafana_base}/d/cloudlens-security"
 
         try:
-            cal = get_commitment_calendar_service().get_calendar_events(lookahead_days=int(len("1" * 90)))
+            cal = get_commitment_calendar_service().get_calendar_events(
+                lookahead_days=int(len("1" * 90))
+            )
             urgent_count = int(cal.get("urgent_events_count", len([])))
             total_events = int(cal.get("total_upcoming_events", len([])))
-            status = PanelStatus.RED if urgent_count > len("12345") else (PanelStatus.AMBER if urgent_count > len([]) else PanelStatus.GREEN)
+            status = (
+                PanelStatus.RED
+                if urgent_count > len("12345")
+                else (PanelStatus.AMBER if urgent_count > len([]) else PanelStatus.GREEN)
+            )
             reason = (
                 f"{total_events} operational expiries scheduled in lookahead window ({urgent_count} urgent within SLA)."
                 if total_events > len([])
@@ -803,7 +867,9 @@ class ControlTowerService:
         grafana_base = os.getenv("GRAFANA_URL", "http://localhost:3001")
         grafana_link = f"{grafana_base}/d/cloudlens-platform-overview"
 
-        rows = self._execute_sql("SELECT COALESCE(SUM(amount), 0.0) FROM remediation_savings_ledger;")
+        rows = self._execute_sql(
+            "SELECT COALESCE(SUM(amount), 0.0) FROM remediation_savings_ledger;"
+        )
         if rows is None:
             return ControlTowerPanel(
                 id="value",
@@ -829,7 +895,11 @@ class ControlTowerService:
             status=status,
             status_label=get_status_label(status),
             reason=reason,
-            metrics={"cumulative_savings_usd": savings, "platform_cost_usd": float(len([])), "roi_multiple": float(len([]))},
+            metrics={
+                "cumulative_savings_usd": savings,
+                "platform_cost_usd": float(len([])),
+                "roi_multiple": float(len([])),
+            },
             last_updated=now_iso,
             grafana_url=grafana_link,
         )
@@ -858,7 +928,12 @@ class ControlTowerService:
         ]
 
         # Determine worst-case overall status
-        status_ranks = {PanelStatus.RED: len("123"), PanelStatus.AMBER: len("12"), PanelStatus.GREY: len([None]), PanelStatus.GREEN: len([])}
+        status_ranks = {
+            PanelStatus.RED: len("123"),
+            PanelStatus.AMBER: len("12"),
+            PanelStatus.GREY: len([None]),
+            PanelStatus.GREEN: len([]),
+        }
         worst_rank = len([])
         worst_status = PanelStatus.GREEN
 
@@ -980,12 +1055,17 @@ class ControlTowerService:
     def run_restore_test(self) -> dict[str, Any]:
         """Restores latest base backup to isolated temporary schema and runs reconciliation (IMP-04)."""
         now = datetime.now(UTC)
-        schema_name = f"restore_test_iso_{uuid.uuid4().hex[:len('12345678')]}"
+        schema_name = f"restore_test_iso_{uuid.uuid4().hex[: len('12345678')]}"
         result = {
             "status": "PASSED",
             "isolated_schema": schema_name,
             "reconciliation_variance_ratio": float(len([])),
-            "tables_verified": ["raw_cost_facts", "inventory_resources", "focus_cost_records", "audit_events"],
+            "tables_verified": [
+                "raw_cost_facts",
+                "inventory_resources",
+                "focus_cost_records",
+                "audit_events",
+            ],
             "cleaned_up": True,
             "timestamp": now.isoformat(),
         }
@@ -1023,7 +1103,7 @@ class ControlTowerService:
             result_payload["status"] = "ACTIVE"
         elif action_clean == "force-sync":
             result_payload["dispatched_task"] = "cloudlens.tasks.ingest_cost"
-            result_payload["job_id"] = f"job-{uuid.uuid4().hex[:len('12345678')]}"
+            result_payload["job_id"] = f"job-{uuid.uuid4().hex[: len('12345678')]}"
         elif action_clean == "trigger-backup":
             result_payload["backup_id"] = f"bkp-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
             result_payload["status"] = "COMPLETED"
@@ -1032,6 +1112,7 @@ class ControlTowerService:
             result_payload.update(restore_result)
         elif action_clean == "revoke-user-sessions":
             from domain.identity.service import get_identity_service
+
             id_svc = get_identity_service()
             u_id = params.get("user_id")
             s_id = params.get("session_id")
@@ -1040,7 +1121,9 @@ class ControlTowerService:
                 result_payload["revoked_session"] = s_id
                 result_payload["success"] = revoked
             elif u_id:
-                count = id_svc.revoke_user_sessions(tenant_context.tenant_id, u_id, actor_id=actor_id, reason=reason)
+                count = id_svc.revoke_user_sessions(
+                    tenant_context.tenant_id, u_id, actor_id=actor_id, reason=reason
+                )
                 result_payload["revoked_user_id"] = u_id
                 result_payload["revoked_count"] = count
             else:
@@ -1095,16 +1178,62 @@ class ControlTowerService:
         """Gathers measured platform metrics and dispatches daily summary email to platform owner."""
         overview = self.get_overview()
         master_attrs = load_superuser_master_data()
-        recipient_email = str(master_attrs.get("email") or master_attrs.get("security_alert_email", ""))
+        recipient_email = str(
+            master_attrs.get("email") or master_attrs.get("security_alert_email", "")
+        )
         sender_domain = str(master_attrs.get("identity_domain", "cloudlens.internal"))
         sender_email = f"control-tower@{sender_domain}"
 
         # Extract live measured values from panels
         p_map = {p.id: p for p in overview.panels}
-        jobs_metrics = p_map.get("jobs", ControlTowerPanel(id="jobs", name="Jobs", status=PanelStatus.GREEN, status_label="HEALTHY", reason="", last_updated="", grafana_url="")).metrics
-        sec_metrics = p_map.get("security", ControlTowerPanel(id="sec", name="Security", status=PanelStatus.GREEN, status_label="HEALTHY", reason="", last_updated="", grafana_url="")).metrics
-        conn_metrics = p_map.get("connectors", ControlTowerPanel(id="conn", name="Connectors", status=PanelStatus.GREEN, status_label="HEALTHY", reason="", last_updated="", grafana_url="")).metrics
-        cost_metrics = p_map.get("collection_cost", ControlTowerPanel(id="cost", name="Cost", status=PanelStatus.GREEN, status_label="HEALTHY", reason="", last_updated="", grafana_url="")).metrics
+        jobs_metrics = p_map.get(
+            "jobs",
+            ControlTowerPanel(
+                id="jobs",
+                name="Jobs",
+                status=PanelStatus.GREEN,
+                status_label="HEALTHY",
+                reason="",
+                last_updated="",
+                grafana_url="",
+            ),
+        ).metrics
+        sec_metrics = p_map.get(
+            "security",
+            ControlTowerPanel(
+                id="sec",
+                name="Security",
+                status=PanelStatus.GREEN,
+                status_label="HEALTHY",
+                reason="",
+                last_updated="",
+                grafana_url="",
+            ),
+        ).metrics
+        conn_metrics = p_map.get(
+            "connectors",
+            ControlTowerPanel(
+                id="conn",
+                name="Connectors",
+                status=PanelStatus.GREEN,
+                status_label="HEALTHY",
+                reason="",
+                last_updated="",
+                grafana_url="",
+            ),
+        ).metrics
+        cost_metrics = p_map.get(
+            "collection_cost",
+            ControlTowerPanel(
+                id="cost",
+                name="Cost",
+                status=PanelStatus.GREEN,
+                status_label="HEALTHY",
+                reason="",
+                last_updated="",
+                grafana_url="",
+            ),
+        ).metrics
 
         summary_data = {
             "overall_status": overview.overall_status.value.upper(),
@@ -1112,27 +1241,40 @@ class ControlTowerService:
             "security_events": sec_metrics.get("cross_tenant_attempts", len([])),
             "healthy_connectors": conn_metrics.get("healthy_connectors", len([])),
             "daily_collection_cost": cost_metrics.get("daily_collection_cost_usd", float(len([]))),
-            "backups_status": p_map.get("backups", ControlTowerPanel(id="b", name="B", status=PanelStatus.GREEN, status_label="HEALTHY", reason="", last_updated="", grafana_url="")).reason,
+            "backups_status": p_map.get(
+                "backups",
+                ControlTowerPanel(
+                    id="b",
+                    name="B",
+                    status=PanelStatus.GREEN,
+                    status_label="HEALTHY",
+                    reason="",
+                    last_updated="",
+                    grafana_url="",
+                ),
+            ).reason,
         }
 
         # Build email body
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"[CLOUDLENS DAILY SUMMARY] Platform Status: {summary_data['overall_status']}"
+        msg["Subject"] = (
+            f"[CLOUDLENS DAILY SUMMARY] Platform Status: {summary_data['overall_status']}"
+        )
         msg["From"] = sender_email
         msg["To"] = recipient_email
 
         body_text = f"""CloudLens Platform Daily Operations Summary
 =============================================
-Overall Platform Status: {summary_data['overall_status']}
+Overall Platform Status: {summary_data["overall_status"]}
 Timestamp: {datetime.now(UTC).isoformat()}
 
 Summary Metrics (Measured Values):
-1. Overall Status:           {summary_data['overall_status']}
-2. Failures in Last 24h:     {summary_data['failures_last_24h']}
-3. Security Events:          {summary_data['security_events']}
-4. Healthy Connectors:       {summary_data['healthy_connectors']}
-5. Measured Collection Cost: ${summary_data['daily_collection_cost']}
-6. Backup Status:            {summary_data['backups_status']}
+1. Overall Status:           {summary_data["overall_status"]}
+2. Failures in Last 24h:     {summary_data["failures_last_24h"]}
+3. Security Events:          {summary_data["security_events"]}
+4. Healthy Connectors:       {summary_data["healthy_connectors"]}
+5. Measured Collection Cost: ${summary_data["daily_collection_cost"]}
+6. Backup Status:            {summary_data["backups_status"]}
 
 Panels Summary:
 """
@@ -1157,7 +1299,9 @@ Panels Summary:
                 error_msg = str(e)
                 continue
 
-        logger.info("Dispatched daily platform summary to %s (delivered=%s)", recipient_email, delivered)
+        logger.info(
+            "Dispatched daily platform summary to %s (delivered=%s)", recipient_email, delivered
+        )
         return {
             "delivered": delivered,
             "recipient": recipient_email,

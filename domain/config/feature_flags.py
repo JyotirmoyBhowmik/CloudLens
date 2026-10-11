@@ -48,6 +48,7 @@ class FeatureFlagService:
             self._repo = repository
         else:
             from domain.config.feature_flags_repository import get_feature_flag_repository
+
             self._repo = get_feature_flag_repository()
 
     @property
@@ -57,45 +58,57 @@ class FeatureFlagService:
     @property
     def _tenant_overrides(self):
         service = self
+
         class _TenantOverridesProxy(dict):
             def get(self, key, default=None):
                 tid, fkey = key
                 val = service._repo.get_override_sync(fkey, tenant_id=tid)
                 return val if val is not None else default
+
             def __getitem__(self, key):
                 tid, fkey = key
                 val = service._repo.get_override_sync(fkey, tenant_id=tid)
                 if val is None:
                     raise KeyError(key)
                 return val
+
             def __setitem__(self, key, enabled):
                 tid, fkey = key
                 service._repo.set_override_sync(fkey, enabled, tenant_id=tid)
+
             def __contains__(self, key):
                 tid, fkey = key
                 return service._repo.get_override_sync(fkey, tenant_id=tid) is not None
+
             def clear(self):
                 pass
+
         return _TenantOverridesProxy()
 
     @property
     def _global_overrides(self):
         service = self
+
         class _GlobalOverridesProxy(dict):
             def get(self, fkey, default=None):
                 val = service._repo.get_override_sync(fkey, tenant_id=None)
                 return val if val is not None else default
+
             def __getitem__(self, fkey):
                 val = service._repo.get_override_sync(fkey, tenant_id=None)
                 if val is None:
                     raise KeyError(fkey)
                 return val
+
             def __setitem__(self, fkey, enabled):
                 service._repo.set_override_sync(fkey, enabled, tenant_id=None)
+
             def __contains__(self, fkey):
                 return service._repo.get_override_sync(fkey, tenant_id=None) is not None
+
             def clear(self):
                 pass
+
         return _GlobalOverridesProxy()
 
     @property
@@ -201,9 +214,20 @@ class FeatureFlagService:
 
     def reset(self) -> None:
         """Reset all runtime overrides and audit entries (for testing)."""
-        self._tenant_overrides.clear()
-        self._global_overrides.clear()
-        self._audit_log.clear()
+        from domain.config.feature_flags_repository import get_feature_flag_repository
+
+        self._repo = get_feature_flag_repository()
+        if hasattr(self._repo, "_tenant_overrides"):
+            self._repo._tenant_overrides.clear()
+        if hasattr(self._repo, "_global_overrides"):
+            self._repo._global_overrides.clear()
+        if hasattr(self._repo, "_audit_log"):
+            self._repo._audit_log.clear()
+        else:
+            try:
+                self._audit_log.clear()
+            except Exception:
+                pass
 
 
 # Global singleton instance

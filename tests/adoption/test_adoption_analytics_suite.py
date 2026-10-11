@@ -196,7 +196,9 @@ class TestGovernanceMetrics:
         now = dt.datetime.now(dt.UTC)
 
         # 1. Prepare Alerts
-        alert_evidence = AlertEvidence(summary="High CPU anomaly detected", datapoints=[{"util": 95}])
+        alert_evidence = AlertEvidence(
+            summary="High CPU anomaly detected", datapoints=[{"util": 95}]
+        )
         alert_1 = AlertEntity(
             tenant_id="tenant-acme-corp",
             alert_type=AlertType.UNEXPECTED_COST_INCREASE,
@@ -423,10 +425,18 @@ class TestPlatformValueLedger:
         assert report.roi_multiple == 12.0
 
         # Check source breakdown
-        assert report.savings_by_source[ValueSourceType.REMEDIATION_TASK.value] == Decimal("12000.00")
-        assert report.savings_by_source[ValueSourceType.DECOMMISSIONING.value] == Decimal("18000.00")
-        assert report.savings_by_source[ValueSourceType.SCHEDULE_ADHERENCE.value] == Decimal("6000.00")
-        assert report.savings_by_source[ValueSourceType.COMMITMENT_OPTIMISATION.value] == Decimal("24000.00")
+        assert report.savings_by_source[ValueSourceType.REMEDIATION_TASK.value] == Decimal(
+            "12000.00"
+        )
+        assert report.savings_by_source[ValueSourceType.DECOMMISSIONING.value] == Decimal(
+            "18000.00"
+        )
+        assert report.savings_by_source[ValueSourceType.SCHEDULE_ADHERENCE.value] == Decimal(
+            "6000.00"
+        )
+        assert report.savings_by_source[ValueSourceType.COMMITMENT_OPTIMISATION.value] == Decimal(
+            "24000.00"
+        )
 
         # Check team breakdown
         assert report.savings_by_team["TEAM_COMMERCE"] == Decimal("25000.00")
@@ -448,7 +458,10 @@ class TestDataQualityScoring:
             "ownership_coverage": {"score": 92.0, "details": {"total": 1000, "owned": 920}},
             "tagging_compliance": {"score": 85.0, "details": {"total": 1000, "compliant": 850}},
             "budget_coverage": {"score": 100.0, "details": {"scopes": 50, "budgeted": 50}},
-            "allocation_coverage": {"score": 88.0, "details": {"spend": 100000, "allocated": 88000}},
+            "allocation_coverage": {
+                "score": 88.0,
+                "details": {"spend": 100000, "allocated": 88000},
+            },
             "reconciliation_pass_rate": {"score": 95.0, "details": {"periods": 20, "passed": 19}},
             "connector_freshness": {"score": 90.0, "details": {"connectors": 10, "fresh": 9}},
             "catalogue_gap_rate": {"score": 80.0, "details": {"unmapped": 5, "total_skus": 25}},
@@ -524,7 +537,9 @@ class TestFeatureAdoption:
         assert "itsm_integration" in dormant_keys
 
         # Dormant items must carry actionable recommendations
-        decom_item = next(f for f in report.dormant_features if f.feature_key == "decommissioning_workflow")
+        decom_item = next(
+            f for f in report.dormant_features if f.feature_key == "decommissioning_workflow"
+        )
         assert decom_item.status == FeatureAdoptionStatus.ENABLED_DORMANT
         assert "PROMOTE_DORMANT_FEATURE" in decom_item.recommendation
 
@@ -640,7 +655,9 @@ class TestQuarterlyReviewPack:
         usage_report = adoption_service.get_usage_report("2026-Q3", tenant_context=tenant_context)
 
         # 2. Prepare Governance
-        alert_evidence = AlertEvidence(summary="High CPU anomaly detected", datapoints=[{"util": 95}])
+        alert_evidence = AlertEvidence(
+            summary="High CPU anomaly detected", datapoints=[{"util": 95}]
+        )
         alert = AlertEntity(
             tenant_id="tenant-acme-corp",
             alert_type=AlertType.UNEXPECTED_COST_INCREASE,
@@ -912,29 +929,48 @@ class TestAdoptionEdgeCasesAndBoundaries:
     ) -> None:
         """Verifies score clamping (0-100) and all 4 rating thresholds."""
         # Critical rating (<60%)
-        critical_metrics = {comp: {"score": 40.0} for comp in [
-            "ownership_coverage", "tagging_compliance", "budget_coverage",
-            "allocation_coverage", "reconciliation_pass_rate", "connector_freshness", "catalogue_gap_rate"
-        ]}
-        crit_rep = adoption_service.calculate_data_quality(critical_metrics, tenant_context=tenant_context)
+        critical_metrics = {
+            comp: {"score": 40.0}
+            for comp in [
+                "ownership_coverage",
+                "tagging_compliance",
+                "budget_coverage",
+                "allocation_coverage",
+                "reconciliation_pass_rate",
+                "connector_freshness",
+                "catalogue_gap_rate",
+            ]
+        }
+        crit_rep = adoption_service.calculate_data_quality(
+            critical_metrics, tenant_context=tenant_context
+        )
         assert crit_rep.headline_score == 40.0
         assert crit_rep.rating == DataQualityRating.CRITICAL
 
         # Needs attention rating (60-74.9%)
         needs_attn = {comp: {"score": 65.0} for comp in critical_metrics}
-        attn_rep = adoption_service.calculate_data_quality(needs_attn, tenant_context=tenant_context)
+        attn_rep = adoption_service.calculate_data_quality(
+            needs_attn, tenant_context=tenant_context
+        )
         assert attn_rep.headline_score == 65.0
         assert attn_rep.rating == DataQualityRating.NEEDS_ATTENTION
 
         # Good rating (75-89.9%)
         good_metrics = {comp: {"score": 80.0} for comp in critical_metrics}
-        good_rep = adoption_service.calculate_data_quality(good_metrics, tenant_context=tenant_context)
+        good_rep = adoption_service.calculate_data_quality(
+            good_metrics, tenant_context=tenant_context
+        )
         assert good_rep.headline_score == 80.0
         assert good_rep.rating == DataQualityRating.GOOD
 
         # Clamping test: negative becomes 0.0, >100 becomes 100.0
-        extreme_metrics = {comp: {"score": -50.0 if i % 2 == 0 else 150.0} for i, comp in enumerate(critical_metrics)}
-        clamped_rep = adoption_service.calculate_data_quality(extreme_metrics, tenant_context=tenant_context)
+        extreme_metrics = {
+            comp: {"score": -50.0 if i % 2 == 0 else 150.0}
+            for i, comp in enumerate(critical_metrics)
+        }
+        clamped_rep = adoption_service.calculate_data_quality(
+            extreme_metrics, tenant_context=tenant_context
+        )
         for comp in clamped_rep.components:
             assert 0.0 <= comp.score <= 100.0
 
@@ -967,11 +1003,15 @@ class TestAdoptionEdgeCasesAndBoundaries:
     ) -> None:
         """When no governance gaps exist, Section 8 is omitted cleanly."""
         usage_rep = adoption_service.get_usage_report("2026-Q4", tenant_context=tenant_context)
-        gov_rep = adoption_service.compute_governance_report("2026-Q4", [], [], tenant_context=tenant_context)
+        gov_rep = adoption_service.compute_governance_report(
+            "2026-Q4", [], [], tenant_context=tenant_context
+        )
         val_rep = adoption_service.get_value_ledger_report("2026-Q4", tenant_context=tenant_context)
         dq_rep = adoption_service.calculate_data_quality({}, tenant_context=tenant_context)
         feat_rep = adoption_service.evaluate_feature_adoption({}, {}, tenant_context=tenant_context)
-        funnel_rep = adoption_service.generate_onboarding_funnel_report([], tenant_context=tenant_context)
+        funnel_rep = adoption_service.generate_onboarding_funnel_report(
+            [], tenant_context=tenant_context
+        )
 
         pack = adoption_service.generate_quarterly_review_pack(
             quarter_label="2026-Q4",
@@ -987,4 +1027,3 @@ class TestAdoptionEdgeCasesAndBoundaries:
 
         assert "## 7. Onboarding Maturity Funnel" in pack.document_markdown
         assert "## 8. Outstanding Governance Gaps" not in pack.document_markdown
-

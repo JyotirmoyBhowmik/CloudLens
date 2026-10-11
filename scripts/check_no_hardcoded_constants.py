@@ -176,7 +176,9 @@ IDENTITY_ATTRS = {
     "actor",
     "author",
 }
-FIXTURE_KEY_REGEX = re.compile(r"^(?:owner_email|owner|actor|author|assignee|creator)$", re.IGNORECASE)
+FIXTURE_KEY_REGEX = re.compile(
+    r"^(?:owner_email|owner|actor|author|assignee|creator)$", re.IGNORECASE
+)
 NUMERIC_COMPARISON_PATHS = ("domain/cost/reconciliation", "domain/statements", "domain/thresholds")
 
 ALLOW_ANNOTATION_PATTERN = re.compile(
@@ -298,7 +300,10 @@ class ZeroHardCodingVisitor(ast.NodeVisitor):
             return True, str(expr.value)
         if isinstance(expr, ast.UnaryOp) and isinstance(expr.operand, ast.Constant):
             if isinstance(expr.operand.value, (int, float)):
-                if expr.operand.value in ALLOWED_STRUCTURAL_NUMBERS or -expr.operand.value in ALLOWED_STRUCTURAL_NUMBERS:
+                if (
+                    expr.operand.value in ALLOWED_STRUCTURAL_NUMBERS
+                    or -expr.operand.value in ALLOWED_STRUCTURAL_NUMBERS
+                ):
                     return False, ""
                 return True, f"-{expr.operand.value}"
         if isinstance(expr, ast.Call):
@@ -459,7 +464,11 @@ class ZeroHardCodingVisitor(ast.NodeVisitor):
             offset = len(pos_args) - len(defaults)
             for i, default in enumerate(defaults):
                 arg = pos_args[offset + i]
-                if SECRET_NAME_REGEX.search(arg.arg) and arg.arg not in ("token_type", "natural_key_field") and not arg.arg.endswith("_type"):
+                if (
+                    SECRET_NAME_REGEX.search(arg.arg)
+                    and arg.arg not in ("token_type", "natural_key_field")
+                    and not arg.arg.endswith("_type")
+                ):
                     if (
                         isinstance(default, ast.Constant)
                         and isinstance(default.value, str)
@@ -516,7 +525,12 @@ class ZeroHardCodingVisitor(ast.NodeVisitor):
             self.generic_visit(node)
             return
 
-        if target_name and SECRET_NAME_REGEX.search(target_name) and target_name not in ("token_type", "natural_key_field") and not target_name.endswith("_type"):
+        if (
+            target_name
+            and SECRET_NAME_REGEX.search(target_name)
+            and target_name not in ("token_type", "natural_key_field")
+            and not target_name.endswith("_type")
+        ):
             if (
                 isinstance(node.value, ast.Constant)
                 and isinstance(node.value.value, str)
@@ -578,7 +592,11 @@ class ZeroHardCodingVisitor(ast.NodeVisitor):
                 target_names.append(target.attr.lower())
 
         # Rule 4.3 check on plain assignment
-        if any(SECRET_NAME_REGEX.search(t) for t in target_names if t not in ("token_type", "natural_key_field") and not t.endswith("_type")):
+        if any(
+            SECRET_NAME_REGEX.search(t)
+            for t in target_names
+            if t not in ("token_type", "natural_key_field") and not t.endswith("_type")
+        ):
             if (
                 isinstance(node.value, ast.Constant)
                 and isinstance(node.value.value, str)
@@ -725,7 +743,8 @@ class ZeroHardCodingVisitor(ast.NodeVisitor):
             # Check exclusions for Rule 4.1: tests, masterdata/seeds, connectors/fixtures
             norm = self.rel_path.lower()
             if not any(
-                ex in norm for ex in ("tests/", "masterdata/seeds", "connectors/fixtures", "/seeds/")
+                ex in norm
+                for ex in ("tests/", "masterdata/seeds", "connectors/fixtures", "/seeds/")
             ):
                 if not self._check_allow_annotation(node.lineno, node.value):
                     self.violations.append(
@@ -801,7 +820,9 @@ def is_exempt(rel_path: str) -> bool:
     )
 
 
-def scan_code(content: str, rel_path: str = "sample.py") -> tuple[list[Violation], list[AllowedException]]:
+def scan_code(
+    content: str, rel_path: str = "sample.py"
+) -> tuple[list[Violation], list[AllowedException]]:
     """Scans code text in memory and returns violations and allowed exceptions."""
     raw_lines = content.splitlines()
     tree = ast.parse(content, filename=rel_path)
@@ -868,10 +889,12 @@ def publish_exception_register(exceptions: list[AllowedException]) -> None:
     # Filter to genuine architectural, statutory, and algorithmic exceptions (Prompt 18)
     # Excluding cosmetic UI hex codes and string delimiters
     genuine_exceptions = [
-        e for e in exceptions
+        e
+        for e in exceptions
         if not (
             e.literal_value.startswith("#")
-            or e.literal_value in (
+            or e.literal_value
+            in (
                 "@",
                 "STOPPED",
                 "CRITICAL",
@@ -966,7 +989,9 @@ def main() -> None:
 
         print("=" * 80, file=sys.stderr)
         print("CLOUDLENS BUILD GATE FINDINGS: HARD-CODED CONSTANTS DETECTED", file=sys.stderr)
-        print(f"Mode: {args.mode.upper()} | Total Violations: {len(all_violations)}", file=sys.stderr)
+        print(
+            f"Mode: {args.mode.upper()} | Total Violations: {len(all_violations)}", file=sys.stderr
+        )
         print("=" * 80, file=sys.stderr)
 
         rule_titles = {
@@ -980,7 +1005,10 @@ def main() -> None:
 
         for rule_key, items in grouped.items():
             if items:
-                print(f"\n### {rule_titles.get(rule_key, rule_key)} ({len(items)} findings):", file=sys.stderr)
+                print(
+                    f"\n### {rule_titles.get(rule_key, rule_key)} ({len(items)} findings):",
+                    file=sys.stderr,
+                )
                 for item in items:
                     print(
                         f"  - {item.file_path}:{item.line_number} -> '{item.literal_value}'\n    Reason: {item.reason}",
@@ -988,14 +1016,20 @@ def main() -> None:
                     )
 
         print("\n" + "=" * 80, file=sys.stderr)
-        print(f"Summary: {len(all_violations)} violations found across {len(SCANNED_DIRS)} directories.", file=sys.stderr)
+        print(
+            f"Summary: {len(all_violations)} violations found across {len(SCANNED_DIRS)} directories.",
+            file=sys.stderr,
+        )
         print(f"Allow-listed exceptions recorded: {len(all_allowed)}", file=sys.stderr)
 
         if args.mode == "enforce":
             print("[GATE RESULT: FAILED] Exiting with status 1 (Enforce mode).", file=sys.stderr)
             sys.exit(1)
         else:
-            print("[GATE RESULT: REPORT MODE] Exiting with status 0 (Reporting mode for CI).", file=sys.stderr)
+            print(
+                "[GATE RESULT: REPORT MODE] Exiting with status 0 (Reporting mode for CI).",
+                file=sys.stderr,
+            )
             sys.exit(0)
     else:
         print(

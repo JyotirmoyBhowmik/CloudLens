@@ -169,6 +169,7 @@ class IdentityService:
             self._repo = repository
         else:
             from domain.identity.repository import get_identity_repository
+
             self._repo = get_identity_repository()
 
         self._break_glass_accounts: dict[
@@ -200,100 +201,132 @@ class IdentityService:
     @property
     def _users(self):
         service = self
+
         class _UsersProxy(dict):
             def get(self, user_id, default=None):
                 u = service._repo.get_user_sync(user_id)
                 return u if u is not None else default
+
             def __getitem__(self, user_id):
                 u = service._repo.get_user_sync(user_id)
                 if u is None:
                     raise KeyError(user_id)
                 return u
+
             def __setitem__(self, user_id, user):
                 service._repo.save_user_sync(user)
+
             def values(self):
-                return service._repo.list_users_sync("global") + service._repo.list_users_sync("tenant-primary")
+                if hasattr(service._repo, "_users"):
+                    return list(service._repo._users.values())
+                return service._repo.list_users_sync("global") + service._repo.list_users_sync(
+                    "tenant-primary"
+                )
+
             def __contains__(self, user_id):
                 return service._repo.get_user_sync(user_id) is not None
+
             def clear(self):
                 pass
+
         return _UsersProxy()
 
     @property
     def _users_by_email(self):
         service = self
+
         class _UsersByEmailProxy(dict):
             def get(self, key, default=None):
                 tenant_id, email = key
                 u = service._repo.get_user_by_email_sync(tenant_id, email)
                 return u.id if u else default
+
             def __contains__(self, key):
                 tenant_id, email = key
                 return service._repo.get_user_by_email_sync(tenant_id, email) is not None
+
             def __getitem__(self, key):
                 tenant_id, email = key
                 u = service._repo.get_user_by_email_sync(tenant_id, email)
                 if not u:
                     raise KeyError(key)
                 return u.id
+
             def __setitem__(self, key, user_id):
                 pass
+
         return _UsersByEmailProxy()
 
     @property
     def _sessions(self):
         service = self
+
         class _SessionsProxy(dict):
             def get(self, session_id, default=None):
                 s = service._repo.get_session_sync(session_id)
                 return s if s is not None else default
+
             def __getitem__(self, session_id):
                 s = service._repo.get_session_sync(session_id)
                 if s is None:
                     raise KeyError(session_id)
                 return s
+
             def __setitem__(self, session_id, s):
                 service._repo.save_session_sync(s)
+
             def values(self):
                 return service._repo.list_active_sessions_sync("global")
+
             def __contains__(self, session_id):
                 return service._repo.get_session_sync(session_id) is not None
+
         return _SessionsProxy()
 
     @property
     def _machine_clients(self):
         service = self
+
         class _ClientsProxy(dict):
             def get(self, client_id, default=None):
                 c = service._repo.get_machine_client_sync(client_id)
                 return c if c is not None else default
+
             def __getitem__(self, client_id):
                 c = service._repo.get_machine_client_sync(client_id)
                 if c is None:
                     raise KeyError(client_id)
                 return c
+
             def __setitem__(self, client_id, c):
                 service._repo.save_machine_client_sync(c)
+
             def __contains__(self, client_id):
                 return service._repo.get_machine_client_sync(client_id) is not None
+
         return _ClientsProxy()
 
     @property
     def _step_up_challenges(self):
         service = self
+
         class _StepUpProxy(dict):
             def get(self, challenge_id, default=None):
                 c = service._repo.get_step_up_challenge_sync(challenge_id)
                 return c if c is not None else default
+
             def __getitem__(self, challenge_id):
                 c = service._repo.get_step_up_challenge_sync(challenge_id)
                 if c is None:
                     raise KeyError(challenge_id)
                 return c
+
             def __setitem__(self, challenge_id, c):
                 service._repo.save_step_up_challenge_sync(c)
+
             def __contains__(self, challenge_id):
                 return service._repo.get_step_up_challenge_sync(challenge_id) is not None
+
         return _StepUpProxy()
 
     @property
@@ -344,10 +377,16 @@ class IdentityService:
         """Initiates OIDC Authorization Code Flow with PKCE (Prompt P01B Item 1)."""
         issuer = os.getenv("OIDC_ISSUER", "http://localhost:8081/realms/cloudlens").rstrip("/")
         client_id = os.getenv("OIDC_CLIENT_ID", "cloudlens-api")
-        eff_redirect_uri = redirect_uri or os.getenv("OIDC_REDIRECT_URI", "http://localhost:8000/api/v1/auth/oidc/callback")
+        eff_redirect_uri = redirect_uri or os.getenv(
+            "OIDC_REDIRECT_URI", "http://localhost:8000/api/v1/auth/oidc/callback"
+        )
 
         code_verifier = secrets.token_urlsafe(64)
-        code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest()).decode().rstrip("=")
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest())
+            .decode()
+            .rstrip("=")
+        )
         state = secrets.token_urlsafe(32)
         nonce = secrets.token_urlsafe(32)
 
@@ -386,7 +425,9 @@ class IdentityService:
         """Exchanges authorization code for tokens, verifies IdP signature, and mints session tokens (Prompt P01B Item 1)."""
         flow = self._oidc_flow_states.pop(state, None)
         if not flow or (time.time() - flow["created_at"] > 600):
-            raise IdentityException("Invalid, expired, or previously redeemed OIDC state parameter.")
+            raise IdentityException(
+                "Invalid, expired, or previously redeemed OIDC state parameter."
+            )
 
         issuer = os.getenv("OIDC_ISSUER", "http://localhost:8081/realms/cloudlens").rstrip("/")
         client_id = os.getenv("OIDC_CLIENT_ID", "cloudlens-api")
@@ -406,12 +447,16 @@ class IdentityService:
         try:
             resp = httpx.post(token_url, data=token_payload, timeout=5.0)
             if resp.status_code != 200:
-                raise IdentityException(f"OIDC token endpoint rejected code exchange: {resp.status_code} {resp.text}")
+                raise IdentityException(
+                    f"OIDC token endpoint rejected code exchange: {resp.status_code} {resp.text}"
+                )
             token_resp = resp.json()
         except IdentityException:
             raise
         except Exception as e:
-            raise IdentityException(f"Failed to communicate with OIDC provider token endpoint: {e}") from e
+            raise IdentityException(
+                f"Failed to communicate with OIDC provider token endpoint: {e}"
+            ) from e
 
         raw_id_token = token_resp.get("id_token")
         if not raw_id_token:
@@ -703,12 +748,16 @@ class IdentityService:
             raise BreakGlassAuthFailedException(
                 "IdP identity assertion is mandatory for break-glass. Break-glass must be through the IdP."
             )
-        idp_email = str(
-            idp_assertion.get("email")
-            or idp_assertion.get("nameID")
-            or idp_assertion.get("sub")
-            or ""
-        ).strip().lower()
+        idp_email = (
+            str(
+                idp_assertion.get("email")
+                or idp_assertion.get("nameID")
+                or idp_assertion.get("sub")
+                or ""
+            )
+            .strip()
+            .lower()
+        )
         if idp_email != expected_superuser:
             raise BreakGlassAuthFailedException(
                 f"IdP assertion '{idp_email}' does not match superuser identity '{expected_superuser}'."
@@ -785,9 +834,7 @@ class IdentityService:
             is_break_glass=True,
         )
 
-    def consolidate_break_glass(
-        self, superuser_email: str, mfa_secret: str | None = None
-    ) -> None:
+    def consolidate_break_glass(self, superuser_email: str, mfa_secret: str | None = None) -> None:
         """Consolidates emergency break-glass access onto single named superuser (Prompt 49B Item 18 / AM-05)."""
         self._break_glass_consolidated = True
         self._consolidated_superuser_email = superuser_email
@@ -1004,6 +1051,7 @@ class IdentityService:
     ) -> list[Session]:
         """Lists active user sessions applying master-data idle and absolute timeouts."""
         from masterdata.improvement_features import get_feature_config
+
         cfg = get_feature_config("IMP_02_SESSION_MANAGEMENT")
         idle_timeout = cfg.get("session_idle_timeout_seconds", 1800)
         now = datetime.now(UTC)
@@ -1073,7 +1121,8 @@ class IdentityService:
     ) -> int:
         """Revokes all active sessions for a specific user (IMP-02)."""
         active_sessions = [
-            s for s in self._sessions.values()
+            s
+            for s in self._sessions.values()
             if s.tenant_id == tenant_id and s.user_id == user_id and s.is_active
         ]
         count = 0
@@ -1583,4 +1632,3 @@ def reset_identity_service() -> IdentityService:
     global _identity_service
     _identity_service = IdentityService()
     return _identity_service
-

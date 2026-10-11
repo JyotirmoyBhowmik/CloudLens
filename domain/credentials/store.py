@@ -126,10 +126,13 @@ class VaultSecretStore(SecretStore):
                         json={"role_id": self.config.role_id, "secret_id": self.config.secret_id},
                     )
                     resp.raise_for_status()
-                    self._cached_token = resp.json()["auth"]["client_token"]
-                    return self._cached_token
+                    token = str(resp.json()["auth"]["client_token"])
+                    self._cached_token = token
+                    return token
                 except Exception as e:
-                    raise SecretStoreUnavailableException(f"Vault AppRole authentication failed: {e}") from e
+                    raise SecretStoreUnavailableException(
+                        f"Vault AppRole authentication failed: {e}"
+                    ) from e
 
             # 2. Kubernetes Service Account Authentication
             elif auth_method == "kubernetes" or self.config.kubernetes_role:
@@ -142,24 +145,27 @@ class VaultSecretStore(SecretStore):
                         json={"role": self.config.kubernetes_role, "jwt": jwt_token},
                     )
                     resp.raise_for_status()
-                    self._cached_token = resp.json()["auth"]["client_token"]
-                    return self._cached_token
+                    token = str(resp.json()["auth"]["client_token"])
+                    self._cached_token = token
+                    return token
                 except Exception as e:
-                    raise SecretStoreUnavailableException(f"Vault Kubernetes authentication failed: {e}") from e
+                    raise SecretStoreUnavailableException(
+                        f"Vault Kubernetes authentication failed: {e}"
+                    ) from e
 
             # 3. Token Authentication (dev env / explicit config)
             else:
-                token = (
+                raw_token = (
                     self.config.vault_token
                     or os.getenv("VAULT_TOKEN")
                     or os.getenv("VAULT_DEV_ROOT_TOKEN_ID")
                 )
-                if not token:
+                if not raw_token:
                     raise SecretStoreUnavailableException(
                         "Vault authentication token missing. Configure token, AppRole or Kubernetes auth."
                     )
-                self._cached_token = token
-                return token
+                self._cached_token = str(raw_token)
+                return self._cached_token
 
     def store_secret(
         self,
@@ -169,7 +175,9 @@ class VaultSecretStore(SecretStore):
         secret_data: dict[str, Any],
     ) -> str:
         if not secret_data:
-            raise SecretStoreUnavailableException("Cannot store empty credential payload in SecretStore.")
+            raise SecretStoreUnavailableException(
+                "Cannot store empty credential payload in SecretStore."
+            )
 
         ref_uri = self._build_reference_uri(tenant_id, profile_id, version)
         clean_tenant = urllib.parse.quote(tenant_id, safe="")
@@ -337,4 +345,3 @@ def reset_secret_store(store: SecretStore | None = None) -> None:
         if _global_secret_store and hasattr(_global_secret_store, "clear"):
             _global_secret_store.clear()
         _global_secret_store = store
-

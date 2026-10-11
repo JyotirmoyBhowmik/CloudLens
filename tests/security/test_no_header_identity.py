@@ -277,7 +277,9 @@ def test_route_walk_all_non_exempt_routes_require_authentication(client: TestCli
             tested_count += 1
 
     # Assert that we verified the platform's non-exempt routes
-    assert tested_count >= 400, f"Expected at least 400 authenticated routes, checked {tested_count}"
+    assert tested_count >= 400, (
+        f"Expected at least 400 authenticated routes, checked {tested_count}"
+    )
 
     # Verify live unauthenticated invocation on representative routes
     representative_endpoints = [

@@ -11,6 +11,18 @@ from masterdata.enum_bridge import verify_enumeration_bridge  # noqa: E402
 
 
 def main() -> None:
+    from masterdata.repository import get_master_data_repository, reset_master_data_repository
+    from masterdata.service import reset_master_data_service
+
+    repo = get_master_data_repository()
+    try:
+        repo.list_records_sync("CLOUD_PROVIDER")
+    except Exception:
+        from tests.fakes.masterdata import InMemoryMasterDataRepository
+
+        reset_master_data_repository(InMemoryMasterDataRepository())
+        reset_master_data_service()
+
     success = verify_enumeration_bridge()
     sys.exit(0 if success else 1)
 

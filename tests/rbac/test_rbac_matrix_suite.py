@@ -74,7 +74,9 @@ class TestRBACMatrixSuite:
     def test_cross_tenant_scope_isolation_in_repository(self) -> None:
         """User from tenant A cannot read data belonging to tenant B."""
         cost_repo = CostFactRepository()
-        context_a = TenantContext(tenant_id="tenant-alpha", user_id="user-a", roles={"TENANT_ADMIN"})
+        context_a = TenantContext(
+            tenant_id="tenant-alpha", user_id="user-a", roles={"TENANT_ADMIN"}
+        )
         context_b = TenantContext(tenant_id="tenant-beta", user_id="user-b", roles={"TENANT_ADMIN"})
 
         facts_a = cost_repo.get_all_facts(tenant_context=context_a)

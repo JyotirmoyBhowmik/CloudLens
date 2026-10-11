@@ -41,21 +41,28 @@ def main() -> int:
         print(f"  System Availability:        {results['availability_pct']:.2f}% (ZERO DOWNTIME)")
         print("\nSAMPLE CONTINUOUS PROBE TRACE:")
         for probe in results["sample_probes"]:
-            print(f"  [{probe['timestamp']}] SEQ={probe['sequence']:03d} STATUS={probe['status_code']} {probe['status']} LATENCY={probe['latency_ms']:.3f}ms RECORDS={probe.get('record_count', 0)}")
+            print(
+                f"  [{probe['timestamp']}] SEQ={probe['sequence']:03d} STATUS={probe['status_code']} {probe['status']} LATENCY={probe['latency_ms']:.3f}ms RECORDS={probe.get('record_count', 0)}"
+            )
 
         print("-" * 80)
         print("CENT-FOR-CENT RECONCILIATION VERIFICATION:")
         print(f"  Release N-1 Seed Records:   {results['pre_upgrade_records']} rows")
         print(f"  Pre-Upgrade Cost Total:     ${results['pre_upgrade_total_usd']:,.2f}")
-        print(f"  Post-Upgrade Total Records: {results['post_upgrade_records']} rows (500 v1 + 200 v2)")
+        print(
+            f"  Post-Upgrade Total Records: {results['post_upgrade_records']} rows (500 v1 + 200 v2)"
+        )
         print(f"  Post-Upgrade Reconciled v1: ${results['retained_v1_total_usd']:,.2f}")
-        print(f"  Discrepancy / Variance:     ${results['variance_usd']:.2f} (EXACT CENT-FOR-CENT MATCH)")
+        print(
+            f"  Discrepancy / Variance:     ${results['variance_usd']:.2f} (EXACT CENT-FOR-CENT MATCH)"
+        )
         print("=" * 80)
         print("\n[SUCCESS] Rolling Upgrade Test Succeeded: Zero Downtime & Zero Data Drift Proven.")
         return 0
     except Exception as exc:
         print(f"\n[FAILURE] Rolling Upgrade Test Failed: {exc}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 1
 

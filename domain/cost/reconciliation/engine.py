@@ -108,6 +108,7 @@ class CostReconciliationEngine:
         tolerances = dict(DEFAULT_PROVIDER_TOLERANCES)
         try:
             from masterdata.service import get_master_data_service
+
             md_service = get_master_data_service()
             records = md_service.list_records("RECONCILIATION_TOLERANCE")
             for r in records:
@@ -116,8 +117,12 @@ class CostReconciliationEngine:
                     if prov:
                         tolerances[prov] = ProviderToleranceConfig(
                             provider=prov,
-                            absolute_tolerance=Decimal(str(r.attributes.get("absolute_tolerance", 5.0))),
-                            percentage_tolerance=Decimal(str(r.attributes.get("percentage_tolerance", 0.5))),
+                            absolute_tolerance=Decimal(
+                                str(r.attributes.get("absolute_tolerance", 5.0))
+                            ),
+                            percentage_tolerance=Decimal(
+                                str(r.attributes.get("percentage_tolerance", 0.5))
+                            ),
                             currency=str(r.attributes.get("currency", "USD")),
                             finalisation_lag_days=int(r.attributes.get("finalisation_lag_days", 3)),
                         )
@@ -129,8 +134,11 @@ class CostReconciliationEngine:
         """Fetches investigation priority severity bands from master data."""
         try:
             from masterdata.service import get_master_data_service
+
             md_service = get_master_data_service()
-            record = md_service.get_record("RECONCILIATION_TOLERANCE", "RECONCILIATION_SEVERITY_BANDS", tenant_id=tenant_id)
+            record = md_service.get_record(
+                "RECONCILIATION_TOLERANCE", "RECONCILIATION_SEVERITY_BANDS", tenant_id=tenant_id
+            )
             if record and record.attributes:
                 return {
                     "critical_pct": Decimal(str(record.attributes.get("critical_pct"))),
@@ -365,9 +373,13 @@ class CostReconciliationEngine:
             trust_score = Decimal("100.00")
 
         # Health status determination
-        if trust_score >= Decimal("99.50") and fail_count == 0:  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
+        if (
+            trust_score >= Decimal("99.50") and fail_count == 0
+        ):  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
             health_status = ExecutiveTrustStatus.EXCELLENT
-        elif trust_score >= Decimal("98.00"):  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
+        elif (
+            trust_score >= Decimal("98.00")
+        ):  # no-hardcode-allow: reason="Executive trust score tier thresholds (99.5% and 98.0%)", reviewer="Prompt-48-Audit"
             health_status = ExecutiveTrustStatus.HEALTHY
         else:
             health_status = ExecutiveTrustStatus.NEEDS_ATTENTION
@@ -536,7 +548,9 @@ class CostReconciliationEngine:
         )
 
         # Determine trend direction (comparing first half vs second half if multiple)
-        if len(reports) >= 2:  # no-hardcode-allow: reason="Minimum sample size for half-split trend comparison", reviewer="Prompt-48-Audit"
+        if (
+            len(reports) >= 2
+        ):  # no-hardcode-allow: reason="Minimum sample size for half-split trend comparison", reviewer="Prompt-48-Audit"
             mid = len(reports) // 2
             first_half_avg = sum(
                 (r.absolute_variance for r in reports[:mid]), Decimal("0.0")
@@ -744,7 +758,10 @@ class CostReconciliationEngine:
         """Constructs an investigation item for a failed reconciliation."""
         # Priority rules from master data bands
         bands = self._get_severity_bands(tenant_context.tenant_id)
-        if percentage_variance >= bands["critical_pct"] or variance_amount >= bands["critical_amount"]:
+        if (
+            percentage_variance >= bands["critical_pct"]
+            or variance_amount >= bands["critical_amount"]
+        ):
             priority = InvestigationPriority.CRITICAL
         elif percentage_variance >= bands["high_pct"] or variance_amount >= bands["high_amount"]:
             priority = InvestigationPriority.HIGH
@@ -791,5 +808,3 @@ def reset_cost_reconciliation_engine() -> CostReconciliationEngine:
     _GLOBAL_RECONCILIATION_ENGINE._reconciliation_repo = get_reconciliation_repository()
     _GLOBAL_RECONCILIATION_ENGINE._cost_repo = get_cost_repository()
     return _GLOBAL_RECONCILIATION_ENGINE
-
-

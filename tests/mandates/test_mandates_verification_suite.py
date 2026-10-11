@@ -57,7 +57,11 @@ class TestMandatesVerificationSuite:
     # ==========================================================================
     def test_mandate_m2_automated_ast_anti_hardcoding_scan(self) -> None:
         """Mandate M2: Automated AST scan returns zero unannotated hardcoded constants."""
-        script_path = Path(__file__).resolve().parent.parent.parent / "scripts" / "check_no_hardcoded_constants.py"
+        script_path = (
+            Path(__file__).resolve().parent.parent.parent
+            / "scripts"
+            / "check_no_hardcoded_constants.py"
+        )
         assert script_path.exists(), f"AST check script not found at {script_path}"
 
         proc = subprocess.run(
@@ -66,7 +70,6 @@ class TestMandatesVerificationSuite:
             text=True,
         )
         assert proc.returncode == 0, f"Mandate M2 AST scan failed:\n{proc.stdout}\n{proc.stderr}"
-
 
     # ==========================================================================
     # Mandate M3: Demo Mode Absolute Isolation & Watermarking
@@ -94,6 +97,8 @@ class TestMandatesVerificationSuite:
 
         # Verify export watermarking
         export_payload = {"cost_report": 12500.0}
-        watermarked = demo_service.apply_watermark(export_payload, tenant_id=tenant_context.tenant_id)
+        watermarked = demo_service.apply_watermark(
+            export_payload, tenant_id=tenant_context.tenant_id
+        )
         assert watermarked.get("_watermark") == EXPORT_WATERMARK
         assert watermarked.get("_demo_mode") is True

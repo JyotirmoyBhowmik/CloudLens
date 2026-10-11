@@ -75,7 +75,9 @@ class RuntimeRepository(Protocol):
     def list_attachments(
         self, *, tenant_context: TenantContext
     ) -> builtins.list[ScheduleAttachment]: ...
-    def save_exemption(self, exemption: RuntimeExemption, *, tenant_context: TenantContext) -> None: ...
+    def save_exemption(
+        self, exemption: RuntimeExemption, *, tenant_context: TenantContext
+    ) -> None: ...
     def get_exemption(
         self, exemption_id: str, *, tenant_context: TenantContext
     ) -> RuntimeExemption | None: ...
@@ -128,7 +130,9 @@ class SqlRuntimeRepository:
     ) -> ScheduleAdherenceResult | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM runtime_adherence_results WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM runtime_adherence_results WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": entity_id, "tid": tenant_context.tenant_id},
             )
             row = res.fetchone()
@@ -151,7 +155,9 @@ class SqlRuntimeRepository:
     ) -> builtins.list[ScheduleAdherenceResult]:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM runtime_adherence_results WHERE tenant_id = :tid ORDER BY evaluation_window_end DESC LIMIT :limit OFFSET :offset;"),
+                text(
+                    "SELECT * FROM runtime_adherence_results WHERE tenant_id = :tid ORDER BY evaluation_window_end DESC LIMIT :limit OFFSET :offset;"
+                ),
                 {"tid": tenant_context.tenant_id, "limit": limit, "offset": offset},
             )
             rows = res.fetchall()
@@ -165,7 +171,14 @@ class SqlRuntimeRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> builtins.list[ScheduleAdherenceResult]:
-        return self._run_async(self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset))
+        return self._run_async(
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
+        )
 
     async def save_async(
         self, entity: ScheduleAdherenceResult, *, tenant_context: TenantContext
@@ -218,7 +231,9 @@ class SqlRuntimeRepository:
     async def exists_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT 1 FROM runtime_adherence_results WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT 1 FROM runtime_adherence_results WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": entity_id, "tid": tenant_context.tenant_id},
             )
             return res.fetchone() is not None
@@ -231,7 +246,11 @@ class SqlRuntimeRepository:
         self, observation: RuntimeObservation, *, tenant_context: TenantContext
     ) -> None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            status_val = observation.state.value if hasattr(observation.state, "value") else str(observation.state)
+            status_val = (
+                observation.state.value
+                if hasattr(observation.state, "value")
+                else str(observation.state)
+            )
             query = text("""
                 INSERT INTO runtime_state (
                     window_start, tenant_id, id, resource_id, status,
@@ -308,11 +327,15 @@ class SqlRuntimeRepository:
         tenant_context: TenantContext,
     ) -> builtins.list[RuntimeObservation]:
         return self._run_async(
-            self.list_observations_async(resource_id, start_time, end_time, tenant_context=tenant_context)
+            self.list_observations_async(
+                resource_id, start_time, end_time, tenant_context=tenant_context
+            )
         )
 
     # 3. Named Schedules
-    async def save_schedule_async(self, schedule: NamedSchedule, *, tenant_context: TenantContext) -> None:
+    async def save_schedule_async(
+        self, schedule: NamedSchedule, *, tenant_context: TenantContext
+    ) -> None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 INSERT INTO runtime_schedules (id, tenant_id, name, schedule_payload, created_at)
@@ -340,7 +363,9 @@ class SqlRuntimeRepository:
     ) -> NamedSchedule | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM runtime_schedules WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM runtime_schedules WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": schedule_id, "tid": tenant_context.tenant_id},
             )
             row = res.fetchone()
@@ -355,7 +380,9 @@ class SqlRuntimeRepository:
     ) -> NamedSchedule | None:
         return self._run_async(self.get_schedule_async(schedule_id, tenant_context=tenant_context))
 
-    async def list_schedules_async(self, *, tenant_context: TenantContext) -> builtins.list[NamedSchedule]:
+    async def list_schedules_async(
+        self, *, tenant_context: TenantContext
+    ) -> builtins.list[NamedSchedule]:
         sched_map: dict[str, NamedSchedule] = {}
         for s in STANDARD_SCHEDULES.values():
             sched_map[s.id] = s
@@ -389,7 +416,9 @@ class SqlRuntimeRepository:
         ]
 
     # 4. Runtime Exemptions
-    async def save_exemption_async(self, exemption: RuntimeExemption, *, tenant_context: TenantContext) -> None:
+    async def save_exemption_async(
+        self, exemption: RuntimeExemption, *, tenant_context: TenantContext
+    ) -> None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 INSERT INTO runtime_exemptions (id, tenant_id, resource_id, exemption_payload, created_at)
@@ -417,7 +446,9 @@ class SqlRuntimeRepository:
     ) -> RuntimeExemption | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM runtime_exemptions WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM runtime_exemptions WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": exemption_id, "tid": tenant_context.tenant_id},
             )
             row = res.fetchone()
@@ -428,14 +459,18 @@ class SqlRuntimeRepository:
     def get_exemption(
         self, exemption_id: str, *, tenant_context: TenantContext
     ) -> RuntimeExemption | None:
-        return self._run_async(self.get_exemption_async(exemption_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_exemption_async(exemption_id, tenant_context=tenant_context)
+        )
 
     async def list_exemptions_for_resource_async(
         self, resource_id: str, *, tenant_context: TenantContext
     ) -> builtins.list[RuntimeExemption]:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM runtime_exemptions WHERE tenant_id = :tid AND resource_id = :rid;"),
+                text(
+                    "SELECT * FROM runtime_exemptions WHERE tenant_id = :tid AND resource_id = :rid;"
+                ),
                 {"tid": tenant_context.tenant_id, "rid": resource_id},
             )
             rows = res.fetchall()

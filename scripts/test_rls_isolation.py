@@ -2,8 +2,11 @@
 
 import psycopg2
 
+
 def main():
-    admin_conn = psycopg2.connect("postgresql://cloudlens:cloudlens_dev_password@localhost:5432/cloudlens")
+    admin_conn = psycopg2.connect(
+        "postgresql://cloudlens:cloudlens_dev_password@localhost:5432/cloudlens"
+    )
     admin_cur = admin_conn.cursor()
 
     # 1. Insert rows for Tenant A and Tenant B
@@ -24,16 +27,22 @@ def main():
     if not admin_cur.fetchone():
         admin_cur.execute("CREATE ROLE cloudlens_app LOGIN PASSWORD 'cloudlens_app_pw';")
     admin_cur.execute("GRANT USAGE ON SCHEMA public TO cloudlens_app;")
-    admin_cur.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO cloudlens_app;")
+    admin_cur.execute(
+        "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO cloudlens_app;"
+    )
 
     # Ensure a base permissive policy exists so RESTRICTIVE policy can restrict it
     admin_cur.execute("DROP POLICY IF EXISTS p_base_notification_logs ON notification_logs;")
-    admin_cur.execute("CREATE POLICY p_base_notification_logs ON notification_logs FOR ALL USING (true);")
+    admin_cur.execute(
+        "CREATE POLICY p_base_notification_logs ON notification_logs FOR ALL USING (true);"
+    )
     admin_conn.commit()
     admin_conn.close()
 
     # 3. Connect as app role with app.current_tenant_id = 'tenant-A'
-    app_conn = psycopg2.connect("postgresql://cloudlens_app:cloudlens_app_pw@localhost:5432/cloudlens")
+    app_conn = psycopg2.connect(
+        "postgresql://cloudlens_app:cloudlens_app_pw@localhost:5432/cloudlens"
+    )
     app_cur = app_conn.cursor()
 
     # Session A
@@ -43,7 +52,9 @@ def main():
     print("Effective setting:", setting)
     app_cur.execute("SELECT id, tenant_id, message FROM notification_logs;")
     rows_a = app_cur.fetchall()
-    print("Session A (app.current_tenant_id='tenant-A') executed 'SELECT * FROM notification_logs' (NO WHERE clause):")
+    print(
+        "Session A (app.current_tenant_id='tenant-A') executed 'SELECT * FROM notification_logs' (NO WHERE clause):"
+    )
     for r in rows_a:
         print(f"  Row: id={r[0]}, tenant_id={r[1]}, message={r[2]}")
 
@@ -55,7 +66,9 @@ def main():
     app_cur.execute("SET LOCAL app.current_tenant_id = 'tenant-B';")
     app_cur.execute("SELECT id, tenant_id, message FROM notification_logs;")
     rows_b = app_cur.fetchall()
-    print("Session B (app.current_tenant_id='tenant-B') executed 'SELECT * FROM notification_logs' (NO WHERE clause):")
+    print(
+        "Session B (app.current_tenant_id='tenant-B') executed 'SELECT * FROM notification_logs' (NO WHERE clause):"
+    )
     for r in rows_b:
         print(f"  Row: id={r[0]}, tenant_id={r[1]}, message={r[2]}")
 
@@ -64,7 +77,10 @@ def main():
     assert any(r[0] == "notif-B" for r in rows_b), "Tenant B row missing!"
 
     app_conn.close()
-    print("\n[RLS PROOF B PASS] Tenant isolation mathematically enforced by PostgreSQL RLS without WHERE clauses.")
+    print(
+        "\n[RLS PROOF B PASS] Tenant isolation mathematically enforced by PostgreSQL RLS without WHERE clauses."
+    )
+
 
 if __name__ == "__main__":
     main()

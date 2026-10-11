@@ -43,13 +43,11 @@ logger = logging.getLogger(__name__)
 class ThresholdRepository(Protocol):
     """Authoritative protocol for Threshold Rules, Overrides, and Outcomes."""
 
-    def ensure_tenant_default_rules(self, *, tenant_context: TenantContext) -> None:
-        ...
+    def ensure_tenant_default_rules(self, *, tenant_context: TenantContext) -> None: ...
 
     def get(
         self, entity_id: str, *, tenant_context: TenantContext
-    ) -> ThresholdEvaluationResult | None:
-        ...
+    ) -> ThresholdEvaluationResult | None: ...
 
     def list(
         self,
@@ -58,56 +56,44 @@ class ThresholdRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[ThresholdEvaluationResult]:
-        ...
+    ) -> list[ThresholdEvaluationResult]: ...
 
     def save(
         self, entity: ThresholdEvaluationResult, *, tenant_context: TenantContext
-    ) -> ThresholdEvaluationResult:
-        ...
+    ) -> ThresholdEvaluationResult: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def get_latest_for_entity(
         self, entity_id: str, *, tenant_context: TenantContext
-    ) -> ThresholdEvaluationResult | None:
-        ...
+    ) -> ThresholdEvaluationResult | None: ...
 
     def list_for_entity(
         self, entity_id: str, *, tenant_context: TenantContext, limit: int = 50
-    ) -> list[ThresholdEvaluationResult]:
-        ...
+    ) -> list[ThresholdEvaluationResult]: ...
 
-    def save_rule(self, rule: ThresholdRule, *, tenant_context: TenantContext) -> ThresholdRule:
-        ...
+    def save_rule(self, rule: ThresholdRule, *, tenant_context: TenantContext) -> ThresholdRule: ...
 
-    def get_rule(self, rule_id: str, *, tenant_context: TenantContext) -> ThresholdRule | None:
-        ...
+    def get_rule(self, rule_id: str, *, tenant_context: TenantContext) -> ThresholdRule | None: ...
 
     def list_rules(
         self,
         *,
         tenant_context: TenantContext,
         basis: ThresholdBasis | None = None,
-    ) -> list[ThresholdRule]:
-        ...
+    ) -> list[ThresholdRule]: ...
 
-    def delete_rule(self, rule_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete_rule(self, rule_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def save_override(
         self, override: ThresholdOverride, *, tenant_context: TenantContext
-    ) -> ThresholdOverride:
-        ...
+    ) -> ThresholdOverride: ...
 
     def get_override(
         self, override_id: str, *, tenant_context: TenantContext
-    ) -> ThresholdOverride | None:
-        ...
+    ) -> ThresholdOverride | None: ...
 
     def list_overrides(
         self,
@@ -115,16 +101,13 @@ class ThresholdRepository(Protocol):
         tenant_context: TenantContext,
         target_id: str | None = None,
         active_only: bool = True,
-    ) -> list[ThresholdOverride]:
-        ...
+    ) -> list[ThresholdOverride]: ...
 
-    def delete_override(self, override_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete_override(self, override_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def save_storm_event(
         self, event: StormGroupEvent, *, tenant_context: TenantContext
-    ) -> StormGroupEvent:
-        ...
+    ) -> StormGroupEvent: ...
 
     def list_storm_events(
         self,
@@ -132,8 +115,7 @@ class ThresholdRepository(Protocol):
         tenant_context: TenantContext,
         scope_id: str | None = None,
         limit: int = 50,
-    ) -> list[StormGroupEvent]:
-        ...
+    ) -> list[StormGroupEvent]: ...
 
 
 class SqlThresholdRepository:
@@ -156,6 +138,7 @@ class SqlThresholdRepository:
             return ThresholdEvaluationResult.model_validate(raw)
 
         from domain.thresholds.models import ThresholdState
+
         return ThresholdEvaluationResult(
             id=m["id"],
             tenant_id=m["tenant_id"],
@@ -178,6 +161,7 @@ class SqlThresholdRepository:
             return ThresholdRule.model_validate(raw)
 
         from domain.thresholds.defaults import create_configurable_budget_bands
+
         bands = create_configurable_budget_bands(
             warning_upper=Decimal(str(m.get("warning_threshold") or "90.0")),
             high_upper=Decimal(str(m.get("critical_threshold") or "100.0")),
@@ -198,8 +182,12 @@ class SqlThresholdRepository:
             tenant_id=m["tenant_id"],
             rule_id=m["rule_id"],
             target_id=m["scope_id"],
-            warning_threshold=float(m["warning_threshold"]) if m.get("warning_threshold") is not None else None,
-            critical_threshold=float(m["critical_threshold"]) if m.get("critical_threshold") is not None else None,
+            warning_threshold=float(m["warning_threshold"])
+            if m.get("warning_threshold") is not None
+            else None,
+            critical_threshold=float(m["critical_threshold"])
+            if m.get("critical_threshold") is not None
+            else None,
             justification=m["reason"],
             expires_at=m.get("expires_at"),
             created_at=m.get("created_at") or datetime.now(UTC),
@@ -261,7 +249,9 @@ class SqlThresholdRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM threshold_evaluation_results WHERE id = :id AND tenant_id = :tid;"),
+                    text(
+                        "SELECT * FROM threshold_evaluation_results WHERE id = :id AND tenant_id = :tid;"
+                    ),
                     {"id": entity_id, "tid": tid},
                 )
                 row = res.first()
@@ -281,7 +271,9 @@ class SqlThresholdRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid ORDER BY evaluated_at DESC LIMIT :limit OFFSET :offset;"),
+                    text(
+                        "SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid ORDER BY evaluated_at DESC LIMIT :limit OFFSET :offset;"
+                    ),
                     {"tid": tid, "limit": limit, "offset": offset},
                 )
                 return [self._row_to_result(r) for r in res.fetchall()]
@@ -316,8 +308,12 @@ class SqlThresholdRepository:
                         "tid": tid,
                         "rule_id": entity.rule_id,
                         "scope_id": entity.entity_id,
-                        "state": entity.committed_state.value if hasattr(entity.committed_state, "value") else str(entity.committed_state),
-                        "cur": float(entity.measured_value) if entity.measured_value is not None else 0.0,
+                        "state": entity.committed_state.value
+                        if hasattr(entity.committed_state, "value")
+                        else str(entity.committed_state),
+                        "cur": float(entity.measured_value)
+                        if entity.measured_value is not None
+                        else 0.0,
                         "thresh": 0.0,
                         "eval_at": entity.evaluated_at,
                         "payload": json.dumps(entity.model_dump(mode="json")),
@@ -333,7 +329,9 @@ class SqlThresholdRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("DELETE FROM threshold_evaluation_results WHERE id = :id AND tenant_id = :tid;"),
+                    text(
+                        "DELETE FROM threshold_evaluation_results WHERE id = :id AND tenant_id = :tid;"
+                    ),
                     {"id": entity_id, "tid": tid},
                 )
                 await session.commit()
@@ -351,7 +349,9 @@ class SqlThresholdRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid AND scope_id = :sid ORDER BY evaluated_at DESC LIMIT 1;"),
+                    text(
+                        "SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid AND scope_id = :sid ORDER BY evaluated_at DESC LIMIT 1;"
+                    ),
                     {"tid": tid, "sid": entity_id},
                 )
                 row = res.first()
@@ -366,7 +366,9 @@ class SqlThresholdRepository:
             tid = tenant_context.tenant_id
             async with get_tenant_session(tid) as session:
                 res = await session.execute(
-                    text("SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid AND scope_id = :sid ORDER BY evaluated_at DESC LIMIT :limit;"),
+                    text(
+                        "SELECT * FROM threshold_evaluation_results WHERE tenant_id = :tid AND scope_id = :sid ORDER BY evaluated_at DESC LIMIT :limit;"
+                    ),
                     {"tid": tid, "sid": entity_id, "limit": limit},
                 )
                 return [self._row_to_result(r) for r in res.fetchall()]
@@ -416,7 +418,9 @@ class SqlThresholdRepository:
                         "id": rule.id,
                         "tid": tid,
                         "name": rule.name,
-                        "basis": rule.basis.value if hasattr(rule.basis, "value") else str(rule.basis),
+                        "basis": rule.basis.value
+                        if hasattr(rule.basis, "value")
+                        else str(rule.basis),
                         "scope_type": "SCOPE" if rule.scope_id else "TENANT",
                         "scope_id": rule.scope_id,
                         "warn": warn,
@@ -579,6 +583,7 @@ class SqlThresholdRepository:
         self, event: StormGroupEvent, *, tenant_context: TenantContext
     ) -> StormGroupEvent:
         tid = tenant_context.tenant_id
+
         async def _save():
             async with get_tenant_session(tid) as session:
                 q = text("""
@@ -589,16 +594,20 @@ class SqlThresholdRepository:
                         updated_at = :now;
                 """)
                 payload = json.dumps(event.model_dump(mode="json"))
-                await session.execute(q, {
-                    "id": event.id,
-                    "tid": tid,
-                    "title": f"Storm Event: {event.id}",
-                    "scope_id": event.scope_id or "default",
-                    "payload": payload,
-                    "now": datetime.now(UTC),
-                })
+                await session.execute(
+                    q,
+                    {
+                        "id": event.id,
+                        "tid": tid,
+                        "title": f"Storm Event: {event.id}",
+                        "scope_id": event.scope_id or "default",
+                        "payload": payload,
+                        "now": datetime.now(UTC),
+                    },
+                )
                 await session.commit()
                 return event
+
         return self._run_async(_save())
 
     def list_storm_events(
@@ -609,6 +618,7 @@ class SqlThresholdRepository:
         limit: int = 50,
     ) -> list[StormGroupEvent]:
         tid = tenant_context.tenant_id
+
         async def _list():
             async with get_tenant_session(tid) as session:
                 sql = "SELECT alert_payload FROM alerts WHERE tenant_id = :tid AND alert_type = 'STORM_GROUP'"
@@ -626,6 +636,7 @@ class SqlThresholdRepository:
                         raw = json.loads(raw)
                     events.append(StormGroupEvent.model_validate(raw))
                 return events
+
         return self._run_async(_list())
 
 

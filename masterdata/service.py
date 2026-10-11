@@ -11,10 +11,13 @@ Enforces Prompt 45:
 """
 
 import json
+import logging
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+logger = logging.getLogger("cloudlens.masterdata.service")
 
 from domain.models.exceptions import (
     CannotDeleteSystemMasterException,
@@ -61,6 +64,7 @@ class MasterDataService:
             self._repo = repository
         else:
             from masterdata.repository import get_master_data_repository
+
             self._repo = get_master_data_repository()
 
         self._audits: list[MasterDataAuditEntry] = []
@@ -81,24 +85,32 @@ class MasterDataService:
     @property
     def _records(self):
         service = self
+
         class _RecordsProxy(dict):
             def get(self, master_type, default=None):
                 recs = service._repo.list_records_sync(master_type)
                 return recs if recs else (default if default is not None else [])
+
             def __getitem__(self, master_type):
                 recs = service._repo.list_records_sync(master_type)
                 return recs
+
             def __setitem__(self, master_type, record_list):
                 for r in record_list:
                     service._repo.save_record_sync(r)
+
             def setdefault(self, master_type, default=None):
                 service_ref = service
+
                 class _ListProxy(list):
                     def append(self, record):
                         service_ref._repo.save_record_sync(record)
+
                 return _ListProxy(service._repo.list_records_sync(master_type))
+
             def __contains__(self, master_type):
                 return len(service._repo.list_records_sync(master_type)) > 0
+
         return _RecordsProxy()
 
     # ==========================================================================
@@ -122,7 +134,11 @@ class MasterDataService:
 
     def seed_system_masters(self) -> SeedExecutionReport:
         """Executes idempotent seeding across all registered masters."""
-        return self._seeder.seed(self._records)
+        try:
+            return self._seeder.seed(self._records)
+        except Exception as exc:
+            logger.warning("Master data seed initialization caught exception: %s", exc)
+            return SeedExecutionReport(errors=[str(exc)])
 
     # ==========================================================================
     # 3. Universal Point-in-Time Master Resolution (Prompt 45 Item 3)
@@ -191,9 +207,8 @@ class MasterDataService:
         # Distinct by code, resolving latest effective version per code
         by_code: dict[str, MasterDataRecord] = {}
         for r in records:
-            if (
-                _is_record_effective(r, target_time)
-                and (include_inactive or r.lifecycle_status == LifecycleStatus.PUBLISHED)
+            if _is_record_effective(r, target_time) and (
+                include_inactive or r.lifecycle_status == LifecycleStatus.PUBLISHED
             ):
                 if tenant_id and r.tenant_id == tenant_id:
                     by_code[r.code] = r

@@ -340,4 +340,3 @@ def reset_report_service() -> None:
     global _global_report_service
     with _service_lock:
         _global_report_service = None
-

@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class PlanningBasisType(str, Enum):
     """Pre-populated basis methods for bottom-up budget proposals."""
+
     PRIOR_YEAR_ACTUAL = "PRIOR_YEAR_ACTUAL"
     CURRENT_YEAR_RUN_RATE = "CURRENT_YEAR_RUN_RATE"
     CURRENT_YEAR_FORECAST = "CURRENT_YEAR_FORECAST"
@@ -29,6 +30,7 @@ class PlanningBasisType(str, Enum):
 
 class CycleStatus(str, Enum):
     """Lifecycle status of a planning cycle."""
+
     DRAFT = "DRAFT"
     OPEN_SUBMISSION = "OPEN_SUBMISSION"
     UNDER_REVIEW = "UNDER_REVIEW"
@@ -38,6 +40,7 @@ class CycleStatus(str, Enum):
 
 class SubmissionStatus(str, Enum):
     """Status of a bottom-up submission draft."""
+
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
     REVISED = "REVISED"
@@ -46,6 +49,7 @@ class SubmissionStatus(str, Enum):
 
 class AssumptionType(str, Enum):
     """Type of what-if scenario assumption."""
+
     GROWTH_RATE = "GROWTH_RATE"
     PROVIDER_MIGRATION = "PROVIDER_MIGRATION"
     COMMITMENT_PURCHASE = "COMMITMENT_PURCHASE"
@@ -56,7 +60,10 @@ class AssumptionType(str, Enum):
 
 class PlanningScope(BaseModel):
     """Participating organizational scope in a planning cycle."""
-    scope_type: str = Field(..., description="Scope level: TENANT, BUSINESS_UNIT, COST_CENTRE, PROJECT")
+
+    scope_type: str = Field(
+        ..., description="Scope level: TENANT, BUSINESS_UNIT, COST_CENTRE, PROJECT"
+    )
     scope_id: str = Field(..., description="Unique scope identifier")
     owner_id: str = Field(..., description="Responsible owner user identity")
     display_name: str | None = Field(default=None, description="Human readable scope title")
@@ -64,8 +71,11 @@ class PlanningScope(BaseModel):
 
 class PlanLineItem(BaseModel):
     """Line-level build-up element within a proposal."""
+
     item_id: str = Field(default_factory=lambda: f"item-{uuid.uuid4().hex[:8]}")
-    service_category: str = Field(..., description="Cloud service category, e.g. COMPUTE, STORAGE, DATABASE")
+    service_category: str = Field(
+        ..., description="Cloud service category, e.g. COMPUTE, STORAGE, DATABASE"
+    )
     service_name: str = Field(..., description="Specific cloud service or resource group")
     proposed_amount: Decimal = Field(..., description="Monetary proposed figure in Decimal")
     rationale: str = Field(default="", description="Engineering or operational rationale")
@@ -80,6 +90,7 @@ class PlanLineItem(BaseModel):
 
 class PlanningCycle(BaseModel):
     """Master-data-governed planning cycle representing a fiscal planning window."""
+
     cycle_id: str = Field(default_factory=lambda: f"cycle-{uuid.uuid4().hex[:8]}")
     tenant_id: str = Field(..., description="Tenant identifier")
     name: str = Field(..., description="Cycle name, e.g. FY27 Budget Formulation")
@@ -98,6 +109,7 @@ class PlanningCycle(BaseModel):
 
 class BottomUpSubmission(BaseModel):
     """Versioned bottom-up proposal submitted by a budget scope owner."""
+
     submission_id: str = Field(default_factory=lambda: f"sub-{uuid.uuid4().hex[:8]}")
     cycle_id: str
     tenant_id: str
@@ -108,7 +120,9 @@ class BottomUpSubmission(BaseModel):
     basis_type: PlanningBasisType = Field(default=PlanningBasisType.PRIOR_YEAR_ACTUAL)
     baseline_amount: Decimal = Field(default=Decimal("0.00"))
     proposed_amount: Decimal = Field(..., description="Final submitted budget figure")
-    justification: str = Field(..., min_length=5, description="Business justification for budget amount")
+    justification: str = Field(
+        ..., min_length=5, description="Business justification for budget amount"
+    )
     line_items: list[PlanLineItem] = Field(default_factory=list)
     status: SubmissionStatus = Field(default=SubmissionStatus.DRAFT)
     workflow_request_id: str | None = None
@@ -125,6 +139,7 @@ class BottomUpSubmission(BaseModel):
 
 class TopDownTarget(BaseModel):
     """Executive or Finance-issued budget envelope target."""
+
     target_id: str = Field(default_factory=lambda: f"tgt-{uuid.uuid4().hex[:8]}")
     cycle_id: str
     tenant_id: str
@@ -144,18 +159,22 @@ class TopDownTarget(BaseModel):
 
 class TargetGapReport(BaseModel):
     """Financial gap report between executive targets and operational submissions."""
+
     cycle_id: str
     scope_type: str
     scope_id: str
     top_down_target: Decimal
     bottom_up_sum: Decimal
     gap: Decimal = Field(..., description="Sum of bottom-up minus top-down target")
-    is_unfavourable: bool = Field(..., description="True if submissions exceed top-down budget envelope")
+    is_unfavourable: bool = Field(
+        ..., description="True if submissions exceed top-down budget envelope"
+    )
     child_breakdowns: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class ScenarioAssumption(BaseModel):
     """Atomic parameter assumption within a what-if financial model."""
+
     assumption_id: str = Field(default_factory=lambda: f"asm-{uuid.uuid4().hex[:8]}")
     assumption_type: AssumptionType
     description: str
@@ -178,6 +197,7 @@ class ScenarioAssumption(BaseModel):
 
 class WhatIfScenario(BaseModel):
     """Named financial scenario applied on top of an untouched baseline."""
+
     scenario_id: str = Field(default_factory=lambda: f"scen-{uuid.uuid4().hex[:8]}")
     cycle_id: str
     name: str
@@ -195,6 +215,7 @@ class WhatIfScenario(BaseModel):
 
 class ScenarioEvaluationResult(BaseModel):
     """Result of evaluating a scenario against baseline without mutating original figures."""
+
     scenario_id: str
     name: str
     baseline_amount: Decimal
@@ -206,6 +227,7 @@ class ScenarioEvaluationResult(BaseModel):
 
 class PlanAccuracyReport(BaseModel):
     """Post-period reconciliation measuring plan versus actual expenditure accuracy."""
+
     fiscal_period: str
     scope_id: str
     planned_amount: Decimal

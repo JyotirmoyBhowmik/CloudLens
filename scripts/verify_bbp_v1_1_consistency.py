@@ -53,9 +53,21 @@ def main() -> int:
     checks = [
         ("Screens count (27)", r"27\s*(?:screens|user interface screens|screens in inventory)", 27),
         ("Admin functions count (29)", r"29\s*(?:administrative functions|admin functions)", 29),
-        ("Connector capabilities count (18)", r"18\s*(?:connector capabilities|capabilities across connectors)", 18),
-        ("Threshold bases count (11)", r"11\s*(?:threshold bases|bases for threshold evaluation)", 11),
-        ("Monitoring types count (15)", r"15\s*(?:monitoring types|telemetry monitoring types)", 15),
+        (
+            "Connector capabilities count (18)",
+            r"18\s*(?:connector capabilities|capabilities across connectors)",
+            18,
+        ),
+        (
+            "Threshold bases count (11)",
+            r"11\s*(?:threshold bases|bases for threshold evaluation)",
+            11,
+        ),
+        (
+            "Monitoring types count (15)",
+            r"15\s*(?:monitoring types|telemetry monitoring types)",
+            15,
+        ),
     ]
 
     print("\n1. Verifying Five Reconciled Core Counts (Defects D-12, D-13, D-14):")
@@ -84,7 +96,21 @@ def main() -> int:
 
     # 3. Verify All 13 Requirement Identifier Prefixes
     print("\n3. Verifying Thirteen Requirement Prefixes (Prompt 00R Register):")
-    prefixes = ["BR", "FR", "PR", "CST", "USE", "RUN", "DEP", "CON", "API", "SEC", "NFR", "DR", "AC"]
+    prefixes = [
+        "BR",
+        "FR",
+        "PR",
+        "CST",
+        "USE",
+        "RUN",
+        "DEP",
+        "CON",
+        "API",
+        "SEC",
+        "NFR",
+        "DR",
+        "AC",
+    ]
     missing_prefixes = []
     for prefix in prefixes:
         # Check header or table mention

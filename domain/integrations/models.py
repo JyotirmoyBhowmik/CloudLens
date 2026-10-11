@@ -247,7 +247,9 @@ class CostCentreAccrualItem(BaseModel):
     cost_centre_name: str = Field(..., description="Cost centre display name")
     business_unit_code: str = Field(..., description="Parent business unit code")
     gl_account_code: str = Field(..., description="General ledger account code (e.g. 'GL-52010')")
-    accrued_amount: Decimal = Field(..., ge=Decimal("0.00"), description="Total accrued cost amount")
+    accrued_amount: Decimal = Field(
+        ..., ge=Decimal("0.00"), description="Total accrued cost amount"
+    )
     currency: str = Field(default="USD", description="Currency code")
     unbilled_usage_amount: Decimal = Field(
         default=Decimal("0.00"), ge=Decimal("0.00"), description="Estimated unbilled usage portion"
@@ -358,4 +360,6 @@ class OwnershipGapFinding(BaseModel):
     detected_at: dt.datetime = Field(
         default_factory=lambda: dt.datetime.now(dt.UTC), description="Detection timestamp"
     )
-    status: str = Field(default="ACTIVE", description="Finding lifecycle status ('ACTIVE', 'RESOLVED')")
+    status: str = Field(
+        default="ACTIVE", description="Finding lifecycle status ('ACTIVE', 'RESOLVED')"
+    )

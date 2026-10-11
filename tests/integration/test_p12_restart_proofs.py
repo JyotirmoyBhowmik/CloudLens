@@ -55,7 +55,9 @@ async def test_snpl_production_creation_and_restart_proof():
     # Step 3: Fresh Repository Instance B connects to PostgreSQL
     repo_b = SqlTenantRepository()
     retrieved = await repo_b.get(tenant_id)
-    assert retrieved is not None, "SNPL Production must survive repository discard and persist in PostgreSQL"
+    assert retrieved is not None, (
+        "SNPL Production must survive repository discard and persist in PostgreSQL"
+    )
     assert retrieved.id == tenant_id
     assert retrieved.code == tenant_code
     assert retrieved.name == tenant_name
@@ -101,7 +103,9 @@ def test_tenant_api_non_admin_forbidden_403(client: TestClient, make_auth_token)
 
     # Attempt to list tenants
     list_resp = client.get("/api/v1/tenants", headers=headers)
-    assert list_resp.status_code == 403, f"Expected 403 Forbidden for non-admin, got {list_resp.status_code}"
+    assert list_resp.status_code == 403, (
+        f"Expected 403 Forbidden for non-admin, got {list_resp.status_code}"
+    )
     assert "Forbidden" in list_resp.text
 
     # Attempt to create tenant
@@ -115,7 +119,9 @@ def test_tenant_api_non_admin_forbidden_403(client: TestClient, make_auth_token)
             "reporting_currency": "USD",
         },
     )
-    assert create_resp.status_code == 403, f"Expected 403 Forbidden for non-admin, got {create_resp.status_code}"
+    assert create_resp.status_code == 403, (
+        f"Expected 403 Forbidden for non-admin, got {create_resp.status_code}"
+    )
     assert "Forbidden" in create_resp.text
 
     # Read-Only User (non-admin)

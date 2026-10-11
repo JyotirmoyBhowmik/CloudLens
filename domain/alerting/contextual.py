@@ -68,7 +68,9 @@ class SqlContextualAlertRepository:
             return ContextualAlert.model_validate(raw)
         return ContextualAlert.model_validate(m)
 
-    async def save_async(self, alert: ContextualAlert, *, tenant_context: TenantContext) -> ContextualAlert:
+    async def save_async(
+        self, alert: ContextualAlert, *, tenant_context: TenantContext
+    ) -> ContextualAlert:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             alert.tenant_id = tenant_context.tenant_id
             query = text("""
@@ -90,11 +92,15 @@ class SqlContextualAlertRepository:
                 {
                     "id": alert.id,
                     "tid": tenant_context.tenant_id,
-                    "atype": alert.alert_type.value if hasattr(alert.alert_type, "value") else str(alert.alert_type),
+                    "atype": alert.alert_type.value
+                    if hasattr(alert.alert_type, "value")
+                    else str(alert.alert_type),
                     "title": alert.title,
                     "etype": alert.context_entity_type,
                     "eid": alert.context_entity_id,
-                    "sev": alert.severity.value if hasattr(alert.severity, "value") else str(alert.severity),
+                    "sev": alert.severity.value
+                    if hasattr(alert.severity, "value")
+                    else str(alert.severity),
                     "dismissed": alert.is_dismissed,
                     "payload": json.dumps(alert.model_dump(mode="json")),
                 },
@@ -105,10 +111,14 @@ class SqlContextualAlertRepository:
     def save(self, alert: ContextualAlert, *, tenant_context: TenantContext) -> ContextualAlert:
         return self._run_async(self.save_async(alert, tenant_context=tenant_context))
 
-    async def get_async(self, alert_id: str, *, tenant_context: TenantContext) -> ContextualAlert | None:
+    async def get_async(
+        self, alert_id: str, *, tenant_context: TenantContext
+    ) -> ContextualAlert | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM contextual_alerts WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM contextual_alerts WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": alert_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()

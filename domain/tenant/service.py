@@ -34,7 +34,21 @@ from domain.tenant.repository import TenantRepository, get_tenant_repository
 logger = logging.getLogger(__name__)
 
 SUPPORTED_CURRENCIES = {
-    "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "SGD", "BRL", "SEK", "NZD", "ZAR", "HKD"
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY",
+    "AUD",
+    "CAD",
+    "CHF",
+    "CNY",
+    "INR",
+    "SGD",
+    "BRL",
+    "SEK",
+    "NZD",
+    "ZAR",
+    "HKD",
 }
 
 
@@ -71,11 +85,17 @@ class UnauthorizedTenantOperationException(TenantAdministrationException):
 class TenantCreateDTO(BaseModel):
     """Data transfer object for tenant creation."""
 
-    code: str = Field(..., min_length=2, max_length=64, description="Unique alphanumeric code (e.g. 'SNPL_PROD')")
-    name: str = Field(..., min_length=2, max_length=255, description="Tenant organization display name")
+    code: str = Field(
+        ..., min_length=2, max_length=64, description="Unique alphanumeric code (e.g. 'SNPL_PROD')"
+    )
+    name: str = Field(
+        ..., min_length=2, max_length=255, description="Tenant organization display name"
+    )
     type: TenantType = Field(default=TenantType.PRODUCTION, description="Environment type")
     reporting_currency: str = Field(default="USD", description="Base reporting ISO currency code")
-    fiscal_year_start: int = Field(default=1, ge=1, le=12, description="Starting month of fiscal calendar (1-12)")
+    fiscal_year_start: int = Field(
+        default=1, ge=1, le=12, description="Starting month of fiscal calendar (1-12)"
+    )
     iana_timezone: str = Field(default="UTC", description="IANA Time Zone identifier")
     retention_profile: str = Field(default="STANDARD", description="Data retention policy profile")
 
@@ -84,7 +104,9 @@ class TenantCreateDTO(BaseModel):
     def validate_code(cls, v: str) -> str:
         cleaned = v.strip().upper()
         if not re.match(r"^[A-Z0-9_\-]+$", cleaned):
-            raise ValueError("Tenant code must contain only uppercase alphanumeric characters, underscores, and dashes.")
+            raise ValueError(
+                "Tenant code must contain only uppercase alphanumeric characters, underscores, and dashes."
+            )
         return cleaned
 
     @field_validator("reporting_currency")
@@ -205,8 +227,13 @@ class TenantAdministrationService:
         """Retrieves tenant record by ID with authorization checks."""
         # Non-admins can only view their own assigned tenant
         if not (tenant_context.is_super_admin or tenant_context.is_superuser):
-            if tenant_context.tenant_id != tenant_id and tenant_context.effective_tenant_id != tenant_id:
-                raise UnauthorizedTenantOperationException("Cannot view tenant details outside caller scope.")
+            if (
+                tenant_context.tenant_id != tenant_id
+                and tenant_context.effective_tenant_id != tenant_id
+            ):
+                raise UnauthorizedTenantOperationException(
+                    "Cannot view tenant details outside caller scope."
+                )
 
         tenant = self._repo.get_sync(tenant_id)
         if not tenant:
@@ -264,7 +291,9 @@ class TenantAdministrationService:
         )
         return saved
 
-    def update_tenant(self, tenant_id: str, data: TenantUpdateDTO, tenant_context: TenantContext) -> Tenant:
+    def update_tenant(
+        self, tenant_id: str, data: TenantUpdateDTO, tenant_context: TenantContext
+    ) -> Tenant:
         """Updates mutable tenant parameters, enforcing business invariance."""
         self._assert_admin_authority(tenant_context)
 
@@ -313,7 +342,9 @@ class TenantAdministrationService:
 
         clean_reason = reason.strip()
         if len(clean_reason) < 5:
-            raise ValueError("A valid non-empty reason of at least 5 characters is required to suspend a tenant.")
+            raise ValueError(
+                "A valid non-empty reason of at least 5 characters is required to suspend a tenant."
+            )
 
         if tenant_id == "tenant-system":
             raise ValueError("The system root tenant cannot be suspended.")
@@ -333,7 +364,10 @@ class TenantAdministrationService:
             event_type=AuditEventType.TENANT_SUSPENDED,
             action="SUSPEND_TENANT",
             tenant_id=saved.id,
-            details={"reason": clean_reason, "suspended_by": tenant_context.email or tenant_context.user_id},
+            details={
+                "reason": clean_reason,
+                "suspended_by": tenant_context.email or tenant_context.user_id,
+            },
         )
         return saved
 
@@ -343,7 +377,9 @@ class TenantAdministrationService:
 
         clean_reason = reason.strip()
         if len(clean_reason) < 5:
-            raise ValueError("A valid non-empty reason of at least 5 characters is required to resume a tenant.")
+            raise ValueError(
+                "A valid non-empty reason of at least 5 characters is required to resume a tenant."
+            )
 
         tenant = self._repo.get_sync(tenant_id)
         if not tenant:
@@ -360,7 +396,10 @@ class TenantAdministrationService:
             event_type=AuditEventType.TENANT_RESUMED,
             action="RESUME_TENANT",
             tenant_id=saved.id,
-            details={"reason": clean_reason, "resumed_by": tenant_context.email or tenant_context.user_id},
+            details={
+                "reason": clean_reason,
+                "resumed_by": tenant_context.email or tenant_context.user_id,
+            },
         )
         return saved
 
@@ -409,7 +448,9 @@ class TenantAdministrationService:
         clean_email = email.strip().lower()
         existing = self._identity.get_user_by_email(tenant_id, clean_email)
         if existing:
-            raise ValueError(f"User with email '{clean_email}' already exists in tenant '{tenant_id}'.")
+            raise ValueError(
+                f"User with email '{clean_email}' already exists in tenant '{tenant_id}'."
+            )
 
         now = datetime.now(UTC)
         user = User(

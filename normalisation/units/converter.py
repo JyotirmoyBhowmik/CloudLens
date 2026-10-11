@@ -7,14 +7,27 @@ All unit conversions are backed by the declarative Unit Catalogue.
 
 from decimal import ROUND_HALF_EVEN, Decimal
 
+from typing import Any
+
 from domain.catalogues.models import Dimensionality
-from domain.catalogues.repository import CatalogueRepository
+from domain.catalogues.repository import CatalogueRepository, get_catalogue_repository
 from domain.catalogues.unit_service import UnitConversionService
 from domain.rules.monetary import to_decimal
 
+
+class _RepoProxy:
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_catalogue_repository(), name)
+
+
+class _ServiceProxy:
+    def __getattr__(self, name: str) -> Any:
+        return getattr(UnitConversionService(get_catalogue_repository()), name)
+
+
 # Shared catalogue repository & unit service backed by canonical seeds
-_default_repo = CatalogueRepository(load_seeds=True)
-_default_unit_service = UnitConversionService(_default_repo)
+_default_repo = _RepoProxy()
+_default_unit_service = _ServiceProxy()
 
 
 def convert_unit(

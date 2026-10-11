@@ -5,55 +5,7 @@
     "literal_value": "2555",
     "reason": "Statutory 7-year audit retention requirement (365 * 7)",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.686030+00:00"
-  },
-  {
-    "file_path": "domain/cost/reconciliation/engine.py",
-    "line_number": 368,
-    "literal_value": "Decimal('99.50')",
-    "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.867951+00:00"
-  },
-  {
-    "file_path": "domain/cost/reconciliation/engine.py",
-    "line_number": 370,
-    "literal_value": "Decimal('98.00')",
-    "reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.867951+00:00"
-  },
-  {
-    "file_path": "domain/cost/reconciliation/engine.py",
-    "line_number": 539,
-    "literal_value": "2",
-    "reason": "Minimum sample size for half-split trend comparison",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.868951+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/accuracy.py",
-    "line_number": 40,
-    "literal_value": "0.75",
-    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.972633+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/accuracy.py",
-    "line_number": 42,
-    "literal_value": "0.5",
-    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.972633+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/accuracy.py",
-    "line_number": 44,
-    "literal_value": "0.25",
-    "reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.972633+00:00"
+    "recorded_at": "2026-10-11T18:47:05.381764+00:00"
   },
   {
     "file_path": "domain/forecasting/engine.py",
@@ -61,7 +13,7 @@
     "literal_value": "0.9",
     "reason": "Empirical statistical confidence score for historical baseline",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.978985+00:00"
+    "recorded_at": "2026-10-11T18:47:05.679920+00:00"
   },
   {
     "file_path": "domain/forecasting/engine.py",
@@ -69,39 +21,7 @@
     "literal_value": "0.9",
     "reason": "Empirical statistical confidence score for seasonal pattern",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.979984+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/engine.py",
-    "line_number": 506,
-    "literal_value": "0.3",
-    "reason": "Cost trend spiking threshold ratio (30%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.980988+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/engine.py",
-    "line_number": 514,
-    "literal_value": "0.4",
-    "reason": "Cost trend volatility coefficient of variation threshold (0.40)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.980988+00:00"
-  },
-  {
-    "file_path": "domain/forecasting/engine.py",
-    "line_number": 530,
-    "literal_value": "0.05",
-    "reason": "Cost trend normalized slope drift threshold (5%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:20.980988+00:00"
-  },
-  {
-    "file_path": "domain/hierarchy/service.py",
-    "line_number": 1383,
-    "literal_value": "0.9",
-    "reason": "Search ranking score weight",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.014905+00:00"
+    "recorded_at": "2026-10-11T18:47:05.680527+00:00"
   },
   {
     "file_path": "domain/identity/password_hasher.py",
@@ -109,7 +29,7 @@
     "literal_value": "30",
     "reason": "RFC 6238 TOTP standard interval of 30 seconds",
     "reviewer": "security-arch",
-    "recorded_at": "2026-10-11T05:11:21.020914+00:00"
+    "recorded_at": "2026-10-11T18:47:05.723589+00:00"
   },
   {
     "file_path": "domain/observability/health.py",
@@ -117,71 +37,7 @@
     "literal_value": "0.9",
     "reason": "Simulated probe latency metric",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.131026+00:00"
-  },
-  {
-    "file_path": "domain/resource_detail/service.py",
-    "line_number": 1355,
-    "literal_value": "0.9",
-    "reason": "Derivation multiplier for estimated cost",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.355855+00:00"
-  },
-  {
-    "file_path": "domain/statements/acceptance.py",
-    "line_number": 94,
-    "literal_value": "7",
-    "reason": "SLA escalation threshold days",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.389512+00:00"
-  },
-  {
-    "file_path": "domain/statements/acceptance.py",
-    "line_number": 96,
-    "literal_value": "3",
-    "reason": "SLA reminder threshold days",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.389512+00:00"
-  },
-  {
-    "file_path": "domain/statements/acceptance.py",
-    "line_number": 124,
-    "literal_value": "5",
-    "reason": "SLA overdue threshold days",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.389512+00:00"
-  },
-  {
-    "file_path": "domain/statements/disputes.py",
-    "line_number": 66,
-    "literal_value": "5",
-    "reason": "Minimum dispute justification text length",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.394474+00:00"
-  },
-  {
-    "file_path": "domain/statements/generator.py",
-    "line_number": 183,
-    "literal_value": "Decimal('10.0')",
-    "reason": "Budget variance tolerance threshold percentage (10%)",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.400846+00:00"
-  },
-  {
-    "file_path": "domain/statements/generator.py",
-    "line_number": 205,
-    "literal_value": "Decimal('50.00')",
-    "reason": "Period cost movement significance threshold",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.400846+00:00"
-  },
-  {
-    "file_path": "domain/statements/generator.py",
-    "line_number": 207,
-    "literal_value": "Decimal('-50.00')",
-    "reason": "Period cost movement significance threshold",
-    "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.400846+00:00"
+    "recorded_at": "2026-10-11T18:47:05.837701+00:00"
   },
   {
     "file_path": "workers/cloudlens_workers/scheduler.py",
@@ -189,7 +45,7 @@
     "literal_value": "30.0",
     "reason": "Schedule refresh polling interval seconds",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T05:11:21.563165+00:00"
+    "recorded_at": "2026-10-11T18:47:06.396624+00:00"
   },
   {
     "file_path": "connectors/diagnostics/service.py",
@@ -197,6 +53,6 @@
     "literal_value": "6",
     "reason": "Standard 6-hour reconciliation window slice for backfill planning",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-10-11T05:11:21.669492+00:00"
+    "recorded_at": "2026-10-11T18:47:06.519653+00:00"
   }
 ]

@@ -58,6 +58,7 @@ class RBACService:
             self._repo = repository
         else:
             from domain.rbac.repository import get_rbac_repository
+
             self._repo = get_rbac_repository()
 
     @property
@@ -67,23 +68,30 @@ class RBACService:
     @property
     def _grants(self):
         service = self
+
         class _GrantsProxy(dict):
             def get(self, gid, default=None):
                 g = service._repo.get_scope_grant_sync(gid)
                 return g if g is not None else default
+
             def __getitem__(self, gid):
                 g = service._repo.get_scope_grant_sync(gid)
                 if g is None:
                     raise KeyError(gid)
                 return g
+
             def __setitem__(self, gid, grant):
                 service._repo.save_scope_grant_sync(grant)
+
             def __contains__(self, gid):
                 return service._repo.get_scope_grant_sync(gid) is not None
+
             def values(self):
                 return service._repo.list_scope_grants_sync()
+
             def clear(self):
                 pass
+
         return _GrantsProxy()
 
     @property
@@ -394,4 +402,6 @@ def reset_rbac_service() -> None:
     """Resets the shared RBACService singleton."""
     global _rbac_service
     _rbac_service = None
+    from domain.rbac.catalogue import reset_permission_catalogue
 
+    reset_permission_catalogue()

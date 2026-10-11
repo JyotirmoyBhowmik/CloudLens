@@ -89,7 +89,7 @@ PERMITTED_TRANSITIONS: dict[LifecycleState, set[LifecycleState]] = {
         LifecycleState.STOPPED,
     },
     LifecycleState.STOPPED: {
-        LifecycleState.ACTIVE,            # Rollback / restart during soak
+        LifecycleState.ACTIVE,  # Rollback / restart during soak
         LifecycleState.PENDING_DELETION,
     },
     LifecycleState.PENDING_DELETION: {
@@ -105,7 +105,9 @@ PERMITTED_TRANSITIONS: dict[LifecycleState, set[LifecycleState]] = {
 class LifecycleService:
     """Enterprise FinOps Resource Lifecycle & Decommissioning Engine."""
 
-    def __init__(self, transition_matrix: dict[LifecycleState, set[LifecycleState]] | None = None) -> None:
+    def __init__(
+        self, transition_matrix: dict[LifecycleState, set[LifecycleState]] | None = None
+    ) -> None:
         self._resources: dict[str, LifecycleResource] = {}
         self._requests: dict[str, DecommissioningRequest] = {}
         self._programmes: dict[str, DecommissioningProgramme] = {}
@@ -163,7 +165,9 @@ class LifecycleService:
 
     def get_resource(self, resource_id: str) -> LifecycleResource:
         if resource_id not in self._resources:
-            raise LifecycleException(f"Resource '{resource_id}' is not registered in lifecycle engine.")
+            raise LifecycleException(
+                f"Resource '{resource_id}' is not registered in lifecycle engine."
+            )
         return self._resources[resource_id]
 
     def add_inbound_dependency(
@@ -207,7 +211,9 @@ class LifecycleService:
                 dep.acknowledged_by = acknowledged_by
                 dep.acknowledged_at = dt.datetime.now(dt.UTC)
                 return dep
-        raise LifecycleException(f"Dependency '{dependency_id}' not found on resource '{resource_id}'.")
+        raise LifecycleException(
+            f"Dependency '{dependency_id}' not found on resource '{resource_id}'."
+        )
 
     # -------------------------------------------------------------------------
     # Lifecycle State Transitions with Configured Evidence Gates
@@ -276,7 +282,9 @@ class LifecycleService:
     ) -> RetentionObligation:
         res = self.get_resource(resource_id)
         if not res.retention_obligation:
-            raise LifecycleException(f"Resource '{resource_id}' has no recorded retention obligation.")
+            raise LifecycleException(
+                f"Resource '{resource_id}' has no recorded retention obligation."
+            )
 
         res.retention_obligation.is_satisfied = True
         res.retention_obligation.satisfied_by = compliance_officer_id
@@ -403,7 +411,9 @@ class LifecycleService:
                             stopped_at=stopped_time,
                             days_in_stopped_state=days_stopped,
                             ongoing_storage_cost=res.storage_cost_rate,
-                            alert_level="CRITICAL" if days_stopped > (max_soak_days * 2) else "WARNING",
+                            alert_level="CRITICAL"
+                            if days_stopped > (max_soak_days * 2)
+                            else "WARNING",
                         )
                     )
         return surfaced
@@ -440,7 +450,9 @@ class LifecycleService:
                         f"of ${cost_dec:,.2f}/month. Decommissioning was incomplete in provider."
                     ),
                     category=TaskCategory.RECONCILIATION_VARIANCE,
-                    priority=TaskPriority.CRITICAL if cost_dec > Decimal("500.00") else TaskPriority.HIGH,
+                    priority=TaskPriority.CRITICAL
+                    if cost_dec > Decimal("500.00")
+                    else TaskPriority.HIGH,
                     assignee_id=res.owner_team,
                     assignee_type="TEAM",
                     estimated_saving=float(cost_dec),
@@ -497,7 +509,9 @@ class LifecycleService:
                         f"Accruing ${cost_dec:,.2f}/month in wasteful spend."
                     ),
                     category=TaskCategory.IDLE_RESOURCE,
-                    priority=TaskPriority.HIGH if cost_dec > Decimal("100.00") else TaskPriority.MEDIUM,
+                    priority=TaskPriority.HIGH
+                    if cost_dec > Decimal("100.00")
+                    else TaskPriority.MEDIUM,
                     assignee_id=cand.get("owner_id") or "unassigned-finops",
                     assignee_type="USER",
                     estimated_saving=float(cost_dec),
@@ -534,8 +548,12 @@ class LifecycleService:
     ) -> Decimal:
         """Credits verified monthly savings computed from empirical billing records into Prompt 51 ledger."""
         res = self.get_resource(resource_id)
-        before_dec = Decimal(str(actual_billing_before)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        after_dec = Decimal(str(actual_billing_after)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        before_dec = Decimal(str(actual_billing_before)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        after_dec = Decimal(str(actual_billing_after)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
 
         realised = (before_dec - after_dec).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
@@ -607,7 +625,7 @@ class LifecycleService:
                 state_counts[res.current_state.value] += 1
                 total_proj += res.monthly_run_rate
                 if res.current_state in (LifecycleState.DELETED, LifecycleState.RETIRED):
-                    total_real += (res.monthly_run_rate - res.storage_cost_rate)
+                    total_real += res.monthly_run_rate - res.storage_cost_rate
                 for dep in res.inbound_dependencies:
                     if dep.is_cross_team and not dep.is_acknowledged:
                         unack_deps += 1

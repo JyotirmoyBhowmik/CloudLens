@@ -78,7 +78,10 @@ def _seed_demo_inventory_if_needed(tenant_id: str) -> None:
                 else str(res.created_at)
             )
             tag_list = (
-                [{"key": k, "value": v, "inherited": False, "source": "native"} for k, v in res.tags.items()]
+                [
+                    {"key": k, "value": v, "inherited": False, "source": "native"}
+                    for k, v in res.tags.items()
+                ]
                 if isinstance(res.tags, dict)
                 else (res.tags if isinstance(res.tags, list) else [])
             )

@@ -919,7 +919,16 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         is_tenant_scoped=False,
         is_editable=True,
         requires_approval=True,
-        consuming_modules=["control_tower", "maintenance", "identity", "audit", "synthetic", "commitments", "reporting", "config"],
+        consuming_modules=[
+            "control_tower",
+            "maintenance",
+            "identity",
+            "audit",
+            "synthetic",
+            "commitments",
+            "reporting",
+            "config",
+        ],
         seed_file="masterdata/seeds/improvement_features.json",
         expected_review_period_days=90,
     ),
@@ -938,7 +947,6 @@ SYSTEM_MASTER_REGISTRY: dict[str, MasterRegistryEntry] = {
         expected_review_period_days=180,
     ),
 }
-
 
 
 def get_registered_master(master_type: str) -> MasterRegistryEntry | None:

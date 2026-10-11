@@ -48,6 +48,7 @@ class WatermarkTracker:
 
     def get_watermark(self, tenant_id: str, period: str) -> PartitionWatermark:
         """Retrieves or initializes the watermark record for a tenant partition period."""
+
         async def _get():
             async with get_tenant_session(tenant_id) as sess:
                 res = await sess.execute(
@@ -62,7 +63,11 @@ class WatermarkTracker:
                 row = res.fetchone()
                 if row:
                     raw_sup = row[4]
-                    sup = raw_sup if isinstance(raw_sup, list) else (json.loads(raw_sup) if raw_sup else [])
+                    sup = (
+                        raw_sup
+                        if isinstance(raw_sup, list)
+                        else (json.loads(raw_sup) if raw_sup else [])
+                    )
                     return PartitionWatermark(
                         tenant_id=tenant_id,
                         period=period,
@@ -109,6 +114,7 @@ class WatermarkTracker:
         self, tenant_id: str, period: str, new_watermark_ts: str
     ) -> PartitionWatermark:
         """Updates high watermark timestamp for incremental extract."""
+
         async def _update():
             extract_ts = dt.datetime.now(dt.UTC).isoformat()
             wid = f"wm-{tenant_id}-{period}"

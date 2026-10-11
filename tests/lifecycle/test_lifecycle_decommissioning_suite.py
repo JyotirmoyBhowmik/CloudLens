@@ -128,7 +128,9 @@ class TestLifecycleDecommissioningSuite:
 
         # Attempting approval while cross-team dependency is unacknowledged MUST FAIL
         with pytest.raises(UnacknowledgedDependencyException) as exc_info:
-            service.approve_decommissioning_request(req.request_id, approver_id="cloud-lead@acme.corp")
+            service.approve_decommissioning_request(
+                req.request_id, approver_id="cloud-lead@acme.corp"
+            )
         assert "TEAM_PAYMENTS" in str(exc_info.value)
         assert res.current_state == LifecycleState.DECOMMISSION_PROPOSED
 
@@ -155,7 +157,7 @@ class TestLifecycleDecommissioningSuite:
             owner_team="TEAM_ANALYTICS",
             service_type="KUBERNETES_CLUSTER",
             monthly_run_rate=Decimal("5000.00"),
-            storage_cost_rate=Decimal("450.00"), # Lingering EBS storage charges
+            storage_cost_rate=Decimal("450.00"),  # Lingering EBS storage charges
             initial_state=LifecycleState.DECOMMISSION_APPROVED,
         )
 
@@ -225,7 +227,9 @@ class TestLifecycleDecommissioningSuite:
 
         # Transitioning to PENDING_DELETION while obligation is unsatisfied MUST FAIL
         with pytest.raises(RetentionObligationUnsatisfiedException) as exc_info:
-            service.transition_state("res-storage-sec-archive", LifecycleState.PENDING_DELETION, "sre-lead")
+            service.transition_state(
+                "res-storage-sec-archive", LifecycleState.PENDING_DELETION, "sre-lead"
+            )
         assert "SEC-Rule-17a-4" in str(exc_info.value)
 
         # Named compliance officer signs off
@@ -236,7 +240,9 @@ class TestLifecycleDecommissioningSuite:
         )
 
         # Now deletion proceeds cleanly
-        service.transition_state("res-storage-sec-archive", LifecycleState.PENDING_DELETION, "sre-lead")
+        service.transition_state(
+            "res-storage-sec-archive", LifecycleState.PENDING_DELETION, "sre-lead"
+        )
         assert res.current_state == LifecycleState.PENDING_DELETION
 
         service.transition_state("res-storage-sec-archive", LifecycleState.DELETED, "sre-lead")
@@ -288,7 +294,9 @@ class TestLifecycleDecommissioningSuite:
             tenant_context=tenant_context,
         )
         assert realised == Decimal("9730.00")
-        assert realised != res.monthly_run_rate  # Based on actuals ($9,730.00), not estimate ($10,000.00)
+        assert (
+            realised != res.monthly_run_rate
+        )  # Based on actuals ($9,730.00), not estimate ($10,000.00)
 
     def test_decommissioning_programme_view(
         self, service: LifecycleService, tenant_context: TenantContext
@@ -510,7 +518,10 @@ class TestLifecycleDecommissioningSuite:
         assert "RETIRED" in model["states"]
 
         assert "DECOMMISSION_APPROVED" in model["evidence_requirements"]
-        assert "cross-team dependency" in model["evidence_requirements"]["DECOMMISSION_APPROVED"].lower()
+        assert (
+            "cross-team dependency"
+            in model["evidence_requirements"]["DECOMMISSION_APPROVED"].lower()
+        )
 
     def test_dependency_provenance_and_confidence(
         self, service: LifecycleService, tenant_context: TenantContext

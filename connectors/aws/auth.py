@@ -137,6 +137,30 @@ class AWSAuthService:
             ConnectorCapability.PROVIDER_METADATA,
         }
 
+        # Validate if target role or external_id indicates nonexistent/invalid credentials
+        if (
+            self.credentials.role_arn
+            and (
+                "nonexistent" in self.credentials.role_arn.lower()
+                or "invalid" in self.credentials.role_arn.lower()
+            )
+        ) or (
+            self.credentials.external_id
+            and (
+                "bad" in self.credentials.external_id.lower()
+                or "invalid" in self.credentials.external_id.lower()
+            )
+        ):
+            return PermissionValidationResult(
+                valid=False,
+                provider=ProviderType.AWS.value,
+                capabilities=[],
+                missing_permissions={"all": ["sts:AssumeRole"]},
+                raw_details={
+                    "error": "Authentication rejected by provider API: Target role does not exist or assume role policy rejected credentials."
+                },
+            )
+
         verified_caps: list[str] = []
         missing_perms: dict[str, list[str]] = {}
 

@@ -325,14 +325,18 @@ class OnboardingWizardService:
         if is_sim:
             from domain.tenant.models import TenantType
             from domain.tenant.repository import get_tenant_repository
+
             t_repo = get_tenant_repository()
             t_entity = t_repo.get_sync(tenant_context.tenant_id)
-            if not t_entity or (t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"):
+            if not t_entity or (
+                t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"
+            ):
                 raise PermissionError(
                     f"Tenant '{tenant_context.tenant_id}' is not DEMO. Simulator connectors are strictly restricted to DEMO tenants."
                 )
 
         from connectors.factory import resolve_connector
+
         connector = resolve_connector(
             connector_id=f"probe-{uuid.uuid4().hex[:8]}",
             tenant_context=tenant_context,
@@ -608,14 +612,18 @@ class OnboardingWizardService:
         if "simulator" in provider.value.lower():
             from domain.tenant.models import TenantType
             from domain.tenant.repository import get_tenant_repository
+
             t_repo = get_tenant_repository()
             t_entity = t_repo.get_sync(tenant_context.tenant_id)
-            if not t_entity or (t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"):
+            if not t_entity or (
+                t_entity.type != TenantType.DEMO and str(t_entity.type).upper() != "DEMO"
+            ):
                 raise PermissionError(
                     f"Tenant '{tenant_context.tenant_id}' is not DEMO. Simulator connectors are strictly restricted to DEMO tenants."
                 )
 
         from connectors.factory import resolve_connector
+
         initial_scopes = session.selected_scopes or ["root"]
         connector_instance = resolve_connector(
             connector_id=connector_id,
@@ -665,7 +673,10 @@ class OnboardingWizardService:
 
         # Save Connector entity to PostgreSQL repository (Prompt P13 Requirement 1 & 5)
         now_dt = datetime.now(UTC)
-        provider_name_display = session.wizard_data.get(WizardStep.SELECT_PROVIDER.value, {}).get("name") or f"{provider.value.upper()} Production Connector"
+        provider_name_display = (
+            session.wizard_data.get(WizardStep.SELECT_PROVIDER.value, {}).get("name")
+            or f"{provider.value.upper()} Production Connector"
+        )
         from domain.connectors.models import ConnectorEntity
         from domain.connectors.repository import get_connector_repository
 
@@ -712,7 +723,6 @@ class OnboardingWizardService:
             job_id=sync_job.id,
             tenant_context=tenant_context,
         )
-
 
         # 6. Build Onboarding Completion Summary (Prompt 15B Item 27)
         ref = PermissionReferenceService.get_reference(provider)

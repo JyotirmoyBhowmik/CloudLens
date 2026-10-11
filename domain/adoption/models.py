@@ -49,10 +49,16 @@ class UsageTelemetryEvent(BaseModel):
     )
     tenant_id: str = Field(..., description="Tenant boundary")
     role: str = Field(..., description="System role of the actor (e.g. FINOPS_ADMIN, DEVELOPER)")
-    team_id: str = Field(..., description="Organizational team identifier (e.g. TEAM_DATA_PLATFORM)")
-    screen_or_feature: str = Field(..., description="Screen, report, dashboard, or workflow identifier")
+    team_id: str = Field(
+        ..., description="Organizational team identifier (e.g. TEAM_DATA_PLATFORM)"
+    )
+    screen_or_feature: str = Field(
+        ..., description="Screen, report, dashboard, or workflow identifier"
+    )
     action_type: TelemetryActionType = Field(..., description="Action category")
-    result: str = Field(default="SUCCESS", description="Outcome of the action ('SUCCESS', 'FAILED')")
+    result: str = Field(
+        default="SUCCESS", description="Outcome of the action ('SUCCESS', 'FAILED')"
+    )
     timestamp: dt.datetime = Field(
         default_factory=lambda: dt.datetime.now(dt.UTC), description="Event UTC timestamp"
     )
@@ -69,7 +75,9 @@ class UsageAggregationRecord(BaseModel):
     success_count: int = Field(default=0, ge=0, description="Successful actions")
     failure_count: int = Field(default=0, ge=0, description="Failed actions")
     success_rate: float = Field(default=100.0, ge=0.0, le=100.0, description="Success percentage")
-    last_used_at: dt.datetime | None = Field(default=None, description="Most recent activity timestamp")
+    last_used_at: dt.datetime | None = Field(
+        default=None, description="Most recent activity timestamp"
+    )
 
 
 class UsageTelemetryReport(BaseModel):
@@ -176,13 +184,19 @@ class PlatformRunningCost(BaseModel):
 
     period: str = Field(..., description="Accounting period")
     bigquery_query_cost: Decimal = Field(
-        default=Decimal("0.00"), ge=Decimal("0.00"), description="BigQuery query and extract charges"
+        default=Decimal("0.00"),
+        ge=Decimal("0.00"),
+        description="BigQuery query and extract charges",
     )
     connector_api_cost: Decimal = Field(
-        default=Decimal("0.00"), ge=Decimal("0.00"), description="Cloud provider API calls invoked by connectors"
+        default=Decimal("0.00"),
+        ge=Decimal("0.00"),
+        description="Cloud provider API calls invoked by connectors",
     )
     infrastructure_hosting_cost: Decimal = Field(
-        default=Decimal("0.00"), ge=Decimal("0.00"), description="CloudLens host, cluster, and DB costs"
+        default=Decimal("0.00"),
+        ge=Decimal("0.00"),
+        description="CloudLens host, cluster, and DB costs",
     )
     total_platform_cost: Decimal = Field(
         ..., ge=Decimal("0.00"), description="Grand total platform self-cost"
@@ -261,7 +275,9 @@ class FeatureAdoptionItem(BaseModel):
     feature_key: str = Field(..., description="Internal capability key (e.g. 'budget_forecasting')")
     feature_name: str = Field(..., description="Display title")
     category: str = Field(..., description="Capability category")
-    enabled: bool = Field(default=True, description="Whether capability is enabled in configuration")
+    enabled: bool = Field(
+        default=True, description="Whether capability is enabled in configuration"
+    )
     status: FeatureAdoptionStatus = Field(..., description="Adoption state")
     usage_count_last_30_days: int = Field(default=0, ge=0)
     active_teams_count: int = Field(default=0, ge=0)
@@ -307,9 +323,7 @@ class ScopeOnboardingFunnel(BaseModel):
     steps: list[FunnelProgressStep] = Field(default_factory=list)
     is_stalled: bool = Field(default=False, description="True if stuck without progress > 14 days")
     stalled_stage: FunnelStage | None = None
-    onboarding_started_at: dt.datetime = Field(
-        default_factory=lambda: dt.datetime.now(dt.UTC)
-    )
+    onboarding_started_at: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.UTC))
 
 
 class OnboardingFunnelReport(BaseModel):
@@ -347,4 +361,6 @@ class QuarterlyReviewPack(BaseModel):
     feature_adoption: FeatureAdoptionReport
     onboarding_funnel: OnboardingFunnelReport
     outstanding_governance_gaps: list[dict[str, Any]] = Field(default_factory=list)
-    document_markdown: str = Field(..., description="Formatted markdown report for PDF/presentation")
+    document_markdown: str = Field(
+        ..., description="Formatted markdown report for PDF/presentation"
+    )

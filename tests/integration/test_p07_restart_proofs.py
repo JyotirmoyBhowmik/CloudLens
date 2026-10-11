@@ -768,8 +768,12 @@ async def test_dependency_graph_restart_proof() -> None:
     edge = DependencyEdge(
         id=edge_id,
         tenant_id=tenant_id,
-        source_ref=TypedEntityRef(entity_id="app-payments-api", entity_type=EntityReferenceType.APPLICATION),
-        target_ref=TypedEntityRef(entity_id="db-postgres-cluster", entity_type=EntityReferenceType.RESOURCE),
+        source_ref=TypedEntityRef(
+            entity_id="app-payments-api", entity_type=EntityReferenceType.APPLICATION
+        ),
+        target_ref=TypedEntityRef(
+            entity_id="db-postgres-cluster", entity_type=EntityReferenceType.RESOURCE
+        ),
         relationship_type=RelationshipType.DATA_FLOW,
         provenance=EdgeProvenance(
             provenance_type=EdgeProvenanceType.DISCOVERED,
@@ -784,7 +788,9 @@ async def test_dependency_graph_restart_proof() -> None:
     conflict = EdgeConflict(
         conflict_id=conf_id,
         tenant_id=tenant_id,
-        source_ref=TypedEntityRef(entity_id="app-payments-api", entity_type=EntityReferenceType.APPLICATION),
+        source_ref=TypedEntityRef(
+            entity_id="app-payments-api", entity_type=EntityReferenceType.APPLICATION
+        ),
         manual_edge_id=edge_id,
         discovered_edge_id=f"disc-{edge_id}",
         manual_version={"rel": "DATA_FLOW"},

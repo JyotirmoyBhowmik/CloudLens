@@ -103,7 +103,9 @@ class FilesystemTenantObjectStorage(TenantObjectStorage):
 
     def __init__(self, base_dir: Path | str | None = None) -> None:
         self._lock = threading.Lock()
-        self._base_dir = Path(base_dir or os.getenv("OBJECT_STORAGE_DIR", "data/object_store")).resolve()
+        self._base_dir = Path(
+            base_dir or os.getenv("OBJECT_STORAGE_DIR", "data/object_store")
+        ).resolve()
         self._base_dir.mkdir(parents=True, exist_ok=True)
 
     def put_object(

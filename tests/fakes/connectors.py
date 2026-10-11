@@ -33,7 +33,9 @@ class InMemoryConnectorRepository:
         offset: int = 0,
     ) -> list[ConnectorEntity]:
         with self._lock:
-            items = [c for (tid, _), c in self._connectors.items() if tid == tenant_context.tenant_id]
+            items = [
+                c for (tid, _), c in self._connectors.items() if tid == tenant_context.tenant_id
+            ]
 
         if provider:
             items = [c for c in items if c.provider == provider]
@@ -50,7 +52,11 @@ class InMemoryConnectorRepository:
             return entity
 
     def update_lifecycle_state(
-        self, connector_id: str, new_state: ConnectorLifecycleState, *, tenant_context: TenantContext
+        self,
+        connector_id: str,
+        new_state: ConnectorLifecycleState,
+        *,
+        tenant_context: TenantContext,
     ) -> bool:
         with self._lock:
             key = (tenant_context.tenant_id, connector_id)

@@ -19,7 +19,9 @@ class InMemoryMasterDataRepository:
         # code -> registry entry
         self._registry: dict[str, MasterRegistryEntry] = {}
 
-    async def get_record(self, record_id: str, session: AsyncSession | None = None) -> MasterDataRecord | None:
+    async def get_record(
+        self, record_id: str, session: AsyncSession | None = None
+    ) -> MasterDataRecord | None:
         return self._records.get(record_id)
 
     async def save_record(

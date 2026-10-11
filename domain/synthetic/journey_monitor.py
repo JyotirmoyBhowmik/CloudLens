@@ -29,7 +29,9 @@ class SyntheticJourneyMonitor:
 
     def __init__(self) -> None:
         self._config = get_feature_config("IMP_05_SYNTHETIC_MONITOR")
-        self._user_email = self._config.get("synthetic_user_email", "synthetic-monitor@cloudlens.internal")
+        self._user_email = self._config.get(
+            "synthetic_user_email", "synthetic-monitor@cloudlens.internal"
+        )
         self._tenant_id = self._config.get("synthetic_tenant_id", "tenant-synthetic")
         self._latency_sla_ms = self._config.get("latency_sla_target_ms", 2500)
         self._last_result: dict[str, Any] | None = None
@@ -58,6 +60,7 @@ class SyntheticJourneyMonitor:
             # Step 2: Load Dashboard
             s2_start = time.time()
             from domain.control_tower.service import get_control_tower_service
+
             ct_svc = get_control_tower_service()
             _ = ct_svc.get_overview()
             step_durations["dashboard"] = (time.time() - s2_start) * 1000
@@ -65,6 +68,7 @@ class SyntheticJourneyMonitor:
             # Step 3: Run Cost Query
             s3_start = time.time()
             from domain.cost.reconciliation.engine import get_cost_reconciliation_engine
+
             cost_engine = get_cost_reconciliation_engine()
             step_durations["cost_query"] = (time.time() - s3_start) * 1000
 
@@ -72,7 +76,9 @@ class SyntheticJourneyMonitor:
             s4_start = time.time()
             time.sleep(0.03)  # Simulated report compilation
             if simulate_failure:
-                raise RuntimeError("Simulated synthetic report generation timeout (504 Gateway Timeout)")
+                raise RuntimeError(
+                    "Simulated synthetic report generation timeout (504 Gateway Timeout)"
+                )
             step_durations["report"] = (time.time() - s4_start) * 1000
 
         except Exception as exc:
@@ -93,6 +99,7 @@ class SyntheticJourneyMonitor:
             from domain.observability.metrics import (
                 record_synthetic_journey_metric,
             )
+
             record_synthetic_journey_metric(journey_status, total_duration_ms / 1000.0)
         except Exception:
             pass
@@ -102,6 +109,7 @@ class SyntheticJourneyMonitor:
         if sla_breached:
             try:
                 from domain.alerting.service import get_alert_service
+
                 alert_svc = get_alert_service()
                 alert_raised = True
             except Exception as e:

@@ -81,7 +81,11 @@ class RawLandingService:
     async def _insert_landing_db(
         self, record: RawLandingRecord, session: AsyncSession | None = None
     ) -> None:
-        cap_val = record.capability.value if hasattr(record.capability, "value") else str(record.capability)
+        cap_val = (
+            record.capability.value
+            if hasattr(record.capability, "value")
+            else str(record.capability)
+        )
         query = text("""
             INSERT INTO raw_landings (
                 id, tenant_id, connector_id, run_id, capability, schema_version,
@@ -171,7 +175,11 @@ class RawLandingService:
         eff_dataset = dataset or (
             "cost"
             if "cost" in cap_val.lower()
-            else ("inventory" if "inventory" in cap_val.lower() or "resource" in cap_val.lower() else cap_val.lower())
+            else (
+                "inventory"
+                if "inventory" in cap_val.lower() or "resource" in cap_val.lower()
+                else cap_val.lower()
+            )
         )
         eff_period = period or now.strftime("%Y-%m")
 
@@ -179,9 +187,7 @@ class RawLandingService:
         full_storage_path = f"raw-landing/{minio_key}"
 
         # 4. Storage Key: relative key for tenant storage
-        relative_key = (
-            f"landings/{connector_id}/{cap_val}/{run_id}/page_{page_number}.json"
-        )
+        relative_key = f"landings/{connector_id}/{cap_val}/{run_id}/page_{page_number}.json"
 
         # Check immutability
         if self._storage.object_exists(tenant_context=tenant_context, key=relative_key):
@@ -204,29 +210,14 @@ class RawLandingService:
 
         # Upload directly to MinIO S3 bucket 'raw-landing' (Prompt P14 Item 2)
         try:
-            import boto3
+            from connectors.aws.minio_landing import upload_to_minio_s3
 
-            s3_endpoint = os.getenv("S3_ENDPOINT", os.getenv("MINIO_ENDPOINT", "http://localhost:9000"))
-            s3_access = os.getenv("S3_ACCESS_KEY", os.getenv("OBJECT_STORE_ACCESS_KEY", "cloudlens_minio"))
-            s3_secret = os.getenv("S3_SECRET_KEY", os.getenv("OBJECT_STORE_SECRET_KEY", "cloudlens_minio_password"))
-            s3_client = boto3.client(
-                "s3",
-                endpoint_url=s3_endpoint,
-                aws_access_key_id=s3_access,
-                aws_secret_access_key=s3_secret,
-                region_name="us-east-1",
+            upload_to_minio_s3(
+                bucket="raw-landing",
+                key=minio_key,
+                payload_bytes=payload_bytes,
+                content_type="application/json",
             )
-            try:
-                s3_client.create_bucket(Bucket="raw-landing")
-            except Exception:
-                pass
-            s3_client.put_object(
-                Bucket="raw-landing",
-                Key=minio_key,
-                Body=payload_bytes,
-                ContentType="application/json",
-            )
-            logger.info("Uploaded raw payload to MinIO: %s (%d bytes)", full_storage_path, byte_size)
         except Exception as s3_err:
             logger.debug("MinIO S3 landing note: %s", s3_err)
 
@@ -353,9 +344,7 @@ class RawLandingService:
         capability: ConnectorCapability | None = None,
     ) -> list[RawLandingRecord]:
         """Lists landing metadata records from PostgreSQL."""
-        return self._run_async(
-            self.list_landings_async(tenant_context, connector_id, capability)
-        )
+        return self._run_async(self.list_landings_async(tenant_context, connector_id, capability))
 
     def reset_for_test(self) -> None:
         pass

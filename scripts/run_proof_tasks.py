@@ -26,7 +26,11 @@ from domain.observability.metrics import metrics
 from domain.sync.repository import get_quarantine_repository, get_sync_job_repository
 from domain.tenant.context import TenantContext
 from workers.cloudlens_workers import tasks
-from workers.cloudlens_workers.locking import BeatLeaderLock, TaskConcurrencyLock, reset_in_memory_locks
+from workers.cloudlens_workers.locking import (
+    BeatLeaderLock,
+    TaskConcurrencyLock,
+    reset_in_memory_locks,
+)
 from workers.cloudlens_workers.scheduler import DatabaseBeatScheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -81,7 +85,9 @@ def test_leader_lock_prevents_duplicate_runs() -> bool:
     assert leader_lock_2.is_leader is False, "Instance 2 must remain STANDBY"
     assert sleep_2 == 5.0, f"Instance 2 must sleep with backoff (got {sleep_2})"
 
-    logger.info("Leader Election Proof: Instance 1 is LEADER. Instance 2 is STANDBY (dispatches suppressed).")
+    logger.info(
+        "Leader Election Proof: Instance 1 is LEADER. Instance 2 is STANDBY (dispatches suppressed)."
+    )
     leader_lock_1.release()
     return True
 
@@ -191,7 +197,11 @@ def test_prometheus_metrics_scrapable() -> bool:
     assert "ingestion_rows_total" in scraped, "ingestion_rows_total missing from metrics"
 
     # Print relevant metric sample lines
-    relevant = [line for line in scraped.splitlines() if any(k in line for k in ["sync_job_outcome_total", "ingestion_rows_total"])]
+    relevant = [
+        line
+        for line in scraped.splitlines()
+        if any(k in line for k in ["sync_job_outcome_total", "ingestion_rows_total"])
+    ]
     print("\nPrometheus Scraped Sample Metrics:")
     for line in relevant[:12]:
         print("  " + line)

@@ -39,8 +39,7 @@ logger = logging.getLogger("cloudlens.domain.audit.repository")
 class AuditRepository(Protocol):
     """Authoritative protocol for append-only audit event persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> AuditEvent | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> AuditEvent | None: ...
 
     def list(
         self,
@@ -49,23 +48,17 @@ class AuditRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[AuditEvent]:
-        ...
+    ) -> list[AuditEvent]: ...
 
-    def save(self, entity: AuditEvent, *, tenant_context: TenantContext) -> AuditEvent:
-        ...
+    def save(self, entity: AuditEvent, *, tenant_context: TenantContext) -> AuditEvent: ...
 
-    def get_last_event(self, *, tenant_context: TenantContext) -> AuditEvent | None:
-        ...
+    def get_last_event(self, *, tenant_context: TenantContext) -> AuditEvent | None: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def count(self, *, tenant_context: TenantContext) -> int:
-        ...
+    def count(self, *, tenant_context: TenantContext) -> int: ...
 
 
 class SqlAuditRepository:
@@ -159,7 +152,11 @@ class SqlAuditRepository:
         if filters:
             if filters.event_type:
                 clauses.append("event_type = :etype")
-                params["etype"] = filters.event_type.value if hasattr(filters.event_type, "value") else str(filters.event_type)
+                params["etype"] = (
+                    filters.event_type.value
+                    if hasattr(filters.event_type, "value")
+                    else str(filters.event_type)
+                )
             if filters.actor_id:
                 clauses.append("actor_id = :aid")
                 params["aid"] = filters.actor_id
@@ -227,7 +224,9 @@ class SqlAuditRepository:
                         "entity_type": entity.resource_type,
                         "entity_id": entity.resource_id,
                         "correlation_id": entity.correlation_id or "default-trace",
-                        "event_type": entity.event_type.value if hasattr(entity.event_type, "value") else str(entity.event_type),
+                        "event_type": entity.event_type.value
+                        if hasattr(entity.event_type, "value")
+                        else str(entity.event_type),
                         "actor_roles": json.dumps(entity.actor_roles),
                         "details": json.dumps(entity.details),
                         "previous_event_hash": entity.previous_event_hash,

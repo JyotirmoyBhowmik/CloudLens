@@ -91,7 +91,6 @@ ALLOWED_TRANSITIONS: dict[ConnectorLifecycleState, set[ConnectorLifecycleState]]
 }
 
 
-
 class ConnectorLifecycleManager:
     """Manages lifecycle states and per-capability health records for connectors."""
 
@@ -100,7 +99,7 @@ class ConnectorLifecycleManager:
         audit_service: AuditService | None = None,
         cb_registry: CircuitBreakerRegistry | None = None,
     ) -> None:
-        self._audit = audit_service or get_audit_service()
+        self._audit = audit_service
         self._breakers = cb_registry or circuit_breaker_registry
         # Map: (tenant_id, connector_id) -> ConnectorLifecycleState
         self._states: dict[tuple[str, str], ConnectorLifecycleState] = {}
@@ -109,6 +108,10 @@ class ConnectorLifecycleManager:
         # Map: (tenant_id, connector_id) -> set[ConnectorCapability]
         self._declared_capabilities: dict[tuple[str, str], set[ConnectorCapability]] = {}
         self._lock = threading.RLock()
+
+    @property
+    def audit(self) -> AuditService:
+        return self._audit or get_audit_service()
 
     def get_state(self, tenant_id: str, connector_id: str) -> ConnectorLifecycleState:
         """Returns the current lifecycle state of the connector, defaulting to REGISTERED."""
@@ -119,6 +122,7 @@ class ConnectorLifecycleManager:
 
         try:
             from domain.connectors.repository import get_connector_repository
+
             conn = get_connector_repository().get(
                 connector_id, tenant_context=TenantContext(tenant_id=tenant_id)
             )
@@ -183,6 +187,7 @@ class ConnectorLifecycleManager:
 
         try:
             from domain.connectors.repository import get_connector_repository
+
             get_connector_repository().update_lifecycle_state(
                 connector_id, target_state, tenant_context=tenant_context
             )
@@ -197,7 +202,7 @@ class ConnectorLifecycleManager:
             reason or "normal lifecycle operation",
         )
 
-        self._audit.record_event(
+        self.audit.record_event(
             tenant_context=tenant_context,
             event_type=AuditEventType.CONNECTOR_STATE_CHANGED,
             actor=actor,
@@ -280,7 +285,7 @@ class ConnectorLifecycleManager:
                     actor=actor,
                 )
 
-        self._audit.record_event(
+        self.audit.record_event(
             tenant_context=tenant_context,
             event_type=AuditEventType.CONNECTOR_CAPABILITY_DEGRADED,
             actor=actor,
@@ -332,7 +337,7 @@ class ConnectorLifecycleManager:
             self._capability_health[cap_key] = record
 
         if was_degraded:
-            self._audit.record_event(
+            self.audit.record_event(
                 tenant_context=tenant_context,
                 event_type=AuditEventType.CONNECTOR_CAPABILITY_RECOVERED,
                 actor=actor,

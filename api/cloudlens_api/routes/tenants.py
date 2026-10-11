@@ -47,7 +47,12 @@ def require_platform_admin(tc: TenantContext = Depends(require_auth)) -> TenantC
         return tc
     for r in tc.roles:
         role_str = r.value if hasattr(r, "value") else str(r)
-        if role_str in (SystemRole.SUPER_ADMIN, SystemRole.PLATFORM_ADMIN, "SUPER_ADMIN", "PLATFORM_ADMIN"):
+        if role_str in (
+            SystemRole.SUPER_ADMIN,
+            SystemRole.PLATFORM_ADMIN,
+            "SUPER_ADMIN",
+            "PLATFORM_ADMIN",
+        ):
             return tc
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -63,11 +68,17 @@ def require_platform_admin(tc: TenantContext = Depends(require_auth)) -> TenantC
 class TenantCreateRequest(BaseModel):
     """Payload for creating a new tenant organization."""
 
-    code: str = Field(..., min_length=2, max_length=64, description="Unique tenant code (e.g. 'SNPL_PROD')")
-    name: str = Field(..., min_length=2, max_length=255, description="Tenant organization display name")
+    code: str = Field(
+        ..., min_length=2, max_length=64, description="Unique tenant code (e.g. 'SNPL_PROD')"
+    )
+    name: str = Field(
+        ..., min_length=2, max_length=255, description="Tenant organization display name"
+    )
     type: TenantType = Field(default=TenantType.PRODUCTION, description="Environment type")
     reporting_currency: str = Field(default="USD", description="Base reporting ISO currency code")
-    fiscal_year_start: int = Field(default=1, ge=1, le=12, description="Starting month of fiscal calendar (1-12)")
+    fiscal_year_start: int = Field(
+        default=1, ge=1, le=12, description="Starting month of fiscal calendar (1-12)"
+    )
     iana_timezone: str = Field(default="UTC", description="IANA Time Zone identifier")
     retention_profile: str = Field(default="STANDARD", description="Data retention policy profile")
 
@@ -99,7 +110,9 @@ class TenantGrantCreateRequest(BaseModel):
     account_ids: list[str] = Field(default_factory=list)
     hierarchy_subtree_roots: list[str] = Field(default_factory=list)
     cascade_hierarchy: bool = Field(default=True)
-    financial_sensitivity: FinancialSensitivity = Field(default=FinancialSensitivity.FULL_FINANCIAL_DETAIL)
+    financial_sensitivity: FinancialSensitivity = Field(
+        default=FinancialSensitivity.FULL_FINANCIAL_DETAIL
+    )
     description: str | None = Field(default=None)
 
 

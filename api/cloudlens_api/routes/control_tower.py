@@ -228,7 +228,9 @@ def get_audit_tail(
             "action": getattr(e, "action", ""),
             "resource_type": getattr(e, "resource_type", ""),
             "actor_roles": getattr(e, "actor_roles", []),
-            "timestamp": getattr(e, "timestamp", "").isoformat() if hasattr(getattr(e, "timestamp", None), "isoformat") else str(getattr(e, "timestamp", "")),
+            "timestamp": getattr(e, "timestamp", "").isoformat()
+            if hasattr(getattr(e, "timestamp", None), "isoformat")
+            else str(getattr(e, "timestamp", "")),
         }
         for e in events
     ]
@@ -303,15 +305,17 @@ VALID_ACTIONS = {
 }
 
 
-@router.get("/abuse", status_code=status.HTTP_200_OK, summary="Rate-Limit and Abuse Dashboard (IMP-07)")
+@router.get(
+    "/abuse", status_code=status.HTTP_200_OK, summary="Rate-Limit and Abuse Dashboard (IMP-07)"
+)
 def get_abuse_dashboard(
     tc: TenantContext = Depends(get_authenticated_tenant_context),
 ) -> dict[str, Any]:
     """Returns real-time rate limiting, 429 counts, top callers, and lockout status (IMP-07)."""
     _check_observe_permission(tc)
     from domain.abuse.tracker import get_abuse_tracker
-    return get_abuse_tracker().get_abuse_summary()
 
+    return get_abuse_tracker().get_abuse_summary()
 
 
 @router.post("/actions/{action_name}", status_code=status.HTTP_200_OK)

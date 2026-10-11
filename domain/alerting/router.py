@@ -64,7 +64,11 @@ class RecipientRouter:
         default_admin_channel: NotificationChannel = NotificationChannel.EMAIL,
     ) -> None:
         domain = os.getenv("CLOUDLENS_DOMAIN", "cloudlens.local")
-        self.default_scope_admin = default_scope_admin or os.getenv("CLOUDLENS_GOVERNANCE_ADMIN_EMAIL") or f"governance-admin@{domain}"
+        self.default_scope_admin = (
+            default_scope_admin
+            or os.getenv("CLOUDLENS_GOVERNANCE_ADMIN_EMAIL")
+            or f"governance-admin@{domain}"
+        )
         self.default_admin_channel = default_admin_channel
 
     def resolve_recipients(

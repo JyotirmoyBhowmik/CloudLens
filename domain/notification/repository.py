@@ -34,8 +34,9 @@ logger = logging.getLogger("cloudlens.domain.notification.repository")
 class NotificationLogRepository(Protocol):
     """Authoritative protocol for Notification Log persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> NotificationLogRecord | None:
-        ...
+    def get(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> NotificationLogRecord | None: ...
 
     def list(
         self,
@@ -45,29 +46,27 @@ class NotificationLogRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[NotificationLogRecord]:
-        ...
+    ) -> list[NotificationLogRecord]: ...
 
     def save(
         self, entity: NotificationLogRecord, *, tenant_context: TenantContext
-    ) -> NotificationLogRecord:
-        ...
+    ) -> NotificationLogRecord: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     async def get_async(
         self, entity_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> NotificationLogRecord | None:
-        ...
+    ) -> NotificationLogRecord | None: ...
 
     async def save_async(
-        self, entity: NotificationLogRecord, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> NotificationLogRecord:
-        ...
+        self,
+        entity: NotificationLogRecord,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
+    ) -> NotificationLogRecord: ...
 
 
 class SqlNotificationLogRepository:
@@ -136,7 +135,11 @@ class SqlNotificationLogRepository:
         return self._row_to_record(row) if row else None
 
     async def save_async(
-        self, entity: NotificationLogRecord, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: NotificationLogRecord,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> NotificationLogRecord:
         entity.tenant_id = tenant_context.tenant_id
         if session is not None:
@@ -211,9 +214,13 @@ class SqlNotificationLogRepository:
         session: AsyncSession | None = None,
     ) -> list[NotificationLogRecord]:
         if session is not None:
-            return await self._list_with_session(tenant_context, include_tests, filter_params, limit, offset, session)
+            return await self._list_with_session(
+                tenant_context, include_tests, filter_params, limit, offset, session
+            )
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            return await self._list_with_session(tenant_context, include_tests, filter_params, limit, offset, sess)
+            return await self._list_with_session(
+                tenant_context, include_tests, filter_params, limit, offset, sess
+            )
 
     async def _list_with_session(
         self,

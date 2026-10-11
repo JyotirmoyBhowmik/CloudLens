@@ -75,7 +75,9 @@ class InMemoryPricingRepository:
             existing_history.append(stored_record)
             return stored_record, None
 
-        is_price_changed = abs(active_record.unit_price - record.unit_price) > 1e-9  # no-hardcode-allow: reason="Floating point pricing comparison epsilon", reviewer="Prompt-48-Audit"
+        is_price_changed = (
+            abs(active_record.unit_price - record.unit_price) > 1e-9
+        )  # no-hardcode-allow: reason="Floating point pricing comparison epsilon", reviewer="Prompt-48-Audit"
         is_tier_changed = active_record.tier != record.tier
         is_allowance_changed = active_record.free_allowance != record.free_allowance
 
@@ -152,9 +154,7 @@ class InMemoryPricingRepository:
         history = self._natural_index.get(key, [])
         record = next((r for r in history if r.is_active), None)
         if record is None and tenant_id:
-            return self.get_active_rate(
-                provider, sku, region, dimension, rate_type, tenant_id=None
-            )
+            return self.get_active_rate(provider, sku, region, dimension, rate_type, tenant_id=None)
         return record
 
     def get_rate_at_timestamp(
@@ -190,9 +190,7 @@ class InMemoryPricingRepository:
         now = occurred_at or datetime.now(UTC)
         if key in self._unknown_skus:
             rec = self._unknown_skus[key]
-            updated = rec.model_copy(
-                update={"count": rec.count + 1, "last_seen_at": now}
-            )
+            updated = rec.model_copy(update={"count": rec.count + 1, "last_seen_at": now})
             self._unknown_skus[key] = updated
             return updated
         new_rec = UnknownSkuRecord(
@@ -258,7 +256,8 @@ class InMemoryPricingRepository:
         page_size: int = 50,
     ) -> tuple[list[PricingRecord], int]:
         all_rec = [
-            r for r in self._records.values()
+            r
+            for r in self._records.values()
             if (include_historical or r.is_active)
             and (provider is None or r.provider.lower() == provider.lower())
             and (service is None or (r.service_name and r.service_name.lower() == service.lower()))

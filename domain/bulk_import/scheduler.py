@@ -147,9 +147,12 @@ class ScheduledImportScheduler:
 
 
 # Global singleton instance
-_scheduler_instance = ScheduledImportScheduler()
+_scheduler_instance: ScheduledImportScheduler | None = None
 
 
 def get_scheduled_import_scheduler() -> ScheduledImportScheduler:
     """Returns the singleton ScheduledImportScheduler."""
+    global _scheduler_instance
+    if _scheduler_instance is None:
+        _scheduler_instance = ScheduledImportScheduler()
     return _scheduler_instance

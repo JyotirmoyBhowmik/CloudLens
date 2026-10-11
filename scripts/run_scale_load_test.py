@@ -75,7 +75,9 @@ class ScaleLoadBenchmarkRunner:
             return (time.perf_counter() - t0) * 1000.0
 
         with ThreadPoolExecutor(max_workers=self.concurrent_users) as executor:
-            futures = [executor.submit(simulate_api_call, u) for u in range(self.concurrent_users * 5)]
+            futures = [
+                executor.submit(simulate_api_call, u) for u in range(self.concurrent_users * 5)
+            ]
             for f in futures:
                 latencies.append(f.result())
 
@@ -113,7 +115,12 @@ class ScaleLoadBenchmarkRunner:
         throughput = batch_size / duration
         target = ">= 10,000 rows/s"
         status = "PASS" if throughput >= 10000.0 else "FAIL"
-        return {"target": target, "measured": f"{throughput:,.1f} rows/s", "pass_fail": status, "raw": throughput}
+        return {
+            "target": target,
+            "measured": f"{throughput:,.1f} rows/s",
+            "pass_fail": status,
+            "raw": throughput,
+        }
 
     def benchmark_nfr_012_nightly_batch_sync_duration(self) -> dict[str, Any]:
         """NFR-012: Nightly batch sync for 50,000-resource estate completes <= 2 hours (7200s)."""
@@ -127,7 +134,12 @@ class ScaleLoadBenchmarkRunner:
         extrapolated_seconds = (duration / sample_count) * 50_000
         target = "<= 7,200.00s (2h)"
         status = "PASS" if extrapolated_seconds <= 7200.0 else "FAIL"
-        return {"target": target, "measured": f"{extrapolated_seconds:.2f}s", "pass_fail": status, "raw": extrapolated_seconds}
+        return {
+            "target": target,
+            "measured": f"{extrapolated_seconds:.2f}s",
+            "pass_fail": status,
+            "raw": extrapolated_seconds,
+        }
 
     def benchmark_nfr_013_threshold_evaluation_pipeline(self) -> dict[str, Any]:
         """NFR-013: Threshold evaluation processes >= 100,000 metric data points per minute (1,667/sec)."""
@@ -145,7 +157,12 @@ class ScaleLoadBenchmarkRunner:
         pts_per_min = (data_points / duration) * 60.0
         target = ">= 100,000 pts/min"
         status = "PASS" if pts_per_min >= 100_000.0 else "FAIL"
-        return {"target": target, "measured": f"{pts_per_min:,.0f} pts/min", "pass_fail": status, "raw": pts_per_min}
+        return {
+            "target": target,
+            "measured": f"{pts_per_min:,.0f} pts/min",
+            "pass_fail": status,
+            "raw": pts_per_min,
+        }
 
     def benchmark_nfr_014_full_text_search_p95(self) -> dict[str, Any]:
         """NFR-014: Full-text global search p95 latency under 300ms."""
@@ -156,7 +173,9 @@ class ScaleLoadBenchmarkRunner:
         latencies: list[float] = []
         for term in ["production", "aws", "database", "analytics", "us-east-1", "storage"] * 20:
             t0 = time.perf_counter()
-            _ = [i for i in items if term in i.get("provider", "") or term in str(i.get("tags", {}))]
+            _ = [
+                i for i in items if term in i.get("provider", "") or term in str(i.get("tags", {}))
+            ]
             latencies.append((time.perf_counter() - t0) * 1000.0)
 
         p95 = percentile(latencies, 95.0)
@@ -189,14 +208,21 @@ class ScaleLoadBenchmarkRunner:
         latencies: list[float] = []
         for i in range(100):
             t0 = time.perf_counter()
-            _ = self.repo.list(tenant_context=self.tenant_context, limit=100, filter_params={"provider": "aws"})
+            _ = self.repo.list(
+                tenant_context=self.tenant_context, limit=100, filter_params={"provider": "aws"}
+            )
             latencies.append((time.perf_counter() - t0) * 1000.0)
 
         avg_lat = sum(latencies) / len(latencies)
         target = "<= 50.00ms"
         max_allowed_ms = 50.0
         status = "PASS" if avg_lat <= max_allowed_ms else "FAIL"
-        return {"target": target, "measured": f"{avg_lat:.2f}ms", "pass_fail": status, "raw": avg_lat}
+        return {
+            "target": target,
+            "measured": f"{avg_lat:.2f}ms",
+            "pass_fail": status,
+            "raw": avg_lat,
+        }
 
     def benchmark_nfr_017_export_generation_duration(self) -> dict[str, Any]:
         """NFR-017: Export generation for 1,000,000 rows completes within 60.0 seconds asynchronously."""
@@ -209,7 +235,12 @@ class ScaleLoadBenchmarkRunner:
         extrapolated_seconds = (duration / test_rows) * 1_000_000
         target = "<= 60.00s"
         status = "PASS" if extrapolated_seconds <= 60.0 else "FAIL"
-        return {"target": target, "measured": f"{extrapolated_seconds:.2f}s", "pass_fail": status, "raw": extrapolated_seconds}
+        return {
+            "target": target,
+            "measured": f"{extrapolated_seconds:.2f}s",
+            "pass_fail": status,
+            "raw": extrapolated_seconds,
+        }
 
     def benchmark_nfr_018_worker_queue_latency(self) -> dict[str, Any]:
         """NFR-018: Background worker queue dispatch response time benchmarking."""
@@ -267,7 +298,9 @@ class ScaleLoadBenchmarkRunner:
         return {"target": target, "measured": f"{p95:.3f}ms", "pass_fail": status, "raw": p95}
 
     def run_all(self) -> dict[str, dict[str, Any]]:
-        print(f"Executing NFR benchmarks with {self.concurrent_users} simulated concurrent users...")
+        print(
+            f"Executing NFR benchmarks with {self.concurrent_users} simulated concurrent users..."
+        )
         self.results["NFR-010"] = self.benchmark_nfr_010_interactive_api_p95()
         self.results["NFR-011"] = self.benchmark_nfr_011_bulk_cost_ingestion_throughput()
         self.results["NFR-012"] = self.benchmark_nfr_012_nightly_batch_sync_duration()
@@ -292,18 +325,26 @@ def main() -> int:
     results = runner.run_all()
 
     print("\n" + "=" * 80)
-    print(f"{'Requirement':<10} | {'Target SLA':<20} | {'Measured p95 / Rate':<22} | {'Status':<10}")
+    print(
+        f"{'Requirement':<10} | {'Target SLA':<20} | {'Measured p95 / Rate':<22} | {'Status':<10}"
+    )
     print("-" * 80)
     for nfr_id, data in sorted(results.items()):
-        print(f"{nfr_id:<10} | {data['target']:<20} | {data['measured']:<22} | {data['pass_fail']:<10}")
+        print(
+            f"{nfr_id:<10} | {data['target']:<20} | {data['measured']:<22} | {data['pass_fail']:<10}"
+        )
     print("=" * 80)
 
     all_passed = all(d["pass_fail"] == "PASS" for d in results.values())
     if all_passed:
-        print("[SUCCESS] All NFR-010 through NFR-020 targets PASSED without rounding in system favour.")
+        print(
+            "[SUCCESS] All NFR-010 through NFR-020 targets PASSED without rounding in system favour."
+        )
         return 0
     else:
-        print("[FAILURE] One or more NFR targets failed to meet SLA specifications.", file=sys.stderr)
+        print(
+            "[FAILURE] One or more NFR targets failed to meet SLA specifications.", file=sys.stderr
+        )
         return 1
 
 

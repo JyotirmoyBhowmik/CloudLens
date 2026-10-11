@@ -24,7 +24,9 @@ class EmailChannelAdapter(ChannelAdapter):
 
     def __init__(self, sender_address: str | None = None) -> None:
         domain = os.getenv("CLOUDLENS_DOMAIN", "cloudlens.local")
-        self.sender_address = sender_address or os.getenv("CLOUDLENS_ALERT_EMAIL_SENDER") or f"alerts@{domain}"
+        self.sender_address = (
+            sender_address or os.getenv("CLOUDLENS_ALERT_EMAIL_SENDER") or f"alerts@{domain}"
+        )
 
     @property
     def channel_type(self) -> NotificationChannel:

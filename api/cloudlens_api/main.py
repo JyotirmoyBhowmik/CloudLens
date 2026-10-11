@@ -33,7 +33,6 @@ from api.cloudlens_api.routes import (
     connectors_router,
     control_tower_router,
     cost_router,
-
     credentials_router,
     dashboards_router,
     demo_mode_router,
@@ -228,6 +227,7 @@ app = FastAPI(
 def get_jwks() -> dict[str, Any]:
     """Publishes platform public keys for token signature verification (Prompt P01B Item 4)."""
     return get_default_key_manager().get_jwks()
+
 
 # CORS configuration (Prompt P01 Item 8)
 cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:3000")
@@ -1060,7 +1060,6 @@ app.include_router(explanation_router, dependencies=auth_dep)
 app.include_router(admin_router, dependencies=auth_dep)
 app.include_router(tenants_router, dependencies=auth_dep)
 app.include_router(control_tower_router, dependencies=auth_dep)
-
 
 
 class HealthResponse(BaseModel):

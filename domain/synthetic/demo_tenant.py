@@ -218,49 +218,65 @@ class DemoTenantLoaderService:
 
     def _persist_to_postgres(self, estate: CompleteEstateResult, tenant_id: str) -> None:
         """Persists generated synthetic estate to PostgreSQL for demonstration tenants only (Prompt P09)."""
+
         async def _do_persist() -> None:
             async with get_tenant_session(tenant_id) as sess:
                 # 1. Tenant record
-                await sess.execute(text("""
+                await sess.execute(
+                    text("""
                     INSERT INTO tenants (id, name, reporting_currency)
                     VALUES (:tid, :tname, 'USD')
                     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
-                """), {"tid": tenant_id, "tname": DEMO_TENANT_NAME})
+                """),
+                    {"tid": tenant_id, "tname": DEMO_TENANT_NAME},
+                )
 
                 # 2. Reference dimensions (regions, services, resource_types)
                 for res in estate.resources:
-                    prov_str = str(res.provider.value if hasattr(res.provider, 'value') else res.provider).lower()
-                    await sess.execute(text("""
+                    prov_str = str(
+                        res.provider.value if hasattr(res.provider, "value") else res.provider
+                    ).lower()
+                    await sess.execute(
+                        text("""
                         INSERT INTO regions (id, provider, native_name, display_name, geography, created_at)
                         VALUES (:id, :prov, :id, :id, 'GLOBAL', NOW())
                         ON CONFLICT (id) DO NOTHING;
-                    """), {"id": res.region_id, "prov": prov_str})
+                    """),
+                        {"id": res.region_id, "prov": prov_str},
+                    )
 
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO services (id, provider, service_code, name, category, created_at)
                         VALUES (:id, :prov, :code, :name, 'COMPUTE', NOW())
                         ON CONFLICT (id) DO NOTHING;
-                    """), {
-                        "id": res.service_id,
-                        "prov": prov_str,
-                        "code": res.service_id,
-                        "name": res.service_id,
-                    })
+                    """),
+                        {
+                            "id": res.service_id,
+                            "prov": prov_str,
+                            "code": res.service_id,
+                            "name": res.service_id,
+                        },
+                    )
 
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO resource_types (id, provider, service_id, native_type_name, canonical_type, created_at)
                         VALUES (:id, :prov, :svc, :id, 'INSTANCE', NOW())
                         ON CONFLICT (id) DO NOTHING;
-                    """), {
-                        "id": res.resource_type_id,
-                        "prov": prov_str,
-                        "svc": res.service_id,
-                    })
+                    """),
+                        {
+                            "id": res.resource_type_id,
+                            "prov": prov_str,
+                            "svc": res.service_id,
+                        },
+                    )
 
                 # 3. Scopes
-                sorted_scopes = sorted(estate.scopes, key=lambda s: getattr(s, 'depth', 0))
+                sorted_scopes = sorted(estate.scopes, key=lambda s: getattr(s, "depth", 0))
                 for sc in sorted_scopes:
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO scopes (
                             id, tenant_id, parent_id, name, canonical_role, provider,
                             native_type, native_id, materialized_path, depth,
@@ -276,24 +292,36 @@ class DemoTenantLoaderService:
                             name = EXCLUDED.name,
                             materialized_path = EXCLUDED.materialized_path,
                             updated_at = NOW();
-                    """), {
-                        "id": sc.id,
-                        "tid": tenant_id,
-                        "parent_id": sc.parent_id,
-                        "name": sc.name,
-                        "canonical_role": str(sc.canonical_role.value if hasattr(sc.canonical_role, 'value') else sc.canonical_role),
-                        "provider": str(sc.provider.value if hasattr(sc.provider, 'value') else sc.provider),
-                        "native_type": sc.native_type,
-                        "native_id": sc.native_id,
-                        "materialized_path": getattr(sc, 'materialized_path', f"/{sc.id}"),
-                        "depth": getattr(sc, 'depth', 0),
-                    })
+                    """),
+                        {
+                            "id": sc.id,
+                            "tid": tenant_id,
+                            "parent_id": sc.parent_id,
+                            "name": sc.name,
+                            "canonical_role": str(
+                                sc.canonical_role.value
+                                if hasattr(sc.canonical_role, "value")
+                                else sc.canonical_role
+                            ),
+                            "provider": str(
+                                sc.provider.value if hasattr(sc.provider, "value") else sc.provider
+                            ),
+                            "native_type": sc.native_type,
+                            "native_id": sc.native_id,
+                            "materialized_path": getattr(sc, "materialized_path", f"/{sc.id}"),
+                            "depth": getattr(sc, "depth", 0),
+                        },
+                    )
 
                 # 4. Resources
                 now_str = datetime.now(UTC).isoformat()
                 for res in estate.resources:
-                    tags_json = json.dumps([t.model_dump() if hasattr(t, 'model_dump') else t for t in res.tags])
-                    prov_str = str(res.provider.value if hasattr(res.provider, 'value') else res.provider).upper()
+                    tags_json = json.dumps(
+                        [t.model_dump() if hasattr(t, "model_dump") else t for t in res.tags]
+                    )
+                    prov_str = str(
+                        res.provider.value if hasattr(res.provider, "value") else res.provider
+                    ).upper()
                     payload = {
                         "id": res.id,
                         "tenant_id": tenant_id,
@@ -315,7 +343,8 @@ class DemoTenantLoaderService:
                         "last_synced_at": now_str,
                         "created_at": now_str,
                     }
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO resources (
                             id, tenant_id, scope_id, native_id, name, provider,
                             service_id, resource_type_id, region_id, availability_zone,
@@ -333,28 +362,43 @@ class DemoTenantLoaderService:
                             name = EXCLUDED.name,
                             provider_native = EXCLUDED.provider_native,
                             updated_at = NOW();
-                    """), {
-                        "id": res.id,
-                        "tid": tenant_id,
-                        "sid": res.scope_id,
-                        "native_id": res.native_id,
-                        "name": res.name,
-                        "provider": prov_str.lower(),
-                        "service_id": res.service_id,
-                        "resource_type_id": res.resource_type_id,
-                        "region_id": res.region_id,
-                        "az": res.availability_zone,
-                        "pricing_status": str(res.pricing_status.value if hasattr(res.pricing_status, 'value') else res.pricing_status),
-                        "tags": tags_json,
-                        "payload": json.dumps(payload),
-                    })
+                    """),
+                        {
+                            "id": res.id,
+                            "tid": tenant_id,
+                            "sid": res.scope_id,
+                            "native_id": res.native_id,
+                            "name": res.name,
+                            "provider": prov_str.lower(),
+                            "service_id": res.service_id,
+                            "resource_type_id": res.resource_type_id,
+                            "region_id": res.region_id,
+                            "az": res.availability_zone,
+                            "pricing_status": str(
+                                res.pricing_status.value
+                                if hasattr(res.pricing_status, "value")
+                                else res.pricing_status
+                            ),
+                            "tags": tags_json,
+                            "payload": json.dumps(payload),
+                        },
+                    )
 
                 # 5. Cost Facts
                 for cf in estate.cost_facts:
-                    b_cost = cf.billed_cost.value if cf.billed_cost and cf.billed_cost.is_present else Decimal("0.00")
-                    e_cost = cf.effective_cost.value if cf.effective_cost and cf.effective_cost.is_present else b_cost
+                    b_cost = (
+                        cf.billed_cost.value
+                        if cf.billed_cost and cf.billed_cost.is_present
+                        else Decimal("0.00")
+                    )
+                    e_cost = (
+                        cf.effective_cost.value
+                        if cf.effective_cost and cf.effective_cost.is_present
+                        else b_cost
+                    )
                     p_start = cf.charge_period_start.date().replace(day=1)
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO cost_fact (
                             billing_period_start, tenant_id, id, scope_id, resource_id,
                             service_id, charge_period_start, charge_period_end,
@@ -373,23 +417,30 @@ class DemoTenantLoaderService:
                         ON CONFLICT (billing_period_start, tenant_id, id) DO UPDATE SET
                             billed_cost = EXCLUDED.billed_cost,
                             effective_cost = EXCLUDED.effective_cost;
-                    """), {
-                        "b_start": p_start,
-                        "tid": tenant_id,
-                        "id": cf.id,
-                        "scope_id": cf.scope_id,
-                        "resource_id": cf.resource_id,
-                        "service_id": cf.service_id,
-                        "cp_start": cf.charge_period_start,
-                        "cp_end": cf.charge_period_end,
-                        "cat": str(cf.charge_category.value if hasattr(cf.charge_category, 'value') else cf.charge_category),
-                        "b_cost": b_cost,
-                        "e_cost": e_cost,
-                    })
+                    """),
+                        {
+                            "b_start": p_start,
+                            "tid": tenant_id,
+                            "id": cf.id,
+                            "scope_id": cf.scope_id,
+                            "resource_id": cf.resource_id,
+                            "service_id": cf.service_id,
+                            "cp_start": cf.charge_period_start,
+                            "cp_end": cf.charge_period_end,
+                            "cat": str(
+                                cf.charge_category.value
+                                if hasattr(cf.charge_category, "value")
+                                else cf.charge_category
+                            ),
+                            "b_cost": b_cost,
+                            "e_cost": e_cost,
+                        },
+                    )
 
                 # 6. Budgets for scopes
                 for sc in sorted_scopes[:5]:
-                    await sess.execute(text("""
+                    await sess.execute(
+                        text("""
                         INSERT INTO budgets (
                             id, tenant_id, scope_id, name, amount, amount_state,
                             period, start_date, created_at
@@ -398,17 +449,22 @@ class DemoTenantLoaderService:
                             'MONTHLY', CURRENT_DATE, NOW()
                         )
                         ON CONFLICT (id) DO UPDATE SET amount = EXCLUDED.amount;
-                    """), {
-                        "bid": f"bgt-{sc.id}",
-                        "tid": tenant_id,
-                        "sid": sc.id,
-                        "bname": f"Budget for {sc.name}",
-                    })
+                    """),
+                        {
+                            "bid": f"bgt-{sc.id}",
+                            "tid": tenant_id,
+                            "sid": sc.id,
+                            "bname": f"Budget for {sc.name}",
+                        },
+                    )
 
                 # 7. Sync Jobs & Connector Schedules
                 for sj in estate.sync_jobs:
-                    conn_type = str(getattr(sj, "connector_type", getattr(sj, "provider", "aws"))).lower()
-                    await sess.execute(text("""
+                    conn_type = str(
+                        getattr(sj, "connector_type", getattr(sj, "provider", "aws"))
+                    ).lower()
+                    await sess.execute(
+                        text("""
                         INSERT INTO sync_jobs (
                             id, tenant_id, connector_type, scope_id, connector_id,
                             sync_type, capability, dataset_version, idempotency_key,
@@ -423,14 +479,18 @@ class DemoTenantLoaderService:
                             100, NULL, NOW()
                         )
                         ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status;
-                    """), {
-                        "id": sj.id,
-                        "tid": tenant_id,
-                        "conn_type": conn_type,
-                        "conn_id": f"conn-{sj.id}",
-                        "idem": f"idem-{sj.id}",
-                        "status": str(sj.status.value if hasattr(sj.status, 'value') else sj.status),
-                    })
+                    """),
+                        {
+                            "id": sj.id,
+                            "tid": tenant_id,
+                            "conn_type": conn_type,
+                            "conn_id": f"conn-{sj.id}",
+                            "idem": f"idem-{sj.id}",
+                            "status": str(
+                                sj.status.value if hasattr(sj.status, "value") else sj.status
+                            ),
+                        },
+                    )
 
                 await sess.commit()
 
@@ -439,7 +499,6 @@ class DemoTenantLoaderService:
             logger.info("Demo tenant '%s' estate successfully persisted to PostgreSQL.", tenant_id)
         except Exception as exc:
             logger.warning("Could not persist demo estate to PostgreSQL: %s", exc)
-
 
     # ----------------------------------------------------------------------
     # Anomaly Discovery Methods (Prompt 09 Item 63 & Acceptance)
@@ -584,17 +643,19 @@ class DemoTenantLoaderService:
 
 
 # Singleton instance
-_demo_tenant_service = DemoTenantLoaderService()
+_demo_tenant_service: DemoTenantLoaderService | None = None
 
 
 def get_demo_tenant_service() -> DemoTenantLoaderService:
     """Retrieves the global DemoTenantLoaderService singleton."""
+    global _demo_tenant_service
+    if _demo_tenant_service is None:
+        _demo_tenant_service = DemoTenantLoaderService()
     return _demo_tenant_service
 
 
-def reset_demo_tenant_service() -> DemoTenantLoaderService:
+def reset_demo_tenant_service() -> DemoTenantLoaderService | None:
     """Resets the global DemoTenantLoaderService singleton."""
     global _demo_tenant_service
-    _demo_tenant_service = DemoTenantLoaderService()
+    _demo_tenant_service = None
     return _demo_tenant_service
-

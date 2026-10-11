@@ -63,6 +63,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         from sqlalchemy import text
+
         connection.execute(
             text(
                 "CREATE TABLE IF NOT EXISTS alembic_version ("

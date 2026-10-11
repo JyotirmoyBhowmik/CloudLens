@@ -131,16 +131,24 @@ class CommitmentService:
     ) -> CommitmentCoverageAnalysis:
         comm = self.get_commitment(commitment_id)
 
-        el_dec = Decimal(str(eligible_usage_cost)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        cov_dec = Decimal(str(covered_usage_cost)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        el_dec = Decimal(str(eligible_usage_cost)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        cov_dec = Decimal(str(covered_usage_cost)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         cost_dec = Decimal(str(commitment_cost)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        act_dec = Decimal(str(actual_consumed_cost)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        act_dec = Decimal(str(actual_consumed_cost)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         list_dec = Decimal(str(list_price_cost)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
         coverage_ratio = (cov_dec / el_dec) if el_dec > Decimal("0.00") else Decimal("0.0000")
         coverage_ratio = coverage_ratio.quantize(Decimal("0.0001"), rounding=ROUND_HALF_EVEN)
 
-        utilization_ratio = (act_dec / cost_dec) if cost_dec > Decimal("0.00") else Decimal("0.0000")
+        utilization_ratio = (
+            (act_dec / cost_dec) if cost_dec > Decimal("0.00") else Decimal("0.0000")
+        )
         utilization_ratio = utilization_ratio.quantize(Decimal("0.0001"), rounding=ROUND_HALF_EVEN)
 
         realized_saving = (list_dec - act_dec).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
@@ -264,9 +272,9 @@ class CommitmentService:
         list_rate = analysis.list_price_cost
 
         # Option 1: Do Nothing (100% on demand list rate)
-        do_nothing_cost = (list_rate * (Decimal("1.00") + forward_growth_pct - planned_decommission_pct)).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_EVEN
-        )
+        do_nothing_cost = (
+            list_rate * (Decimal("1.00") + forward_growth_pct - planned_decommission_pct)
+        ).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
         opt_do_nothing = WhatIfOption(
             action=RenewalAction.DO_NOTHING,
             description="Allow commitment to lapse; run all workload on on-demand rates",
@@ -277,7 +285,9 @@ class CommitmentService:
 
         # Option 2: Renew Same Level
         same_cost = annual_base
-        same_saving = (do_nothing_cost - same_cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        same_saving = (do_nothing_cost - same_cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         opt_same = WhatIfOption(
             action=RenewalAction.RENEW_SAME,
             description=f"Renew identical level at ${same_cost:,.2f}/yr",
@@ -287,8 +297,12 @@ class CommitmentService:
         )
 
         # Option 3: Upsize (Higher Level)
-        upsize_cost = (annual_base * Decimal("1.20")).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        upsize_saving = (do_nothing_cost - upsize_cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        upsize_cost = (annual_base * Decimal("1.20")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        upsize_saving = (do_nothing_cost - upsize_cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         opt_higher = WhatIfOption(
             action=RenewalAction.RENEW_HIGHER,
             description="Upsize commitment by 20% to capture unreserved burst capacity",
@@ -298,8 +312,12 @@ class CommitmentService:
         )
 
         # Option 4: Downsize (Lower Level)
-        downsize_cost = (annual_base * Decimal("0.80")).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        downsize_saving = (do_nothing_cost - downsize_cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        downsize_cost = (annual_base * Decimal("0.80")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        downsize_saving = (do_nothing_cost - downsize_cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         opt_lower = WhatIfOption(
             action=RenewalAction.RENEW_LOWER,
             description="Downsize commitment by 20% to right-size capacity and prevent idle waste",
@@ -309,8 +327,12 @@ class CommitmentService:
         )
 
         # Option 5: Change Term
-        term_cost = (annual_base * Decimal("0.85")).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
-        term_saving = (do_nothing_cost - term_cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+        term_cost = (annual_base * Decimal("0.85")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
+        term_saving = (do_nothing_cost - term_cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_EVEN
+        )
         opt_term = WhatIfOption(
             action=RenewalAction.CHANGE_TERM,
             description="Extend to 3-year term for deeper multi-year rate reduction",
@@ -346,22 +368,36 @@ class CommitmentService:
             recommended_action = RenewalAction.ALLOW_TO_LAPSE
             rec_amount = Decimal("0.00")
             rec_saving = Decimal("0.00")
-            reasoning.append("Recommendation: ALLOW_TO_LAPSE due to complete or near-total workload decommissioning (Prompt 59).")
-        elif analysis.assessment == CommitmentAssessment.OVER_COMMITMENT or planned_decommission_pct > Decimal("0.15"):
+            reasoning.append(
+                "Recommendation: ALLOW_TO_LAPSE due to complete or near-total workload decommissioning (Prompt 59)."
+            )
+        elif (
+            analysis.assessment == CommitmentAssessment.OVER_COMMITMENT
+            or planned_decommission_pct > Decimal("0.15")
+        ):
             recommended_action = RenewalAction.RENEW_LOWER
             rec_amount = downsize_cost
             rec_saving = downsize_saving
-            reasoning.append("Recommendation: RENEW_LOWER due to over-commitment and low historical utilisation.")
-        elif analysis.assessment == CommitmentAssessment.UNDER_COMMITMENT and forward_growth_pct >= Decimal("0.00"):
+            reasoning.append(
+                "Recommendation: RENEW_LOWER due to over-commitment and low historical utilisation."
+            )
+        elif (
+            analysis.assessment == CommitmentAssessment.UNDER_COMMITMENT
+            and forward_growth_pct >= Decimal("0.00")
+        ):
             recommended_action = RenewalAction.RENEW_HIGHER
             rec_amount = upsize_cost
             rec_saving = upsize_saving
-            reasoning.append("Recommendation: RENEW_HIGHER due to under-commitment with strong workload demand.")
+            reasoning.append(
+                "Recommendation: RENEW_HIGHER due to under-commitment with strong workload demand."
+            )
         else:
             recommended_action = RenewalAction.RENEW_SAME
             rec_amount = same_cost
             rec_saving = same_saving
-            reasoning.append("Recommendation: RENEW_SAME maintaining steady-state baseline commitments.")
+            reasoning.append(
+                "Recommendation: RENEW_SAME maintaining steady-state baseline commitments."
+            )
 
         return RenewalRecommendation(
             commitment_id=commitment_id,
@@ -393,7 +429,9 @@ class CommitmentService:
 
         if requires_approval and workflow_service is not None:
             approval_status = "PENDING_WORKFLOW"
-            provider_str = comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            provider_str = (
+                comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            )
             submit_req = WorkflowSubmitRequest(
                 request_type=WorkflowRequestType.BUDGET_APPROVAL.value,
                 title=f"Commitment Renewal Decision: {comm.commitment_id} ({chosen_action.value})",
@@ -495,7 +533,9 @@ class CommitmentService:
 
         task_id = None
         if remediation_service is not None and tenant_context is not None:
-            provider_str = comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            provider_str = (
+                comm.provider.value if hasattr(comm.provider, "value") else str(comm.provider)
+            )
             task_req = TaskCreateRequest(
                 source=TaskSource.ALERT,
                 subject_entity=RemediationSubjectEntity(
@@ -572,7 +612,10 @@ class CommitmentService:
                 RenewalAction.RENEW_HIGHER,
                 RenewalAction.RENEW_LOWER,
             }:
-                if not replacement_commitment_id or replacement_commitment_id not in self._commitments:
+                if (
+                    not replacement_commitment_id
+                    or replacement_commitment_id not in self._commitments
+                ):
                     incident_raised = True
                     incident_details = (
                         f"INCIDENT: Commitment {commitment_id} decision was {decision.chosen_action.value}, "
@@ -580,9 +623,7 @@ class CommitmentService:
                     )
                 else:
                     incident_raised = False
-                    incident_details = (
-                        f"Renewal verified. Replacement commitment {replacement_commitment_id} active in inventory."
-                    )
+                    incident_details = f"Renewal verified. Replacement commitment {replacement_commitment_id} active in inventory."
             else:
                 incident_raised = False
                 incident_details = (
@@ -617,15 +658,18 @@ class CommitmentService:
             )
 
         total_annual = sum((c.annual_committed_cost for c in comms), Decimal("0.00"))
-        all_analyses = [self._analyses.get(c.commitment_id) for c in comms if c.commitment_id in self._analyses]
+        all_analyses = [
+            self._analyses.get(c.commitment_id) for c in comms if c.commitment_id in self._analyses
+        ]
 
         if all_analyses:
-            avg_cov = (sum((a.coverage_ratio for a in all_analyses), Decimal("0.00")) / len(all_analyses)).quantize(
-                Decimal("0.0001"), rounding=ROUND_HALF_EVEN
-            )
-            avg_util = (sum((a.utilization_ratio for a in all_analyses), Decimal("0.00")) / len(all_analyses)).quantize(
-                Decimal("0.0001"), rounding=ROUND_HALF_EVEN
-            )
+            avg_cov = (
+                sum((a.coverage_ratio for a in all_analyses), Decimal("0.00")) / len(all_analyses)
+            ).quantize(Decimal("0.0001"), rounding=ROUND_HALF_EVEN)
+            avg_util = (
+                sum((a.utilization_ratio for a in all_analyses), Decimal("0.00"))
+                / len(all_analyses)
+            ).quantize(Decimal("0.0001"), rounding=ROUND_HALF_EVEN)
             tot_sav = sum((a.realized_saving for a in all_analyses), Decimal("0.00"))
         else:
             avg_cov = Decimal("0.0000")

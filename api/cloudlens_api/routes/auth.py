@@ -165,7 +165,11 @@ def _enforce_lockout_check(principal_id: str) -> None:
     tracker = get_abuse_tracker()
     is_locked, remaining_seconds = tracker.is_locked_out(principal_id)
     if is_locked:
-        logger.warning("Authentication rejected: principal '%s' locked out (%ds remaining)", principal_id, remaining_seconds)
+        logger.warning(
+            "Authentication rejected: principal '%s' locked out (%ds remaining)",
+            principal_id,
+            remaining_seconds,
+        )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Account or client is locked out due to excessive failed attempts. Please retry after {remaining_seconds} seconds.",
@@ -190,7 +194,9 @@ def oidc_authorize(
         correlation_id=x_correlation_id,
     )
     if redirect:
-        return RedirectResponse(url=auth_data["authorization_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        return RedirectResponse(
+            url=auth_data["authorization_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT
+        )
     return auth_data
 
 
@@ -395,7 +401,9 @@ def list_sessions(
     else:
         target_user_id = tenant_context.user_id
 
-    sessions = service.list_active_sessions(tenant_id=tenant_context.tenant_id, user_id=target_user_id)
+    sessions = service.list_active_sessions(
+        tenant_id=tenant_context.tenant_id, user_id=target_user_id
+    )
     return {
         "tenant_id": tenant_context.tenant_id,
         "returned_count": len(sessions),
@@ -426,8 +434,14 @@ def revoke_session(
     service = get_identity_service()
     sess = service.get_session(session_id)
     if not sess:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive.")
-    if sess.user_id != tenant_context.user_id and not tenant_context.is_superuser and not tenant_context.has_capability("users:write"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive."
+        )
+    if (
+        sess.user_id != tenant_context.user_id
+        and not tenant_context.is_superuser
+        and not tenant_context.has_capability("users:write")
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: caller lacks capability to revoke sessions of other users.",
@@ -440,7 +454,9 @@ def revoke_session(
         correlation_id=x_correlation_id,
     )
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found or already inactive."
+        )
     return {"status": "REVOKED", "session_id": session_id}
 
 
@@ -451,7 +467,11 @@ def revoke_all_user_sessions(
     x_correlation_id: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Revokes all active sessions for a given user (IMP-02)."""
-    if user_id != tenant_context.user_id and not tenant_context.is_superuser and not tenant_context.has_capability("users:write"):
+    if (
+        user_id != tenant_context.user_id
+        and not tenant_context.is_superuser
+        and not tenant_context.has_capability("users:write")
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Forbidden: caller lacks capability to revoke sessions of other users.",
@@ -704,42 +724,53 @@ class SwitchTenantResponse(BaseModel):
 @router.get("/me", response_model=AuthMeResponse, summary="Get current authentication context")
 async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthMeResponse:
     """Returns caller identity, roles, capabilities, authorized tenants, and current tenant (Prompt P02 Item 4)."""
-    roles_list = [
-        r.value if hasattr(r, "value") else str(r) for r in tenant_context.roles
-    ]
+    roles_list = [r.value if hasattr(r, "value") else str(r) for r in tenant_context.roles]
 
     # Calculate capabilities
     caps = set(tenant_context.scope_grants)
     if tenant_context.is_super_admin:
-        caps.update([
-            "*",
-            "admin:access",
-            "platform.observe",
-            "platform.operate",
-            "platform.act_as",
-            "iam:manage",
-            "iam:read",
-            "billing:read",
-            "cost:totals:read",
-            "reports:read",
-            "quotas:read",
-            "audit:read",
-            "tenants:settings:read",
-            "tenants:settings:write",
-        ])
+        caps.update(
+            [
+                "*",
+                "admin:access",
+                "platform.observe",
+                "platform.operate",
+                "platform.act_as",
+                "iam:manage",
+                "iam:read",
+                "billing:read",
+                "cost:totals:read",
+                "reports:read",
+                "quotas:read",
+                "audit:read",
+                "tenants:settings:read",
+                "tenants:settings:write",
+            ]
+        )
     for r in roles_list:
         if r in ("PLATFORM_ADMIN", "CLOUD_ADMINISTRATOR"):
-            caps.update(["admin:access", "tenants:settings:read", "tenants:settings:write", "iam:read"])
+            caps.update(
+                ["admin:access", "tenants:settings:read", "tenants:settings:write", "iam:read"]
+            )
         elif r in ("AUDITOR",):
             caps.update(["audit:read", "reports:read", "platform.observe"])
         elif r in ("FINOPS_ADMINISTRATOR",):
-            caps.update(["billing:read", "cost:totals:read", "reports:read", "budgets:read", "tenants:settings:read"])
+            caps.update(
+                [
+                    "billing:read",
+                    "cost:totals:read",
+                    "reports:read",
+                    "budgets:read",
+                    "tenants:settings:read",
+                ]
+            )
 
     # Query authorized tenants
     available_tenants: list[TenantSummary] = []
     if tenant_context.is_super_admin:
         try:
             from domain.tenant.repository import get_tenant_repository
+
             repo = get_tenant_repository()
             tenants_list = repo.list_sync()
             for t in tenants_list:
@@ -757,7 +788,8 @@ async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthM
     user_email = tenant_context.email or tenant_context.user_id
     display_name = (
         user_email.split("@")[0].replace(".", " ").title()
-        if "@" in user_email  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
+        if "@"
+        in user_email  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
         else user_email
     )
 
@@ -779,7 +811,9 @@ async def get_me(tenant_context: TenantContext = Depends(require_auth)) -> AuthM
     )
 
 
-@router.post("/switch-tenant", response_model=SwitchTenantResponse, summary="Switch active tenant context")
+@router.post(
+    "/switch-tenant", response_model=SwitchTenantResponse, summary="Switch active tenant context"
+)
 def switch_tenant(
     payload: SwitchTenantRequest,
     response: Response,
@@ -821,9 +855,7 @@ def switch_tenant(
 
     # Issue updated token
     identity_service = get_identity_service()
-    roles = [
-        SystemRole(r) for r in tenant_context.roles if r in SystemRole._value2member_map_
-    ]
+    roles = [SystemRole(r) for r in tenant_context.roles if r in SystemRole._value2member_map_]
     new_token = identity_service.token_engine.issue_access_token(
         user_id=tenant_context.user_id,
         email=tenant_context.email or tenant_context.user_id,
@@ -884,7 +916,9 @@ def get_session_state(
         else "OIDC"
     )
     email = tenant_context.email or tenant_context.user_id
-    display_name = email.split("@")[0].capitalize() if "@" in email else email  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
+    display_name = (
+        email.split("@")[0].capitalize() if "@" in email else email
+    )  # no-hardcode-allow: reason="Email delimiter check for display name formatting", reviewer="Prompt-48-Audit"
 
     return SessionStateResponse(
         user_id=tenant_context.user_id,

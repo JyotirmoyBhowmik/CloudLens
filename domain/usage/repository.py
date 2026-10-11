@@ -132,7 +132,11 @@ class SqlUsageRepository:
             qty_val = None
             qty_state = "UNKNOWN"
             if hasattr(record.usage_quantity, "value"):
-                qty_val = float(record.usage_quantity.value) if record.usage_quantity.value is not None else None
+                qty_val = (
+                    float(record.usage_quantity.value)
+                    if record.usage_quantity.value is not None
+                    else None
+                )
             elif isinstance(record.usage_quantity, (int, float)):
                 qty_val = float(record.usage_quantity)
             if hasattr(record.usage_quantity, "state"):
@@ -268,7 +272,12 @@ class SqlUsageRepository:
         offset: int = 0,
     ) -> builtins.list[PreAggregatedUsageRecord]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
     async def query_metrics_async(
@@ -308,7 +317,9 @@ class SqlUsageRepository:
     def query_metrics(
         self, filter_params: UsageQueryFilter, *, tenant_context: TenantContext
     ) -> builtins.list[PreAggregatedUsageRecord]:
-        return self._run_async(self.query_metrics_async(filter_params, tenant_context=tenant_context))
+        return self._run_async(
+            self.query_metrics_async(filter_params, tenant_context=tenant_context)
+        )
 
     # 2. Monitoring Type Overrides
     async def save_override_async(
@@ -347,7 +358,9 @@ class SqlUsageRepository:
     ) -> MonitoringTypeOverride | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM usage_overrides WHERE tenant_id = :tid AND resource_id = :rid LIMIT 1;"),
+                text(
+                    "SELECT * FROM usage_overrides WHERE tenant_id = :tid AND resource_id = :rid LIMIT 1;"
+                ),
                 {"tid": tenant_context.tenant_id, "rid": resource_id},
             )
             row = res.fetchone()
@@ -384,7 +397,11 @@ class SqlUsageRepository:
             raise ValueError(
                 f"Expectation tenant '{expectation.tenant_id}' mismatches context '{tenant_context.tenant_id}'."
             )
-        lvl_val = expectation.level.value if hasattr(expectation.level, "value") else str(expectation.level)
+        lvl_val = (
+            expectation.level.value
+            if hasattr(expectation.level, "value")
+            else str(expectation.level)
+        )
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 INSERT INTO usage_expectations (id, tenant_id, level, target_id, expectation_payload, created_at)
@@ -416,7 +433,9 @@ class SqlUsageRepository:
     ) -> UsageExpectation | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM usage_expectations WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM usage_expectations WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": expectation_id, "tid": tenant_context.tenant_id},
             )
             row = res.fetchone()
@@ -427,7 +446,9 @@ class SqlUsageRepository:
     def get_expectation(
         self, expectation_id: str, *, tenant_context: TenantContext
     ) -> UsageExpectation | None:
-        return self._run_async(self.get_expectation_async(expectation_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_expectation_async(expectation_id, tenant_context=tenant_context)
+        )
 
     async def list_expectations_async(
         self,
@@ -457,7 +478,11 @@ class SqlUsageRepository:
         level: ExpectationLevel | None = None,
         target_id: str | None = None,
     ) -> builtins.list[UsageExpectation]:
-        return self._run_async(self.list_expectations_async(tenant_context=tenant_context, level=level, target_id=target_id))
+        return self._run_async(
+            self.list_expectations_async(
+                tenant_context=tenant_context, level=level, target_id=target_id
+            )
+        )
 
     async def delete_expectation_async(
         self, expectation_id: str, *, tenant_context: TenantContext
@@ -471,7 +496,9 @@ class SqlUsageRepository:
             return (res.rowcount or 0) > 0
 
     def delete_expectation(self, expectation_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_expectation_async(expectation_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_expectation_async(expectation_id, tenant_context=tenant_context)
+        )
 
 
 _usage_repo_instance: UsageRepository | None = None

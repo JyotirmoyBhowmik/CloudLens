@@ -34,61 +34,49 @@ class MasterDataRepository(Protocol):
     """Authoritative protocol for master data registry and records persistence."""
 
     # Records
-    async def get_record(self, record_id: str, session: AsyncSession | None = None) -> MasterDataRecord | None:
-        ...
+    async def get_record(
+        self, record_id: str, session: AsyncSession | None = None
+    ) -> MasterDataRecord | None: ...
 
     async def save_record(
         self, record: MasterDataRecord, session: AsyncSession | None = None
-    ) -> MasterDataRecord:
-        ...
+    ) -> MasterDataRecord: ...
 
     async def list_records(
         self, master_type: str, tenant_id: str | None = None, session: AsyncSession | None = None
-    ) -> list[MasterDataRecord]:
-        ...
+    ) -> list[MasterDataRecord]: ...
 
-    async def delete_record(self, record_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete_record(self, record_id: str, session: AsyncSession | None = None) -> bool: ...
 
     # Registry Entries
     async def get_registry_entry(
         self, code: str, session: AsyncSession | None = None
-    ) -> MasterRegistryEntry | None:
-        ...
+    ) -> MasterRegistryEntry | None: ...
 
     async def save_registry_entry(
         self, entry: MasterRegistryEntry, session: AsyncSession | None = None
-    ) -> MasterRegistryEntry:
-        ...
+    ) -> MasterRegistryEntry: ...
 
     async def list_registry_entries(
         self, session: AsyncSession | None = None
-    ) -> list[MasterRegistryEntry]:
-        ...
+    ) -> list[MasterRegistryEntry]: ...
 
     # Synchronous Helpers
-    def get_record_sync(self, record_id: str) -> MasterDataRecord | None:
-        ...
+    def get_record_sync(self, record_id: str) -> MasterDataRecord | None: ...
 
-    def save_record_sync(self, record: MasterDataRecord) -> MasterDataRecord:
-        ...
+    def save_record_sync(self, record: MasterDataRecord) -> MasterDataRecord: ...
 
     def list_records_sync(
         self, master_type: str, tenant_id: str | None = None
-    ) -> list[MasterDataRecord]:
-        ...
+    ) -> list[MasterDataRecord]: ...
 
-    def delete_record_sync(self, record_id: str) -> bool:
-        ...
+    def delete_record_sync(self, record_id: str) -> bool: ...
 
-    def get_registry_entry_sync(self, code: str) -> MasterRegistryEntry | None:
-        ...
+    def get_registry_entry_sync(self, code: str) -> MasterRegistryEntry | None: ...
 
-    def save_registry_entry_sync(self, entry: MasterRegistryEntry) -> MasterRegistryEntry:
-        ...
+    def save_registry_entry_sync(self, entry: MasterRegistryEntry) -> MasterRegistryEntry: ...
 
-    def list_registry_entries_sync(self) -> list[MasterRegistryEntry]:
-        ...
+    def list_registry_entries_sync(self) -> list[MasterRegistryEntry]: ...
 
 
 class SqlMasterDataRepository:
@@ -158,13 +146,17 @@ class SqlMasterDataRepository:
     # Records
     # -------------------------------------------------------------------------
 
-    async def get_record(self, record_id: str, session: AsyncSession | None = None) -> MasterDataRecord | None:
+    async def get_record(
+        self, record_id: str, session: AsyncSession | None = None
+    ) -> MasterDataRecord | None:
         if session is not None:
             return await self._get_record_with_session(record_id, session)
         async with get_tenant_session() as sess:
             return await self._get_record_with_session(record_id, sess)
 
-    async def _get_record_with_session(self, record_id: str, session: AsyncSession) -> MasterDataRecord | None:
+    async def _get_record_with_session(
+        self, record_id: str, session: AsyncSession
+    ) -> MasterDataRecord | None:
         query = text("""
             SELECT id, master_type, code, display_name, description, sort_order,
                    is_system, is_active, effective_from, effective_to, version,
@@ -200,6 +192,7 @@ class SqlMasterDataRepository:
         )
         if not check_reg.fetchone():
             from masterdata.registry import get_registered_master
+
             entry = get_registered_master(record.master_type)
             if entry:
                 await session.execute(
@@ -280,7 +273,9 @@ class SqlMasterDataRepository:
                 "tenant_id": record.tenant_id,
                 "created_by": record.created_by,
                 "approved_by": record.approved_by,
-                "lifecycle_status": record.lifecycle_status.value if hasattr(record.lifecycle_status, "value") else str(record.lifecycle_status),
+                "lifecycle_status": record.lifecycle_status.value
+                if hasattr(record.lifecycle_status, "value")
+                else str(record.lifecycle_status),
             },
         )
         return record
@@ -333,7 +328,7 @@ class SqlMasterDataRepository:
     async def _delete_record_with_session(self, record_id: str, session: AsyncSession) -> bool:
         query = text("DELETE FROM master_data_records WHERE id = :rid;")
         res = await session.execute(query, {"rid": record_id})
-        return res.rowcount > 0
+        return bool(getattr(res, "rowcount", 0) > 0)
 
     # -------------------------------------------------------------------------
     # Registry Entries

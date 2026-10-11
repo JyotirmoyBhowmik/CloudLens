@@ -231,4 +231,6 @@ class TestWorkflowApprovalSuite:
         )
         assert due_date > friday_afternoon
         # Must skip Saturday (Oct 3) and Sunday (Oct 4), arriving on Monday (Oct 5)
-        assert due_date.weekday() == 0, f"Expected Monday due date, got weekday {due_date.weekday()}"
+        assert due_date.weekday() == 0, (
+            f"Expected Monday due date, got weekday {due_date.weekday()}"
+        )

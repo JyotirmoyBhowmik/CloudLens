@@ -39,9 +39,12 @@ def tenant_context() -> TenantContext:
     )
 
 
+from tests.fakes.wizard import InMemoryWizardRepository
+
+
 @pytest.fixture
 def wizard_service() -> OnboardingWizardService:
-    return OnboardingWizardService(wizard_repo=WizardRepository())
+    return OnboardingWizardService(wizard_repo=InMemoryWizardRepository())
 
 
 # ==============================================================================

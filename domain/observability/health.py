@@ -137,7 +137,6 @@ class DependencyHealthProbe:
         }
         return all_healthy, report
 
-
     def evaluate_liveness(self) -> dict[str, Any]:
         """Basic liveness probe."""
         return {

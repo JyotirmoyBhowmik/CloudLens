@@ -154,7 +154,9 @@ class SqlBulkImportRepository:
     def save_mapping_profile(
         self, profile: MappingProfile, *, tenant_context: TenantContext
     ) -> MappingProfile:
-        return self._run_async(self.save_mapping_profile_async(profile, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_mapping_profile_async(profile, tenant_context=tenant_context)
+        )
 
     async def get_mapping_profile_async(
         self, profile_id: str, *, tenant_context: TenantContext
@@ -175,7 +177,9 @@ class SqlBulkImportRepository:
     def get_mapping_profile(
         self, profile_id: str, *, tenant_context: TenantContext
     ) -> MappingProfile | None:
-        return self._run_async(self.get_mapping_profile_async(profile_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_mapping_profile_async(profile_id, tenant_context=tenant_context)
+        )
 
     async def list_mapping_profiles_async(
         self,
@@ -201,9 +205,13 @@ class SqlBulkImportRepository:
         tenant_context: TenantContext,
         entity_type: str | None = None,
     ) -> list[MappingProfile]:
-        return self._run_async(self.list_mapping_profiles_async(tenant_context=tenant_context, entity_type=entity_type))
+        return self._run_async(
+            self.list_mapping_profiles_async(tenant_context=tenant_context, entity_type=entity_type)
+        )
 
-    async def delete_mapping_profile_async(self, profile_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_mapping_profile_async(
+        self, profile_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
@@ -214,7 +222,9 @@ class SqlBulkImportRepository:
             return (res.rowcount or 0) > 0
 
     def delete_mapping_profile(self, profile_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_mapping_profile_async(profile_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_mapping_profile_async(profile_id, tenant_context=tenant_context)
+        )
 
     # Dry Runs
     async def save_dry_run_async(
@@ -255,7 +265,9 @@ class SqlBulkImportRepository:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM bulk_import_dry_runs WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM bulk_import_dry_runs WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": dry_run_id, "tid": tc.tenant_id},
             )
             row = res.fetchone()
@@ -402,7 +414,9 @@ class SqlBulkImportRepository:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM bulk_import_scheduled_jobs WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM bulk_import_scheduled_jobs WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": job_id, "tid": tc.tenant_id},
             )
             row = res.fetchone()
@@ -415,11 +429,15 @@ class SqlBulkImportRepository:
     ) -> ScheduledImportJob | None:
         return self._run_async(self.get_scheduled_job_async(job_id, tenant_context=tenant_context))
 
-    async def list_scheduled_jobs_async(self, *, tenant_context: TenantContext) -> list[ScheduledImportJob]:
+    async def list_scheduled_jobs_async(
+        self, *, tenant_context: TenantContext
+    ) -> list[ScheduledImportJob]:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM bulk_import_scheduled_jobs WHERE tenant_id = :tid ORDER BY name ASC;"),
+                text(
+                    "SELECT * FROM bulk_import_scheduled_jobs WHERE tenant_id = :tid ORDER BY name ASC;"
+                ),
                 {"tid": tc.tenant_id},
             )
             rows = res.fetchall()
@@ -428,7 +446,9 @@ class SqlBulkImportRepository:
     def list_scheduled_jobs(self, *, tenant_context: TenantContext) -> list[ScheduledImportJob]:
         return self._run_async(self.list_scheduled_jobs_async(tenant_context=tenant_context))
 
-    async def delete_scheduled_job_async(self, job_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_scheduled_job_async(
+        self, job_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
@@ -439,7 +459,9 @@ class SqlBulkImportRepository:
             return (res.rowcount or 0) > 0
 
     def delete_scheduled_job(self, job_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_scheduled_job_async(job_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_scheduled_job_async(job_id, tenant_context=tenant_context)
+        )
 
 
 _repository_instance: BulkImportRepository | None = None

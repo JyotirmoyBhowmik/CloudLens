@@ -46,8 +46,7 @@ logger = logging.getLogger(__name__)
 class BudgetRepository(Protocol):
     """Authoritative protocol for budget persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> BudgetEntity | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> BudgetEntity | None: ...
 
     def list(
         self,
@@ -56,35 +55,28 @@ class BudgetRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[BudgetEntity]:
-        ...
+    ) -> list[BudgetEntity]: ...
 
     def list_all(
         self,
         *,
         tenant_context: TenantContext,
-    ) -> list[BudgetEntity]:
-        ...
+    ) -> list[BudgetEntity]: ...
 
-    def save(self, entity: BudgetEntity, *, tenant_context: TenantContext) -> BudgetEntity:
-        ...
+    def save(self, entity: BudgetEntity, *, tenant_context: TenantContext) -> BudgetEntity: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int:
-        ...
+    def count(self, *, tenant_context: TenantContext, filter_params: Any = None) -> int: ...
 
     def get_children(
         self,
         parent_budget_id: str,
         *,
         tenant_context: TenantContext,
-    ) -> list[BudgetEntity]:
-        ...
+    ) -> list[BudgetEntity]: ...
 
     def find_by_scope(
         self,
@@ -92,8 +84,7 @@ class BudgetRepository(Protocol):
         scope_id: str,
         *,
         tenant_context: TenantContext,
-    ) -> list[BudgetEntity]:
-        ...
+    ) -> list[BudgetEntity]: ...
 
 
 class SqlBudgetRepository:
@@ -124,9 +115,7 @@ class SqlBudgetRepository:
         appr_raw = m.get("approval_decision")
         if isinstance(appr_raw, str):
             appr_raw = json.loads(appr_raw)
-        approval_decision = (
-            BudgetApprovalDecision.model_validate(appr_raw) if appr_raw else None
-        )
+        approval_decision = BudgetApprovalDecision.model_validate(appr_raw) if appr_raw else None
 
         amend_raw = m.get("amendments") or []
         if isinstance(amend_raw, str):
@@ -176,9 +165,7 @@ class SqlBudgetRepository:
 
         amt = float(m["amount"]) if m.get("amount") is not None else 0.0
         forecast_thresh = (
-            float(m["forecast_threshold"])
-            if m.get("forecast_threshold") is not None
-            else None
+            float(m["forecast_threshold"]) if m.get("forecast_threshold") is not None else None
         )
 
         return BudgetEntity(
@@ -304,7 +291,9 @@ class SqlBudgetRepository:
 
         thresh_json = json.dumps([t.model_dump(mode="json") for t in entity.thresholds])
         recips_json = json.dumps(entity.alert_recipients)
-        esc_json = json.dumps(entity.escalation.model_dump(mode="json")) if entity.escalation else None
+        esc_json = (
+            json.dumps(entity.escalation.model_dump(mode="json")) if entity.escalation else None
+        )
         appr_json = (
             json.dumps(entity.approval_decision.model_dump(mode="json"))
             if entity.approval_decision

@@ -72,6 +72,7 @@ class OCICostService:
         """Constructs an OCI UsageapiClient if credentials are configured."""
         try:
             import oci
+
             creds = self.config.get("credentials") or {}
             if creds.get("user") and creds.get("key_content") and creds.get("fingerprint"):
                 config_dict = {

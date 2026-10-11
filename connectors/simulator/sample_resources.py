@@ -474,9 +474,7 @@ def get_sample_oci_resources() -> list[dict[str, Any]]:
             compartment_id=c_sub_app,
             lifecycle_state="AVAILABLE",
             region="us-ashburn-1",
-            service_category=KNOWN_OCI_TYPE_MAPPINGS.get(
-                "Instance", ServiceCategory.COMPUTE.value
-            ),
+            service_category=KNOWN_OCI_TYPE_MAPPINGS.get("Instance", ServiceCategory.COMPUTE.value),
             defined_tags={
                 "Operations": {"CostCenter": "CC-OPS-200", "Owner": "devops"},
                 "Security": {"DataClassification": "Restricted"},

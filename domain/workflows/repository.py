@@ -36,11 +36,17 @@ class WorkflowRepository(Protocol):
         limit: int = 50,
         offset: int = 0,
     ) -> list[WorkflowRequest]: ...
-    def save(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest: ...
+    def save(
+        self, entity: WorkflowRequest, *, tenant_context: TenantContext
+    ) -> WorkflowRequest: ...
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
-    def save_request(self, req: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest: ...
-    def get_request(self, req_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None: ...
+    def save_request(
+        self, req: WorkflowRequest, *, tenant_context: TenantContext
+    ) -> WorkflowRequest: ...
+    def get_request(
+        self, req_id: str, *, tenant_context: TenantContext
+    ) -> WorkflowRequest | None: ...
     def list_requests(
         self,
         *,
@@ -114,10 +120,14 @@ class SqlWorkflowRepository:
     # Requests
     # --------------------------------------------------------------------------
 
-    async def get_async(self, entity_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
+    async def get_async(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> WorkflowRequest | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": entity_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -129,7 +139,9 @@ class SqlWorkflowRepository:
     def get_request(self, req_id: str, *, tenant_context: TenantContext) -> WorkflowRequest | None:
         return self.get(req_id, tenant_context=tenant_context)
 
-    async def save_async(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+    async def save_async(
+        self, entity: WorkflowRequest, *, tenant_context: TenantContext
+    ) -> WorkflowRequest:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             entity.tenant_id = tenant_context.tenant_id
             query = text("""
@@ -149,7 +161,9 @@ class SqlWorkflowRepository:
                     "id": entity.id,
                     "tid": tenant_context.tenant_id,
                     "rtype": entity.request_type,
-                    "state": entity.state.value if hasattr(entity.state, "value") else str(entity.state),
+                    "state": entity.state.value
+                    if hasattr(entity.state, "value")
+                    else str(entity.state),
                     "req_id": entity.requester.requester_id,
                     "payload": json.dumps(entity.model_dump(mode="json")),
                     "created_at": entity.created_at,
@@ -161,7 +175,9 @@ class SqlWorkflowRepository:
     def save(self, entity: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
         return self._run_async(self.save_async(entity, tenant_context=tenant_context))
 
-    def save_request(self, req: WorkflowRequest, *, tenant_context: TenantContext) -> WorkflowRequest:
+    def save_request(
+        self, req: WorkflowRequest, *, tenant_context: TenantContext
+    ) -> WorkflowRequest:
         return self.save(req, tenant_context=tenant_context)
 
     async def list_async(
@@ -200,7 +216,14 @@ class SqlWorkflowRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> list[WorkflowRequest]:
-        return self._run_async(self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset))
+        return self._run_async(
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
+        )
 
     def list_requests(
         self,
@@ -219,7 +242,9 @@ class SqlWorkflowRepository:
             fp["request_type"] = request_type
         if requester_id:
             fp["requester_id"] = requester_id
-        return self.list(tenant_context=tenant_context, filter_params=fp, limit=limit, offset=offset)
+        return self.list(
+            tenant_context=tenant_context, filter_params=fp, limit=limit, offset=offset
+        )
 
     async def delete_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
@@ -236,7 +261,9 @@ class SqlWorkflowRepository:
     async def exists_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT 1 FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT 1 FROM workflow_requests WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": entity_id, "tid": tenant_context.tenant_id},
             )
             return res.first() is not None
@@ -276,14 +303,18 @@ class SqlWorkflowRepository:
     def save_definition(
         self, definition: WorkflowDefinition, *, tenant_context: TenantContext
     ) -> WorkflowDefinition:
-        return self._run_async(self.save_definition_async(definition, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_definition_async(definition, tenant_context=tenant_context)
+        )
 
     async def get_definition_async(
         self, def_id: str, *, tenant_context: TenantContext
     ) -> WorkflowDefinition | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM workflow_definitions WHERE (id = :id OR UPPER(request_type) = UPPER(:id)) AND (tenant_id = :tid OR tenant_id = 'SYSTEM') LIMIT 1;"),
+                text(
+                    "SELECT * FROM workflow_definitions WHERE (id = :id OR UPPER(request_type) = UPPER(:id)) AND (tenant_id = :tid OR tenant_id = 'SYSTEM') LIMIT 1;"
+                ),
                 {"id": def_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -299,11 +330,15 @@ class SqlWorkflowRepository:
     ) -> WorkflowDefinition | None:
         return self._run_async(self.get_definition_async(def_id, tenant_context=tenant_context))
 
-    async def list_definitions_async(self, *, tenant_context: TenantContext) -> list[WorkflowDefinition]:
+    async def list_definitions_async(
+        self, *, tenant_context: TenantContext
+    ) -> list[WorkflowDefinition]:
         defaults_map = {d.id: d for d in get_default_workflow_definitions()}
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM workflow_definitions WHERE tenant_id = :tid OR tenant_id = 'SYSTEM';"),
+                text(
+                    "SELECT * FROM workflow_definitions WHERE tenant_id = :tid OR tenant_id = 'SYSTEM';"
+                ),
                 {"tid": tenant_context.tenant_id},
             )
             rows = res.fetchall()
@@ -345,14 +380,18 @@ class SqlWorkflowRepository:
     def save_delegation(
         self, delegation: DelegationRule, *, tenant_context: TenantContext
     ) -> DelegationRule:
-        return self._run_async(self.save_delegation_async(delegation, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_delegation_async(delegation, tenant_context=tenant_context)
+        )
 
     async def get_delegation_async(
         self, delegation_id: str, *, tenant_context: TenantContext
     ) -> DelegationRule | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM workflow_delegations WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM workflow_delegations WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": delegation_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -361,7 +400,9 @@ class SqlWorkflowRepository:
     def get_delegation(
         self, delegation_id: str, *, tenant_context: TenantContext
     ) -> DelegationRule | None:
-        return self._run_async(self.get_delegation_async(delegation_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_delegation_async(delegation_id, tenant_context=tenant_context)
+        )
 
     async def list_delegations_async(
         self,
@@ -403,7 +444,9 @@ class SqlWorkflowRepository:
             )
         )
 
-    async def delete_delegation_async(self, delegation_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_delegation_async(
+        self, delegation_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
                 text("DELETE FROM workflow_delegations WHERE id = :id AND tenant_id = :tid;"),
@@ -413,7 +456,9 @@ class SqlWorkflowRepository:
             return res.rowcount > 0
 
     def delete_delegation(self, delegation_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_delegation_async(delegation_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_delegation_async(delegation_id, tenant_context=tenant_context)
+        )
 
 
 # Singleton instance & factory

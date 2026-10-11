@@ -41,9 +41,11 @@ class GCPInventoryService:
         """Constructs a Google Cloud Asset client if credentials exist."""
         try:
             from google.cloud import asset_v1
+
             creds = self.config.get("credentials") or {}
             if creds.get("service_account_info"):
                 from google.oauth2 import service_account
+
                 credentials = service_account.Credentials.from_service_account_info(
                     creds["service_account_info"]
                 )
@@ -64,7 +66,11 @@ class GCPInventoryService:
         if client is not None:
             try:
                 parent = f"projects/{self.primary_project_id}"
-                page_token = pagination.continuation_token if pagination and pagination.continuation_token else None
+                page_token = (
+                    pagination.continuation_token
+                    if pagination and pagination.continuation_token
+                    else None
+                )
                 response = client.search_all_resources(
                     request={
                         "scope": parent,
@@ -93,8 +99,7 @@ class GCPInventoryService:
         if scope_id and scope_id not in ("root", "global", ""):
             clean_scope = scope_id.replace("projects/", "").strip()
             records = [
-                r for r in records
-                if r.project_id == clean_scope or clean_scope in r.asset_name
+                r for r in records if r.project_id == clean_scope or clean_scope in r.asset_name
             ]
 
         raw_dicts = [r.model_dump() for r in records]

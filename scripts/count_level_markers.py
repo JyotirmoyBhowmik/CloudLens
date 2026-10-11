@@ -31,7 +31,7 @@ MARKERS = [
     ("level18", "Level 18: Master-Data Integrity Suite"),
     ("level19", "Level 19: Workflow & Approval Engine Suite"),
     ("level20", "Level 20: Analytical Extract Suite"),
-    ("phase2",  "Phase 2: Addendum B & Features (57-61)"),
+    ("phase2", "Phase 2: Addendum B & Features (57-61)"),
 ]
 
 

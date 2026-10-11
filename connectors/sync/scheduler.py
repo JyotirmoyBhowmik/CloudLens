@@ -39,8 +39,14 @@ class SyncScheduler:
     """Manages connector schedules, applies tenant configuration defaults, and evaluates cadence warnings."""
 
     def __init__(self, schedule_repo: ConnectorScheduleRepository | None = None) -> None:
-        self._schedule_repo = schedule_repo or get_connector_schedule_repository()
+        self._schedule_repo_override = schedule_repo
         self._audit_service = get_audit_service()
+
+    @property
+    def _schedule_repo(self) -> ConnectorScheduleRepository:
+        if self._schedule_repo_override is not None:
+            return self._schedule_repo_override
+        return get_connector_schedule_repository()
 
     def get_default_schedules(
         self, connector_id: str, tenant_context: TenantContext
@@ -276,8 +282,16 @@ class SyncScheduler:
 
 
 # Global singleton scheduler
-_sync_scheduler = SyncScheduler()
+_sync_scheduler: SyncScheduler | None = None
 
 
 def get_sync_scheduler() -> SyncScheduler:
+    global _sync_scheduler
+    if _sync_scheduler is None:
+        _sync_scheduler = SyncScheduler()
     return _sync_scheduler
+
+
+def reset_sync_scheduler(scheduler: SyncScheduler | None = None) -> None:
+    global _sync_scheduler
+    _sync_scheduler = scheduler

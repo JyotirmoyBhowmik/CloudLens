@@ -106,7 +106,6 @@ def reset_string_catalogue_service() -> None:
     _string_catalogue_service = None
 
 
-
 def t(
     key: str,
     locale: str = "en_US",

@@ -17,15 +17,22 @@ class InMemoryRBACRepository:
         self._grants: dict[str, ScopeGrant] = {}
         self._custom_roles: dict[tuple[str, str], RoleDefinition] = {}
 
-    async def get_scope_grant(self, grant_id: str, session: AsyncSession | None = None) -> ScopeGrant | None:
+    async def get_scope_grant(
+        self, grant_id: str, session: AsyncSession | None = None
+    ) -> ScopeGrant | None:
         return self._grants.get(grant_id)
 
-    async def save_scope_grant(self, grant: ScopeGrant, session: AsyncSession | None = None) -> ScopeGrant:
+    async def save_scope_grant(
+        self, grant: ScopeGrant, session: AsyncSession | None = None
+    ) -> ScopeGrant:
         self._grants[grant.id] = grant
         return grant
 
     async def list_scope_grants(
-        self, tenant_id: str | None = None, grantee_id: str | None = None, session: AsyncSession | None = None
+        self,
+        tenant_id: str | None = None,
+        grantee_id: str | None = None,
+        session: AsyncSession | None = None,
     ) -> list[ScopeGrant]:
         grants = list(self._grants.values())
         if tenant_id and tenant_id != "*":

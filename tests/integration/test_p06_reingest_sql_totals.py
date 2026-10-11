@@ -152,7 +152,9 @@ async def test_reingest_gives_identical_totals_sql() -> None:
     # Verify materialized aggregates refreshed in database
     async with get_tenant_session(tenant_id) as session:
         agg_res = await session.execute(
-            text("SELECT SUM(billed_cost), SUM(effective_cost), SUM(row_count) FROM agg_cost_scope_service_day WHERE tenant_id = :tid;"),
+            text(
+                "SELECT SUM(billed_cost), SUM(effective_cost), SUM(row_count) FROM agg_cost_scope_service_day WHERE tenant_id = :tid;"
+            ),
             {"tid": tenant_id},
         )
         agg_row = agg_res.first()

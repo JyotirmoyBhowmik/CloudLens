@@ -56,7 +56,9 @@ class ControlTowerPanel(BaseModel):
     status: PanelStatus = Field(description="Traffic light status indicator (green/amber/red/grey)")
     status_label: str = Field(description="Accessible status string (never color alone)")
     reason: str = Field(description="Empirical explanation of the current status")
-    metrics: dict[str, Any] = Field(default_factory=dict, description="Key operational metric values")
+    metrics: dict[str, Any] = Field(
+        default_factory=dict, description="Key operational metric values"
+    )
     last_updated: str = Field(description="ISO 8601 UTC timestamp of last probe/update")
     grafana_url: str = Field(description="SSO deep link to corresponding Grafana dashboard")
 
@@ -66,7 +68,9 @@ class ControlTowerOverview(BaseModel):
 
     overall_status: PanelStatus = Field(description="Worst-case aggregated platform health status")
     overall_label: str = Field(description="Accessible overall health label")
-    maintenance_mode: bool = Field(default=False, description="Whether platform maintenance mode is engaged")
+    maintenance_mode: bool = Field(
+        default=False, description="Whether platform maintenance mode is engaged"
+    )
     panels: list[ControlTowerPanel] = Field(description="Collection of all 14 monitoring panels")
     timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
@@ -77,9 +81,13 @@ class BlastRadius(BaseModel):
     action: str = Field(description="Target action identifier")
     affected_tenants: list[str] = Field(description="Tenants impacted by this action")
     affected_connectors: list[str] = Field(default_factory=list, description="Connectors impacted")
-    affected_queues: list[str] = Field(default_factory=list, description="Background task queues impacted")
+    affected_queues: list[str] = Field(
+        default_factory=list, description="Background task queues impacted"
+    )
     impact_summary: str = Field(description="Detailed description of operational side-effects")
-    requires_confirmation: bool = Field(default=True, description="Enforces explicit user confirmation")
+    requires_confirmation: bool = Field(
+        default=True, description="Enforces explicit user confirmation"
+    )
 
 
 class ControlTowerActionRequest(BaseModel):
@@ -87,9 +95,15 @@ class ControlTowerActionRequest(BaseModel):
 
     action: str = Field(description="Action name to execute")
     params: dict[str, Any] = Field(default_factory=dict, description="Action parameters")
-    reason: str = Field(min_length=20, description="Mandatory operational justification (>= 20 chars)")
-    step_up_token: str | None = Field(default=None, description="Step-up MFA authentication proof token")
-    confirm: bool = Field(default=False, description="Set True to execute; False returns blast radius only")
+    reason: str = Field(
+        min_length=20, description="Mandatory operational justification (>= 20 chars)"
+    )
+    step_up_token: str | None = Field(
+        default=None, description="Step-up MFA authentication proof token"
+    )
+    confirm: bool = Field(
+        default=False, description="Set True to execute; False returns blast radius only"
+    )
 
 
 class ControlTowerActionResult(BaseModel):

@@ -38,15 +38,17 @@ def get_installed_packages() -> list[dict]:
         else:
             lic_id = license_name[:30]
 
-        packages.append({
-            "type": "library",
-            "name": name,
-            "version": version,
-            "description": summary[:120],
-            "licenses": [{"license": {"id": lic_id}}],
-            "purl": f"pkg:pypi/{name.lower()}@{version}",
-            "ecosystem": "python",
-        })
+        packages.append(
+            {
+                "type": "library",
+                "name": name,
+                "version": version,
+                "description": summary[:120],
+                "licenses": [{"license": {"id": lic_id}}],
+                "purl": f"pkg:pypi/{name.lower()}@{version}",
+                "ecosystem": "python",
+            }
+        )
 
     return packages
 

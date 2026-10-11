@@ -94,14 +94,34 @@ class SqlCheckpointStore:
 
         if session is not None:
             return await self._save_with_session(
-                tenant_context, job_id, connector_id, capability, cap_val,
-                continuation_token, page_number, records_ingested, last_record_id, status, now, session
+                tenant_context,
+                job_id,
+                connector_id,
+                capability,
+                cap_val,
+                continuation_token,
+                page_number,
+                records_ingested,
+                last_record_id,
+                status,
+                now,
+                session,
             )
 
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await self._save_with_session(
-                tenant_context, job_id, connector_id, capability, cap_val,
-                continuation_token, page_number, records_ingested, last_record_id, status, now, sess
+                tenant_context,
+                job_id,
+                connector_id,
+                capability,
+                cap_val,
+                continuation_token,
+                page_number,
+                records_ingested,
+                last_record_id,
+                status,
+                now,
+                sess,
             )
             await sess.commit()
             return res
@@ -128,7 +148,9 @@ class SqlCheckpointStore:
             WHERE tenant_id = :tid AND job_id = :jid AND capability = :cap
             LIMIT 1;
         """)
-        res = await session.execute(sel_q, {"tid": tenant_context.tenant_id, "jid": job_id, "cap": cap_val})
+        res = await session.execute(
+            sel_q, {"tid": tenant_context.tenant_id, "jid": job_id, "cap": cap_val}
+        )
         row = res.fetchone()
         chk_id = row[0] if row else f"chk-{uuid.uuid4().hex[:12]}"
         created_at = row[1] if row else now

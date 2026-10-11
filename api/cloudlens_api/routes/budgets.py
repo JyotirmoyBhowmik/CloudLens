@@ -284,16 +284,17 @@ def list_budget_plans(
         amt = float(b.get("amount") or 0.0)
         fc = float(b.get("forecast_spend") or amt)
         cur = float(b.get("current_spend") or 0.0)
-        plans.append({
-            "id": f"PLAN-{b.get('id', 'item')}",
-            "scopeName": b.get("name", "Scope"),
-            "scopeType": b.get("scope_type", "APPLICATION"),
-            "currentRunRate": cur,
-            "baseForecast": fc,
-            "proposedBudget": amt,
-            "plannedAdjustment": round(amt - fc, 2),
-            "variancePct": round(((amt - fc) / fc * 100), 1) if fc > 0 else 0.0,
-            "status": "APPROVED" if b.get("approval_status") == "APPROVED" else "DRAFT",
-        })
+        plans.append(
+            {
+                "id": f"PLAN-{b.get('id', 'item')}",
+                "scopeName": b.get("name", "Scope"),
+                "scopeType": b.get("scope_type", "APPLICATION"),
+                "currentRunRate": cur,
+                "baseForecast": fc,
+                "proposedBudget": amt,
+                "plannedAdjustment": round(amt - fc, 2),
+                "variancePct": round(((amt - fc) / fc * 100), 1) if fc > 0 else 0.0,
+                "status": "APPROVED" if b.get("approval_status") == "APPROVED" else "DRAFT",
+            }
+        )
     return plans
-

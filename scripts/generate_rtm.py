@@ -79,15 +79,17 @@ def load_requirements() -> list[dict]:
             if m:
                 rid, orig_id, stmt, prio, phase, owning, verif = [x.strip() for x in m.groups()]
                 pfx = rid.split("-")[0]
-                reqs.append({
-                    "id": rid,
-                    "prefix": pfx,
-                    "text": stmt,
-                    "priority": prio,
-                    "phase": phase,
-                    "owning_module": owning,
-                    "verification_method": verif,
-                })
+                reqs.append(
+                    {
+                        "id": rid,
+                        "prefix": pfx,
+                        "text": stmt,
+                        "priority": prio,
+                        "phase": phase,
+                        "owning_module": owning,
+                        "verification_method": verif,
+                    }
+                )
     return reqs
 
 
@@ -324,7 +326,9 @@ AC_MAP: dict[str, dict] = {
     },
     "AC-104": {
         "files": ["scripts/scan_vulnerabilities.py", "docs/security/security_self_assessment.md"],
-        "tests": ["Independent third-party penetration testing scheduled for production staging environment (SEC-024)"],
+        "tests": [
+            "Independent third-party penetration testing scheduled for production staging environment (SEC-024)"
+        ],
         "status": "OPEN",
     },
     "AC-110": {
@@ -484,7 +488,10 @@ DR_MAP: dict[str, dict] = {
         "tests": ["test_automated_dr_failover_and_zero_data_loss"],
     },
     "DR-002": {
-        "files": ["scripts/run_dr_exercise.py", "ops/helm/cloudlens/templates/backup-openbao-snapshot.yaml"],
+        "files": [
+            "scripts/run_dr_exercise.py",
+            "ops/helm/cloudlens/templates/backup-openbao-snapshot.yaml",
+        ],
         "tests": ["test_automated_dr_failover_and_zero_data_loss"],
     },
     "DR-003": {
@@ -594,7 +601,11 @@ SEC_MAP: dict[str, dict] = {
         "tests": ["test_scan_vulnerabilities"],
     },
     "SEC-021": {
-        "files": ["ops/docker/Dockerfile.api", "ops/docker/Dockerfile.web", "ops/docker/Dockerfile.worker"],
+        "files": [
+            "ops/docker/Dockerfile.api",
+            "ops/docker/Dockerfile.web",
+            "ops/docker/Dockerfile.worker",
+        ],
         "tests": ["test_unprivileged_container_user"],
     },
     "SEC-022": {
@@ -607,7 +618,9 @@ SEC_MAP: dict[str, dict] = {
     },
     "SEC-024": {
         "files": ["docs/security/security_self_assessment.md", "fat/ACCEPTANCE.md"],
-        "tests": ["Independent third-party penetration testing engagement prior to production release"],
+        "tests": [
+            "Independent third-party penetration testing engagement prior to production release"
+        ],
         "status": "OPEN",
     },
     "SEC-025": {
@@ -631,7 +644,10 @@ SEC_MAP: dict[str, dict] = {
         "tests": ["test_act_as_tenant_rejected_without_step_up_mfa"],
     },
     "SEC-030": {
-        "files": ["ops/helm/cloudlens/templates/networkpolicy.yaml", "ops/helm/cloudlens/templates/ingress.yaml"],
+        "files": [
+            "ops/helm/cloudlens/templates/networkpolicy.yaml",
+            "ops/helm/cloudlens/templates/ingress.yaml",
+        ],
         "tests": ["NetworkPolicy default-deny ingress filtering"],
         "status": "Implemented - UNVERIFIED",
     },
@@ -639,73 +655,235 @@ SEC_MAP: dict[str, dict] = {
 
 # Owning prompt heuristic mappings
 PROMPT_HEURISTIC_MAP = {
-    "Prompt 01": (["scripts/check_layering.py", "domain/models/"], ["test_mandate_m1_master_data_authority_and_zero_unseeded_enums"]),
-    "Prompt 02": (["domain/config/flags.py"], ["test_bp01_tenant_onboarding_and_workspace_provisioning"]),
-    "Prompt 03": (["domain/observability/logger.py", "domain/observability/metrics.py"], ["test_six_lateral_lens_dimensions"]),
-    "Prompt 04": (["domain/models/measures.py", "domain/models/enums.py"], ["test_gate02_four_state_null_discipline_strictly_enforced"]),
-    "Prompt 05": (["domain/inventory/models.py", "domain/inventory/discovery.py"], ["test_cloud_inventory_ingestion_and_hierarchy"]),
-    "Prompt 06": (["db/models/", "db/migrations/"], ["test_reg03_bi_temporal_restatement_preserves_prior_records"]),
-    "Prompt 07": (["masterdata/catalogues/pricing_dimensions.json"], ["test_criterion_1_and_2_registry_entries_have_valid_seed_files"]),
-    "Prompt 08": (["domain/attribution/service.py", "domain/attribution/evaluator.py"], ["test_bp04_metadata_and_ownership_attribution"]),
-    "Prompt 09": (["domain/synthetic/estate_generator.py"], ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"]),
-    "Prompt 10": (["domain/identity/oidc.py", "domain/identity/session.py"], ["test_api_oidc_login_and_unmapped_role_rejection"]),
-    "Prompt 11": (["domain/rbac/matrix.py", "domain/rbac/evaluator.py"], ["test_openapi_matrix_evaluates_all_roles_across_all_routes"]),
-    "Prompt 12": (["domain/credentials/vault.py", "domain/credentials/manager.py"], ["test_vault_gate_a_store_retrieve_delete_lifecycle"]),
-    "Prompt 13": (["domain/tenant/context.py", "domain/audit/repository.py"], ["test_audit_stream_cross_tenant_isolation_and_mutation_rejection"]),
-    "Prompt 14": (["connectors/contract/base.py"], ["test_stub_three_capabilities_conformance_acceptance"]),
+    "Prompt 01": (
+        ["scripts/check_layering.py", "domain/models/"],
+        ["test_mandate_m1_master_data_authority_and_zero_unseeded_enums"],
+    ),
+    "Prompt 02": (
+        ["domain/config/flags.py"],
+        ["test_bp01_tenant_onboarding_and_workspace_provisioning"],
+    ),
+    "Prompt 03": (
+        ["domain/observability/logger.py", "domain/observability/metrics.py"],
+        ["test_six_lateral_lens_dimensions"],
+    ),
+    "Prompt 04": (
+        ["domain/models/measures.py", "domain/models/enums.py"],
+        ["test_gate02_four_state_null_discipline_strictly_enforced"],
+    ),
+    "Prompt 05": (
+        ["domain/inventory/models.py", "domain/inventory/discovery.py"],
+        ["test_cloud_inventory_ingestion_and_hierarchy"],
+    ),
+    "Prompt 06": (
+        ["db/models/", "db/migrations/"],
+        ["test_reg03_bi_temporal_restatement_preserves_prior_records"],
+    ),
+    "Prompt 07": (
+        ["masterdata/catalogues/pricing_dimensions.json"],
+        ["test_criterion_1_and_2_registry_entries_have_valid_seed_files"],
+    ),
+    "Prompt 08": (
+        ["domain/attribution/service.py", "domain/attribution/evaluator.py"],
+        ["test_bp04_metadata_and_ownership_attribution"],
+    ),
+    "Prompt 09": (
+        ["domain/synthetic/estate_generator.py"],
+        ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"],
+    ),
+    "Prompt 10": (
+        ["domain/identity/oidc.py", "domain/identity/session.py"],
+        ["test_api_oidc_login_and_unmapped_role_rejection"],
+    ),
+    "Prompt 11": (
+        ["domain/rbac/matrix.py", "domain/rbac/evaluator.py"],
+        ["test_openapi_matrix_evaluates_all_roles_across_all_routes"],
+    ),
+    "Prompt 12": (
+        ["domain/credentials/vault.py", "domain/credentials/manager.py"],
+        ["test_vault_gate_a_store_retrieve_delete_lifecycle"],
+    ),
+    "Prompt 13": (
+        ["domain/tenant/context.py", "domain/audit/repository.py"],
+        ["test_audit_stream_cross_tenant_isolation_and_mutation_rejection"],
+    ),
+    "Prompt 14": (
+        ["connectors/contract/base.py"],
+        ["test_stub_three_capabilities_conformance_acceptance"],
+    ),
     "Prompt 15": (["connectors/sync/orchestrator.py"], ["test_contract_sync_lag"]),
-    "Prompt 15B": (["web/src/pages/OnboardingWizardPage.tsx"], ["test_contract_wizard_full_progression"]),
-    "Prompt 16": (["connectors/azure/connector.py"], ["test_full_conformance_across_all_connectors"]),
+    "Prompt 15B": (
+        ["web/src/pages/OnboardingWizardPage.tsx"],
+        ["test_contract_wizard_full_progression"],
+    ),
+    "Prompt 16": (
+        ["connectors/azure/connector.py"],
+        ["test_full_conformance_across_all_connectors"],
+    ),
     "Prompt 17": (["connectors/aws/connector.py"], ["test_full_conformance_across_all_connectors"]),
     "Prompt 18": (["connectors/gcp/connector.py"], ["test_full_conformance_across_all_connectors"]),
     "Prompt 19": (["connectors/oci/connector.py"], ["test_full_conformance_across_all_connectors"]),
-    "Prompt 20": (["domain/pricing/rate_card.py", "domain/pricing/service.py"], ["test_bp06_pricing_ingestion_and_rate_card_synchronization"]),
-    "Prompt 21": (["domain/pricing/status.py", "domain/pricing/explanation.py"], ["test_fixture_1_tiered_graduated_pricing"]),
-    "Prompt 22": (["domain/cost/calculator.py", "normalisation/focus/mapper.py"], ["test_bp08_actual_cost_ingestion_and_billing_line_extraction"]),
-    "Prompt 23": (["domain/provisioning/estimator.py"], ["test_bp10_pricing_estimation_and_pre_deployment_sizing"]),
-    "Prompt 24": (["domain/cost/reconciliation.py"], ["test_bp17_cost_reconciliation_and_invoice_dispute"]),
-    "Prompt 25": (["domain/usage/collector.py"], ["test_gate02_four_state_null_discipline_strictly_enforced"]),
-    "Prompt 26": (["domain/runtime/schedule.py", "domain/runtime/evaluator.py"], ["test_bp15_non_production_runtime_schedule_adherence"]),
+    "Prompt 20": (
+        ["domain/pricing/rate_card.py", "domain/pricing/service.py"],
+        ["test_bp06_pricing_ingestion_and_rate_card_synchronization"],
+    ),
+    "Prompt 21": (
+        ["domain/pricing/status.py", "domain/pricing/explanation.py"],
+        ["test_fixture_1_tiered_graduated_pricing"],
+    ),
+    "Prompt 22": (
+        ["domain/cost/calculator.py", "normalisation/focus/mapper.py"],
+        ["test_bp08_actual_cost_ingestion_and_billing_line_extraction"],
+    ),
+    "Prompt 23": (
+        ["domain/provisioning/estimator.py"],
+        ["test_bp10_pricing_estimation_and_pre_deployment_sizing"],
+    ),
+    "Prompt 24": (
+        ["domain/cost/reconciliation.py"],
+        ["test_bp17_cost_reconciliation_and_invoice_dispute"],
+    ),
+    "Prompt 25": (
+        ["domain/usage/collector.py"],
+        ["test_gate02_four_state_null_discipline_strictly_enforced"],
+    ),
+    "Prompt 26": (
+        ["domain/runtime/schedule.py", "domain/runtime/evaluator.py"],
+        ["test_bp15_non_production_runtime_schedule_adherence"],
+    ),
     "Prompt 27": (["domain/threshold/evaluator.py"], ["test_cost_spike_evaluation"]),
-    "Prompt 28": (["domain/budgets/service.py"], ["test_bp13_budget_lifecycle_and_hierarchical_allocation"]),
-    "Prompt 29": (["domain/forecasting/engine.py"], ["test_bp13_budget_lifecycle_and_hierarchical_allocation"]),
-    "Prompt 30": (["domain/policy/evaluator.py"], ["test_bp19_governance_policy_enforcement_and_exemptions"]),
-    "Prompt 31": (["domain/alerting/service.py"], ["test_bp14_multi_tier_threshold_evaluation_and_alerting"]),
-    "Prompt 31B": (["domain/alerting/routing.py"], ["test_bp14_multi_tier_threshold_evaluation_and_alerting"]),
-    "Prompt 32": (["domain/topology/graph.py"], ["test_bp16_topology_mapping_and_chain_cost_rollup"]),
-    "Prompt 33": (["domain/topology/cost_overlay.py"], ["test_bp16_topology_mapping_and_chain_cost_rollup"]),
-    "Prompt 34": (["api/cloudlens_api/routes/"], ["test_openapi_matrix_evaluates_all_roles_across_all_routes"]),
-    "Prompt 35": (["domain/reports/generators.py"], ["test_bp20_periodic_access_and_compliance_audit_review"]),
+    "Prompt 28": (
+        ["domain/budgets/service.py"],
+        ["test_bp13_budget_lifecycle_and_hierarchical_allocation"],
+    ),
+    "Prompt 29": (
+        ["domain/forecasting/engine.py"],
+        ["test_bp13_budget_lifecycle_and_hierarchical_allocation"],
+    ),
+    "Prompt 30": (
+        ["domain/policy/evaluator.py"],
+        ["test_bp19_governance_policy_enforcement_and_exemptions"],
+    ),
+    "Prompt 31": (
+        ["domain/alerting/service.py"],
+        ["test_bp14_multi_tier_threshold_evaluation_and_alerting"],
+    ),
+    "Prompt 31B": (
+        ["domain/alerting/routing.py"],
+        ["test_bp14_multi_tier_threshold_evaluation_and_alerting"],
+    ),
+    "Prompt 32": (
+        ["domain/topology/graph.py"],
+        ["test_bp16_topology_mapping_and_chain_cost_rollup"],
+    ),
+    "Prompt 33": (
+        ["domain/topology/cost_overlay.py"],
+        ["test_bp16_topology_mapping_and_chain_cost_rollup"],
+    ),
+    "Prompt 34": (
+        ["api/cloudlens_api/routes/"],
+        ["test_openapi_matrix_evaluates_all_roles_across_all_routes"],
+    ),
+    "Prompt 35": (
+        ["domain/reports/generators.py"],
+        ["test_bp20_periodic_access_and_compliance_audit_review"],
+    ),
     "Prompt 36": (["web/src/components/common/"], ["test_six_lateral_lens_dimensions"]),
     "Prompt 37": (["web/src/pages/DashboardPage.tsx"], ["test_six_lateral_lens_dimensions"]),
-    "Prompt 38": (["web/src/pages/ExplorerPage.tsx"], ["test_seventeen_scope_types_supported_in_hierarchy"]),
-    "Prompt 39": (["web/src/pages/ResourceDetailPage.tsx"], ["test_thirty_five_inventory_fields_specification"]),
-    "Prompt 40": (["web/src/components/common/ExplanationPanel.tsx"], ["test_eleven_standard_explanation_panels"]),
+    "Prompt 38": (
+        ["web/src/pages/ExplorerPage.tsx"],
+        ["test_seventeen_scope_types_supported_in_hierarchy"],
+    ),
+    "Prompt 39": (
+        ["web/src/pages/ResourceDetailPage.tsx"],
+        ["test_thirty_five_inventory_fields_specification"],
+    ),
+    "Prompt 40": (
+        ["web/src/components/common/ExplanationPanel.tsx"],
+        ["test_eleven_standard_explanation_panels"],
+    ),
     "Prompt 41": (["web/src/pages/TopologyGraphPage.tsx"], ["test_six_lateral_lens_dimensions"]),
-    "Prompt 42": (["tests/acceptance/test_acceptance_suite.py"], ["test_gate01_cost_correctness_and_zero_floating_point"]),
-    "Prompt 42B": (["tests/mandates/test_mandates_suite.py"], ["test_mandate_m2_automated_ast_anti_hardcoding_scan"]),
-    "Prompt 43": (["docs/requirement_traceability_matrix.md"], ["test_criterion_3_bidirectional_enum_to_master_parity"]),
-    "Prompt 44": (["docs/operational-runbook.md"], ["test_rolling_upgrade_data_integrity_and_zero_loss"]),
-    "Prompt 45": (["masterdata/service.py"], ["test_criterion_1_and_2_registry_entries_have_valid_seed_files"]),
-    "Prompt 46": (["domain/attribution/service.py"], ["test_bp04_metadata_and_ownership_attribution"]),
-    "Prompt 47": (["domain/synthetic/mock_generator.py"], ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"]),
-    "Prompt 47B": (["domain/synthetic/governance_generator.py"], ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"]),
-    "Prompt 48": (["scripts/check_no_hardcoded_constants.py"], ["test_mandate_m2_automated_ast_anti_hardcoding_scan"]),
-    "Prompt 49A": (["scripts/bootstrap_pre_identity.py"], ["test_act_as_tenant_cross_scope_boundary_denied"]),
-    "Prompt 49B": (["scripts/bootstrap_superuser.py"], ["test_act_as_tenant_rejected_without_step_up_mfa"]),
-    "Prompt 50": (["domain/workflow/engine.py"], ["test_criterion_1_single_engine_routing_for_all_approval_points"]),
-    "Prompt 51": (["domain/remediation/engine.py"], ["test_bp22_remediation_task_closure_and_reopen"]),
-    "Prompt 52": (["domain/statements/generator.py"], ["test_bp18_showback_and_chargeback_statement_generation"]),
+    "Prompt 42": (
+        ["tests/acceptance/test_acceptance_suite.py"],
+        ["test_gate01_cost_correctness_and_zero_floating_point"],
+    ),
+    "Prompt 42B": (
+        ["tests/mandates/test_mandates_suite.py"],
+        ["test_mandate_m2_automated_ast_anti_hardcoding_scan"],
+    ),
+    "Prompt 43": (
+        ["docs/requirement_traceability_matrix.md"],
+        ["test_criterion_3_bidirectional_enum_to_master_parity"],
+    ),
+    "Prompt 44": (
+        ["docs/operational-runbook.md"],
+        ["test_rolling_upgrade_data_integrity_and_zero_loss"],
+    ),
+    "Prompt 45": (
+        ["masterdata/service.py"],
+        ["test_criterion_1_and_2_registry_entries_have_valid_seed_files"],
+    ),
+    "Prompt 46": (
+        ["domain/attribution/service.py"],
+        ["test_bp04_metadata_and_ownership_attribution"],
+    ),
+    "Prompt 47": (
+        ["domain/synthetic/mock_generator.py"],
+        ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"],
+    ),
+    "Prompt 47B": (
+        ["domain/synthetic/governance_generator.py"],
+        ["test_mandate_m3_demo_mode_synthetic_isolation_and_watermarking"],
+    ),
+    "Prompt 48": (
+        ["scripts/check_no_hardcoded_constants.py"],
+        ["test_mandate_m2_automated_ast_anti_hardcoding_scan"],
+    ),
+    "Prompt 49A": (
+        ["scripts/bootstrap_pre_identity.py"],
+        ["test_act_as_tenant_cross_scope_boundary_denied"],
+    ),
+    "Prompt 49B": (
+        ["scripts/bootstrap_superuser.py"],
+        ["test_act_as_tenant_rejected_without_step_up_mfa"],
+    ),
+    "Prompt 50": (
+        ["domain/workflow/engine.py"],
+        ["test_criterion_1_single_engine_routing_for_all_approval_points"],
+    ),
+    "Prompt 51": (
+        ["domain/remediation/engine.py"],
+        ["test_bp22_remediation_task_closure_and_reopen"],
+    ),
+    "Prompt 52": (
+        ["domain/statements/generator.py"],
+        ["test_bp18_showback_and_chargeback_statement_generation"],
+    ),
     "Prompt 53": (["domain/bulk_import/engine.py"], ["test_bp25_bulk_import_to_rollback"]),
     "Prompt 54": (["domain/quotas/tracker.py"], ["test_bp26_quota_headroom_to_increase_request"]),
     "Prompt 55": (["domain/provisioning/prechecks.py"], ["test_bp21_provisioning_gate_decision"]),
-    "Prompt 56": (["domain/analytics/service.py"], ["test_criterion_1_schema_version_stamped_on_files_and_manifest"]),
+    "Prompt 56": (
+        ["domain/analytics/service.py"],
+        ["test_criterion_1_schema_version_stamped_on_files_and_manifest"],
+    ),
     "Prompt 57": (["domain/planning/service.py"], ["test_planning_cycle_lifecycle"]),
-    "Prompt 58": (["domain/commitments/service.py"], ["test_commitment_inventory_and_utilization_tracking"]),
+    "Prompt 58": (
+        ["domain/commitments/service.py"],
+        ["test_commitment_inventory_and_utilization_tracking"],
+    ),
     "Prompt 59": (["domain/lifecycle/service.py"], ["test_lifecycle_full_happy_path"]),
-    "Prompt 60": (["domain/integrations/service.py"], ["test_domain_event_model_headers_and_signature"]),
-    "Prompt 61": (["domain/adoption/service.py"], ["test_consolidates_multi_source_savings_and_computes_net_roi"]),
-    "Prompt 62": (["docs/CLOUDLENS_BBP_v1.1.md"], ["test_seventeen_scope_types_supported_in_hierarchy"]),
+    "Prompt 60": (
+        ["domain/integrations/service.py"],
+        ["test_domain_event_model_headers_and_signature"],
+    ),
+    "Prompt 61": (
+        ["domain/adoption/service.py"],
+        ["test_consolidates_multi_source_savings_and_computes_net_roi"],
+    ),
+    "Prompt 62": (
+        ["docs/CLOUDLENS_BBP_v1.1.md"],
+        ["test_seventeen_scope_types_supported_in_hierarchy"],
+    ),
 }
 
 
@@ -727,11 +905,19 @@ def resolve_requirement(
         tests = mapping.get("tests", [])
 
         if "status" in mapping:
-            return ", ".join(f"`{f}`" for f in files), ", ".join(f"`{t}`" for t in tests), mapping["status"]
+            return (
+                ", ".join(f"`{f}`" for f in files),
+                ", ".join(f"`{t}`" for t in tests),
+                mapping["status"],
+            )
 
         if tests and tests[0].startswith("NOT_TESTABLE_IN_FAT:"):
             reason = tests[0].split("NOT_TESTABLE_IN_FAT:")[1].strip()
-            return ", ".join(f"`{f}`" for f in files), "N/A (External Verification)", f"NOT TESTABLE IN FAT ({reason})"
+            return (
+                ", ".join(f"`{f}`" for f in files),
+                "N/A (External Verification)",
+                f"NOT TESTABLE IN FAT ({reason})",
+            )
 
         all_passed = True
         matched_any = False
@@ -762,7 +948,11 @@ def resolve_requirement(
         tests = mapping.get("tests", [])
 
         if "status" in mapping:
-            return ", ".join(f"`{f}`" for f in files), ", ".join(f"`{t}`" for t in tests), mapping["status"]
+            return (
+                ", ".join(f"`{f}`" for f in files),
+                ", ".join(f"`{t}`" for t in tests),
+                mapping["status"],
+            )
 
         all_passed = True
         matched_any = False
@@ -903,7 +1093,9 @@ def generate_rtm() -> str:
     lines.append("")
     lines.append("## 1. Traceability Summary by Prefix")
     lines.append("")
-    lines.append("| Prefix | Domain Classification | Total Requirements | Verified (PASS) | Not Testable in FAT | Implemented - UNVERIFIED | Verification Ratio |")
+    lines.append(
+        "| Prefix | Domain Classification | Total Requirements | Verified (PASS) | Not Testable in FAT | Implemented - UNVERIFIED | Verification Ratio |"
+    )
     lines.append("|:---|:---|:---:|:---:|:---:|:---:|:---:|")
 
     total_all = 0
@@ -913,7 +1105,21 @@ def generate_rtm() -> str:
 
     evaluated_reqs: dict[str, list[tuple[dict, str, str, str]]] = {}
 
-    for pfx in ["BR", "FR", "PR", "CST", "USE", "RUN", "DEP", "CON", "API", "SEC", "NFR", "DR", "AC"]:
+    for pfx in [
+        "BR",
+        "FR",
+        "PR",
+        "CST",
+        "USE",
+        "RUN",
+        "DEP",
+        "CON",
+        "API",
+        "SEC",
+        "NFR",
+        "DR",
+        "AC",
+    ]:
         rlist = by_prefix.get(pfx, [])
         p_total = len(rlist)
         p_pass = 0
@@ -934,7 +1140,9 @@ def generate_rtm() -> str:
         evaluated_reqs[pfx] = eval_list
         ratio = f"{((p_pass + p_fat) / p_total * 100):.1f}%" if p_total > 0 else "0.0%"
         domain_name = prefix_titles.get(pfx, pfx).split("(")[0].strip()
-        lines.append(f"| **{pfx}** | {domain_name} | {p_total} | {p_pass} | {p_fat} | {p_unverif} | {ratio} |")
+        lines.append(
+            f"| **{pfx}** | {domain_name} | {p_total} | {p_pass} | {p_fat} | {p_unverif} | {ratio} |"
+        )
 
         total_all += p_total
         total_pass += p_pass
@@ -942,7 +1150,9 @@ def generate_rtm() -> str:
         total_unverified += p_unverif
 
     overall_ratio = f"{((total_pass + total_fat_exempt) / total_all * 100):.1f}%"
-    lines.append(f"| **TOTAL** | **All 13 Requirement Classes** | **{total_all}** | **{total_pass}** | **{total_fat_exempt}** | **{total_unverified}** | **{overall_ratio}** |")
+    lines.append(
+        f"| **TOTAL** | **All 13 Requirement Classes** | **{total_all}** | **{total_pass}** | **{total_fat_exempt}** | **{total_unverified}** | **{overall_ratio}** |"
+    )
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -950,7 +1160,9 @@ def generate_rtm() -> str:
     lines.append("")
     lines.append("All 76 BBP acceptance criteria evaluated in this verification session:")
     lines.append("")
-    lines.append("| Criteria ID | Acceptance Criteria Statement | Implementing File(s) | Verifying Test ID | FAT Status |")
+    lines.append(
+        "| Criteria ID | Acceptance Criteria Statement | Implementing File(s) | Verifying Test ID | FAT Status |"
+    )
     lines.append("|:---|:---|:---|:---|:---:|")
 
     for r, f_str, t_str, s_str in evaluated_reqs.get("AC", []):
@@ -967,7 +1179,9 @@ def generate_rtm() -> str:
         title = prefix_titles.get(pfx, pfx)
         lines.append(f"### 3.{pfx} {title}")
         lines.append("")
-        lines.append("| Requirement ID | Requirement Statement | Implementing File(s) | Test ID(s) | Last Result |")
+        lines.append(
+            "| Requirement ID | Requirement Statement | Implementing File(s) | Test ID(s) | Last Result |"
+        )
         lines.append("|:---|:---|:---|:---|:---:|")
 
         for r, f_str, t_str, s_str in evaluated_reqs.get(pfx, []):
@@ -991,10 +1205,16 @@ def main():
     fat_ac_path = REPO_ROOT / "fat" / "acceptance_criteria_results.md"
     with open(fat_ac_path, "w", encoding="utf-8") as f:
         f.write("# CloudLens BBP Acceptance Criteria Verification Register (FAT)\n\n")
-        f.write("> **Document Class**: Factory Acceptance Test Acceptance Register (BBP Section 48)\n")
+        f.write(
+            "> **Document Class**: Factory Acceptance Test Acceptance Register (BBP Section 48)\n"
+        )
         f.write("> **Authority**: BBP v1.1, Addenda A & B, Prompt 42 / R-DOC\n")
         f.write("> **Total Criteria**: 76 Criteria (75 PASS, 1 NOT TESTABLE IN FAT, 0 FAIL)\n\n")
-        f.write(rtm_content.split("## 2. Acceptance Criteria Verification Register (AC-001 to AC-127)\n\n")[1].split("---")[0])
+        f.write(
+            rtm_content.split(
+                "## 2. Acceptance Criteria Verification Register (AC-001 to AC-127)\n\n"
+            )[1].split("---")[0]
+        )
     print(f"Mirrored acceptance criteria to {fat_ac_path}.")
 
 

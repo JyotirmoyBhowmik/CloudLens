@@ -59,9 +59,11 @@ class GCPCostService:
         """Constructs a Google Cloud BigQuery client if credentials exist."""
         try:
             from google.cloud import bigquery
+
             creds = self.config.get("credentials") or {}
             if creds.get("service_account_info"):
                 from google.oauth2 import service_account
+
                 credentials = service_account.Credentials.from_service_account_info(
                     creds["service_account_info"]
                 )
@@ -138,7 +140,9 @@ class GCPCostService:
 
         if client is not None:
             # Mandatory Cost Discipline: BigQuery partition filter enforced
-            table_name = f"{self.primary_project_id}.{self.dataset_name}.gcp_billing_export_resource_v1_*"
+            table_name = (
+                f"{self.primary_project_id}.{self.dataset_name}.gcp_billing_export_resource_v1_*"
+            )
             query_sql = (
                 f"SELECT * FROM `{table_name}` "
                 f"WHERE _PARTITIONDATE BETWEEN '{start_date}' AND '{end_date}' "
@@ -170,7 +174,11 @@ class GCPCostService:
                     raw_dict = dict(row.items())
                     rec = self._parse_bq_record(raw_dict)
                     if account_id:
-                        clean_acc = account_id.replace("projects/", "").replace("billingAccounts/", "").strip()
+                        clean_acc = (
+                            account_id.replace("projects/", "")
+                            .replace("billingAccounts/", "")
+                            .strip()
+                        )
                         if rec.project_id != clean_acc and rec.billing_account_id != clean_acc:
                             continue
                     parsed_records.append(rec)

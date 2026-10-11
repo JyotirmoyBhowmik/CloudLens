@@ -39,7 +39,9 @@ class DisasterRecoveryCoordinator:
         """Captures an atomic snapshot of current repository state."""
         facts = self.primary_repo.get_all_facts(tenant_context=tenant_context)
         snapshot = copy.deepcopy(facts)
-        serialized = "".join(f"{f.id}:{f.billed_cost.value}" for f in sorted(snapshot, key=lambda x: x.id))
+        serialized = "".join(
+            f"{f.id}:{f.billed_cost.value}" for f in sorted(snapshot, key=lambda x: x.id)
+        )
         chk_hash = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
         self.checkpoints.append(
             {
@@ -51,9 +53,7 @@ class DisasterRecoveryCoordinator:
         )
         return chk_hash
 
-    def simulate_disaster_and_recover(
-        self, tenant_context: TenantContext
-    ) -> dict[str, Any]:
+    def simulate_disaster_and_recover(self, tenant_context: TenantContext) -> dict[str, Any]:
         """Simulates catastrophic primary failure, failover to secondary, and verifies RTO/RPO."""
         start_time = time.perf_counter()
         disaster_time = datetime.now(UTC)
@@ -223,7 +223,9 @@ class TestDisasterRecoverySuite:
         secrets_store = {
             "secret/cloudlens/database": {"password": "pg-super-secret-password-1234"},
             "secret/cloudlens/jwt": {"signing_key": "vault-derived-ed25519-key-5678"},
-            "secret/cloudlens/connectors/aws": {"role_arn": "arn:aws:iam::123456789012:role/CloudLensRole"},
+            "secret/cloudlens/connectors/aws": {
+                "role_arn": "arn:aws:iam::123456789012:role/CloudLensRole"
+            },
         }
 
         # Take Raft snapshot
@@ -235,12 +237,18 @@ class TestDisasterRecoverySuite:
         assert len(secrets_store) == 0
 
         # Restore from Raft snapshot
-        secrets_store.update({
-            "secret/cloudlens/database": {"password": "pg-super-secret-password-1234"},
-            "secret/cloudlens/jwt": {"signing_key": "vault-derived-ed25519-key-5678"},
-            "secret/cloudlens/connectors/aws": {"role_arn": "arn:aws:iam::123456789012:role/CloudLensRole"},
-        })
-        restored_hash = hashlib.sha256(str(sorted(secrets_store.items())).encode("utf-8")).hexdigest()
+        secrets_store.update(
+            {
+                "secret/cloudlens/database": {"password": "pg-super-secret-password-1234"},
+                "secret/cloudlens/jwt": {"signing_key": "vault-derived-ed25519-key-5678"},
+                "secret/cloudlens/connectors/aws": {
+                    "role_arn": "arn:aws:iam::123456789012:role/CloudLensRole"
+                },
+            }
+        )
+        restored_hash = hashlib.sha256(
+            str(sorted(secrets_store.items())).encode("utf-8")
+        ).hexdigest()
 
         assert restored_hash == snapshot_hash
         assert "secret/cloudlens/database" in secrets_store
@@ -248,16 +256,22 @@ class TestDisasterRecoverySuite:
     def test_mid_sync_worker_crash_recovery(self) -> None:
         """Simulates worker crashing mid-batch; lock releases, retries succeed, and idempotency guarantees zero duplication (NFR-043)."""
         job_repo = get_sync_job_repository()
-        tc = TenantContext(tenant_id="tenant-crash-test", user_id="worker@cloudlens.internal", roles={"SUPER_ADMIN"})
+        tc = TenantContext(
+            tenant_id="tenant-crash-test",
+            user_id="worker@cloudlens.internal",
+            roles={"SUPER_ADMIN"},
+        )
 
         job_id = f"job-crash-{int(time.time())}"
         idempotency_key = f"idem-key-{job_id}"
 
         from domain.models.enums import ProviderType
+
         now = datetime.now(UTC)
 
         # 1. Worker starts and registers RUNNING job
         from domain.sync.models import SyncJob
+
         job = SyncJob(
             id=job_id,
             tenant_id=tc.tenant_id,

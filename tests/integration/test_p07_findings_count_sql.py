@@ -54,7 +54,9 @@ async def test_findings_count_equals_select_count() -> None:
 
     repo_count_initial = repo.count_findings(tenant_context=tc)
     assert repo_count_initial == 0, f"Expected 0 findings, got {repo_count_initial}"
-    assert repo_count_initial == sql_count_initial, "Repo count must match SELECT COUNT(*) initially"
+    assert repo_count_initial == sql_count_initial, (
+        "Repo count must match SELECT COUNT(*) initially"
+    )
 
     # Step 2: Insert 3 findings
     f1 = PolicyFinding(
@@ -108,19 +110,25 @@ async def test_findings_count_equals_select_count() -> None:
 
     repo_count_total = repo.count_findings(tenant_context=tc)
     assert sql_count_total == 3, f"Expected 3 in DB, found {sql_count_total}"
-    assert repo_count_total == sql_count_total, f"Repo count ({repo_count_total}) != SELECT COUNT(*) ({sql_count_total})"
+    assert repo_count_total == sql_count_total, (
+        f"Repo count ({repo_count_total}) != SELECT COUNT(*) ({sql_count_total})"
+    )
 
     # Step 4: Verify status filtered count equals SELECT COUNT(*) WHERE lifecycle_status = 'OPEN'
     async with get_tenant_session(tenant_id) as sess:
         raw_res = await sess.execute(
-            text("SELECT COUNT(*) FROM policy_findings WHERE tenant_id = :tid AND lifecycle_status = 'OPEN';"),
+            text(
+                "SELECT COUNT(*) FROM policy_findings WHERE tenant_id = :tid AND lifecycle_status = 'OPEN';"
+            ),
             {"tid": tenant_id},
         )
         sql_count_open = raw_res.scalar() or 0
 
     repo_count_open = repo.count_findings(tenant_context=tc, status="OPEN")
     assert sql_count_open == 2, f"Expected 2 OPEN in DB, found {sql_count_open}"
-    assert repo_count_open == sql_count_open, f"Repo OPEN count ({repo_count_open}) != SELECT COUNT(*) ({sql_count_open})"
+    assert repo_count_open == sql_count_open, (
+        f"Repo OPEN count ({repo_count_open}) != SELECT COUNT(*) ({sql_count_open})"
+    )
 
     # Step 5: Delete one finding and verify count reduces immediately via SQL
     repo.delete_finding(f1.id, tenant_context=tc)
@@ -134,4 +142,6 @@ async def test_findings_count_equals_select_count() -> None:
 
     repo_count_after_del = repo.count_findings(tenant_context=tc)
     assert sql_count_after_del == 2, f"Expected 2 after delete in DB, found {sql_count_after_del}"
-    assert repo_count_after_del == sql_count_after_del, "Repo count must equal SELECT COUNT(*) after deletion"
+    assert repo_count_after_del == sql_count_after_del, (
+        "Repo count must equal SELECT COUNT(*) after deletion"
+    )

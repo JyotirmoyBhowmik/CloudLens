@@ -62,7 +62,10 @@ class TestAnalyticalExtractSuite:
         ]
 
     def test_criterion_1_schema_version_stamped_on_files_and_manifest(
-        self, extract_engine: AnalyticsExtractEngine, tenant_context: TenantContext, sample_facts: list[dict]
+        self,
+        extract_engine: AnalyticsExtractEngine,
+        tenant_context: TenantContext,
+        sample_facts: list[dict],
     ) -> None:
         """Criterion 1: Schema version stamped on every file and manifest."""
         job, manifest = extract_engine.generate_extract(
@@ -79,7 +82,10 @@ class TestAnalyticalExtractSuite:
         assert manifest.version >= 1
 
     def test_criterion_2_restatement_re_emitted_in_full_with_new_version(
-        self, extract_engine: AnalyticsExtractEngine, tenant_context: TenantContext, sample_facts: list[dict]
+        self,
+        extract_engine: AnalyticsExtractEngine,
+        tenant_context: TenantContext,
+        sample_facts: list[dict],
     ) -> None:
         """Criterion 2: Restatement re-emitted in full with an incremented version."""
         # Initial run: version 1
@@ -108,7 +114,10 @@ class TestAnalyticalExtractSuite:
         assert manifest_v2.supersedes_version == 1
 
     def test_criterion_3_scope_manifest_present_and_accurate(
-        self, extract_engine: AnalyticsExtractEngine, tenant_context: TenantContext, sample_facts: list[dict]
+        self,
+        extract_engine: AnalyticsExtractEngine,
+        tenant_context: TenantContext,
+        sample_facts: list[dict],
     ) -> None:
         """Criterion 3: Scope manifest present, signed with checksums, and accurate."""
         job, manifest = extract_engine.generate_extract(
@@ -160,9 +169,7 @@ class TestAnalyticalExtractSuite:
         assert new_v == 2
         assert old_v == 1
 
-    def test_criterion_6_late_and_empty_runs_alert(
-        self, tenant_context: TenantContext
-    ) -> None:
+    def test_criterion_6_late_and_empty_runs_alert(self, tenant_context: TenantContext) -> None:
         """Criterion 6: Empty and late extract executions dispatch alerts and raise exceptions."""
         obs = ExtractObservabilityEngine()
         from domain.analytics.models import AnalyticsExtractJob
@@ -194,6 +201,7 @@ class TestAnalyticalExtractSuite:
 
         class MockOltpConnection:
             """Simulated live PostgreSQL OLTP transactional handle."""
+
             pass
 
         with pytest.raises(TransactionalPathAccessForbiddenException):

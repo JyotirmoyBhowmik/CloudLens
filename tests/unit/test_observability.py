@@ -251,4 +251,3 @@ def test_all_18_robs_metrics_registered_and_scrapable(client: TestClient):
         assert metric_name in metrics_text, (
             f"Exact R-OBS metric {metric_name} was not found in /metrics scrape output!"
         )
-

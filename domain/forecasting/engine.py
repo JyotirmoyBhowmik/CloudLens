@@ -503,7 +503,9 @@ class ForecastingEngine:
         if len(amounts) >= 4:
             recent_avg = sum(amounts[-2:]) / 2.0
             prior_avg = sum(amounts[:-2]) / len(amounts[:-2])
-            if prior_avg > 0 and (recent_avg - prior_avg) / prior_avg > 0.30:  # no-hardcode-allow: reason="Cost trend spiking threshold ratio (30%)", reviewer="Prompt-48-Audit"
+            if (
+                prior_avg > 0 and (recent_avg - prior_avg) / prior_avg > 0.30
+            ):  # no-hardcode-allow: reason="Cost trend spiking threshold ratio (30%)", reviewer="Prompt-48-Audit"
                 return CostTrend.SPIKING
 
         # 2. Check for Volatility (Coefficient of Variation > 0.40)
@@ -511,7 +513,9 @@ class ForecastingEngine:
         std_dev = math.sqrt(variance)
         cv = std_dev / mean_amt
 
-        if cv > 0.40:  # no-hardcode-allow: reason="Cost trend volatility coefficient of variation threshold (0.40)", reviewer="Prompt-48-Audit"
+        if (
+            cv > 0.40
+        ):  # no-hardcode-allow: reason="Cost trend volatility coefficient of variation threshold (0.40)", reviewer="Prompt-48-Audit"
             return CostTrend.VOLATILE
 
         # 3. Check for Trend Slope
@@ -527,9 +531,13 @@ class ForecastingEngine:
             slope = ((n * sum_xy) - (sum_x * sum_y)) / denom
             normalized_slope = slope / mean_amt
 
-            if normalized_slope > 0.05:  # no-hardcode-allow: reason="Cost trend normalized slope drift threshold (5%)", reviewer="Prompt-48-Audit"
+            if (
+                normalized_slope > 0.05
+            ):  # no-hardcode-allow: reason="Cost trend normalized slope drift threshold (5%)", reviewer="Prompt-48-Audit"
                 return CostTrend.INCREASING
-            elif normalized_slope < -0.05:  # no-hardcode-allow: reason="Cost trend normalized slope drift threshold (5%)", reviewer="Prompt-48-Audit"
+            elif (
+                normalized_slope < -0.05
+            ):  # no-hardcode-allow: reason="Cost trend normalized slope drift threshold (5%)", reviewer="Prompt-48-Audit"
                 return CostTrend.DECREASING
 
         return CostTrend.STABLE

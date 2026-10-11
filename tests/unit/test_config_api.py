@@ -5,11 +5,26 @@ from fastapi.testclient import TestClient
 
 from api.cloudlens_api.main import app
 from domain.config import feature_flag_service, tenant_settings_store
+from domain.models.enums import SystemRole
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def client(make_auth_token):
+    token = make_auth_token(
+        tenant_id="tenant-finops-101",
+        email="qa-lead",
+        roles=[SystemRole.SUPER_ADMIN],
+        permissions=[
+            "config:read",
+            "config:write",
+            "features:read",
+            "features:toggle",
+            "tenants:settings:read",
+            "tenants:settings:write",
+            "platform.operate",
+        ],
+    )
+    return TestClient(app, headers={"Authorization": f"Bearer {token}"})
 
 
 @pytest.fixture(autouse=True)
@@ -96,7 +111,9 @@ def test_api_features_lifecycle(client: TestClient):
             "enabled": True,
             "changed_by": "qa-lead",
             "reason": "Test toggle via API",
+            "step_up_token": "valid-step-up",
         },
+        headers={"X-Step-Up-Token": "valid-step-up"},
     )
     assert toggle_res.status_code == 200
     assert toggle_res.json()["audit_event"]["new_value"] is True

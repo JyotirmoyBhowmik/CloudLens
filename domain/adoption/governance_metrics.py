@@ -50,10 +50,14 @@ class GovernanceMetricsService:
         # 1. Alert Metrics
         raised_count = len(alerts)
         acknowledged_count = sum(
-            1 for a in alerts if a.status in {AlertLifecycleStatus.ACKNOWLEDGED, AlertLifecycleStatus.RESOLVED}
+            1
+            for a in alerts
+            if a.status in {AlertLifecycleStatus.ACKNOWLEDGED, AlertLifecycleStatus.RESOLVED}
         )
         actioned_count = sum(
-            1 for a in alerts if a.status in {AlertLifecycleStatus.RESOLVED, AlertLifecycleStatus.AUTO_RESOLVED}
+            1
+            for a in alerts
+            if a.status in {AlertLifecycleStatus.RESOLVED, AlertLifecycleStatus.AUTO_RESOLVED}
         )
 
         ack_times: list[float] = []
@@ -65,7 +69,9 @@ class GovernanceMetricsService:
                     ack_times.append(delta)
 
         mtta = round(sum(ack_times) / len(ack_times), 2) if ack_times else 0.0
-        ack_rate = round((acknowledged_count / raised_count * 100.0) if raised_count > 0 else 100.0, 1)
+        ack_rate = round(
+            (acknowledged_count / raised_count * 100.0) if raised_count > 0 else 100.0, 1
+        )
 
         alert_metrics = AlertGovernanceMetrics(
             raised_count=raised_count,
@@ -91,7 +97,9 @@ class GovernanceMetricsService:
                     close_times.append(delta)
 
         mttc = round(sum(close_times) / len(close_times), 2) if close_times else 0.0
-        closure_rate = round((closed_count / created_count * 100.0) if created_count > 0 else 100.0, 1)
+        closure_rate = round(
+            (closed_count / created_count * 100.0) if created_count > 0 else 100.0, 1
+        )
 
         task_metrics = TaskGovernanceMetrics(
             created_count=created_count,

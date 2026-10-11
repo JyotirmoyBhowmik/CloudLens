@@ -63,11 +63,15 @@ class SqlReportRepository:
                         "id": job.id,
                         "tenant_id": tc.tenant_id,
                         "name": job.output_filename or job.template_id,
-                        "report_type": job.format.value if hasattr(job.format, "value") else str(job.format),
+                        "report_type": job.format.value
+                        if hasattr(job.format, "value")
+                        else str(job.format),
                         "status": job.status,
                         "parameters": json.dumps(job.parameters.model_dump()),
                         "artifact_id": job.download_token or job.id,
-                        "created_by": job.provenance.requester_identity if job.provenance else "system",
+                        "created_by": job.provenance.requester_identity
+                        if job.provenance
+                        else "system",
                         "created_at": job.created_at,
                         "completed_at": job.completed_at,
                         "error_message": job.error_message,
@@ -222,7 +226,9 @@ class SqlReportRepository:
                         "id": schedule.id,
                         "tenant_id": tc.tenant_id,
                         "name": schedule.template_id,
-                        "report_type": schedule.format.value if hasattr(schedule.format, "value") else str(schedule.format),
+                        "report_type": schedule.format.value
+                        if hasattr(schedule.format, "value")
+                        else str(schedule.format),
                         "cron_expression": schedule.cron_expression,
                         "parameters": json.dumps(schedule.parameters.model_dump()),
                         "enabled": schedule.is_active,

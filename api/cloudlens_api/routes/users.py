@@ -159,7 +159,9 @@ async def list_users(
         perms = identity_service.resolve_effective_permissions(user.roles)
         grants = [
             g.model_dump()
-            for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
+            for g in rbac_service.list_scope_grants(
+                tenant_id=tenant_context.tenant_id, grantee_id=user.id
+            )
         ]
         u_dict = user.model_dump()
         u_dict["permissions"] = perms
@@ -194,7 +196,9 @@ async def create_user(
     """Invites or provisions a new user in the authenticated tenant (API-006)."""
     _ = idempotency_key
     identity_service = get_identity_service()
-    existing_user = identity_service.get_user_by_email(tenant_context.tenant_id, payload.email.lower())
+    existing_user = identity_service.get_user_by_email(
+        tenant_context.tenant_id, payload.email.lower()
+    )
     if existing_user is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -254,7 +258,9 @@ async def get_user(
     perms = identity_service.resolve_effective_permissions(user.roles)
     grants = [
         g.model_dump()
-        for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
+        for g in rbac_service.list_scope_grants(
+            tenant_id=tenant_context.tenant_id, grantee_id=user.id
+        )
     ]
 
     res_dict = user.model_dump()
@@ -306,7 +312,9 @@ async def update_user(
     perms = identity_service.resolve_effective_permissions(user.roles)
     grants = [
         g.model_dump()
-        for g in rbac_service.list_scope_grants(tenant_id=tenant_context.tenant_id, grantee_id=user.id)
+        for g in rbac_service.list_scope_grants(
+            tenant_id=tenant_context.tenant_id, grantee_id=user.id
+        )
     ]
 
     res_dict = user.model_dump()

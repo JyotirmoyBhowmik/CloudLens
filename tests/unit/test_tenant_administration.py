@@ -133,7 +133,9 @@ def test_update_tenant_demo_cannot_become_production(tenant_admin_setup):
 
     # Attempt to change type from DEMO to PRODUCTION
     update_dto = TenantUpdateDTO(type=TenantType.PRODUCTION)
-    with pytest.raises(InvalidTenantTransitionException, match="DEMO tenant cannot be converted to PRODUCTION"):
+    with pytest.raises(
+        InvalidTenantTransitionException, match="DEMO tenant cannot be converted to PRODUCTION"
+    ):
         service.update_tenant(demo_tenant.id, update_dto, ctx)
 
     # Changing to NON_PRODUCTION or changing name is allowed

@@ -81,6 +81,7 @@ class DashboardService:
         # In-memory preference store for user landing configurations
         self._user_landing_preferences: dict[str, UserLandingPreference] = {}
         from domain.hierarchy.service import get_hierarchy_service
+
         self._hierarchy_service = get_hierarchy_service()
 
     # --------------------------------------------------------------------------
@@ -228,8 +229,12 @@ class DashboardService:
             from domain.cost.repository import get_cost_repository
 
             cost_repo = get_cost_repository()
-            period_totals = cost_repo.get_period_totals(time_window.period_id, tenant_context=tenant_context)
-            if period_totals and period_totals.get("billed_cost", Decimal("0.00")) > Decimal("0.00"):
+            period_totals = cost_repo.get_period_totals(
+                time_window.period_id, tenant_context=tenant_context
+            )
+            if period_totals and period_totals.get("billed_cost", Decimal("0.00")) > Decimal(
+                "0.00"
+            ):
                 sql_total_billed = period_totals["billed_cost"]
         except Exception as c_err:
             logger.debug("Cost period totals resolution note: %s", c_err)
@@ -239,14 +244,26 @@ class DashboardService:
             is_blank = False
             prior_total = round(total_amount * Decimal("0.93"), 2)
             delta_amount = total_amount - prior_total
-            delta_pct = round((delta_amount / prior_total) * Decimal("100.0"), 2) if prior_total > 0 else Decimal("0.00")
+            delta_pct = (
+                round((delta_amount / prior_total) * Decimal("100.0"), 2)
+                if prior_total > 0
+                else Decimal("0.00")
+            )
             current_month_amt = total_amount
             actual_amt = total_amount
             estimated_amt = round(total_amount * Decimal("0.07"), 2)
             forecast_amt = round(total_amount * Decimal("1.06"), 2)
             budget_total = round(total_amount * Decimal("1.02"), 2)
-            util_pct = round((total_amount / budget_total) * Decimal("100.0"), 2) if budget_total > 0 else Decimal("0.00")
-            proj_util_pct = round((forecast_amt / budget_total) * Decimal("100.0"), 2) if budget_total > 0 else Decimal("0.00")
+            util_pct = (
+                round((total_amount / budget_total) * Decimal("100.0"), 2)
+                if budget_total > 0
+                else Decimal("0.00")
+            )
+            proj_util_pct = (
+                round((forecast_amt / budget_total) * Decimal("100.0"), 2)
+                if budget_total > 0
+                else Decimal("0.00")
+            )
             threshold_state = (
                 "CRITICAL"
                 if proj_util_pct > Decimal("100.0")
@@ -269,14 +286,26 @@ class DashboardService:
             total_amount = sum((r.monthly_cost for r in all_res), Decimal("0.00")) * mult
             prior_total = round(total_amount * Decimal("0.93"), 2)
             delta_amount = total_amount - prior_total
-            delta_pct = round((delta_amount / prior_total) * Decimal("100.0"), 2) if prior_total > 0 else Decimal("0.00")
+            delta_pct = (
+                round((delta_amount / prior_total) * Decimal("100.0"), 2)
+                if prior_total > 0
+                else Decimal("0.00")
+            )
             current_month_amt = round(total_amount * Decimal("0.43"), 2)
             actual_amt = round(total_amount * Decimal("0.96"), 2)
             estimated_amt = round(total_amount * Decimal("0.07"), 2)
             forecast_amt = round(total_amount * Decimal("1.06"), 2)
             budget_total = round(total_amount * Decimal("1.02"), 2)
-            util_pct = round((total_amount / budget_total) * Decimal("100.0"), 2) if budget_total > 0 else Decimal("0.00")
-            proj_util_pct = round((forecast_amt / budget_total) * Decimal("100.0"), 2) if budget_total > 0 else Decimal("0.00")
+            util_pct = (
+                round((total_amount / budget_total) * Decimal("100.0"), 2)
+                if budget_total > 0
+                else Decimal("0.00")
+            )
+            proj_util_pct = (
+                round((forecast_amt / budget_total) * Decimal("100.0"), 2)
+                if budget_total > 0
+                else Decimal("0.00")
+            )
             threshold_state = (
                 "CRITICAL"
                 if proj_util_pct > Decimal("100.0")
@@ -301,8 +330,12 @@ class DashboardService:
             amount=current_month_amt,
             currency="USD",
             presentation_basis=CostPresentationBasis.BILLED,
-            prior_amount=round(prior_total * Decimal("0.43"), 2) if not is_blank else Decimal("0.00"),
-            delta_amount=round(delta_amount * Decimal("0.43"), 2) if not is_blank else Decimal("0.00"),
+            prior_amount=round(prior_total * Decimal("0.43"), 2)
+            if not is_blank
+            else Decimal("0.00"),
+            delta_amount=round(delta_amount * Decimal("0.43"), 2)
+            if not is_blank
+            else Decimal("0.00"),
             delta_percentage=delta_pct,
             cost_source="ACTUAL",
         )
@@ -313,8 +346,12 @@ class DashboardService:
             amount=actual_amt,
             currency="USD",
             presentation_basis=CostPresentationBasis.AMORTISED,
-            prior_amount=round(prior_total * Decimal("0.96"), 2) if not is_blank else Decimal("0.00"),
-            delta_amount=round(delta_amount * Decimal("0.96"), 2) if not is_blank else Decimal("0.00"),
+            prior_amount=round(prior_total * Decimal("0.96"), 2)
+            if not is_blank
+            else Decimal("0.00"),
+            delta_amount=round(delta_amount * Decimal("0.96"), 2)
+            if not is_blank
+            else Decimal("0.00"),
             delta_percentage=delta_pct,
             cost_source="ACTUAL",
         )
@@ -334,7 +371,9 @@ class DashboardService:
             amount=forecast_amt,
             currency="USD",
             presentation_basis=CostPresentationBasis.BILLED,
-            delta_amount=round(total_amount * Decimal("0.06"), 2) if not is_blank else Decimal("0.00"),
+            delta_amount=round(total_amount * Decimal("0.06"), 2)
+            if not is_blank
+            else Decimal("0.00"),
             delta_percentage=Decimal("6.00") if not is_blank else Decimal("0.00"),
             cost_source="FORECAST",
         )
@@ -372,7 +411,11 @@ class DashboardService:
             for pid, plabel in prov_map.items():
                 p_res = [r for r in all_res if r.provider.lower() == pid]
                 p_cost = round(sum((r.monthly_cost for r in p_res), Decimal("0.00")) * mult, 2)
-                p_pct = round((p_cost / total_amount) * Decimal("100.0"), 2) if total_amount > 0 else Decimal("0.00")
+                p_pct = (
+                    round((p_cost / total_amount) * Decimal("100.0"), 2)
+                    if total_amount > 0
+                    else Decimal("0.00")
+                )
                 prov_items.append(
                     BreakdownItem(
                         id=pid,
@@ -395,13 +438,17 @@ class DashboardService:
             bu_groups: dict[str, Decimal] = {}
             for r in all_res:
                 bu_name = r.business_unit_name or "Core Infrastructure"
-                bu_groups[bu_name] = bu_groups.get(bu_name, Decimal("0.00")) + (r.monthly_cost * mult)
+                bu_groups[bu_name] = bu_groups.get(bu_name, Decimal("0.00")) + (
+                    r.monthly_cost * mult
+                )
             bu_items = [
                 BreakdownItem(
                     id=f"bu-{name.lower().replace(' ', '-')}",
                     label=name,
                     cost=round(cost, 2),
-                    percentage=round((cost / total_amount) * Decimal("100.0"), 2) if total_amount > 0 else Decimal("0.00"),
+                    percentage=round((cost / total_amount) * Decimal("100.0"), 2)
+                    if total_amount > 0
+                    else Decimal("0.00"),
                 )
                 for name, cost in bu_groups.items()
             ]
@@ -418,13 +465,17 @@ class DashboardService:
             app_groups: dict[str, Decimal] = {}
             for r in all_res:
                 app_name = r.application_name or "Shared Workloads"
-                app_groups[app_name] = app_groups.get(app_name, Decimal("0.00")) + (r.monthly_cost * mult)
+                app_groups[app_name] = app_groups.get(app_name, Decimal("0.00")) + (
+                    r.monthly_cost * mult
+                )
             app_items = [
                 BreakdownItem(
                     id=f"app-{name.lower().replace(' ', '-')}",
                     label=name,
                     cost=round(cost, 2),
-                    percentage=round((cost / total_amount) * Decimal("100.0"), 2) if total_amount > 0 else Decimal("0.00"),
+                    percentage=round((cost / total_amount) * Decimal("100.0"), 2)
+                    if total_amount > 0
+                    else Decimal("0.00"),
                 )
                 for name, cost in app_groups.items()
             ]
@@ -441,13 +492,17 @@ class DashboardService:
             svc_groups: dict[str, Decimal] = {}
             for r in all_res:
                 svc_name = r.service_name or "Cloud Infrastructure"
-                svc_groups[svc_name] = svc_groups.get(svc_name, Decimal("0.00")) + (r.monthly_cost * mult)
+                svc_groups[svc_name] = svc_groups.get(svc_name, Decimal("0.00")) + (
+                    r.monthly_cost * mult
+                )
             svc_items = [
                 BreakdownItem(
                     id=name,
                     label=name,
                     cost=round(cost, 2),
-                    percentage=round((cost / total_amount) * Decimal("100.0"), 2) if total_amount > 0 else Decimal("0.00"),
+                    percentage=round((cost / total_amount) * Decimal("100.0"), 2)
+                    if total_amount > 0
+                    else Decimal("0.00"),
                 )
                 for name, cost in sorted(svc_groups.items(), key=lambda x: x[1], reverse=True)
             ]
@@ -484,7 +539,9 @@ class DashboardService:
         w_top_services = CostBreakdownWidget(
             metadata=make_meta("w_top_services", "Top 5 Dominant Services"),
             dimension="TopServices",
-            total_cost=round(sum((it.cost for it in svc_items[:5]), Decimal("0.0")), 2) if not is_blank else Decimal("0.00"),
+            total_cost=round(sum((it.cost for it in svc_items[:5]), Decimal("0.0")), 2)
+            if not is_blank
+            else Decimal("0.00"),
             items=svc_items[:5],
         )
 
@@ -498,8 +555,12 @@ class DashboardService:
                     MovementItem(
                         item_id=f"mov-{idx + 1}",
                         name=item.label,
-                        category="Database" if "Database" in item.label or "SQL" in item.label else "Compute",
-                        provider="aws" if "Amazon" in item.label else ("azure" if "Azure" in item.label else "gcp"),
+                        category="Database"
+                        if "Database" in item.label or "SQL" in item.label
+                        else "Compute",
+                        provider="aws"
+                        if "Amazon" in item.label
+                        else ("azure" if "Azure" in item.label else "gcp"),
                         current_cost=item.cost,
                         prior_cost=p_cost,
                         delta_cost=d_cost,
@@ -545,7 +606,9 @@ class DashboardService:
         # 17. Runtime Exceptions
         runtime_items: list[AnomalyItem] = []
         if not is_blank:
-            for idx, r in enumerate([res for res in all_res if res.runtime_state == "STOPPED"][:2]):  # no-hardcode-allow: reason="Runtime stopped state check", reviewer="Prompt-P09-Audit"
+            for idx, r in enumerate(
+                [res for res in all_res if res.runtime_state == "STOPPED"][:2]
+            ):  # no-hardcode-allow: reason="Runtime stopped state check", reviewer="Prompt-P09-Audit"
                 runtime_items.append(
                     AnomalyItem(
                         id=f"rt-{idx + 1}",
@@ -823,7 +886,9 @@ class DashboardService:
                             ),
                         ],
                     ),
-                ] if not is_prov_blank else [],
+                ]
+                if not is_prov_blank
+                else [],
             )
         elif provider.lower() == "aws":
             display_name = "Amazon Web Services"
@@ -863,7 +928,9 @@ class DashboardService:
                             ),
                         ],
                     ),
-                ] if not is_prov_blank else [],
+                ]
+                if not is_prov_blank
+                else [],
             )
         elif provider.lower() == "gcp":
             display_name = "Google Cloud Platform"
@@ -903,7 +970,9 @@ class DashboardService:
                             )
                         ],
                     ),
-                ] if not is_prov_blank else [],
+                ]
+                if not is_prov_blank
+                else [],
             )
         else:  # oci
             display_name = "Oracle Cloud Infrastructure"
@@ -931,10 +1000,14 @@ class DashboardService:
                         cost=actual_amt,
                         resource_count=res_count,
                     )
-                ] if not is_prov_blank else [],
+                ]
+                if not is_prov_blank
+                else [],
             )
 
-        util_pct = (actual_amt / budget_amt) * Decimal("100.0") if budget_amt > 0 else Decimal("0.00")
+        util_pct = (
+            (actual_amt / budget_amt) * Decimal("100.0") if budget_amt > 0 else Decimal("0.00")
+        )
 
         return ProviderDashboardResponse(
             provider=provider.lower(),
@@ -999,7 +1072,8 @@ class DashboardService:
 
         all_res = self._hierarchy_service.list_resources(tenant_context=tenant_context)
         matching_res = [
-            r for r in all_res
+            r
+            for r in all_res
             if r.service_id.lower() == svc_key.lower()
             or svc_key.lower() in r.service_name.lower()
             or (r.service_name and r.service_name.lower() in svc_key.lower())
@@ -1133,7 +1207,9 @@ class DashboardService:
             doc_url = "https://cloudlens.internal/docs/services"
             pricing_source = "CloudLens Master Catalog Feed"
 
-        util_pct = (actual_amt / budget_amt) * Decimal("100.0") if budget_amt > 0 else Decimal("0.00")
+        util_pct = (
+            (actual_amt / budget_amt) * Decimal("100.0") if budget_amt > 0 else Decimal("0.00")
+        )
 
         # Historical trend (14)
         trend_pts: list[TimeSeriesPoint] = []
@@ -1384,4 +1460,3 @@ def reset_dashboard_service() -> DashboardService:
     global _dashboard_service
     _dashboard_service = DashboardService()
     return _dashboard_service
-

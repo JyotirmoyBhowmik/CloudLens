@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -178,7 +179,9 @@ class SqlCatalogueRepository:
                             "display_name": metric.display_name,
                             "unit_symbol": metric.unit_symbol,
                             "aggregation_method": metric.aggregation_method,
-                            "applicable_monitoring_types": json.dumps(metric.applicable_monitoring_types),
+                            "applicable_monitoring_types": json.dumps(
+                                metric.applicable_monitoring_types
+                            ),
                             "description": metric.description,
                             "version": metric.version,
                             "effective_from": metric.effective_from,
@@ -250,7 +253,11 @@ class SqlCatalogueRepository:
     def list_service_categories(self) -> list[ServiceCategoryDTO]:
         async def _list():
             async with get_tenant_session("system") as sess:
-                res = await sess.execute(text("SELECT code, name, description, is_focus_standard, created_at FROM service_categories ORDER BY code;"))
+                res = await sess.execute(
+                    text(
+                        "SELECT code, name, description, is_focus_standard, created_at FROM service_categories ORDER BY code;"
+                    )
+                )
                 return [
                     ServiceCategoryDTO(
                         code=row[0],
@@ -295,7 +302,9 @@ class SqlCatalogueRepository:
         async def _get():
             async with get_tenant_session("system") as sess:
                 res = await sess.execute(
-                    text("SELECT id, provider, service_code, name, category, created_at FROM services WHERE id = :id LIMIT 1;"),
+                    text(
+                        "SELECT id, provider, service_code, name, category, created_at FROM services WHERE id = :id LIMIT 1;"
+                    ),
                     {"id": service_id},
                 )
                 row = res.fetchone()
@@ -315,7 +324,11 @@ class SqlCatalogueRepository:
     def list_services(self) -> list[ServiceDTO]:
         async def _list():
             async with get_tenant_session("system") as sess:
-                res = await sess.execute(text("SELECT id, provider, service_code, name, category, created_at FROM services ORDER BY id;"))
+                res = await sess.execute(
+                    text(
+                        "SELECT id, provider, service_code, name, category, created_at FROM services ORDER BY id;"
+                    )
+                )
                 return [
                     ServiceDTO(
                         id=row[0],
@@ -666,7 +679,9 @@ class SqlCatalogueRepository:
                         "display_name": metric.display_name,
                         "unit_symbol": metric.unit_symbol,
                         "aggregation_method": metric.aggregation_method,
-                        "applicable_monitoring_types": json.dumps(metric.applicable_monitoring_types),
+                        "applicable_monitoring_types": json.dumps(
+                            metric.applicable_monitoring_types
+                        ),
                         "description": metric.description,
                         "version": metric.version,
                         "effective_from": metric.effective_from,
@@ -955,7 +970,11 @@ class SqlCatalogueRepository:
                     gap_id = row[0]
                     occ = row[6] + 1
                     raw_ctx = row[9]
-                    ctx_dict = raw_ctx if isinstance(raw_ctx, dict) else (json.loads(raw_ctx) if raw_ctx else {})
+                    ctx_dict = (
+                        raw_ctx
+                        if isinstance(raw_ctx, dict)
+                        else (json.loads(raw_ctx) if raw_ctx else {})
+                    )
                     if context:
                         ctx_dict.update(context)
                     await sess.execute(
@@ -1042,14 +1061,18 @@ class SqlCatalogueRepository:
                 query = f"""
                     SELECT id, tenant_id, catalogue_type, provider, native_identifier, status, occurrence_count, first_seen_at, last_seen_at, context_payload, resolution_notes, resolved_by, resolved_at
                     FROM catalogue_gaps
-                    WHERE {' AND '.join(clauses)}
+                    WHERE {" AND ".join(clauses)}
                     ORDER BY last_seen_at DESC;
                 """
                 res = await sess.execute(text(query), params)
                 items = []
                 for row in res.fetchall():
                     raw_ctx = row[9]
-                    ctx_dict = raw_ctx if isinstance(raw_ctx, dict) else (json.loads(raw_ctx) if raw_ctx else {})
+                    ctx_dict = (
+                        raw_ctx
+                        if isinstance(raw_ctx, dict)
+                        else (json.loads(raw_ctx) if raw_ctx else {})
+                    )
                     items.append(
                         CatalogueGapDTO(
                             id=row[0],
@@ -1104,7 +1127,11 @@ class SqlCatalogueRepository:
                 )
                 await sess.commit()
                 raw_ctx = row[9]
-                ctx_dict = raw_ctx if isinstance(raw_ctx, dict) else (json.loads(raw_ctx) if raw_ctx else {})
+                ctx_dict = (
+                    raw_ctx
+                    if isinstance(raw_ctx, dict)
+                    else (json.loads(raw_ctx) if raw_ctx else {})
+                )
                 return CatalogueGapDTO(
                     id=row[0],
                     tenant_id=row[1],

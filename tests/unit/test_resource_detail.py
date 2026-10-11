@@ -435,7 +435,9 @@ def test_api_post_explorer_success(client: TestClient, test_headers: dict[str, s
 
 def test_api_get_charge_lines_success(client: TestClient, test_headers: dict[str, str]):
     """Tests GET /api/v1/resource-detail/explorer/charge-lines endpoint."""
-    resp = client.get("/api/v1/resource-detail/explorer/charge-lines?group_id=res-aws-vm-01", headers=test_headers)
+    resp = client.get(
+        "/api/v1/resource-detail/explorer/charge-lines?group_id=res-aws-vm-01", headers=test_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
 

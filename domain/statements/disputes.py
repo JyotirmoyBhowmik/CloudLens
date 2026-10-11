@@ -63,7 +63,9 @@ class StatementDisputeManager:
 
             assigned_owner = resolve_dispute_investigator(tc.tenant_id)
 
-        if not reason or len(reason.strip()) < 5:  # no-hardcode-allow: reason="Minimum dispute justification text length", reviewer="Prompt-48-Audit"
+        if (
+            not reason or len(reason.strip()) < 5
+        ):  # no-hardcode-allow: reason="Minimum dispute justification text length", reviewer="Prompt-48-Audit"
             raise StatementDisputeException(
                 "Dispute justification reason must be detailed (min 5 chars)."
             )

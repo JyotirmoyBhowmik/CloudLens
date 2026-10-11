@@ -508,4 +508,3 @@ def reset_demo_mode_service() -> DemoModeService:
     global _demo_mode_service
     _demo_mode_service = DemoModeService()
     return _demo_mode_service
-

@@ -47,7 +47,10 @@ def main():
     logger.info("Stopping container: cloudlens-api ...")
     run_command(["docker", "stop", "cloudlens-api"])
     stop_time = time.time()
-    logger.info("cloudlens-api stopped at %s. Waiting for ComponentDown alert in Mailpit...", time.ctime(stop_time))
+    logger.info(
+        "cloudlens-api stopped at %s. Waiting for ComponentDown alert in Mailpit...",
+        time.ctime(stop_time),
+    )
 
     firing_email = None
     # Wait up to 110s for alert (60s evaluation + 15s scrape + Alertmanager group_wait)
@@ -56,26 +59,39 @@ def main():
         elapsed = time.time() - stop_time
         msgs = get_mailpit_messages()
         new_msgs = [m for m in msgs if m["ID"] not in initial_ids]
-        
+
         # Look for ComponentDown firing email
         for msg in new_msgs:
             subject = msg.get("Subject", "")
             if "ComponentDown" in subject and "FIRING" in subject.upper():
                 firing_email = msg
                 break
-        
-        if firing_email:
-            logger.info("Found FIRING alert email in Mailpit after %.1fs! Subject: %s", elapsed, firing_email["Subject"])
-            break
-        logger.info("Elapsed: %.1fs, waiting for alert email... (current new emails: %d)", elapsed, len(new_msgs))
 
-    assert firing_email is not None, "ComponentDown alert email did not arrive in Mailpit within 120s!"
+        if firing_email:
+            logger.info(
+                "Found FIRING alert email in Mailpit after %.1fs! Subject: %s",
+                elapsed,
+                firing_email["Subject"],
+            )
+            break
+        logger.info(
+            "Elapsed: %.1fs, waiting for alert email... (current new emails: %d)",
+            elapsed,
+            len(new_msgs),
+        )
+
+    assert firing_email is not None, (
+        "ComponentDown alert email did not arrive in Mailpit within 120s!"
+    )
 
     # 2. Restart API container
     logger.info("Restarting container: cloudlens-api ...")
     run_command(["docker", "start", "cloudlens-api"])
     restart_time = time.time()
-    logger.info("cloudlens-api started at %s. Waiting for RESOLVED email in Mailpit...", time.ctime(restart_time))
+    logger.info(
+        "cloudlens-api started at %s. Waiting for RESOLVED email in Mailpit...",
+        time.ctime(restart_time),
+    )
 
     resolved_email = None
     # Wait up to 90s for resolved notification
@@ -84,15 +100,19 @@ def main():
         elapsed = time.time() - restart_time
         msgs = get_mailpit_messages()
         new_msgs = [m for m in msgs if m["ID"] not in initial_ids and m["ID"] != firing_email["ID"]]
-        
+
         for msg in new_msgs:
             subject = msg.get("Subject", "")
             if "ComponentDown" in subject and "RESOLVED" in subject.upper():
                 resolved_email = msg
                 break
-        
+
         if resolved_email:
-            logger.info("Found RESOLVED alert email in Mailpit after %.1fs! Subject: %s", elapsed, resolved_email["Subject"])
+            logger.info(
+                "Found RESOLVED alert email in Mailpit after %.1fs! Subject: %s",
+                elapsed,
+                resolved_email["Subject"],
+            )
             break
         logger.info("Elapsed: %.1fs, waiting for resolved email...", elapsed)
 

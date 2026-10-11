@@ -141,7 +141,11 @@ def list_roles(
     tc: TenantContext = Depends(require_auth),
 ) -> list[RoleDefinition]:
     """Lists built-in platform roles and tenant-specific custom roles."""
-    effective_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
+    effective_tenant = (
+        tenant_id
+        if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate")))
+        else tc.tenant_id
+    )
     service = get_rbac_service()
     return service.list_roles(tenant_id=effective_tenant)
 
@@ -153,7 +157,11 @@ def get_role(
     tc: TenantContext = Depends(require_auth),
 ) -> RoleDefinition:
     """Retrieves a role definition and its allowed permissions."""
-    effective_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
+    effective_tenant = (
+        tenant_id
+        if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate")))
+        else tc.tenant_id
+    )
     service = get_rbac_service()
     role = service.get_role(code, tenant_id=effective_tenant)
     if not role:
@@ -282,7 +290,11 @@ def export_access_review(
 ) -> Any:
     """Exports comprehensive access review audit report in JSON or CSV format (Prompt 11 Item 75)."""
     tc.require_capability("iam.read")
-    target_tenant = tenant_id if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate"))) else tc.tenant_id
+    target_tenant = (
+        tenant_id
+        if (tenant_id and (tc.is_superuser or tc.has_capability("platform.operate")))
+        else tc.tenant_id
+    )
     service = get_rbac_service()
 
     if format.lower() == "csv":

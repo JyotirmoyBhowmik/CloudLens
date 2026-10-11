@@ -76,19 +76,23 @@ def execute_tenant_job(
     from db.session import get_tenant_session
 
     if asyncio.iscoroutinefunction(job_func):
+
         async def _async_exec():
             async with get_tenant_session(tc.effective_tenant_id) as session:
                 sig = inspect.signature(job_func)
                 if "session" in sig.parameters:
                     return await job_func(tc, *args, session=session, **kwargs)
                 return await job_func(tc, *args, **kwargs)
+
         return asyncio.run(_async_exec())
 
     sig = inspect.signature(job_func)
     if "session" in sig.parameters:
+
         async def _sync_with_session():
             async with get_tenant_session(tc.effective_tenant_id) as session:
                 return job_func(tc, *args, session=session, **kwargs)
+
         return asyncio.run(_sync_with_session())
 
     return job_func(tc, *args, **kwargs)

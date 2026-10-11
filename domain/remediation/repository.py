@@ -50,7 +50,9 @@ class RemediationRepository(Protocol):
         offset: int = 0,
         **kwargs: Any,
     ) -> builtins.list[RemediationTask]: ...
-    def save(self, entity: RemediationTask, *, tenant_context: TenantContext) -> RemediationTask: ...
+    def save(
+        self, entity: RemediationTask, *, tenant_context: TenantContext
+    ) -> RemediationTask: ...
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
     def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
     def get_by_subject(
@@ -118,7 +120,9 @@ class SqlRemediationRepository:
     # Task Operations
     # =========================================================================
 
-    async def get_async(self, entity_id: str, *, tenant_context: TenantContext) -> RemediationTask | None:
+    async def get_async(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> RemediationTask | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 SELECT * FROM remediation_tasks
@@ -194,7 +198,11 @@ class SqlRemediationRepository:
             if "source" in filters and filters["source"]:
                 src = filters["source"]
                 src_val = src.value if hasattr(src, "value") else str(src)
-                items = [t for t in items if (t.source.value if hasattr(t.source, "value") else str(t.source)) == src_val]
+                items = [
+                    t
+                    for t in items
+                    if (t.source.value if hasattr(t.source, "value") else str(t.source)) == src_val
+                ]
 
             return items
 
@@ -227,12 +235,18 @@ class SqlRemediationRepository:
             )
         )
 
-    async def save_async(self, entity: RemediationTask, *, tenant_context: TenantContext) -> RemediationTask:
+    async def save_async(
+        self, entity: RemediationTask, *, tenant_context: TenantContext
+    ) -> RemediationTask:
         entity.tenant_id = tenant_context.tenant_id
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             state_val = entity.state.value if hasattr(entity.state, "value") else str(entity.state)
-            priority_val = entity.priority.value if hasattr(entity.priority, "value") else str(entity.priority)
-            cat_val = entity.category.value if hasattr(entity.category, "value") else str(entity.category)
+            priority_val = (
+                entity.priority.value if hasattr(entity.priority, "value") else str(entity.priority)
+            )
+            cat_val = (
+                entity.category.value if hasattr(entity.category, "value") else str(entity.category)
+            )
 
             query = text("""
                 INSERT INTO remediation_tasks (
@@ -284,7 +298,9 @@ class SqlRemediationRepository:
 
     async def exists_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            query = text("SELECT 1 FROM remediation_tasks WHERE id = :id AND tenant_id = :tid LIMIT 1;")
+            query = text(
+                "SELECT 1 FROM remediation_tasks WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+            )
             res = await sess.execute(query, {"id": entity_id, "tid": tenant_context.tenant_id})
             return res.fetchone() is not None
 
@@ -296,8 +312,10 @@ class SqlRemediationRepository:
     ) -> builtins.list[RemediationTask]:
         all_tasks = await self.list_async(tenant_context=tenant_context, limit=1000)
         return [
-            t for t in all_tasks
-            if t.subject_entity.entity_type == entity_type and t.subject_entity.entity_id == entity_id
+            t
+            for t in all_tasks
+            if t.subject_entity.entity_type == entity_type
+            and t.subject_entity.entity_id == entity_id
         ]
 
     def get_by_subject(
@@ -333,7 +351,9 @@ class SqlRemediationRepository:
     def get_by_finding_id(
         self, finding_id: str, *, tenant_context: TenantContext
     ) -> RemediationTask | None:
-        return self._run_async(self.get_by_finding_id_async(finding_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_by_finding_id_async(finding_id, tenant_context=tenant_context)
+        )
 
     # =========================================================================
     # Savings Ledger Operations
@@ -356,7 +376,11 @@ class SqlRemediationRepository:
                     ledger_payload = EXCLUDED.ledger_payload;
             """)
             amt = getattr(entry, "realised_amount", getattr(entry, "amount", 0.0))
-            rec_dt = getattr(entry, "verified_at", getattr(entry, "recorded_at", dt.datetime.now(dt.timezone.utc)))
+            rec_dt = getattr(
+                entry,
+                "verified_at",
+                getattr(entry, "recorded_at", dt.datetime.now(dt.timezone.utc)),
+            )
             await sess.execute(
                 query,
                 {
@@ -418,7 +442,9 @@ class SqlRemediationRepository:
     def get_creation_rule(
         self, source_code: str | TaskSource, *, tenant_context: TenantContext
     ) -> TaskCreationRule | None:
-        return self._run_async(self.get_creation_rule_async(source_code, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_creation_rule_async(source_code, tenant_context=tenant_context)
+        )
 
     async def list_creation_rules_async(
         self, *, tenant_context: TenantContext

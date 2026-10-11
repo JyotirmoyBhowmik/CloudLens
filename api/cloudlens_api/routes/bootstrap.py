@@ -12,6 +12,7 @@ Enforces:
   - POST /api/v1/system/bootstrap/superuser/delegate: Superuser first task: creates working tenant & Platform Admin.
   - POST /api/v1/system/bootstrap/superuser/routine-check: Tracks routine operations and alerts when threshold exceeded.
 """
+
 import os
 from typing import Any
 
@@ -110,7 +111,9 @@ def run_pre_identity_bootstrap(
     service = get_pre_identity_bootstrap_service()
 
     if env == "production":
-        in_cluster = bool(os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true")
+        in_cluster = bool(
+            os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true"
+        )
         if not in_cluster:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -161,7 +164,9 @@ def provision_superuser(
     """Provisions exactly one superuser from master data with unrestricted scope (Item 15, 16)."""
     env = os.getenv("CLOUDLENS_ENV", "development").strip().lower()
     if env == "production":
-        in_cluster = bool(os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true")
+        in_cluster = bool(
+            os.getenv("KUBERNETES_SERVICE_HOST") or os.getenv("IN_CLUSTER_BOOTSTRAP_JOB") == "true"
+        )
         if not in_cluster:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

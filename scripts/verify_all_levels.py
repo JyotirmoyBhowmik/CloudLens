@@ -53,7 +53,14 @@ TWENTY_LEVELS: list[LevelTarget] = [
     LevelTarget(
         1,
         "Unit Tests",
-        [PYTHON_EXE, "-m", "pytest", "tests/unit/test_monetary_arithmetic.py", "tests/unit/test_threshold_bands.py", "-q"],
+        [
+            PYTHON_EXE,
+            "-m",
+            "pytest",
+            "tests/unit/test_monetary_arithmetic.py",
+            "tests/unit/test_threshold_bands.py",
+            "-q",
+        ],
         "Deterministic units, mathematical rules, and threshold bands",
     ),
     LevelTarget(
@@ -65,7 +72,14 @@ TWENTY_LEVELS: list[LevelTarget] = [
     LevelTarget(
         3,
         "API Contract Tests",
-        [PYTHON_EXE, "-m", "pytest", "tests/contracts/test_public_api_catalogue.py", "tests/contracts/test_connector_conformance.py", "-q"],
+        [
+            PYTHON_EXE,
+            "-m",
+            "pytest",
+            "tests/contracts/test_public_api_catalogue.py",
+            "tests/contracts/test_connector_conformance.py",
+            "-q",
+        ],
         "REST API envelopes, response headers, error representations",
     ),
     LevelTarget(
@@ -89,13 +103,26 @@ TWENTY_LEVELS: list[LevelTarget] = [
     LevelTarget(
         7,
         "Cost Reconciliation Tests",
-        [PYTHON_EXE, "-m", "pytest", "tests/cost_reconciliation/test_cost_correctness_suite.py", "-q"],
+        [
+            PYTHON_EXE,
+            "-m",
+            "pytest",
+            "tests/cost_reconciliation/test_cost_correctness_suite.py",
+            "-q",
+        ],
         "100% hand-calculated coverage for tiered, commitments, discounts, currency",
     ),
     LevelTarget(
         8,
         "Security & Isolation Tests",
-        [PYTHON_EXE, "-m", "pytest", "tests/security/test_tenant_isolation_suite.py", "tests/security/test_auth_security_controls.py", "-q"],
+        [
+            PYTHON_EXE,
+            "-m",
+            "pytest",
+            "tests/security/test_tenant_isolation_suite.py",
+            "tests/security/test_auth_security_controls.py",
+            "-q",
+        ],
         "OIDC login, token kill, break-glass, cross-tenant boundary isolation",
     ),
     LevelTarget(
@@ -224,9 +251,13 @@ def main() -> int:
     for target, success, dur, _ in results:
         status_str = "PASSED" if success else "FAILED"
         lvl_str = f"L-{target.level_num:02d}" if target.level_num <= 20 else "M-ALL"
-        print(f"{lvl_str:<6} | {target.name:<35} | {status_str:<8} | {dur:5.2f}s  | {target.description}")
+        print(
+            f"{lvl_str:<6} | {target.name:<35} | {status_str:<8} | {dur:5.2f}s  | {target.description}"
+        )
     print("-" * 80)
-    print(f"Total Suites: {len(TWENTY_LEVELS)} | Passed: {passed_levels}/{len(TWENTY_LEVELS)} | Duration: {overall_duration:.2f}s")
+    print(
+        f"Total Suites: {len(TWENTY_LEVELS)} | Passed: {passed_levels}/{len(TWENTY_LEVELS)} | Duration: {overall_duration:.2f}s"
+    )
 
     # Also verify 100% monetary coverage
     print("\nVerifying 100% Monetary Test Coverage Gate...")

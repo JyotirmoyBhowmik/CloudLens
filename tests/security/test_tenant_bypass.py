@@ -144,7 +144,9 @@ def test_tenant_bypass_gate_c_act_as_token_scoped_to_target_tenant_only(
             "X-Tenant-ID": "tenant-target",
         },
     )
-    assert res_target.status_code == 200, f"Expected 200, got {res_target.status_code}: {res_target.text}"
+    assert res_target.status_code == 200, (
+        f"Expected 200, got {res_target.status_code}: {res_target.text}"
+    )
 
     # 2. Accessing another tenant (tenant-other) with this act-as token -> 403
     res_other = client.get(
@@ -154,12 +156,12 @@ def test_tenant_bypass_gate_c_act_as_token_scoped_to_target_tenant_only(
             "X-Tenant-ID": "tenant-other",
         },
     )
-    assert res_other.status_code == 403, f"Expected 403, got {res_other.status_code}: {res_other.text}"
+    assert res_other.status_code == 403, (
+        f"Expected 403, got {res_other.status_code}: {res_other.text}"
+    )
 
 
-def test_tenant_bypass_gate_d_act_as_token_expiration(
-    client: TestClient, identity_service
-):
+def test_tenant_bypass_gate_d_act_as_token_expiration(client: TestClient, identity_service):
     """Gate d: act-as token expires after configured minutes -> 401."""
     # Issue expired act-as token
     expired_token = identity_service.token_engine.issue_act_as_token(

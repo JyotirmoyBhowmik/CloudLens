@@ -70,7 +70,10 @@ def enable_demo_mode_endpoint(
 
     Refuses activation if tenant has active live cloud connectors.
     """
-    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+    if not (
+        tenant_context.is_superuser
+        or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Enabling Demo Mode requires SUPER_ADMIN role.",
@@ -108,7 +111,10 @@ def disable_demo_mode_endpoint(
     tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoModeStatus:
     """Disables Demo Mode and purges simulated data, enforcing Safety Interlock 3."""
-    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+    if not (
+        tenant_context.is_superuser
+        or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Disabling Demo Mode requires SUPER_ADMIN role.",
@@ -147,7 +153,10 @@ def reset_demo_endpoint(
     tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoResetResult:
     """One-command demo reset: purges, reseeds, and reloads in a single action (Prompt 47 Item 31)."""
-    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+    if not (
+        tenant_context.is_superuser
+        or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Resetting Demo estate requires SUPER_ADMIN role.",
@@ -177,7 +186,10 @@ def load_demo_scenario_endpoint(
     tenant_context: TenantContext = Depends(require_auth),
 ) -> DemoScenarioInfo:
     """Loads a named demo scenario in a single action (Prompt 47 Item 32)."""
-    if not (tenant_context.is_superuser or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)):
+    if not (
+        tenant_context.is_superuser
+        or any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in tenant_context.roles)
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Loading demo scenario requires SUPER_ADMIN role.",

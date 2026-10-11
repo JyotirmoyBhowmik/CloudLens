@@ -80,8 +80,7 @@ def _measure_state(m: Any) -> str:
 class CostFactRepository(Protocol):
     """Authoritative protocol for FOCUS Cost Fact persistence and partition lifecycle."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> FocusCostFact | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> FocusCostFact | None: ...
 
     def list(
         self,
@@ -90,8 +89,7 @@ class CostFactRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[FocusCostFact]:
-        ...
+    ) -> list[FocusCostFact]: ...
 
     def get_all_facts(
         self,
@@ -99,17 +97,13 @@ class CostFactRepository(Protocol):
         tenant_context: TenantContext,
         billing_period: str | None = None,
         scope_id: str | None = None,
-    ) -> list[FocusCostFact]:
-        ...
+    ) -> list[FocusCostFact]: ...
 
-    def save(self, entity: FocusCostFact, *, tenant_context: TenantContext) -> FocusCostFact:
-        ...
+    def save(self, entity: FocusCostFact, *, tenant_context: TenantContext) -> FocusCostFact: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def replace_partition_atomic(
         self,
@@ -117,16 +111,14 @@ class CostFactRepository(Protocol):
         facts: list[FocusCostFact],
         *,
         tenant_context: TenantContext,
-    ) -> tuple[int, CostRestatementRecord | None]:
-        ...
+    ) -> tuple[int, CostRestatementRecord | None]: ...
 
     def list_restatements(
         self,
         *,
         tenant_context: TenantContext,
         provider: str | None = None,
-    ) -> list[CostRestatementRecord]:
-        ...
+    ) -> list[CostRestatementRecord]: ...
 
     def get_historical_partition(
         self,
@@ -134,16 +126,14 @@ class CostFactRepository(Protocol):
         version: int,
         *,
         tenant_context: TenantContext,
-    ) -> list[FocusCostFact]:
-        ...
+    ) -> list[FocusCostFact]: ...
 
     def get_period_totals(
         self,
         billing_period: str,
         *,
         tenant_context: TenantContext,
-    ) -> dict[str, Decimal]:
-        ...
+    ) -> dict[str, Decimal]: ...
 
     def drill_down(
         self,
@@ -154,8 +144,7 @@ class CostFactRepository(Protocol):
         charge_category: ChargeCategory | None = None,
         billing_period: str | None = None,
         has_financial_permission: bool = True,
-    ) -> CostAggregateNode:
-        ...
+    ) -> CostAggregateNode: ...
 
 
 class SqlCostFactRepository:
@@ -181,8 +170,14 @@ class SqlCostFactRepository:
         from domain.models.enums import ChargeCategory, CostSourceType, ServiceCategory
         from domain.models.measures import FinancialMeasure, QuantityMeasure
 
-        b_val = Decimal(str(m["billed_cost"])) if m.get("billed_cost") is not None else Decimal("0.0")
-        e_val = Decimal(str(m["effective_cost"])) if m.get("effective_cost") is not None else Decimal("0.0")
+        b_val = (
+            Decimal(str(m["billed_cost"])) if m.get("billed_cost") is not None else Decimal("0.0")
+        )
+        e_val = (
+            Decimal(str(m["effective_cost"]))
+            if m.get("effective_cost") is not None
+            else Decimal("0.0")
+        )
 
         return FocusCostFact(
             id=m["id"],
@@ -368,7 +363,9 @@ class SqlCostFactRepository:
             "service_id": entity.service_id,
             "charge_period_start": entity.charge_period_start,
             "charge_period_end": entity.charge_period_end,
-            "charge_category": entity.charge_category.value if hasattr(entity.charge_category, "value") else str(entity.charge_category),
+            "charge_category": entity.charge_category.value
+            if hasattr(entity.charge_category, "value")
+            else str(entity.charge_category),
             "charge_subcategory": entity.charge_subcategory,
             "billed_cost": _measure_val(entity.billed_cost),
             "billed_cost_state": _measure_state(entity.billed_cost),
@@ -453,14 +450,17 @@ class SqlCostFactRepository:
                 (f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0")
             )
             new_effective = sum(
-                (f.effective_cost.value for f in facts if f.effective_cost.is_present), Decimal("0.0")
+                (f.effective_cost.value for f in facts if f.effective_cost.is_present),
+                Decimal("0.0"),
             )
 
             billed_delta = new_billed - orig_billed
             effective_delta = new_effective - orig_effective
 
             # 2. Restatement detection if prior facts existed and totals changed
-            if prior_cnt > 0 and (billed_delta != Decimal("0.0") or effective_delta != Decimal("0.0")):
+            if prior_cnt > 0 and (
+                billed_delta != Decimal("0.0") or effective_delta != Decimal("0.0")
+            ):
                 provider = facts[0].provider if facts else "unknown"
                 restatement_record = CostRestatementRecord(
                     id=f"restatement-{tid}-{billing_period}-{uuid.uuid4().hex[:8]}",
@@ -577,7 +577,11 @@ class SqlCostFactRepository:
                     c_val = f.contracted_cost.value if f.contracted_cost.is_present else None
                     l_val = f.list_cost.value if f.list_cost.is_present else None
                     q_val = f.pricing_quantity.value if f.pricing_quantity.is_present else None
-                    cat_val = f.charge_category.value if hasattr(f.charge_category, "value") else str(f.charge_category)
+                    cat_val = (
+                        f.charge_category.value
+                        if hasattr(f.charge_category, "value")
+                        else str(f.charge_category)
+                    )
 
                     await session.execute(
                         ins_fact,
@@ -702,7 +706,11 @@ class SqlCostFactRepository:
             res = await session.execute(query, {"tid": tid, "p_date": p_date})
             row = res.first()
             if not row:
-                return {"billed_cost": Decimal("0.00"), "effective_cost": Decimal("0.00"), "row_count": Decimal("0")}
+                return {
+                    "billed_cost": Decimal("0.00"),
+                    "effective_cost": Decimal("0.00"),
+                    "row_count": Decimal("0"),
+                }
 
             return {
                 "billed_cost": round(Decimal(str(row[0])), 2),
@@ -726,11 +734,21 @@ class SqlCostFactRepository:
             out: list[CostRestatementRecord] = []
             for r in rows:
                 m = dict(r._mapping)
-                orig_b = Decimal(str(m.get("original_billed_cost", m.get("original_billed_total", "0.00"))))
-                rest_b = Decimal(str(m.get("restated_billed_cost", m.get("restated_billed_total", "0.00"))))
-                orig_e = Decimal(str(m.get("original_effective_cost", m.get("original_effective_total", "0.00"))))
-                rest_e = Decimal(str(m.get("restated_effective_cost", m.get("restated_effective_total", "0.00"))))
-                detected = m.get("restatement_detected_at") or m.get("detected_at") or datetime.now(UTC)
+                orig_b = Decimal(
+                    str(m.get("original_billed_cost", m.get("original_billed_total", "0.00")))
+                )
+                rest_b = Decimal(
+                    str(m.get("restated_billed_cost", m.get("restated_billed_total", "0.00")))
+                )
+                orig_e = Decimal(
+                    str(m.get("original_effective_cost", m.get("original_effective_total", "0.00")))
+                )
+                rest_e = Decimal(
+                    str(m.get("restated_effective_cost", m.get("restated_effective_total", "0.00")))
+                )
+                detected = (
+                    m.get("restatement_detected_at") or m.get("detected_at") or datetime.now(UTC)
+                )
                 prov = m.get("provider", provider or "aws")
                 if provider and prov.lower() != provider.lower():
                     continue
@@ -904,12 +922,21 @@ class SqlCostFactRepository:
                         "Access to raw line-item charge details is restricted by RBAC policy."
                     )
 
-                cat_val = charge_category.value if hasattr(charge_category, "value") else str(charge_category)
+                cat_val = (
+                    charge_category.value
+                    if hasattr(charge_category, "value")
+                    else str(charge_category)
+                )
                 sql = """
                     SELECT * FROM cost_fact
                     WHERE tenant_id = :tid AND scope_id = :scope_id AND service_id = :service_id AND charge_category = :cat
                 """
-                params = {"tid": tid, "scope_id": scope_id, "service_id": service_id, "cat": cat_val}
+                params = {
+                    "tid": tid,
+                    "scope_id": scope_id,
+                    "service_id": service_id,
+                    "cat": cat_val,
+                }
                 if p_date:
                     sql += " AND billing_period_start = :p_date"
                     params["p_date"] = p_date
@@ -917,8 +944,13 @@ class SqlCostFactRepository:
 
                 res = await session.execute(text(sql), params)
                 facts = [self._row_to_fact(r) for r in res.fetchall()]
-                b_sum = sum((f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0"))
-                e_sum = sum((f.effective_cost.value for f in facts if f.effective_cost.is_present), Decimal("0.0"))
+                b_sum = sum(
+                    (f.billed_cost.value for f in facts if f.billed_cost.is_present), Decimal("0.0")
+                )
+                e_sum = sum(
+                    (f.effective_cost.value for f in facts if f.effective_cost.is_present),
+                    Decimal("0.0"),
+                )
 
                 return CostAggregateNode(
                     dimension_name="ChargeLine",
@@ -986,7 +1018,9 @@ class SqlCostFactRepository:
         tenant_context: TenantContext,
     ) -> tuple[int, CostRestatementRecord | None]:
         return self._run_async(
-            self.replace_partition_atomic_async(billing_period, facts, tenant_context=tenant_context)
+            self.replace_partition_atomic_async(
+                billing_period, facts, tenant_context=tenant_context
+            )
         )
 
     def list_restatements(
@@ -995,7 +1029,9 @@ class SqlCostFactRepository:
         tenant_context: TenantContext,
         provider: str | None = None,
     ) -> list[CostRestatementRecord]:
-        return self._run_async(self.list_restatements_async(tenant_context=tenant_context, provider=provider))
+        return self._run_async(
+            self.list_restatements_async(tenant_context=tenant_context, provider=provider)
+        )
 
     def get_historical_partition(
         self,

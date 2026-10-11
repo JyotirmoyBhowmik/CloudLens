@@ -141,7 +141,9 @@ async def conventions_dispatch_middleware(
     user_roles_hdr = request.headers.get("X-Roles") or request.headers.get("X-Role") or ""
     caller_roles = [r.strip() for r in user_roles_hdr.split(",") if r.strip()]
 
-    if maint_svc.is_maintenance_mode(tenant_id) and not maint_svc.is_request_exempt(path, method, caller_roles):
+    if maint_svc.is_maintenance_mode(tenant_id) and not maint_svc.is_request_exempt(
+        path, method, caller_roles
+    ):
         maint_info = maint_svc.get_status(tenant_id)
         maint_err = make_problem_details(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

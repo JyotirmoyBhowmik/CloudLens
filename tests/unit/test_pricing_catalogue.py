@@ -39,13 +39,14 @@ from domain.pricing.models import (
     TierStructure,
 )
 from domain.pricing.repository import PricingRepository
+from tests.fakes.pricing import InMemoryPricingRepository
 from domain.pricing.service import PricingCatalogueService
 
 
 @pytest.fixture
 def clean_repo() -> PricingRepository:
     """Fixture providing clean repository with multi-cloud seed data."""
-    return PricingRepository(load_seed_data=True)
+    return InMemoryPricingRepository(load_seed_data=True)
 
 
 @pytest.fixture

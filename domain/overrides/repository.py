@@ -35,8 +35,7 @@ logger = logging.getLogger("cloudlens.domain.overrides.repository")
 class OverrideRepository(Protocol):
     """Authoritative protocol for tenant-scoped override persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> OverrideRecord | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> OverrideRecord | None: ...
 
     def list(
         self,
@@ -45,20 +44,15 @@ class OverrideRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> builtins.list[OverrideRecord]:
-        ...
+    ) -> builtins.list[OverrideRecord]: ...
 
-    def list_active(self, *, tenant_context: TenantContext) -> builtins.list[OverrideRecord]:
-        ...
+    def list_active(self, *, tenant_context: TenantContext) -> builtins.list[OverrideRecord]: ...
 
-    def save(self, entity: OverrideRecord, *, tenant_context: TenantContext) -> OverrideRecord:
-        ...
+    def save(self, entity: OverrideRecord, *, tenant_context: TenantContext) -> OverrideRecord: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
 
 class SqlOverrideRepository:
@@ -110,7 +104,9 @@ class SqlOverrideRepository:
         self._validate_tenant_context(tenant_context)
         return self._run_async(self._get_async(entity_id, tenant_context))
 
-    async def _get_async(self, entity_id: str, tenant_context: TenantContext) -> OverrideRecord | None:
+    async def _get_async(
+        self, entity_id: str, tenant_context: TenantContext
+    ) -> OverrideRecord | None:
         query = text("""
             SELECT id, tenant_id, override_class, who, what, why, "when",
                    previous_value, new_value, expiry, is_permanent, approval_metadata,
@@ -152,7 +148,9 @@ class SqlOverrideRepository:
             LIMIT :limit OFFSET :offset;
         """)
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            result = await sess.execute(query, {"tid": tenant_context.tenant_id, "limit": limit, "offset": offset})
+            result = await sess.execute(
+                query, {"tid": tenant_context.tenant_id, "limit": limit, "offset": offset}
+            )
             rows = result.fetchall()
             return [self._row_to_record(r) for r in rows]
 
@@ -160,7 +158,9 @@ class SqlOverrideRepository:
         self._validate_tenant_context(tenant_context)
         return self._run_async(self._list_active_async(tenant_context))
 
-    async def _list_active_async(self, tenant_context: TenantContext) -> builtins.list[OverrideRecord]:
+    async def _list_active_async(
+        self, tenant_context: TenantContext
+    ) -> builtins.list[OverrideRecord]:
         query = text("""
             SELECT id, tenant_id, override_class, who, what, why, "when",
                    previous_value, new_value, expiry, is_permanent, approval_metadata,
@@ -184,8 +184,12 @@ class SqlOverrideRepository:
             )
         return self._run_async(self._save_async(entity, tenant_context))
 
-    async def _save_async(self, entity: OverrideRecord, tenant_context: TenantContext) -> OverrideRecord:
-        approval_json = json.dumps(entity.approval.model_dump(mode="json")) if entity.approval else None
+    async def _save_async(
+        self, entity: OverrideRecord, tenant_context: TenantContext
+    ) -> OverrideRecord:
+        approval_json = (
+            json.dumps(entity.approval.model_dump(mode="json")) if entity.approval else None
+        )
         prev_json = json.dumps(entity.previous_value) if entity.previous_value is not None else None
         new_json = json.dumps(entity.new_value) if entity.new_value is not None else "null"
 
@@ -227,7 +231,9 @@ class SqlOverrideRepository:
                 {
                     "id": entity.id,
                     "tenant_id": entity.tenant_id,
-                    "override_class": entity.override_class.value if hasattr(entity.override_class, "value") else str(entity.override_class),
+                    "override_class": entity.override_class.value
+                    if hasattr(entity.override_class, "value")
+                    else str(entity.override_class),
                     "who": entity.who,
                     "what": entity.what,
                     "why": entity.why,
@@ -237,7 +243,9 @@ class SqlOverrideRepository:
                     "expiry": entity.expiry,
                     "is_permanent": entity.is_permanent,
                     "approval_metadata": approval_json,
-                    "status": entity.status.value if hasattr(entity.status, "value") else str(entity.status),
+                    "status": entity.status.value
+                    if hasattr(entity.status, "value")
+                    else str(entity.status),
                     "reverted_at": entity.reverted_at,
                     "reverted_by": entity.reverted_by,
                     "reversion_reason": entity.reversion_reason,

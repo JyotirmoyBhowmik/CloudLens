@@ -135,7 +135,10 @@ async def test_duplicate_sync_rejected_by_db_constraint():
     with pytest.raises(IntegrityError) as exc_info:
         await sync_repo.save_async(job_2, tenant_context=ctx)
 
-    assert "uq_sync_jobs_idempotency" in str(exc_info.value).lower() or "unique constraint" in str(exc_info.value).lower()
+    assert (
+        "uq_sync_jobs_idempotency" in str(exc_info.value).lower()
+        or "unique constraint" in str(exc_info.value).lower()
+    )
 
     # -------------------------------------------------------------------------
     # 4. Insert Job with Different Period (Should Succeed)

@@ -76,13 +76,20 @@ class InMemoryIdentityRepository:
         self._sessions[session_entity.id] = session_entity
         return session_entity
 
-    async def list_active_sessions(self, tenant_id: str, user_id: str | None = None, session=None) -> list[Session]:
+    async def list_active_sessions(
+        self, tenant_id: str, user_id: str | None = None, session=None
+    ) -> list[Session]:
         return [
-            s for s in self._sessions.values()
-            if s.tenant_id == tenant_id and s.is_active and (user_id is None or s.user_id == user_id)
+            s
+            for s in self._sessions.values()
+            if s.tenant_id == tenant_id
+            and s.is_active
+            and (user_id is None or s.user_id == user_id)
         ]
 
-    async def revoke_session(self, session_id: str, reason: str | None = None, session=None) -> bool:
+    async def revoke_session(
+        self, session_id: str, reason: str | None = None, session=None
+    ) -> bool:
         s = self._sessions.get(session_id)
         if s and s.is_active:
             s.is_active = False
@@ -91,7 +98,9 @@ class InMemoryIdentityRepository:
             return True
         return False
 
-    async def revoke_all_user_sessions(self, tenant_id: str, user_id: str, reason: str | None = None, session=None) -> int:
+    async def revoke_all_user_sessions(
+        self, tenant_id: str, user_id: str, reason: str | None = None, session=None
+    ) -> int:
         count = 0
         for s in self._sessions.values():
             if s.tenant_id == tenant_id and s.user_id == user_id and s.is_active:
@@ -108,10 +117,15 @@ class InMemoryIdentityRepository:
         self._sessions[s.id] = s
         return s
 
-    def list_active_sessions_sync(self, tenant_id: str, user_id: str | None = None) -> list[Session]:
+    def list_active_sessions_sync(
+        self, tenant_id: str, user_id: str | None = None
+    ) -> list[Session]:
         return [
-            s for s in self._sessions.values()
-            if s.tenant_id == tenant_id and s.is_active and (user_id is None or s.user_id == user_id)
+            s
+            for s in self._sessions.values()
+            if s.tenant_id == tenant_id
+            and s.is_active
+            and (user_id is None or s.user_id == user_id)
         ]
 
     def revoke_session_sync(self, session_id: str, reason: str | None = None) -> bool:
@@ -123,7 +137,9 @@ class InMemoryIdentityRepository:
             return True
         return False
 
-    def revoke_all_user_sessions_sync(self, tenant_id: str, user_id: str, reason: str | None = None) -> int:
+    def revoke_all_user_sessions_sync(
+        self, tenant_id: str, user_id: str, reason: str | None = None
+    ) -> int:
         count = 0
         for s in self._sessions.values():
             if s.tenant_id == tenant_id and s.user_id == user_id and s.is_active:
@@ -161,10 +177,14 @@ class InMemoryIdentityRepository:
         return bool(self._machine_clients.pop(client_id, None))
 
     # Step-Up Challenges
-    async def get_step_up_challenge(self, challenge_id: str, session=None) -> StepUpChallenge | None:
+    async def get_step_up_challenge(
+        self, challenge_id: str, session=None
+    ) -> StepUpChallenge | None:
         return self._step_up_challenges.get(challenge_id)
 
-    async def save_step_up_challenge(self, challenge: StepUpChallenge, session=None) -> StepUpChallenge:
+    async def save_step_up_challenge(
+        self, challenge: StepUpChallenge, session=None
+    ) -> StepUpChallenge:
         self._step_up_challenges[challenge.id] = challenge
         return challenge
 
@@ -187,15 +207,22 @@ class InMemoryIdentityRepository:
 
     async def revoke_session_tokens(self, session_id: str, session=None) -> None:
         import time
+
         self._revoked_sessions[session_id] = time.time()
 
     async def revoke_user_tokens(self, user_id: str, session=None) -> None:
         import time
+
         self._revoked_users[user_id] = time.time()
 
     async def is_token_revoked(
-        self, jti: str, user_id: str | None = None, session_id: str | None = None,
-        issued_at: float | None = None, family_id: str | None = None, session=None
+        self,
+        jti: str,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        issued_at: float | None = None,
+        family_id: str | None = None,
+        session=None,
     ) -> bool:
         if jti in self._revoked_jtis:
             return True
@@ -222,15 +249,21 @@ class InMemoryIdentityRepository:
 
     def revoke_session_tokens_sync(self, session_id: str) -> None:
         import time
+
         self._revoked_sessions[session_id] = time.time()
 
     def revoke_user_tokens_sync(self, user_id: str) -> None:
         import time
+
         self._revoked_users[user_id] = time.time()
 
     def is_token_revoked_sync(
-        self, jti: str, user_id: str | None = None, session_id: str | None = None,
-        issued_at: float | None = None, family_id: str | None = None
+        self,
+        jti: str,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        issued_at: float | None = None,
+        family_id: str | None = None,
     ) -> bool:
         if jti in self._revoked_jtis:
             return True

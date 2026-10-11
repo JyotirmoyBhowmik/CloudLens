@@ -94,7 +94,10 @@ def test_act_as_tenant_rejected_for_non_super_admin(client: TestClient, forbidde
     )
 
     assert response.status_code == 403
-    assert "Act-as-tenant operation strictly restricted to SUPER_ADMIN role." in response.json().get("detail", "")
+    assert (
+        "Act-as-tenant operation strictly restricted to SUPER_ADMIN role."
+        in response.json().get("detail", "")
+    )
 
 
 def test_act_as_tenant_rejected_without_step_up_mfa(client: TestClient):
@@ -366,4 +369,3 @@ def test_control_tower_action_requires_explicit_confirmation_stage(client: TestC
     assert data["requires_confirmation"] is True
     assert "blast_radius" in data
     assert "affected_tenants" in data["blast_radius"]
-

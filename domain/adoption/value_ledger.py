@@ -140,7 +140,9 @@ class PlatformValueService:
         for item in journal:
             total_savings += item.amount
             src_key = item.source.value
-            savings_by_source[src_key] = savings_by_source.get(src_key, Decimal("0.00")) + item.amount
+            savings_by_source[src_key] = (
+                savings_by_source.get(src_key, Decimal("0.00")) + item.amount
+            )
 
         # Retrieve platform running cost
         cost_key = (tenant_id, period)

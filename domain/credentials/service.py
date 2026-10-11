@@ -57,6 +57,7 @@ class CredentialService:
             self._repo = repository
         else:
             from domain.credentials.repository import get_credential_repository
+
             self._repo = get_credential_repository()
 
         self._alerts: list[Alert] = []
@@ -71,23 +72,30 @@ class CredentialService:
     @property
     def _profiles(self):
         service = self
+
         class _ProfilesProxy(dict):
             def get(self, pid, default=None):
                 p = service._repo.get_sync(pid)
                 return p if p is not None else default
+
             def __getitem__(self, pid):
                 p = service._repo.get_sync(pid)
                 if p is None:
                     raise KeyError(pid)
                 return p
+
             def __setitem__(self, pid, profile):
                 service._repo.save_sync(profile)
+
             def __contains__(self, pid):
                 return service._repo.get_sync(pid) is not None
+
             def values(self):
                 return service._repo.list_for_tenant_sync("tenant-primary")
+
             def clear(self):
                 pass
+
         return _ProfilesProxy()
 
     # ----------------------------------------------------------------------
@@ -571,7 +579,9 @@ class CredentialService:
         if tenant_id:
             all_profiles = self._repo.list_for_tenant_sync(tenant_id)
         else:
-            all_profiles = self._repo.list_for_tenant_sync("tenant-primary") + self._repo.list_for_tenant_sync("global")
+            all_profiles = self._repo.list_for_tenant_sync(
+                "tenant-primary"
+            ) + self._repo.list_for_tenant_sync("global")
 
         target_profiles = [
             p

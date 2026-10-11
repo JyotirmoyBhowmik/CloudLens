@@ -36,6 +36,8 @@ from domain.cost.reconciliation import (
     VarianceClassification,
 )
 from domain.cost.repository import CostFactRepository
+from tests.fakes.cost import InMemoryCostFactRepository
+from tests.fakes.reconciliation import InMemoryReconciliationRepository
 from domain.models.base import ProvenanceRecord
 from domain.models.enums import ChargeCategory, CostSourceType, ServiceCategory
 from domain.models.exceptions import (
@@ -58,12 +60,12 @@ def other_tenant_ctx() -> TenantContext:
 
 @pytest.fixture
 def cost_repo() -> CostFactRepository:
-    return CostFactRepository()
+    return InMemoryCostFactRepository()
 
 
 @pytest.fixture
 def recon_repo() -> ReconciliationRepository:
-    return ReconciliationRepository()
+    return InMemoryReconciliationRepository()
 
 
 @pytest.fixture

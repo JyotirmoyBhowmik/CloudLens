@@ -42,69 +42,87 @@ class IdentityRepository(Protocol):
     """Authoritative protocol for identity, session, and revocation persistence."""
 
     # Users
-    async def get_user(self, user_id: str, session: AsyncSession | None = None) -> User | None:
-        ...
+    async def get_user(self, user_id: str, session: AsyncSession | None = None) -> User | None: ...
 
-    async def get_user_by_email(self, tenant_id: str, email: str, session: AsyncSession | None = None) -> User | None:
-        ...
+    async def get_user_by_email(
+        self, tenant_id: str, email: str, session: AsyncSession | None = None
+    ) -> User | None: ...
 
-    async def save_user(self, user: User, session: AsyncSession | None = None) -> User:
-        ...
+    async def save_user(self, user: User, session: AsyncSession | None = None) -> User: ...
 
-    async def list_users(self, tenant_id: str, session: AsyncSession | None = None) -> list[User]:
-        ...
+    async def list_users(
+        self, tenant_id: str, session: AsyncSession | None = None
+    ) -> list[User]: ...
 
-    async def delete_user(self, user_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete_user(self, user_id: str, session: AsyncSession | None = None) -> bool: ...
 
     # Sessions
-    async def get_session(self, session_id: str, session: AsyncSession | None = None) -> Session | None:
-        ...
+    async def get_session(
+        self, session_id: str, session: AsyncSession | None = None
+    ) -> Session | None: ...
 
-    async def save_session(self, session_entity: Session, session: AsyncSession | None = None) -> Session:
-        ...
+    async def save_session(
+        self, session_entity: Session, session: AsyncSession | None = None
+    ) -> Session: ...
 
-    async def list_active_sessions(self, tenant_id: str, user_id: str | None = None, session: AsyncSession | None = None) -> list[Session]:
-        ...
+    async def list_active_sessions(
+        self, tenant_id: str, user_id: str | None = None, session: AsyncSession | None = None
+    ) -> list[Session]: ...
 
-    async def revoke_session(self, session_id: str, reason: str | None = None, session: AsyncSession | None = None) -> bool:
-        ...
+    async def revoke_session(
+        self, session_id: str, reason: str | None = None, session: AsyncSession | None = None
+    ) -> bool: ...
 
-    async def revoke_all_user_sessions(self, tenant_id: str, user_id: str, reason: str | None = None, session: AsyncSession | None = None) -> int:
-        ...
+    async def revoke_all_user_sessions(
+        self,
+        tenant_id: str,
+        user_id: str,
+        reason: str | None = None,
+        session: AsyncSession | None = None,
+    ) -> int: ...
 
     # Machine Clients
-    async def get_machine_client(self, client_id: str, session: AsyncSession | None = None) -> MachineClient | None:
-        ...
+    async def get_machine_client(
+        self, client_id: str, session: AsyncSession | None = None
+    ) -> MachineClient | None: ...
 
-    async def save_machine_client(self, client: MachineClient, session: AsyncSession | None = None) -> MachineClient:
-        ...
+    async def save_machine_client(
+        self, client: MachineClient, session: AsyncSession | None = None
+    ) -> MachineClient: ...
 
-    async def list_machine_clients(self, tenant_id: str, session: AsyncSession | None = None) -> list[MachineClient]:
-        ...
+    async def list_machine_clients(
+        self, tenant_id: str, session: AsyncSession | None = None
+    ) -> list[MachineClient]: ...
 
-    async def delete_machine_client(self, client_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete_machine_client(
+        self, client_id: str, session: AsyncSession | None = None
+    ) -> bool: ...
 
     # Step-Up Challenges
-    async def get_step_up_challenge(self, challenge_id: str, session: AsyncSession | None = None) -> StepUpChallenge | None:
-        ...
+    async def get_step_up_challenge(
+        self, challenge_id: str, session: AsyncSession | None = None
+    ) -> StepUpChallenge | None: ...
 
-    async def save_step_up_challenge(self, challenge: StepUpChallenge, session: AsyncSession | None = None) -> StepUpChallenge:
-        ...
+    async def save_step_up_challenge(
+        self, challenge: StepUpChallenge, session: AsyncSession | None = None
+    ) -> StepUpChallenge: ...
 
-    async def delete_step_up_challenge(self, challenge_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete_step_up_challenge(
+        self, challenge_id: str, session: AsyncSession | None = None
+    ) -> bool: ...
 
     # Revocation Registry & Token Families
-    async def revoke_token(self, jti: str, expires_at: float, session: AsyncSession | None = None) -> None:
-        ...
+    async def revoke_token(
+        self, jti: str, expires_at: float, session: AsyncSession | None = None
+    ) -> None: ...
 
-    async def revoke_session_tokens(self, session_id: str, session: AsyncSession | None = None) -> None:
-        ...
+    async def revoke_session_tokens(
+        self, session_id: str, session: AsyncSession | None = None
+    ) -> None: ...
 
-    async def revoke_user_tokens(self, user_id: str, session: AsyncSession | None = None) -> None:
-        ...
+    async def revoke_user_tokens(
+        self, user_id: str, session: AsyncSession | None = None
+    ) -> None: ...
 
     async def is_token_revoked(
         self,
@@ -114,11 +132,11 @@ class IdentityRepository(Protocol):
         issued_at: float | None = None,
         family_id: str | None = None,
         session: AsyncSession | None = None,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
-    async def record_refresh_token_use(self, token_id: str, family_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def record_refresh_token_use(
+        self, token_id: str, family_id: str, session: AsyncSession | None = None
+    ) -> bool: ...
 
 
 class SqlIdentityRepository:
@@ -154,13 +172,17 @@ class SqlIdentityRepository:
             return None
         return self._row_to_user(row)
 
-    async def get_user_by_email(self, tenant_id: str, email: str, session: AsyncSession | None = None) -> User | None:
+    async def get_user_by_email(
+        self, tenant_id: str, email: str, session: AsyncSession | None = None
+    ) -> User | None:
         if session is not None:
             return await self._get_user_by_email_with_session(tenant_id, email, session)
         async with get_tenant_session(tenant_id) as sess:
             return await self._get_user_by_email_with_session(tenant_id, email, sess)
 
-    async def _get_user_by_email_with_session(self, tenant_id: str, email: str, session: AsyncSession) -> User | None:
+    async def _get_user_by_email_with_session(
+        self, tenant_id: str, email: str, session: AsyncSession
+    ) -> User | None:
         query = text("""
             SELECT id, tenant_id, email, display_name, status, roles, auth_method, idp_sub,
                    is_break_glass, last_login_at, created_at, updated_at
@@ -294,13 +316,17 @@ class SqlIdentityRepository:
     # Sessions
     # -------------------------------------------------------------------------
 
-    async def get_session(self, session_id: str, session: AsyncSession | None = None) -> Session | None:
+    async def get_session(
+        self, session_id: str, session: AsyncSession | None = None
+    ) -> Session | None:
         if session is not None:
             return await self._get_session_with_session(session_id, session)
         async with get_tenant_session() as sess:
             return await self._get_session_with_session(session_id, sess)
 
-    async def _get_session_with_session(self, session_id: str, session: AsyncSession) -> Session | None:
+    async def _get_session_with_session(
+        self, session_id: str, session: AsyncSession
+    ) -> Session | None:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             SELECT session_id, tenant_id, user_id, token_family_id, expires_at,
@@ -332,7 +358,9 @@ class SqlIdentityRepository:
             created_at=row[11],
         )
 
-    async def save_session(self, session_entity: Session, session: AsyncSession | None = None) -> Session:
+    async def save_session(
+        self, session_entity: Session, session: AsyncSession | None = None
+    ) -> Session:
         if session is not None:
             return await self._save_session_with_session(session_entity, session)
         async with get_tenant_session(session_entity.tenant_id) as sess:
@@ -412,7 +440,9 @@ class SqlIdentityRepository:
             result = await session.execute(query, {"tid": tenant_id})
         return [self._row_to_session(r) for r in result.fetchall()]
 
-    async def revoke_session(self, session_id: str, reason: str | None = None, session: AsyncSession | None = None) -> bool:
+    async def revoke_session(
+        self, session_id: str, reason: str | None = None, session: AsyncSession | None = None
+    ) -> bool:
         if session is not None:
             return await self._revoke_session_with_session(session_id, reason, session)
         async with get_tenant_session() as sess:
@@ -420,7 +450,9 @@ class SqlIdentityRepository:
             await sess.commit()
             return res
 
-    async def _revoke_session_with_session(self, session_id: str, reason: str | None, session: AsyncSession) -> bool:
+    async def _revoke_session_with_session(
+        self, session_id: str, reason: str | None, session: AsyncSession
+    ) -> bool:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             UPDATE identity_sessions
@@ -433,12 +465,20 @@ class SqlIdentityRepository:
         return res.rowcount > 0
 
     async def revoke_all_user_sessions(
-        self, tenant_id: str, user_id: str, reason: str | None = None, session: AsyncSession | None = None
+        self,
+        tenant_id: str,
+        user_id: str,
+        reason: str | None = None,
+        session: AsyncSession | None = None,
     ) -> int:
         if session is not None:
-            return await self._revoke_all_user_sessions_with_session(tenant_id, user_id, reason, session)
+            return await self._revoke_all_user_sessions_with_session(
+                tenant_id, user_id, reason, session
+            )
         async with get_tenant_session(tenant_id) as sess:
-            res = await self._revoke_all_user_sessions_with_session(tenant_id, user_id, reason, sess)
+            res = await self._revoke_all_user_sessions_with_session(
+                tenant_id, user_id, reason, sess
+            )
             await sess.commit()
             return res
 
@@ -450,7 +490,9 @@ class SqlIdentityRepository:
             SET is_active = false, revoked_at = NOW(), revocation_reason = :reason
             WHERE tenant_id = :tid AND user_id = :uid AND is_active = true;
         """)
-        res = await session.execute(query, {"tid": tenant_id, "uid": user_id, "reason": reason or "USER_REVOKED"})
+        res = await session.execute(
+            query, {"tid": tenant_id, "uid": user_id, "reason": reason or "USER_REVOKED"}
+        )
         await self.revoke_user_tokens(user_id, session=session)
         return res.rowcount
 
@@ -461,26 +503,34 @@ class SqlIdentityRepository:
     def save_session_sync(self, s: Session) -> Session:
         return self._run_async(self.save_session(s))
 
-    def list_active_sessions_sync(self, tenant_id: str, user_id: str | None = None) -> list[Session]:
+    def list_active_sessions_sync(
+        self, tenant_id: str, user_id: str | None = None
+    ) -> list[Session]:
         return self._run_async(self.list_active_sessions(tenant_id, user_id))
 
     def revoke_session_sync(self, session_id: str, reason: str | None = None) -> bool:
         return self._run_async(self.revoke_session(session_id, reason))
 
-    def revoke_all_user_sessions_sync(self, tenant_id: str, user_id: str, reason: str | None = None) -> int:
+    def revoke_all_user_sessions_sync(
+        self, tenant_id: str, user_id: str, reason: str | None = None
+    ) -> int:
         return self._run_async(self.revoke_all_user_sessions(tenant_id, user_id, reason))
 
     # -------------------------------------------------------------------------
     # Machine Clients
     # -------------------------------------------------------------------------
 
-    async def get_machine_client(self, client_id: str, session: AsyncSession | None = None) -> MachineClient | None:
+    async def get_machine_client(
+        self, client_id: str, session: AsyncSession | None = None
+    ) -> MachineClient | None:
         if session is not None:
             return await self._get_machine_client_with_session(client_id, session)
         async with get_tenant_session() as sess:
             return await self._get_machine_client_with_session(client_id, sess)
 
-    async def _get_machine_client_with_session(self, client_id: str, session: AsyncSession) -> MachineClient | None:
+    async def _get_machine_client_with_session(
+        self, client_id: str, session: AsyncSession
+    ) -> MachineClient | None:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             SELECT client_id, tenant_id, name, secret_hash, secondary_secret_hash,
@@ -510,7 +560,9 @@ class SqlIdentityRepository:
             created_at=row[9],
         )
 
-    async def save_machine_client(self, client: MachineClient, session: AsyncSession | None = None) -> MachineClient:
+    async def save_machine_client(
+        self, client: MachineClient, session: AsyncSession | None = None
+    ) -> MachineClient:
         if session is not None:
             return await self._save_machine_client_with_session(client, session)
         async with get_tenant_session(client.tenant_id) as sess:
@@ -518,7 +570,9 @@ class SqlIdentityRepository:
             await sess.commit()
             return res
 
-    async def _save_machine_client_with_session(self, client: MachineClient, session: AsyncSession) -> MachineClient:
+    async def _save_machine_client_with_session(
+        self, client: MachineClient, session: AsyncSession
+    ) -> MachineClient:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         perms_json = json.dumps(client.scoped_permissions)
         query = text("""
@@ -557,13 +611,17 @@ class SqlIdentityRepository:
         )
         return client
 
-    async def list_machine_clients(self, tenant_id: str, session: AsyncSession | None = None) -> list[MachineClient]:
+    async def list_machine_clients(
+        self, tenant_id: str, session: AsyncSession | None = None
+    ) -> list[MachineClient]:
         if session is not None:
             return await self._list_machine_clients_with_session(tenant_id, session)
         async with get_tenant_session(tenant_id) as sess:
             return await self._list_machine_clients_with_session(tenant_id, sess)
 
-    async def _list_machine_clients_with_session(self, tenant_id: str, session: AsyncSession) -> list[MachineClient]:
+    async def _list_machine_clients_with_session(
+        self, tenant_id: str, session: AsyncSession
+    ) -> list[MachineClient]:
         query = text("""
             SELECT client_id, tenant_id, name, secret_hash, secondary_secret_hash,
                    scoped_permissions, is_active, secret_expires_at, last_used_at, created_at
@@ -594,7 +652,9 @@ class SqlIdentityRepository:
             )
         return clients
 
-    async def delete_machine_client(self, client_id: str, session: AsyncSession | None = None) -> bool:
+    async def delete_machine_client(
+        self, client_id: str, session: AsyncSession | None = None
+    ) -> bool:
         if session is not None:
             return await self._delete_machine_client_with_session(client_id, session)
         async with get_tenant_session() as sess:
@@ -602,7 +662,9 @@ class SqlIdentityRepository:
             await sess.commit()
             return res
 
-    async def _delete_machine_client_with_session(self, client_id: str, session: AsyncSession) -> bool:
+    async def _delete_machine_client_with_session(
+        self, client_id: str, session: AsyncSession
+    ) -> bool:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("DELETE FROM machine_clients WHERE client_id = :cid;")
         res = await session.execute(query, {"cid": client_id})
@@ -625,13 +687,17 @@ class SqlIdentityRepository:
     # Step-Up Challenges
     # -------------------------------------------------------------------------
 
-    async def get_step_up_challenge(self, challenge_id: str, session: AsyncSession | None = None) -> StepUpChallenge | None:
+    async def get_step_up_challenge(
+        self, challenge_id: str, session: AsyncSession | None = None
+    ) -> StepUpChallenge | None:
         if session is not None:
             return await self._get_step_up_challenge_with_session(challenge_id, session)
         async with get_tenant_session() as sess:
             return await self._get_step_up_challenge_with_session(challenge_id, sess)
 
-    async def _get_step_up_challenge_with_session(self, challenge_id: str, session: AsyncSession) -> StepUpChallenge | None:
+    async def _get_step_up_challenge_with_session(
+        self, challenge_id: str, session: AsyncSession
+    ) -> StepUpChallenge | None:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             SELECT challenge_id, tenant_id, user_id, action, target_entity_id,
@@ -655,7 +721,9 @@ class SqlIdentityRepository:
             is_verified=bool(row[7]),
         )
 
-    async def save_step_up_challenge(self, challenge: StepUpChallenge, session: AsyncSession | None = None) -> StepUpChallenge:
+    async def save_step_up_challenge(
+        self, challenge: StepUpChallenge, session: AsyncSession | None = None
+    ) -> StepUpChallenge:
         if session is not None:
             return await self._save_step_up_challenge_with_session(challenge, session)
         async with get_tenant_session(challenge.tenant_id) as sess:
@@ -663,7 +731,9 @@ class SqlIdentityRepository:
             await sess.commit()
             return res
 
-    async def _save_step_up_challenge_with_session(self, c: StepUpChallenge, session: AsyncSession) -> StepUpChallenge:
+    async def _save_step_up_challenge_with_session(
+        self, c: StepUpChallenge, session: AsyncSession
+    ) -> StepUpChallenge:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             INSERT INTO step_up_challenges (
@@ -694,7 +764,9 @@ class SqlIdentityRepository:
         )
         return c
 
-    async def delete_step_up_challenge(self, challenge_id: str, session: AsyncSession | None = None) -> bool:
+    async def delete_step_up_challenge(
+        self, challenge_id: str, session: AsyncSession | None = None
+    ) -> bool:
         if session is not None:
             return await self._delete_step_up_challenge_with_session(challenge_id, session)
         async with get_tenant_session() as sess:
@@ -702,7 +774,9 @@ class SqlIdentityRepository:
             await sess.commit()
             return res
 
-    async def _delete_step_up_challenge_with_session(self, challenge_id: str, session: AsyncSession) -> bool:
+    async def _delete_step_up_challenge_with_session(
+        self, challenge_id: str, session: AsyncSession
+    ) -> bool:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("DELETE FROM step_up_challenges WHERE challenge_id = :cid;")
         res = await session.execute(query, {"cid": challenge_id})
@@ -722,7 +796,9 @@ class SqlIdentityRepository:
     # Revocation Registry & Token Families (Revocation survives restart)
     # -------------------------------------------------------------------------
 
-    async def revoke_token(self, jti: str, expires_at: float, session: AsyncSession | None = None) -> None:
+    async def revoke_token(
+        self, jti: str, expires_at: float, session: AsyncSession | None = None
+    ) -> None:
         if session is not None:
             await self._revoke_token_with_session(jti, expires_at, session)
             return
@@ -730,7 +806,9 @@ class SqlIdentityRepository:
             await self._revoke_token_with_session(jti, expires_at, sess)
             await sess.commit()
 
-    async def _revoke_token_with_session(self, jti: str, expires_at: float, session: AsyncSession) -> None:
+    async def _revoke_token_with_session(
+        self, jti: str, expires_at: float, session: AsyncSession
+    ) -> None:
         exp_dt = datetime.fromtimestamp(expires_at, tz=UTC)
         query = text("""
             INSERT INTO token_revocations (revocation_key, revocation_type, target_id, revoked_at, expires_at)
@@ -739,7 +817,9 @@ class SqlIdentityRepository:
         """)
         await session.execute(query, {"key": f"jti:{jti}", "tid": jti, "exp": exp_dt})
 
-    async def revoke_session_tokens(self, session_id: str, session: AsyncSession | None = None) -> None:
+    async def revoke_session_tokens(
+        self, session_id: str, session: AsyncSession | None = None
+    ) -> None:
         if session is not None:
             await self._revoke_session_tokens_with_session(session_id, session)
             return
@@ -747,7 +827,9 @@ class SqlIdentityRepository:
             await self._revoke_session_tokens_with_session(session_id, sess)
             await sess.commit()
 
-    async def _revoke_session_tokens_with_session(self, session_id: str, session: AsyncSession) -> None:
+    async def _revoke_session_tokens_with_session(
+        self, session_id: str, session: AsyncSession
+    ) -> None:
         query = text("""
             INSERT INTO token_revocations (revocation_key, revocation_type, target_id, revoked_at)
             VALUES (:key, 'SESSION', :tid, NOW())
@@ -781,9 +863,13 @@ class SqlIdentityRepository:
         session: AsyncSession | None = None,
     ) -> bool:
         if session is not None:
-            return await self._is_token_revoked_with_session(jti, user_id, session_id, issued_at, family_id, session)
+            return await self._is_token_revoked_with_session(
+                jti, user_id, session_id, issued_at, family_id, session
+            )
         async with get_tenant_session() as sess:
-            return await self._is_token_revoked_with_session(jti, user_id, session_id, issued_at, family_id, sess)
+            return await self._is_token_revoked_with_session(
+                jti, user_id, session_id, issued_at, family_id, sess
+            )
 
     async def _is_token_revoked_with_session(
         self,
@@ -826,7 +912,9 @@ class SqlIdentityRepository:
 
         # Check family compromise
         if family_id:
-            query_f = text("SELECT is_compromised FROM token_families WHERE family_id = :fid LIMIT 1;")
+            query_f = text(
+                "SELECT is_compromised FROM token_families WHERE family_id = :fid LIMIT 1;"
+            )
             res_f = await session.execute(query_f, {"fid": family_id})
             row_f = res_f.fetchone()
             if row_f and row_f[0]:
@@ -848,7 +936,9 @@ class SqlIdentityRepository:
         self, token_id: str, family_id: str, session: AsyncSession
     ) -> bool:
         # Check if family exists
-        query_sel = text("SELECT is_compromised, used_tokens FROM token_families WHERE family_id = :fid LIMIT 1;")
+        query_sel = text(
+            "SELECT is_compromised, used_tokens FROM token_families WHERE family_id = :fid LIMIT 1;"
+        )
         res = await session.execute(query_sel, {"fid": family_id})
         row = res.fetchone()
 
@@ -872,7 +962,9 @@ class SqlIdentityRepository:
 
         if token_id in used_tokens:
             # REUSE DETECTED! Mark compromised!
-            query_comp = text("UPDATE token_families SET is_compromised = true, updated_at = NOW() WHERE family_id = :fid;")
+            query_comp = text(
+                "UPDATE token_families SET is_compromised = true, updated_at = NOW() WHERE family_id = :fid;"
+            )
             await session.execute(query_comp, {"fid": family_id})
             return False
 
@@ -903,7 +995,9 @@ class SqlIdentityRepository:
         issued_at: float | None = None,
         family_id: str | None = None,
     ) -> bool:
-        return self._run_async(self.is_token_revoked(jti, user_id, session_id, issued_at, family_id))
+        return self._run_async(
+            self.is_token_revoked(jti, user_id, session_id, issued_at, family_id)
+        )
 
     def record_refresh_token_use_sync(self, token_id: str, family_id: str) -> bool:
         return self._run_async(self.record_refresh_token_use(token_id, family_id))

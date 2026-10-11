@@ -25,7 +25,9 @@ class InMemoryTenantSettingsRepository:
             self._tenants[tenant_id] = TenantSettings(tenant_id=tenant_id)
         return self._tenants[tenant_id]
 
-    async def save(self, settings: TenantSettings, session: AsyncSession | None = None) -> TenantSettings:
+    async def save(
+        self, settings: TenantSettings, session: AsyncSession | None = None
+    ) -> TenantSettings:
         self._tenants[settings.tenant_id] = settings
         return settings
 

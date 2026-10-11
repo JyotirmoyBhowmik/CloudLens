@@ -34,8 +34,7 @@ logger = logging.getLogger("cloudlens.domain.wizard.repository")
 class WizardRepository(Protocol):
     """Authoritative protocol for Onboarding Wizard session persistence."""
 
-    def get(self, entity_id: str, *, tenant_context: TenantContext) -> WizardSession | None:
-        ...
+    def get(self, entity_id: str, *, tenant_context: TenantContext) -> WizardSession | None: ...
 
     def list(
         self,
@@ -44,37 +43,33 @@ class WizardRepository(Protocol):
         filter_params: Any = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[WizardSession]:
-        ...
+    ) -> list[WizardSession]: ...
 
-    def save(self, entity: WizardSession, *, tenant_context: TenantContext) -> WizardSession:
-        ...
+    def save(self, entity: WizardSession, *, tenant_context: TenantContext) -> WizardSession: ...
 
-    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
-    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def exists(self, entity_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     def get_active_for_user(
         self, user_id: str, *, tenant_context: TenantContext
-    ) -> WizardSession | None:
-        ...
+    ) -> WizardSession | None: ...
 
     async def get_async(
         self, entity_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> WizardSession | None:
-        ...
+    ) -> WizardSession | None: ...
 
     async def save_async(
-        self, entity: WizardSession, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> WizardSession:
-        ...
+        self,
+        entity: WizardSession,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
+    ) -> WizardSession: ...
 
     async def get_active_for_user_async(
         self, user_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> WizardSession | None:
-        ...
+    ) -> WizardSession | None: ...
 
 
 class SqlWizardRepository:
@@ -190,7 +185,11 @@ class SqlWizardRepository:
         return self._row_to_session(row)
 
     async def save_async(
-        self, entity: WizardSession, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: WizardSession,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> WizardSession:
         entity.tenant_id = tenant_context.tenant_id
         if session is not None:
@@ -212,10 +211,20 @@ class SqlWizardRepository:
         if entity.created_connector_id is not None:
             wdata["_created_connector_id"] = entity.created_connector_id
 
-        steps_json = json.dumps([s.value if hasattr(s, "value") else str(s) for s in entity.completed_steps])
+        steps_json = json.dumps(
+            [s.value if hasattr(s, "value") else str(s) for s in entity.completed_steps]
+        )
         wdata_json = json.dumps(wdata)
-        step_val = entity.current_step.value if hasattr(entity.current_step, "value") else str(entity.current_step)
-        prov_val = entity.provider.value if (entity.provider and hasattr(entity.provider, "value")) else (str(entity.provider) if entity.provider else None)
+        step_val = (
+            entity.current_step.value
+            if hasattr(entity.current_step, "value")
+            else str(entity.current_step)
+        )
+        prov_val = (
+            entity.provider.value
+            if (entity.provider and hasattr(entity.provider, "value"))
+            else (str(entity.provider) if entity.provider else None)
+        )
         now = datetime.now(UTC)
         entity.updated_at = now
 
@@ -264,7 +273,9 @@ class SqlWizardRepository:
         session: AsyncSession | None = None,
     ) -> list[WizardSession]:
         if session is not None:
-            return await self._list_with_session(tenant_context, filter_params, limit, offset, session)
+            return await self._list_with_session(
+                tenant_context, filter_params, limit, offset, session
+            )
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             return await self._list_with_session(tenant_context, filter_params, limit, offset, sess)
 
@@ -329,7 +340,9 @@ class SqlWizardRepository:
     def get_active_for_user(
         self, user_id: str, *, tenant_context: TenantContext
     ) -> WizardSession | None:
-        return self._run_async(self.get_active_for_user_async(user_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_active_for_user_async(user_id, tenant_context=tenant_context)
+        )
 
     def list(
         self,
@@ -340,7 +353,12 @@ class SqlWizardRepository:
         offset: int = 0,
     ) -> list[WizardSession]:
         return self._run_async(
-            self.list_async(tenant_context=tenant_context, filter_params=filter_params, limit=limit, offset=offset)
+            self.list_async(
+                tenant_context=tenant_context,
+                filter_params=filter_params,
+                limit=limit,
+                offset=offset,
+            )
         )
 
     def delete(self, entity_id: str, *, tenant_context: TenantContext) -> bool:

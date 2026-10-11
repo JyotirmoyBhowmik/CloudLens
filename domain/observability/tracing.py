@@ -8,6 +8,7 @@ All spans are joined by a common correlation identifier (Enterprise Rule 4.2 / P
 """
 
 import os
+import sys
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -52,8 +53,19 @@ def setup_tracing(
         _in_memory_exporter = InMemorySpanExporter()
         provider.add_span_processor(SimpleSpanProcessor(_in_memory_exporter))
 
-    # OTLP exporter to Tempo / OpenTelemetry Collector
-    endpoint = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or os.getenv("TEMPO_ENDPOINT")
+    # OTLP exporter to Tempo / OpenTelemetry Collector (skip during test runs or if disabled)
+    in_pytest = (
+        "pytest" in sys.modules
+        or "PYTEST_CURRENT_TEST" in os.environ
+        or "PYTEST_VERSION" in os.environ
+        or os.getenv("OTEL_SDK_DISABLED", "").lower() in ("true", "1")
+    )
+    if in_pytest:
+        endpoint = None
+    else:
+        endpoint = (
+            otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or os.getenv("TEMPO_ENDPOINT")
+        )
     if endpoint:
         try:
             from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter

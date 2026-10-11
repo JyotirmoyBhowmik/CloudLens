@@ -46,7 +46,11 @@ class TokenRateLimiter:
             try:
                 import redis
 
-                redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "redis://localhost:6379/0"
+                redis_url = (
+                    os.getenv("REDIS_URL")
+                    or os.getenv("CELERY_BROKER_URL")
+                    or "redis://localhost:6379/0"
+                )
                 client = redis.Redis.from_url(redis_url, socket_connect_timeout=1, socket_timeout=1)
                 client.ping()
                 self._redis = client

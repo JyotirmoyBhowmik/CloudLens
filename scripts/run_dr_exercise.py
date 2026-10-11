@@ -44,7 +44,9 @@ def main() -> int:
         # Step 3: Point-in-Time Recovery (PITR)
         print("[3/5] Simulating WAL continuous replay and Point-in-Time Recovery (PITR)...")
         suite.test_point_in_time_recovery_pitr()
-        print("      -> PASS: Pre-event records restored cleanly; post-corruption records discarded.")
+        print(
+            "      -> PASS: Pre-event records restored cleanly; post-corruption records discarded."
+        )
 
         # Step 4: OpenBao Raft Snapshot Restore
         print("[4/5] Simulating OpenBao Raft snapshot capture, wipe, and restore...")
@@ -62,19 +64,32 @@ def main() -> int:
         print("\n" + "=" * 80)
         print("DISASTER RECOVERY MEASURED RESULTS VS SLAs (DR-001 to DR-005)")
         print("=" * 80)
-        print(f"{'Requirement':<10} | {'Metric / Description':<36} | {'Target SLA':<16} | {'Measured':<12} | {'Status'}")
+        print(
+            f"{'Requirement':<10} | {'Metric / Description':<36} | {'Target SLA':<16} | {'Measured':<12} | {'Status'}"
+        )
         print("-" * 80)
-        print(f"{'DR-001':<10} | {'Full Recovery Time (RTO)':<36} | {'Target Met':<16} | {f'{elapsed:.3f}s':<12} | {'PASS'}")
-        print(f"{'DR-002':<10} | {'Telemetry Recovery Point (RPO)':<36} | {'Target Met':<16} | {'UNVERIFIED':<12} | {'UNVERIFIED'}")
-        print(f"{'DR-003':<10} | {'Daily Encrypted Snapshots + WAL':<36} | {'Continuous':<16} | {'Enforced':<12} | {'PASS'}")
-        print(f"{'DR-004':<10} | {'Automated Scripted Recovery':<36} | {'Automated':<16} | {'Verified':<12} | {'PASS'}")
-        print(f"{'DR-005':<10} | {'Zero Unrecoverable Records':<36} | {'Zero Loss':<16} | {'Verified':<12} | {'PASS'}")
+        print(
+            f"{'DR-001':<10} | {'Full Recovery Time (RTO)':<36} | {'Target Met':<16} | {f'{elapsed:.3f}s':<12} | {'PASS'}"
+        )
+        print(
+            f"{'DR-002':<10} | {'Telemetry Recovery Point (RPO)':<36} | {'Target Met':<16} | {'UNVERIFIED':<12} | {'UNVERIFIED'}"
+        )
+        print(
+            f"{'DR-003':<10} | {'Daily Encrypted Snapshots + WAL':<36} | {'Continuous':<16} | {'Enforced':<12} | {'PASS'}"
+        )
+        print(
+            f"{'DR-004':<10} | {'Automated Scripted Recovery':<36} | {'Automated':<16} | {'Verified':<12} | {'PASS'}"
+        )
+        print(
+            f"{'DR-005':<10} | {'Zero Unrecoverable Records':<36} | {'Zero Loss':<16} | {'Verified':<12} | {'PASS'}"
+        )
         print("=" * 80)
         print("\n[SUCCESS] Disaster Recovery Exercise Completed with ZERO Data Loss.")
         return 0
     except Exception as exc:
         print(f"\n[FAILURE] Disaster Recovery Exercise Failed: {exc}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 1
 

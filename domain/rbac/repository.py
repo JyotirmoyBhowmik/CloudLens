@@ -33,67 +33,60 @@ class RBACRepository(Protocol):
     """Authoritative protocol for RBAC scope grants and custom roles."""
 
     # Scope Grants
-    async def get_scope_grant(self, grant_id: str, session: AsyncSession | None = None) -> ScopeGrant | None:
-        ...
+    async def get_scope_grant(
+        self, grant_id: str, session: AsyncSession | None = None
+    ) -> ScopeGrant | None: ...
 
-    async def save_scope_grant(self, grant: ScopeGrant, session: AsyncSession | None = None) -> ScopeGrant:
-        ...
+    async def save_scope_grant(
+        self, grant: ScopeGrant, session: AsyncSession | None = None
+    ) -> ScopeGrant: ...
 
     async def list_scope_grants(
-        self, tenant_id: str | None = None, grantee_id: str | None = None, session: AsyncSession | None = None
-    ) -> list[ScopeGrant]:
-        ...
+        self,
+        tenant_id: str | None = None,
+        grantee_id: str | None = None,
+        session: AsyncSession | None = None,
+    ) -> list[ScopeGrant]: ...
 
-    async def delete_scope_grant(self, grant_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete_scope_grant(
+        self, grant_id: str, session: AsyncSession | None = None
+    ) -> bool: ...
 
     # Custom Roles
     async def get_custom_role(
         self, tenant_id: str, role_code: str, session: AsyncSession | None = None
-    ) -> RoleDefinition | None:
-        ...
+    ) -> RoleDefinition | None: ...
 
     async def save_custom_role(
         self, role_def: RoleDefinition, session: AsyncSession | None = None
-    ) -> RoleDefinition:
-        ...
+    ) -> RoleDefinition: ...
 
     async def list_custom_roles(
         self, tenant_id: str, session: AsyncSession | None = None
-    ) -> list[RoleDefinition]:
-        ...
+    ) -> list[RoleDefinition]: ...
 
     async def delete_custom_role(
         self, tenant_id: str, role_code: str, session: AsyncSession | None = None
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
     # Synchronous helpers for sync execution contexts
-    def get_scope_grant_sync(self, grant_id: str) -> ScopeGrant | None:
-        ...
+    def get_scope_grant_sync(self, grant_id: str) -> ScopeGrant | None: ...
 
-    def save_scope_grant_sync(self, grant: ScopeGrant) -> ScopeGrant:
-        ...
+    def save_scope_grant_sync(self, grant: ScopeGrant) -> ScopeGrant: ...
 
     def list_scope_grants_sync(
         self, tenant_id: str | None = None, grantee_id: str | None = None
-    ) -> list[ScopeGrant]:
-        ...
+    ) -> list[ScopeGrant]: ...
 
-    def delete_scope_grant_sync(self, grant_id: str) -> bool:
-        ...
+    def delete_scope_grant_sync(self, grant_id: str) -> bool: ...
 
-    def get_custom_role_sync(self, tenant_id: str, role_code: str) -> RoleDefinition | None:
-        ...
+    def get_custom_role_sync(self, tenant_id: str, role_code: str) -> RoleDefinition | None: ...
 
-    def save_custom_role_sync(self, role_def: RoleDefinition) -> RoleDefinition:
-        ...
+    def save_custom_role_sync(self, role_def: RoleDefinition) -> RoleDefinition: ...
 
-    def list_custom_roles_sync(self, tenant_id: str) -> list[RoleDefinition]:
-        ...
+    def list_custom_roles_sync(self, tenant_id: str) -> list[RoleDefinition]: ...
 
-    def delete_custom_role_sync(self, tenant_id: str, role_code: str) -> bool:
-        ...
+    def delete_custom_role_sync(self, tenant_id: str, role_code: str) -> bool: ...
 
 
 class SqlRBACRepository:
@@ -108,13 +101,17 @@ class SqlRBACRepository:
     # Scope Grants
     # -------------------------------------------------------------------------
 
-    async def get_scope_grant(self, grant_id: str, session: AsyncSession | None = None) -> ScopeGrant | None:
+    async def get_scope_grant(
+        self, grant_id: str, session: AsyncSession | None = None
+    ) -> ScopeGrant | None:
         if session is not None:
             return await self._get_grant_with_session(grant_id, session)
         async with get_tenant_session() as sess:
             return await self._get_grant_with_session(grant_id, sess)
 
-    async def _get_grant_with_session(self, grant_id: str, session: AsyncSession) -> ScopeGrant | None:
+    async def _get_grant_with_session(
+        self, grant_id: str, session: AsyncSession
+    ) -> ScopeGrant | None:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             SELECT id, tenant_id, grantee_type, grantee_id, effect, data, created_at, updated_at
@@ -153,13 +150,17 @@ class SqlRBACRepository:
             business_unit_ids=data.get("business_unit_ids", data.get("business_unit_codes", [])),
             financial_sensitivity=fin_sens,
             is_administrative=data.get("is_administrative", data.get("administrative", False)),
-            resource_exceptions=data.get("resource_exceptions", data.get("resource_exceptions_allow", [])),
+            resource_exceptions=data.get(
+                "resource_exceptions", data.get("resource_exceptions_allow", [])
+            ),
             is_active=data.get("is_active", True),
             created_at=row[6],
             updated_at=row[7],
         )
 
-    async def save_scope_grant(self, grant: ScopeGrant, session: AsyncSession | None = None) -> ScopeGrant:
+    async def save_scope_grant(
+        self, grant: ScopeGrant, session: AsyncSession | None = None
+    ) -> ScopeGrant:
         if session is not None:
             return await self._save_grant_with_session(grant, session)
         async with get_tenant_session(grant.tenant_id) as sess:
@@ -167,12 +168,16 @@ class SqlRBACRepository:
             await sess.commit()
             return res
 
-    async def _save_grant_with_session(self, grant: ScopeGrant, session: AsyncSession) -> ScopeGrant:
+    async def _save_grant_with_session(
+        self, grant: ScopeGrant, session: AsyncSession
+    ) -> ScopeGrant:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         cc_ids = getattr(grant, "cost_centre_ids", getattr(grant, "cost_centre_codes", []))
         bu_ids = getattr(grant, "business_unit_ids", getattr(grant, "business_unit_codes", []))
         is_admin = getattr(grant, "is_administrative", getattr(grant, "administrative", False))
-        res_exc = getattr(grant, "resource_exceptions", getattr(grant, "resource_exceptions_allow", []))
+        res_exc = getattr(
+            grant, "resource_exceptions", getattr(grant, "resource_exceptions_allow", [])
+        )
         data_dict = {
             "providers": grant.providers,
             "account_ids": grant.account_ids,
@@ -183,7 +188,9 @@ class SqlRBACRepository:
             "business_unit_codes": bu_ids,
             "cost_centre_ids": cc_ids,
             "business_unit_ids": bu_ids,
-            "financial_sensitivity": grant.financial_sensitivity.value if hasattr(grant.financial_sensitivity, "value") else str(grant.financial_sensitivity),
+            "financial_sensitivity": grant.financial_sensitivity.value
+            if hasattr(grant.financial_sensitivity, "value")
+            else str(grant.financial_sensitivity),
             "is_administrative": is_admin,
             "administrative": is_admin,
             "resource_exceptions": res_exc,
@@ -207,16 +214,23 @@ class SqlRBACRepository:
             {
                 "id": grant.id,
                 "tenant_id": grant.tenant_id,
-                "grantee_type": grant.grantee_type.value if hasattr(grant.grantee_type, "value") else str(grant.grantee_type),
+                "grantee_type": grant.grantee_type.value
+                if hasattr(grant.grantee_type, "value")
+                else str(grant.grantee_type),
                 "grantee_id": grant.grantee_id,
-                "effect": grant.effect.value if hasattr(grant.effect, "value") else str(grant.effect),
+                "effect": grant.effect.value
+                if hasattr(grant.effect, "value")
+                else str(grant.effect),
                 "data": json.dumps(data_dict),
             },
         )
         return grant
 
     async def list_scope_grants(
-        self, tenant_id: str | None = None, grantee_id: str | None = None, session: AsyncSession | None = None
+        self,
+        tenant_id: str | None = None,
+        grantee_id: str | None = None,
+        session: AsyncSession | None = None,
     ) -> list[ScopeGrant]:
         if session is not None:
             return await self._list_grants_with_session(tenant_id, grantee_id, session)

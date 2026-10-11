@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)
 class DependencyRepository(Protocol):
     """Authoritative repository protocol for dependency edges and conflicts."""
 
-    def save_edge(self, edge: DependencyEdge, *, tenant_context: TenantContext) -> DependencyEdge: ...
+    def save_edge(
+        self, edge: DependencyEdge, *, tenant_context: TenantContext
+    ) -> DependencyEdge: ...
     def get_edge(self, edge_id: str, *, tenant_context: TenantContext) -> DependencyEdge | None: ...
     def find_edge(
         self,
@@ -98,14 +100,22 @@ class SqlDependencyRepository:
         return EdgeConflict.model_validate(m)
 
     # Edge Operations
-    async def save_edge_async(self, edge: DependencyEdge, *, tenant_context: TenantContext) -> DependencyEdge:
+    async def save_edge_async(
+        self, edge: DependencyEdge, *, tenant_context: TenantContext
+    ) -> DependencyEdge:
         tc = require_tenant_context(tenant_context)
         status_val = edge.status.value if hasattr(edge.status, "value") else str(edge.status)
-        rel_val = edge.relationship_type.value if hasattr(edge.relationship_type, "value") else str(edge.relationship_type)
+        rel_val = (
+            edge.relationship_type.value
+            if hasattr(edge.relationship_type, "value")
+            else str(edge.relationship_type)
+        )
 
         async with get_tenant_session(tc.tenant_id) as sess:
             # Check existing for history snapshot
-            check_q = text("SELECT edge_payload FROM service_dependencies WHERE id = :id AND tenant_id = :tid LIMIT 1;")
+            check_q = text(
+                "SELECT edge_payload FROM service_dependencies WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+            )
             existing = await sess.execute(check_q, {"id": edge.id, "tid": tc.tenant_id})
             exist_row = existing.fetchone()
             if exist_row and exist_row[0]:
@@ -114,13 +124,16 @@ class SqlDependencyRepository:
                     VALUES (:id, :tid, :edge_id, CAST(:payload AS JSONB), NOW());
                 """)
                 import uuid
+
                 await sess.execute(
                     hist_q,
                     {
                         "id": f"hist-{uuid.uuid4().hex[:12]}",
                         "tid": tc.tenant_id,
                         "edge_id": edge.id,
-                        "payload": json.dumps(exist_row[0]) if isinstance(exist_row[0], dict) else str(exist_row[0]),
+                        "payload": json.dumps(exist_row[0])
+                        if isinstance(exist_row[0], dict)
+                        else str(exist_row[0]),
                     },
                 )
 
@@ -159,10 +172,14 @@ class SqlDependencyRepository:
     def save_edge(self, edge: DependencyEdge, *, tenant_context: TenantContext) -> DependencyEdge:
         return self._run_async(self.save_edge_async(edge, tenant_context=tenant_context))
 
-    async def get_edge_async(self, edge_id: str, *, tenant_context: TenantContext) -> DependencyEdge | None:
+    async def get_edge_async(
+        self, edge_id: str, *, tenant_context: TenantContext
+    ) -> DependencyEdge | None:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
-            query = text("SELECT * FROM service_dependencies WHERE id = :id AND tenant_id = :tid LIMIT 1;")
+            query = text(
+                "SELECT * FROM service_dependencies WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+            )
             res = await sess.execute(query, {"id": edge_id, "tid": tc.tenant_id})
             row = res.fetchone()
             if not row:
@@ -182,10 +199,16 @@ class SqlDependencyRepository:
     ) -> DependencyEdge | None:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
-            sql = ["SELECT * FROM service_dependencies WHERE tenant_id = :tid AND source_id = :src AND target_id = :tgt"]
+            sql = [
+                "SELECT * FROM service_dependencies WHERE tenant_id = :tid AND source_id = :src AND target_id = :tgt"
+            ]
             params: dict[str, Any] = {"tid": tc.tenant_id, "src": source_id, "tgt": target_id}
             if relationship_type:
-                rel_val = relationship_type.value if hasattr(relationship_type, "value") else str(relationship_type)
+                rel_val = (
+                    relationship_type.value
+                    if hasattr(relationship_type, "value")
+                    else str(relationship_type)
+                )
                 sql.append("AND relationship_type = :rel")
                 params["rel"] = rel_val
             sql.append("LIMIT 1;")
@@ -205,7 +228,10 @@ class SqlDependencyRepository:
     ) -> DependencyEdge | None:
         return self._run_async(
             self.find_edge_async(
-                source_id, target_id, relationship_type=relationship_type, tenant_context=tenant_context
+                source_id,
+                target_id,
+                relationship_type=relationship_type,
+                tenant_context=tenant_context,
             )
         )
 
@@ -235,7 +261,11 @@ class SqlDependencyRepository:
                 sql.append("AND status NOT IN ('DELETED', 'SUPERSEDED')")
 
             if relationship_type:
-                rel_val = relationship_type.value if hasattr(relationship_type, "value") else str(relationship_type)
+                rel_val = (
+                    relationship_type.value
+                    if hasattr(relationship_type, "value")
+                    else str(relationship_type)
+                )
                 sql.append("AND relationship_type = :rel")
                 params["rel"] = rel_val
 
@@ -286,7 +316,9 @@ class SqlDependencyRepository:
     ) -> list[DependencyEdge]:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
-            query = text("SELECT version_payload FROM dependency_history WHERE edge_id = :eid AND tenant_id = :tid ORDER BY recorded_at ASC;")
+            query = text(
+                "SELECT version_payload FROM dependency_history WHERE edge_id = :eid AND tenant_id = :tid ORDER BY recorded_at ASC;"
+            )
             res = await sess.execute(query, {"eid": edge_id, "tid": tc.tenant_id})
             rows = res.fetchall()
             results = []
@@ -328,7 +360,9 @@ class SqlDependencyRepository:
     def delete_edge(
         self, edge_id: str, *, tenant_context: TenantContext, hard: bool = False
     ) -> bool:
-        return self._run_async(self.delete_edge_async(edge_id, tenant_context=tenant_context, hard=hard))
+        return self._run_async(
+            self.delete_edge_async(edge_id, tenant_context=tenant_context, hard=hard)
+        )
 
     # Conflicts
     async def save_conflict_async(
@@ -353,7 +387,9 @@ class SqlDependencyRepository:
                 {
                     "id": conflict.conflict_id,
                     "tid": tc.tenant_id,
-                    "edge_id": getattr(conflict, "edge_id", getattr(conflict, "manual_edge_id", "")),
+                    "edge_id": getattr(
+                        conflict, "edge_id", getattr(conflict, "manual_edge_id", "")
+                    ),
                     "ctype": c_type,
                     "payload": json.dumps(conflict.model_dump(mode="json")),
                     "created_at": conflict.detected_at,
@@ -373,7 +409,9 @@ class SqlDependencyRepository:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM dependency_conflicts WHERE id = :id AND tenant_id = :tid LIMIT 1;"),
+                text(
+                    "SELECT * FROM dependency_conflicts WHERE id = :id AND tenant_id = :tid LIMIT 1;"
+                ),
                 {"id": conflict_id, "tid": tc.tenant_id},
             )
             row = res.fetchone()
@@ -392,7 +430,9 @@ class SqlDependencyRepository:
         tc = require_tenant_context(tenant_context)
         async with get_tenant_session(tc.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT * FROM dependency_conflicts WHERE tenant_id = :tid ORDER BY created_at DESC;"),
+                text(
+                    "SELECT * FROM dependency_conflicts WHERE tenant_id = :tid ORDER BY created_at DESC;"
+                ),
                 {"tid": tc.tenant_id},
             )
             rows = res.fetchall()
@@ -404,7 +444,11 @@ class SqlDependencyRepository:
     def list_conflicts(
         self, *, tenant_context: TenantContext, unresolved_only: bool = True
     ) -> list[EdgeConflict]:
-        return self._run_async(self.list_conflicts_async(tenant_context=tenant_context, unresolved_only=unresolved_only))
+        return self._run_async(
+            self.list_conflicts_async(
+                tenant_context=tenant_context, unresolved_only=unresolved_only
+            )
+        )
 
 
 _dependency_repo_instance: DependencyRepository | None = None

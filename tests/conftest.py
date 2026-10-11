@@ -81,67 +81,384 @@ from masterdata.string_catalogue import reset_string_catalogue_service
 
 
 @pytest.fixture(autouse=True)
-def reset_all_singletons():
+def reset_all_singletons(request: pytest.FixtureRequest):
     """Autouse fixture ensuring pristine singleton and repository state for every test."""
-    reset_alert_repository()
+    from api.cloudlens_api.main import app
+    from db.session import get_db_session
+
+    async def _mock_db_session():
+        yield None
+
+    is_realdb = bool(request.node.get_closest_marker("realdb"))
+    if not is_realdb:
+        app.dependency_overrides[get_db_session] = _mock_db_session
+
+        from domain.identity.repository import reset_identity_repository
+        from tests.fakes.identity import InMemoryIdentityRepository
+
+        reset_identity_repository(InMemoryIdentityRepository())
+
+        from domain.rbac.repository import reset_rbac_repository
+        from tests.fakes.rbac import InMemoryRBACRepository
+
+        reset_rbac_repository(InMemoryRBACRepository())
+
+        from masterdata.repository import reset_master_data_repository
+        from tests.fakes.masterdata import InMemoryMasterDataRepository
+
+        reset_master_data_repository(InMemoryMasterDataRepository())
+
+        from domain.config.feature_flags_repository import reset_feature_flag_repository
+        from tests.fakes.feature_flags import InMemoryFeatureFlagRepository
+
+        reset_feature_flag_repository(InMemoryFeatureFlagRepository())
+
+        from domain.config.repository import reset_tenant_settings_repository
+        from tests.fakes.tenant_settings import InMemoryTenantSettingsRepository
+
+        reset_tenant_settings_repository(InMemoryTenantSettingsRepository())
+
+        from domain.alerting.repository import reset_alert_repository
+        from tests.fakes.alerting import (
+            InMemoryAlertRepository,
+            InMemoryContextualAlertRepository,
+        )
+
+        reset_alert_repository(InMemoryAlertRepository())
+
+        from domain.alerting.contextual import get_contextual_alert_manager
+
+        get_contextual_alert_manager(InMemoryContextualAlertRepository())
+
+        from domain.cost.repository import reset_cost_repository
+        from tests.fakes.cost import InMemoryCostFactRepository
+
+        reset_cost_repository(InMemoryCostFactRepository())
+
+        from domain.cost.reconciliation.repository import (
+            reset_reconciliation_repository,
+        )
+        from tests.fakes.reconciliation import InMemoryReconciliationRepository
+
+        reset_reconciliation_repository(InMemoryReconciliationRepository())
+
+        from domain.budgets.repository import reset_budget_repository
+        from tests.fakes.budgets import InMemoryBudgetRepository
+
+        reset_budget_repository(InMemoryBudgetRepository())
+
+        from domain.usage.repository import reset_usage_repository
+        from tests.fakes.usage import InMemoryUsageRepository
+
+        reset_usage_repository(InMemoryUsageRepository())
+
+        from domain.pricing.repository import reset_pricing_repository
+        from tests.fakes.pricing import InMemoryPricingRepository
+
+        reset_pricing_repository(InMemoryPricingRepository(load_seed_data=True))
+
+        from domain.catalogues.repository import reset_catalogue_repository
+        from tests.fakes.catalogues import InMemoryCatalogueRepository
+
+        reset_catalogue_repository(InMemoryCatalogueRepository(load_seeds=True))
+
+        from domain.policy.repository import reset_policy_repository
+        from tests.fakes.policy import InMemoryPolicyRepository
+
+        reset_policy_repository(InMemoryPolicyRepository())
+
+        from domain.provisioning.repository import reset_provisioning_repository
+        from tests.fakes.provisioning import InMemoryProvisioningRepository
+
+        reset_provisioning_repository(InMemoryProvisioningRepository())
+
+        from domain.quotas.repository import reset_quota_repository
+        from tests.fakes.quotas import InMemoryQuotaRepository
+
+        reset_quota_repository(InMemoryQuotaRepository())
+
+        from domain.runtime.repository import reset_runtime_repository
+        from tests.fakes.runtime import InMemoryRuntimeRepository
+
+        reset_runtime_repository(InMemoryRuntimeRepository())
+
+        from domain.statements.repository import reset_statement_repository
+        from tests.fakes.statements import InMemoryStatementRepository
+
+        reset_statement_repository(InMemoryStatementRepository())
+
+        from domain.remediation.repository import reset_remediation_repository
+        from tests.fakes.remediation import InMemoryRemediationRepository
+
+        reset_remediation_repository(InMemoryRemediationRepository())
+
+        from domain.reports.repository import reset_report_repository
+        from tests.fakes.reports import InMemoryReportRepository
+
+        reset_report_repository(InMemoryReportRepository())
+
+        from domain.workflows.repository import reset_workflow_repository
+        from tests.fakes.workflows import InMemoryWorkflowRepository
+
+        reset_workflow_repository(InMemoryWorkflowRepository())
+
+        from domain.wizard.repository import reset_wizard_repository
+        from tests.fakes.wizard import InMemoryWizardRepository
+
+        reset_wizard_repository(InMemoryWizardRepository())
+
+        from domain.thresholds.repository import reset_threshold_repository
+        from tests.fakes.thresholds import InMemoryThresholdRepository
+
+        reset_threshold_repository(InMemoryThresholdRepository())
+
+        from domain.analytics.repository import reset_analytics_repository
+        from tests.fakes.analytics import InMemoryAnalyticsRepository
+
+        reset_analytics_repository(InMemoryAnalyticsRepository())
+
+        from domain.forecasting.repository import reset_forecast_repository
+        from tests.fakes.forecasting import InMemoryForecastRepository
+
+        reset_forecast_repository(InMemoryForecastRepository())
+
+        from domain.audit.repository import reset_audit_repository
+        from tests.fakes.audit import InMemoryAuditRepository
+
+        reset_audit_repository(InMemoryAuditRepository())
+
+        from domain.hierarchy.repository import reset_hierarchy_repository
+        from tests.fakes.hierarchy import InMemoryHierarchyRepository
+
+        reset_hierarchy_repository(InMemoryHierarchyRepository())
+
+        from domain.dependency.repository import reset_dependency_repository
+        from tests.fakes.dependency import InMemoryDependencyRepository
+
+        reset_dependency_repository(InMemoryDependencyRepository())
+
+        from domain.notification.repository import (
+            reset_notification_log_repository,
+        )
+        from tests.fakes.notification import InMemoryNotificationLogRepository
+
+        reset_notification_log_repository(InMemoryNotificationLogRepository())
+
+        from domain.bulk_import.repository import reset_bulk_import_repository
+        from tests.fakes.bulk_import import InMemoryBulkImportRepository
+
+        reset_bulk_import_repository(InMemoryBulkImportRepository())
+
+        from domain.connectors.repository import reset_connector_repository
+        from tests.fakes.connectors import InMemoryConnectorRepository
+
+        reset_connector_repository(InMemoryConnectorRepository())
+
+        from domain.credentials.store import reset_secret_store
+        from tests.fakes.credentials import InMemorySecretStore
+
+        reset_secret_store(InMemorySecretStore(mount_point="secret"))
+
+        from domain.credentials.repository import reset_credential_repository
+        from tests.fakes.credentials import InMemoryCredentialRepository
+
+        reset_credential_repository(InMemoryCredentialRepository())
+
+        from domain.sync.repository import reset_sync_repositories
+        from tests.fakes.sync import (
+            InMemoryConnectorScheduleRepository,
+            InMemoryFirstSyncProgressRepository,
+            InMemoryQuarantineRepository,
+            InMemorySyncJobRepository,
+        )
+
+        reset_sync_repositories(
+            sync_jobs=InMemorySyncJobRepository(),
+            quarantine=InMemoryQuarantineRepository(),
+            schedules=InMemoryConnectorScheduleRepository(),
+            progress=InMemoryFirstSyncProgressRepository(),
+        )
+    else:
+        app.dependency_overrides.pop(get_db_session, None)
+        from domain.identity.repository import reset_identity_repository
+
+        reset_identity_repository(None)
+
+        from domain.rbac.repository import reset_rbac_repository
+
+        reset_rbac_repository(None)
+
+        from masterdata.repository import reset_master_data_repository
+
+        reset_master_data_repository(None)
+
+        from domain.config.feature_flags_repository import (
+            reset_feature_flag_repository,
+        )
+
+        reset_feature_flag_repository(None)
+
+        from domain.config.repository import reset_tenant_settings_repository
+
+        reset_tenant_settings_repository(None)
+
+        from domain.alerting.repository import reset_alert_repository
+
+        reset_alert_repository(None)
+
+        from domain.cost.repository import reset_cost_repository
+
+        reset_cost_repository(None)
+
+        from domain.cost.reconciliation.repository import (
+            reset_reconciliation_repository,
+        )
+
+        reset_reconciliation_repository(None)
+
+        from domain.budgets.repository import reset_budget_repository
+
+        reset_budget_repository(None)
+
+        from domain.usage.repository import reset_usage_repository
+
+        reset_usage_repository(None)
+
+        from domain.pricing.repository import reset_pricing_repository
+
+        reset_pricing_repository(None)
+
+        from domain.catalogues.repository import reset_catalogue_repository
+
+        reset_catalogue_repository(None)
+
+        from domain.policy.repository import reset_policy_repository
+
+        reset_policy_repository(None)
+
+        from domain.provisioning.repository import reset_provisioning_repository
+
+        reset_provisioning_repository(None)
+
+        from domain.quotas.repository import reset_quota_repository
+
+        reset_quota_repository(None)
+
+        from domain.runtime.repository import reset_runtime_repository
+
+        reset_runtime_repository(None)
+
+        from domain.statements.repository import reset_statement_repository
+
+        reset_statement_repository(None)
+
+        from domain.remediation.repository import reset_remediation_repository
+
+        reset_remediation_repository(None)
+
+        from domain.reports.repository import reset_report_repository
+
+        reset_report_repository(None)
+
+        from domain.workflows.repository import reset_workflow_repository
+
+        reset_workflow_repository(None)
+
+        from domain.wizard.repository import reset_wizard_repository
+
+        reset_wizard_repository(None)
+
+        from domain.thresholds.repository import reset_threshold_repository
+
+        reset_threshold_repository(None)
+
+        from domain.analytics.repository import reset_analytics_repository
+
+        reset_analytics_repository(None)
+
+        from domain.forecasting.repository import reset_forecast_repository
+
+        reset_forecast_repository(None)
+
+        from domain.audit.repository import reset_audit_repository
+
+        reset_audit_repository(None)
+
+        from domain.hierarchy.repository import reset_hierarchy_repository
+
+        reset_hierarchy_repository(None)
+
+        from domain.dependency.repository import reset_dependency_repository
+
+        reset_dependency_repository(None)
+
+        from domain.notification.repository import (
+            reset_notification_log_repository,
+        )
+
+        reset_notification_log_repository(None)
+
+        from domain.bulk_import.repository import reset_bulk_import_repository
+
+        reset_bulk_import_repository(None)
+
+        from domain.connectors.repository import reset_connector_repository
+
+        reset_connector_repository(None)
+
+        from domain.credentials.repository import reset_credential_repository
+
+        reset_credential_repository(None)
+
+        from domain.sync.repository import reset_sync_repositories
+
+        reset_sync_repositories(None, None, None, None)
+
     reset_alert_service()
-    reset_analytics_repository()
     reset_analytics_service()
     reset_audit_service()
     reset_pre_identity_bootstrap_service()
     reset_superuser_service()
-    reset_budget_repository()
     reset_budget_service()
     reset_bulk_import_engine()
-    reset_bulk_import_repository()
     reset_calculation_engine()
     reset_pre_deployment_estimator()
     reset_currency_service()
     reset_cost_pipeline()
     reset_cost_reconciliation_engine()
-    reset_reconciliation_repository()
-    reset_cost_repository()
     reset_credential_service()
-    reset_secret_store()
     reset_dashboard_service()
     reset_demo_mode_service()
-    reset_dependency_repository()
     reset_dependency_service()
     reset_explanation_service()
-    reset_forecast_repository()
     reset_forecasting_service()
     reset_hierarchy_service()
     reset_identity_service()
-    reset_notification_log_repository()
     reset_override_service()
-    reset_policy_repository()
     reset_policy_service()
     reset_pricing_service()
-    reset_provisioning_repository()
     reset_provisioning_gate_service()
-    reset_quota_repository()
     reset_quota_service()
     reset_rbac_service()
     reset_itsm_adapter()
     reset_realised_saving_ledger()
-    reset_remediation_repository()
     reset_remediation_service()
-    reset_report_repository()
     reset_report_service()
     reset_resource_detail_service()
-    reset_runtime_repository()
     reset_runtime_service()
-    reset_statement_repository()
     reset_statement_service()
-    reset_sync_repositories()
+    from connectors.sync.first_sync import reset_first_sync_service
+    from connectors.sync.orchestrator import reset_sync_orchestrator
+    from connectors.sync.scheduler import reset_sync_scheduler
+
+    reset_sync_scheduler(None)
+    reset_sync_orchestrator(None)
+    reset_first_sync_service(None)
     reset_demo_tenant_service()
     reset_tenant_object_storage()
-    reset_threshold_repository()
     reset_threshold_service()
     reset_topology_service()
     reset_usage_service()
-    reset_wizard_repository()
-    reset_workflow_repository()
     reset_workflow_service()
     reset_master_data_service()
     reset_string_catalogue_service()
@@ -151,6 +468,7 @@ def reset_all_singletons():
 @pytest.fixture
 def make_auth_token():
     """Mints a real cryptographically signed JWT test token for testing (Prompt P01 Item 10)."""
+
     def _mint(
         tenant_id: str = "tenant-test",
         user_id: str = "usr-test",
@@ -177,6 +495,7 @@ def make_auth_token():
 @pytest.fixture
 def auth_headers(make_auth_token):
     """Returns headers with a valid Bearer token minted by make_auth_token."""
+
     def _headers(
         tenant_id: str = "tenant-test",
         user_id: str = "usr-test",
@@ -272,6 +591,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     if report.skipped:
         require_realdb = (
             os.getenv("CLOUDLENS_REQUIRE_REALDB") == "1"
+            or os.getenv("REQUIRE_REALDB") == "1"
             or os.getenv("CI", "").strip().lower() in ("true", "1")
             or os.getenv("GITHUB_ACTIONS", "").strip().lower() in ("true", "1")
         )

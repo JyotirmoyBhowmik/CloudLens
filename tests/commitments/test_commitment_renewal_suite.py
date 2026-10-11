@@ -78,7 +78,7 @@ class TestCommitmentRenewalSuite:
             eligible_usage_cost=Decimal("400000.00"),
             covered_usage_cost=Decimal("360000.00"),  # 90% coverage
             commitment_cost=Decimal("438000.00"),
-            actual_consumed_cost=Decimal("262800.00"), # 60% utilization
+            actual_consumed_cost=Decimal("262800.00"),  # 60% utilization
             list_price_cost=Decimal("480000.00"),
         )
         assert analysis_over.assessment == CommitmentAssessment.OVER_COMMITMENT
@@ -105,7 +105,7 @@ class TestCommitmentRenewalSuite:
             eligible_usage_cost=Decimal("380000.00"),
             covered_usage_cost=Decimal("171000.00"),  # 45% coverage
             commitment_cost=Decimal("175200.00"),
-            actual_consumed_cost=Decimal("173448.00"), # 99% utilization
+            actual_consumed_cost=Decimal("173448.00"),  # 99% utilization
             list_price_cost=Decimal("240000.00"),
         )
         assert analysis_under.assessment == CommitmentAssessment.UNDER_COMMITMENT
@@ -139,7 +139,7 @@ class TestCommitmentRenewalSuite:
             covered_usage_cost=Decimal("350000.00"),
             commitment_cost=Decimal("350000.00"),
             actual_consumed_cost=Decimal("340000.00"),
-            list_price_cost=Decimal("500000.00"), # Value at risk = 500k - 350k = 150k
+            list_price_cost=Decimal("500000.00"),  # Value at risk = 500k - 350k = 150k
         )
 
         # Medium value at risk ($30,000 exposure), expiring in 15 days
@@ -163,7 +163,7 @@ class TestCommitmentRenewalSuite:
             covered_usage_cost=Decimal("87600.00"),
             commitment_cost=Decimal("87600.00"),
             actual_consumed_cost=Decimal("87000.00"),
-            list_price_cost=Decimal("117600.00"), # Value at risk = 117.6k - 87.6k = 30k
+            list_price_cost=Decimal("117600.00"),  # Value at risk = 117.6k - 87.6k = 30k
         )
 
         pipeline = service.get_renewal_pipeline(
@@ -228,7 +228,9 @@ class TestCommitmentRenewalSuite:
         assert RenewalAction.RENEW_HIGHER in actions
         assert RenewalAction.RENEW_LOWER in actions
 
-        do_nothing_opt = next(opt for opt in rec.what_if_options if opt.action == RenewalAction.DO_NOTHING)
+        do_nothing_opt = next(
+            opt for opt in rec.what_if_options if opt.action == RenewalAction.DO_NOTHING
+        )
         assert do_nothing_opt.projected_annual_cost > Decimal("219000.00")
         assert do_nothing_opt.projected_annual_saving == Decimal("0.00")
 
@@ -245,9 +247,9 @@ class TestCommitmentRenewalSuite:
             commitment_type=CommitmentType.SAVINGS_PLAN,
             service_category="COMPUTE",
             start_date=now - dt.timedelta(days=390),
-            expiry_date=now - dt.timedelta(days=15), # Lapsed 15 days ago
+            expiry_date=now - dt.timedelta(days=15),  # Lapsed 15 days ago
             hourly_committed_rate=Decimal("10.00"),
-            annual_committed_cost=Decimal("87600.00"), # Monthly = 7,300.00
+            annual_committed_cost=Decimal("87600.00"),  # Monthly = 7,300.00
             owner_id="procurement-lead",
             scope_id="BU_RETAIL",
         )
@@ -443,7 +445,10 @@ class TestCommitmentRenewalSuite:
 
         assert impact.has_deliberate_decision is False
         assert impact.incident_raised is True
-        assert "lapsed without a deliberate renewal or lapse decision recorded" in impact.incident_details
+        assert (
+            "lapsed without a deliberate renewal or lapse decision recorded"
+            in impact.incident_details
+        )
         assert impact.on_demand_increase == Decimal("6400.00")
 
     def test_post_expiry_incident_raised_when_renewal_missing_in_inventory(

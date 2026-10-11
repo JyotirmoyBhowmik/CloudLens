@@ -34,8 +34,9 @@ logger = logging.getLogger("cloudlens.domain.connectors.repository")
 class ConnectorRepository(Protocol):
     """Authoritative protocol for Cloud Connector persistence."""
 
-    def get(self, connector_id: str, *, tenant_context: TenantContext) -> ConnectorEntity | None:
-        ...
+    def get(
+        self, connector_id: str, *, tenant_context: TenantContext
+    ) -> ConnectorEntity | None: ...
 
     def list(
         self,
@@ -45,16 +46,19 @@ class ConnectorRepository(Protocol):
         lifecycle_state: ConnectorLifecycleState | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[ConnectorEntity]:
-        ...
+    ) -> list[ConnectorEntity]: ...
 
-    def save(self, entity: ConnectorEntity, *, tenant_context: TenantContext) -> ConnectorEntity:
-        ...
+    def save(
+        self, entity: ConnectorEntity, *, tenant_context: TenantContext
+    ) -> ConnectorEntity: ...
 
     def update_lifecycle_state(
-        self, connector_id: str, new_state: ConnectorLifecycleState, *, tenant_context: TenantContext
-    ) -> bool:
-        ...
+        self,
+        connector_id: str,
+        new_state: ConnectorLifecycleState,
+        *,
+        tenant_context: TenantContext,
+    ) -> bool: ...
 
     def update_capabilities(
         self,
@@ -63,21 +67,25 @@ class ConnectorRepository(Protocol):
         verified: list[str] | None = None,
         *,
         tenant_context: TenantContext,
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
-    def delete(self, connector_id: str, *, tenant_context: TenantContext) -> bool:
-        ...
+    def delete(self, connector_id: str, *, tenant_context: TenantContext) -> bool: ...
 
     async def get_async(
-        self, connector_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> ConnectorEntity | None:
-        ...
+        self,
+        connector_id: str,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
+    ) -> ConnectorEntity | None: ...
 
     async def save_async(
-        self, entity: ConnectorEntity, *, tenant_context: TenantContext, session: AsyncSession | None = None
-    ) -> ConnectorEntity:
-        ...
+        self,
+        entity: ConnectorEntity,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
+    ) -> ConnectorEntity: ...
 
 
 class SqlConnectorRepository:
@@ -131,7 +139,11 @@ class SqlConnectorRepository:
         )
 
     async def get_async(
-        self, connector_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        connector_id: str,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> ConnectorEntity | None:
         if session is not None:
             return await self._get_with_session(connector_id, tenant_context, session)
@@ -153,7 +165,11 @@ class SqlConnectorRepository:
         return self._row_to_entity(row) if row else None
 
     async def save_async(
-        self, entity: ConnectorEntity, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        entity: ConnectorEntity,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> ConnectorEntity:
         entity.tenant_id = tenant_context.tenant_id
         if session is not None:
@@ -168,8 +184,14 @@ class SqlConnectorRepository:
     ) -> ConnectorEntity:
         now = datetime.now(UTC)
         entity.updated_at = now
-        prov_val = entity.provider.value if hasattr(entity.provider, "value") else str(entity.provider)
-        state_val = entity.lifecycle_state.value if hasattr(entity.lifecycle_state, "value") else str(entity.lifecycle_state)
+        prov_val = (
+            entity.provider.value if hasattr(entity.provider, "value") else str(entity.provider)
+        )
+        state_val = (
+            entity.lifecycle_state.value
+            if hasattr(entity.lifecycle_state, "value")
+            else str(entity.lifecycle_state)
+        )
         decl_json = json.dumps(entity.declared_capabilities)
         ver_json = json.dumps(entity.verified_capabilities)
         cfg_json = json.dumps(entity.config)
@@ -223,9 +245,13 @@ class SqlConnectorRepository:
         session: AsyncSession | None = None,
     ) -> list[ConnectorEntity]:
         if session is not None:
-            return await self._list_with_session(tenant_context, provider, lifecycle_state, limit, offset, session)
+            return await self._list_with_session(
+                tenant_context, provider, lifecycle_state, limit, offset, session
+            )
         async with get_tenant_session(tenant_context.tenant_id) as sess:
-            return await self._list_with_session(tenant_context, provider, lifecycle_state, limit, offset, sess)
+            return await self._list_with_session(
+                tenant_context, provider, lifecycle_state, limit, offset, sess
+            )
 
     async def _list_with_session(
         self,
@@ -244,7 +270,9 @@ class SqlConnectorRepository:
             conditions.append("provider = :prov")
             params["prov"] = prov_val
         if lifecycle_state:
-            state_val = lifecycle_state.value if hasattr(lifecycle_state, "value") else str(lifecycle_state)
+            state_val = (
+                lifecycle_state.value if hasattr(lifecycle_state, "value") else str(lifecycle_state)
+            )
             conditions.append("lifecycle_state = :state")
             params["state"] = state_val
         else:
@@ -324,7 +352,11 @@ class SqlConnectorRepository:
             return res.rowcount > 0
 
     async def delete_async(
-        self, connector_id: str, *, tenant_context: TenantContext, session: AsyncSession | None = None
+        self,
+        connector_id: str,
+        *,
+        tenant_context: TenantContext,
+        session: AsyncSession | None = None,
     ) -> bool:
         query = text("DELETE FROM connectors WHERE tenant_id = :tid AND id = :id;")
         params = {"tid": tenant_context.tenant_id, "id": connector_id}
@@ -365,10 +397,16 @@ class SqlConnectorRepository:
         return self._run_async(self.save_async(entity, tenant_context=tenant_context))
 
     def update_lifecycle_state(
-        self, connector_id: str, new_state: ConnectorLifecycleState, *, tenant_context: TenantContext
+        self,
+        connector_id: str,
+        new_state: ConnectorLifecycleState,
+        *,
+        tenant_context: TenantContext,
     ) -> bool:
         return self._run_async(
-            self.update_lifecycle_state_async(connector_id, new_state, tenant_context=tenant_context)
+            self.update_lifecycle_state_async(
+                connector_id, new_state, tenant_context=tenant_context
+            )
         )
 
     def update_capabilities(

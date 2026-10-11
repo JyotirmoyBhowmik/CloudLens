@@ -517,7 +517,9 @@ class SemanticLayerEngine:
         unique_resources = list({f.ResourceKey for f in facts}) or ["res-001"]
         unique_apps = list({f.ApplicationKey for f in facts}) or ["app-checkout"]
         unique_envs = list({f.EnvironmentKey for f in facts}) or ["PROD"]
-        unique_owners = list({f.OwnerKey for f in facts}) or [resolve_analytics_owner_key(tenant_context.tenant_id)]
+        unique_owners = list({f.OwnerKey for f in facts}) or [
+            resolve_analytics_owner_key(tenant_context.tenant_id)
+        ]
         unique_ccs = list({f.CostCentreKey for f in facts}) or ["CC-1040"]
         unique_bus = list({f.BusinessUnitKey for f in facts}) or ["BU-RETAIL"]
         unique_prjs = list({f.ProjectKey for f in facts}) or ["PRJ-CLOUD"]

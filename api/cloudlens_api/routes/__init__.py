@@ -65,7 +65,6 @@ __all__ = [
     "connectors_router",
     "control_tower_router",
     "cost_router",
-
     "dashboards_router",
     "credentials_router",
     "demo_mode_router",

@@ -23,7 +23,9 @@ def resolve_statements_recipient(tenant_id: str | None = None) -> tuple[str, str
     # 1. Prefer BUSINESS_OWNER role or OWNER_RETAIL_LEAD
     for r in records:
         role = r.attributes.get("role", "")
-        if role == "BUSINESS_OWNER" or r.code == "OWNER_RETAIL_LEAD":  # no-hardcode-allow: reason="Master data OWNER_TEAM role attribute matching", reviewer="Prompt-48-Audit"
+        if (
+            role == "BUSINESS_OWNER" or r.code == "OWNER_RETAIL_LEAD"
+        ):  # no-hardcode-allow: reason="Master data OWNER_TEAM role attribute matching", reviewer="Prompt-48-Audit"
             email = r.attributes.get("contact_channels", {}).get("email")
             if email:
                 return r.code, email
@@ -49,7 +51,10 @@ def resolve_dispute_investigator(tenant_id: str | None = None) -> str:
     # 1. Prefer APPROVER or TECHNICAL_OWNER / TEAM_FINOPS_ENG / OWNER_FINOPS_ARCH
     for r in records:
         role = r.attributes.get("role", "")
-        if role in ("APPROVER", "TECHNICAL_OWNER") or r.code in ("TEAM_FINOPS_ENG", "OWNER_FINOPS_ARCH"):
+        if role in ("APPROVER", "TECHNICAL_OWNER") or r.code in (
+            "TEAM_FINOPS_ENG",
+            "OWNER_FINOPS_ARCH",
+        ):
             email = r.attributes.get("contact_channels", {}).get("email")
             if email:
                 return email

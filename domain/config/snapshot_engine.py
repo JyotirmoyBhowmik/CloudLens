@@ -120,9 +120,13 @@ class ConfigSnapshotEngine:
 
         # Verify hash
         expected_hash = snapshot.get("bundle_sha256")
-        actual_hash = hashlib.sha256(json.dumps(masters, sort_keys=True).encode("utf-8")).hexdigest()
+        actual_hash = hashlib.sha256(
+            json.dumps(masters, sort_keys=True).encode("utf-8")
+        ).hexdigest()
         if expected_hash and expected_hash != actual_hash:
-            raise ValueError(f"Snapshot integrity error: hash mismatch ({expected_hash} != {actual_hash})")
+            raise ValueError(
+                f"Snapshot integrity error: hash mismatch ({expected_hash} != {actual_hash})"
+            )
 
         destination_dir = target_dir or self._seeds_dir
         imported_files: list[str] = []

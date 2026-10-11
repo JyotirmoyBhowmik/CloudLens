@@ -201,7 +201,9 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
 }
 
 
-def _get_or_create(cls, name: str, description: str, *args, registry: CollectorRegistry = REGISTRY, **kwargs):
+def _get_or_create(
+    cls, name: str, description: str, *args, registry: CollectorRegistry = REGISTRY, **kwargs
+):
     """Safely retrieves existing collector or registers new one to prevent duplication."""
     if hasattr(registry, "_names_to_collectors") and name in registry._names_to_collectors:
         return registry._names_to_collectors[name]
@@ -427,7 +429,9 @@ class CloudLensMetrics:
             self.secret_store_up.set(1.0)
             self.build_info.labels(version="1.1.0", commit="main").set(1.0)
             self.api_error_rate.labels(service="cloudlens-api").set(0.0)
-            self.reconciliation_variance_ratio.labels(tenant_id="demo-corp", provider="aws").set(0.0)
+            self.reconciliation_variance_ratio.labels(tenant_id="demo-corp", provider="aws").set(
+                0.0
+            )
             self.connector_freshness_seconds.labels(provider="aws", capability="cost").set(0.0)
             self.queue_depth.labels(queue="celery").set(0.0)
             self.worker_saturation.labels(worker_node="worker-1", queue_name="celery").set(0.0)
@@ -456,7 +460,9 @@ metrics = CloudLensMetrics()
 def record_synthetic_journey_metric(outcome_status: str, duration_seconds: float) -> None:
     """Records synthetic user journey outcome and duration to Prometheus (IMP-05)."""
     try:
-        metrics.synthetic_journey_duration_seconds.labels(status=outcome_status).observe(duration_seconds)
+        metrics.synthetic_journey_duration_seconds.labels(status=outcome_status).observe(
+            duration_seconds
+        )
         metrics.synthetic_journey_outcome_total.labels(status=outcome_status).inc()
     except Exception:
         pass

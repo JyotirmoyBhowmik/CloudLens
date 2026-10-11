@@ -21,17 +21,46 @@ class TestUIContractsSuite:
         """The canonical service inventory screen exposes the required 35 inventory fields."""
         required_fields = {
             # Identity & Hierarchy (1-7)
-            "id", "name", "provider", "scope_id", "region", "availability_zone", "resource_type",
+            "id",
+            "name",
+            "provider",
+            "scope_id",
+            "region",
+            "availability_zone",
+            "resource_type",
             # Organization & Ownership (8-13)
-            "application", "environment", "cost_centre", "business_unit", "business_owner", "technical_owner",
+            "application",
+            "environment",
+            "cost_centre",
+            "business_unit",
+            "business_owner",
+            "technical_owner",
             # Pricing & Financial (14-20)
-            "pricing_model", "currency", "current_spend", "actual_spend", "estimated_spend", "forecast_spend", "budget_amount",
+            "pricing_model",
+            "currency",
+            "current_spend",
+            "actual_spend",
+            "estimated_spend",
+            "forecast_spend",
+            "budget_amount",
             # Variance & Utilization (21-25)
-            "budget_variance", "budget_utilization_pct", "threshold_state", "free_tier_status", "commitment_covered",
+            "budget_variance",
+            "budget_utilization_pct",
+            "threshold_state",
+            "free_tier_status",
+            "commitment_covered",
             # Runtime & Adherence (26-29)
-            "runtime_state", "schedule_name", "schedule_adherence", "excess_cost",
+            "runtime_state",
+            "schedule_name",
+            "schedule_adherence",
+            "excess_cost",
             # Telemetry & Freshness (30-35)
-            "cpu_utilization", "last_sync_timestamp", "pricing_source", "pricing_effective_date", "tags", "audit_version"
+            "cpu_utilization",
+            "last_sync_timestamp",
+            "pricing_source",
+            "pricing_effective_date",
+            "tags",
+            "audit_version",
         }
         assert len(required_fields) == 35
 

@@ -17,6 +17,7 @@ class InMemorySyncJobRepository(TenantAwareRepository[SyncJob]):
     is_in_memory: bool = True
 
     def __init__(self) -> None:
+        super().__init__()
         self._lock = threading.Lock()
         self._jobs: dict[tuple[str, str], SyncJob] = {}
 
@@ -184,6 +185,7 @@ class InMemoryConnectorScheduleRepository(TenantAwareRepository[ConnectorSchedul
     is_in_memory: bool = True
 
     def __init__(self) -> None:
+        super().__init__()
         self._lock = threading.Lock()
         self._schedules: dict[tuple[str, str], ConnectorSchedule] = {}
 
@@ -275,6 +277,7 @@ class InMemoryFirstSyncProgressRepository(TenantAwareRepository[FirstSyncProgres
     is_in_memory: bool = True
 
     def __init__(self) -> None:
+        super().__init__()
         self._lock = threading.Lock()
         self._reports: dict[tuple[str, str], FirstSyncProgressReport] = {}
 

@@ -447,7 +447,9 @@ class TestWidgetDataExport:
 class TestDashboardAPIContracts:
     """End-to-end HTTP contract tests with FastAPI TestClient."""
 
-    def test_api_executive_dashboard(self, client: TestClient, test_headers: dict[str, str]) -> None:
+    def test_api_executive_dashboard(
+        self, client: TestClient, test_headers: dict[str, str]
+    ) -> None:
         res = client.get("/api/v1/dashboards/executive?period_id=2026-09", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
@@ -456,7 +458,9 @@ class TestDashboardAPIContracts:
         assert float(data["total_cloud_cost"]["amount"]) > 0
         assert float(data["cost_by_provider"]["items"][0]["cost"]) > 0
 
-    def test_api_provider_dashboard_native_terms(self, client: TestClient, test_headers: dict[str, str]) -> None:
+    def test_api_provider_dashboard_native_terms(
+        self, client: TestClient, test_headers: dict[str, str]
+    ) -> None:
         res = client.get("/api/v1/dashboards/providers/azure", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
@@ -464,7 +468,9 @@ class TestDashboardAPIContracts:
         assert data["native_group_term"] == "Management Groups"
         assert data["native_account_term"] == "Subscriptions"
 
-    def test_api_service_dashboard_sixteen_panels(self, client: TestClient, test_headers: dict[str, str]) -> None:
+    def test_api_service_dashboard_sixteen_panels(
+        self, client: TestClient, test_headers: dict[str, str]
+    ) -> None:
         res = client.get("/api/v1/dashboards/services/AmazonEC2", headers=test_headers)
         assert res.status_code == 200
         data = res.json()
@@ -474,7 +480,9 @@ class TestDashboardAPIContracts:
         assert len(data["pricing_units"]) >= 2
         assert data["pricing_source_badge"] == "OFFICIAL_PROVIDER_RATECARD"
 
-    def test_api_widget_export_csv_and_json(self, client: TestClient, test_headers: dict[str, str]) -> None:
+    def test_api_widget_export_csv_and_json(
+        self, client: TestClient, test_headers: dict[str, str]
+    ) -> None:
         # CSV
         res_csv = client.get(
             "/api/v1/dashboards/export/w_cost_by_provider?format=CSV", headers=test_headers

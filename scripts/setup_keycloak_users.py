@@ -121,12 +121,14 @@ USERS = [
 
 def get_admin_token() -> str:
     token_url = f"{KEYCLOAK_URL}/realms/master/protocol/openid-connect/token"
-    payload = urllib.parse.urlencode({
-        "client_id": "admin-cli",
-        "username": KEYCLOAK_ADMIN,
-        "password": KEYCLOAK_ADMIN_PASSWORD,
-        "grant_type": "password",
-    }).encode("utf-8")
+    payload = urllib.parse.urlencode(
+        {
+            "client_id": "admin-cli",
+            "username": KEYCLOAK_ADMIN,
+            "password": KEYCLOAK_ADMIN_PASSWORD,
+            "grant_type": "password",
+        }
+    ).encode("utf-8")
     req = urllib.request.Request(token_url, data=payload, method="POST")
     try:
         with urllib.request.urlopen(req) as resp:
@@ -165,10 +167,12 @@ def sync_realm_roles(token: str) -> dict[str, dict]:
         if name not in role_map:
             logger.info(f"Creating role '{name}'...")
             try:
-                api_request("/roles", token, method="POST", data={"name": name, "description": desc})
+                api_request(
+                    "/roles", token, method="POST", data={"name": name, "description": desc}
+                )
             except Exception as e:
                 logger.warning(f"Role create failed: {e}")
-    
+
     # Reload all roles
     refreshed = api_request("/roles", token) or []
     return {r["name"]: r for r in refreshed}

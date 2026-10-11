@@ -405,7 +405,7 @@ class SystemRoleMeta(EnumMeta):
         }
         if name in legacy_map:
             return legacy_map[name]
-        return super().__getattr__(name)
+        raise AttributeError(f"type object '{cls.__name__}' has no attribute '{name}'")
 
 
 class SystemRole(StrEnum, metaclass=SystemRoleMeta):
@@ -821,7 +821,6 @@ class AuditEventType(StrEnum):
     TENANT_UPDATED = "TENANT_UPDATED"
     TENANT_SUSPENDED = "TENANT_SUSPENDED"
     TENANT_RESUMED = "TENANT_RESUMED"
-
 
 
 class OverrideClass(StrEnum):
@@ -1607,5 +1606,3 @@ class DataQualityRating(StrEnum):
     GOOD = "GOOD"
     NEEDS_ATTENTION = "NEEDS_ATTENTION"
     CRITICAL = "CRITICAL"
-
-

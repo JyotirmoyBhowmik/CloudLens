@@ -181,9 +181,7 @@ class ChatAdapter(BaseIntegrationAdapter):
         """Formats and posts an interactive card to Microsoft Teams or Slack webhook."""
 
         def _action() -> ChatAlertCard:
-            base_url = self.config.custom_attributes.get(
-                "app_base_url", "https://app.cloudlens.io"
-            )
+            base_url = self.config.custom_attributes.get("app_base_url", "https://app.cloudlens.io")
             deep_link = f"{base_url}/tenants/{tenant_context.tenant_id}/alerts/{alert.id}"
             action_url = f"{base_url}/api/v1/integrations/{self.integration_id}/actions/acknowledge"
 

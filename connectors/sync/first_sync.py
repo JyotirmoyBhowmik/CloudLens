@@ -113,8 +113,14 @@ class FirstSyncService:
         progress_repo: FirstSyncProgressRepository | None = None,
         audit_service: AuditService | None = None,
     ) -> None:
-        self._progress_repo = progress_repo or get_first_sync_progress_repository()
+        self._progress_repo_override = progress_repo
         self._audit_service = audit_service or get_audit_service()
+
+    @property
+    def _progress_repo(self) -> FirstSyncProgressRepository:
+        if self._progress_repo_override is not None:
+            return self._progress_repo_override
+        return get_first_sync_progress_repository()
 
     def initialize_report(
         self,
@@ -314,11 +320,19 @@ class FirstSyncService:
         return report
 
 
-_first_sync_service = FirstSyncService()
+_first_sync_service: FirstSyncService | None = None
 
 
 def get_first_sync_service() -> FirstSyncService:
+    global _first_sync_service
+    if _first_sync_service is None:
+        _first_sync_service = FirstSyncService()
     return _first_sync_service
+
+
+def reset_first_sync_service(service: FirstSyncService | None = None) -> None:
+    global _first_sync_service
+    _first_sync_service = service
 
 
 __all__ = [

@@ -17,8 +17,12 @@ class InMemoryNotificationLogRepository(TenantAwareRepository[NotificationLogRec
     is_in_memory: bool = True
 
     def __init__(self) -> None:
+        super().__init__()
         self._lock = threading.Lock()
         self._logs: dict[tuple[str, str], NotificationLogRecord] = {}
+
+    def _validate_tenant_context(self, tenant_context: TenantContext) -> None:
+        self._validate_tenant(tenant_context)
 
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> NotificationLogRecord | None:
         self._validate_tenant_context(tenant_context)

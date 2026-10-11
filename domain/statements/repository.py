@@ -127,7 +127,9 @@ class SqlStatementRepository:
         self, statement: ShowbackStatement, *, tenant_context: TenantContext
     ) -> ShowbackStatement:
         tc = require_tenant_context(tenant_context)
-        stat_val = statement.status.value if hasattr(statement.status, "value") else str(statement.status)
+        stat_val = (
+            statement.status.value if hasattr(statement.status, "value") else str(statement.status)
+        )
         async with get_tenant_session(tc.tenant_id) as sess:
             query = text("""
                 INSERT INTO showback_statements (
@@ -182,7 +184,9 @@ class SqlStatementRepository:
     def get_statement(
         self, statement_id: str, *, tenant_context: TenantContext
     ) -> ShowbackStatement | None:
-        return self._run_async(self.get_statement_async(statement_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_statement_async(statement_id, tenant_context=tenant_context)
+        )
 
     async def list_statements_async(
         self,
@@ -254,7 +258,9 @@ class SqlStatementRepository:
                     adjustment_payload = EXCLUDED.adjustment_payload;
             """)
             stmt_id = getattr(adjustment, "original_statement_id", "")
-            adj_dt = _to_datetime(adjustment.adjustment_timestamp) or dt.datetime.now(dt.timezone.utc)
+            adj_dt = _to_datetime(adjustment.adjustment_timestamp) or dt.datetime.now(
+                dt.timezone.utc
+            )
             await sess.execute(
                 query,
                 {
@@ -271,7 +277,9 @@ class SqlStatementRepository:
     def save_adjustment(
         self, adjustment: StatementAdjustment, *, tenant_context: TenantContext
     ) -> StatementAdjustment:
-        return self._run_async(self.save_adjustment_async(adjustment, tenant_context=tenant_context))
+        return self._run_async(
+            self.save_adjustment_async(adjustment, tenant_context=tenant_context)
+        )
 
     async def get_adjustment_async(
         self, adjustment_id: str, *, tenant_context: TenantContext
@@ -292,7 +300,9 @@ class SqlStatementRepository:
     def get_adjustment(
         self, adjustment_id: str, *, tenant_context: TenantContext
     ) -> StatementAdjustment | None:
-        return self._run_async(self.get_adjustment_async(adjustment_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.get_adjustment_async(adjustment_id, tenant_context=tenant_context)
+        )
 
     async def list_adjustments_for_statement_async(
         self, statement_id: str, *, tenant_context: TenantContext
@@ -403,7 +413,9 @@ class SqlStatementRepository:
         self, reallocation: ReallocationRecord, *, tenant_context: TenantContext
     ) -> ReallocationRecord:
         tc = require_tenant_context(tenant_context)
-        self._reallocations[(tc.tenant_id, reallocation.reallocation_id)] = reallocation.model_copy()
+        self._reallocations[(tc.tenant_id, reallocation.reallocation_id)] = (
+            reallocation.model_copy()
+        )
         return reallocation
 
     def list_reallocations_for_statement(

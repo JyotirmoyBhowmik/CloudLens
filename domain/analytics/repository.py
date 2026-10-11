@@ -69,7 +69,8 @@ class SqlAnalyticsRepository:
                         "row_count": job.row_count,
                         "created_at": job.created_at,
                         "completed_at": job.completed_at,
-                        "error_message": getattr(job, "failure_reason", None) or getattr(job, "error_message", None),
+                        "error_message": getattr(job, "failure_reason", None)
+                        or getattr(job, "error_message", None),
                         "job_payload": payload,
                     },
                 )
@@ -199,7 +200,9 @@ class SqlAnalyticsRepository:
                 if not row:
                     return None
                 raw_facts = row[0]
-                facts_data = raw_facts if isinstance(raw_facts, list) else json.loads(raw_facts or "[]")
+                facts_data = (
+                    raw_facts if isinstance(raw_facts, list) else json.loads(raw_facts or "[]")
+                )
                 facts = [FactCostAndUsageRecord.model_validate(f) for f in facts_data]
                 raw_dims = row[1]
                 dims_data = raw_dims if isinstance(raw_dims, dict) else json.loads(raw_dims or "{}")

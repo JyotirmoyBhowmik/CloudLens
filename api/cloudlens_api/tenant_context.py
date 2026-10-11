@@ -51,7 +51,6 @@ EXEMPT_PATHS = {
 }
 
 
-
 def is_exempt_request(method: str, path: str) -> bool:
     """Verifies whether endpoint is in the strict unauthenticated exemption list."""
     if (method, path) in EXEMPT_PATHS:
@@ -129,10 +128,7 @@ def require_auth(
         ) from e
 
     authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id
-    is_superuser = any(
-        r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN")
-        for r in auth_context.roles
-    )
+    is_superuser = any(r in (SystemRole.SUPER_ADMIN, "SUPER_ADMIN") for r in auth_context.roles)
 
     # Check for Parameter Manipulation Attacks
     if x_tenant_id and x_tenant_id != authenticated_tenant_id:
@@ -146,7 +142,9 @@ def require_auth(
             event_in=AuditEventCreate(
                 event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
                 actor_id=auth_context.email or auth_context.user_id,
-                actor_roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                actor_roles=[
+                    r.value if hasattr(r, "value") else str(r) for r in auth_context.roles
+                ],
                 action="TAMPER_TENANT_HEADER",
                 resource_type="TENANT_BOUNDARY",
                 resource_id=x_tenant_id,
@@ -179,7 +177,9 @@ def require_auth(
             event_in=AuditEventCreate(
                 event_type=AuditEventType.CROSS_TENANT_ACCESS_ATTEMPT,
                 actor_id=auth_context.email or auth_context.user_id,
-                actor_roles=[r.value if hasattr(r, "value") else str(r) for r in auth_context.roles],
+                actor_roles=[
+                    r.value if hasattr(r, "value") else str(r) for r in auth_context.roles
+                ],
                 action="TAMPER_TENANT_QUERY_PARAM",
                 resource_type="TENANT_BOUNDARY",
                 resource_id=query_tenant,
@@ -201,7 +201,11 @@ def require_auth(
         )
 
     # Scopes derived strictly from verified token claims, never request headers
-    scope_grants = getattr(auth_context, "permissions", []) or getattr(auth_context, "scope_grants", ["*"]) or ["*"]
+    scope_grants = (
+        getattr(auth_context, "permissions", [])
+        or getattr(auth_context, "scope_grants", ["*"])
+        or ["*"]
+    )
 
     tc = TenantContext(
         tenant_id=auth_context.tenant_id,

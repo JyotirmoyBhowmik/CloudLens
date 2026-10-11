@@ -160,6 +160,7 @@ async def get_entity(
 ```python
 """Alembic migration for Entity table and RLS policy."""
 
+
 def upgrade() -> None:
     op.create_table(
         "entities",

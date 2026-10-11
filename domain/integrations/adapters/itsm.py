@@ -223,7 +223,9 @@ class ITSMAdapter(BaseIntegrationAdapter):
         def _action() -> ITSMTicket:
             ticket = self._tickets.get(external_ticket_id)
             if not ticket:
-                raise KeyError(f"External ticket '{external_ticket_id}' not found in adapter registry.")
+                raise KeyError(
+                    f"External ticket '{external_ticket_id}' not found in adapter registry."
+                )
 
             old_status = ticket.status
             norm_new = new_external_status.upper().strip()
@@ -248,9 +250,12 @@ class ITSMAdapter(BaseIntegrationAdapter):
                             RemediationHistoryEntry(
                                 actor_id=actor_id,
                                 action="CLOSED",
-                                from_state=prev_state.value if hasattr(prev_state, "value") else str(prev_state),
+                                from_state=prev_state.value
+                                if hasattr(prev_state, "value")
+                                else str(prev_state),
                                 to_state=TaskState.CLOSED.value,
-                                reason=reason or f"Synchronised from external ITSM ticket {external_ticket_id}",
+                                reason=reason
+                                or f"Synchronised from external ITSM ticket {external_ticket_id}",
                                 note=f"Status synchronized via {self.adapter_name}",
                             )
                         )
@@ -261,16 +266,23 @@ class ITSMAdapter(BaseIntegrationAdapter):
                         )
                 elif norm_new in EXTERNAL_OPEN_STATUSES:
                     # External ticket is reopened/in progress -> reopen internal task
-                    if target_task.state in {TaskState.CLOSED, TaskState.RESOLVED, TaskState.REJECTED}:
+                    if target_task.state in {
+                        TaskState.CLOSED,
+                        TaskState.RESOLVED,
+                        TaskState.REJECTED,
+                    }:
                         prev_state = target_task.state
                         target_task.state = TaskState.IN_PROGRESS
                         target_task.history.append(
                             RemediationHistoryEntry(
                                 actor_id=actor_id,
                                 action="REOPENED",
-                                from_state=prev_state.value if hasattr(prev_state, "value") else str(prev_state),
+                                from_state=prev_state.value
+                                if hasattr(prev_state, "value")
+                                else str(prev_state),
                                 to_state=TaskState.IN_PROGRESS.value,
-                                reason=reason or f"Synchronised reopening from external ITSM ticket {external_ticket_id}",
+                                reason=reason
+                                or f"Synchronised reopening from external ITSM ticket {external_ticket_id}",
                                 note=f"Status synchronized via {self.adapter_name}",
                             )
                         )

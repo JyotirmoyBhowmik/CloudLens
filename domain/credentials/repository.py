@@ -31,33 +31,32 @@ logger = logging.getLogger("cloudlens.domain.credentials.repository")
 class CredentialRepository(Protocol):
     """Authoritative protocol for CredentialProfile persistence."""
 
-    async def get(self, profile_id: str, session: AsyncSession | None = None) -> CredentialProfile | None:
-        ...
+    async def get(
+        self, profile_id: str, session: AsyncSession | None = None
+    ) -> CredentialProfile | None: ...
 
-    async def save(self, profile: CredentialProfile, session: AsyncSession | None = None) -> CredentialProfile:
-        ...
+    async def save(
+        self, profile: CredentialProfile, session: AsyncSession | None = None
+    ) -> CredentialProfile: ...
 
     async def list_for_tenant(
-        self, tenant_id: str, provider: ProviderType | None = None, session: AsyncSession | None = None
-    ) -> list[CredentialProfile]:
-        ...
+        self,
+        tenant_id: str,
+        provider: ProviderType | None = None,
+        session: AsyncSession | None = None,
+    ) -> list[CredentialProfile]: ...
 
-    async def delete(self, profile_id: str, session: AsyncSession | None = None) -> bool:
-        ...
+    async def delete(self, profile_id: str, session: AsyncSession | None = None) -> bool: ...
 
-    def get_sync(self, profile_id: str) -> CredentialProfile | None:
-        ...
+    def get_sync(self, profile_id: str) -> CredentialProfile | None: ...
 
-    def save_sync(self, profile: CredentialProfile) -> CredentialProfile:
-        ...
+    def save_sync(self, profile: CredentialProfile) -> CredentialProfile: ...
 
     def list_for_tenant_sync(
         self, tenant_id: str, provider: ProviderType | None = None
-    ) -> list[CredentialProfile]:
-        ...
+    ) -> list[CredentialProfile]: ...
 
-    def delete_sync(self, profile_id: str) -> bool:
-        ...
+    def delete_sync(self, profile_id: str) -> bool: ...
 
 
 class SqlCredentialRepository:
@@ -68,13 +67,17 @@ class SqlCredentialRepository:
     def _run_async(self, coro: Any) -> Any:
         return run_async(coro)
 
-    async def get(self, profile_id: str, session: AsyncSession | None = None) -> CredentialProfile | None:
+    async def get(
+        self, profile_id: str, session: AsyncSession | None = None
+    ) -> CredentialProfile | None:
         if session is not None:
             return await self._get_with_session(profile_id, session)
         async with get_tenant_session() as sess:
             return await self._get_with_session(profile_id, sess)
 
-    async def _get_with_session(self, profile_id: str, session: AsyncSession) -> CredentialProfile | None:
+    async def _get_with_session(
+        self, profile_id: str, session: AsyncSession
+    ) -> CredentialProfile | None:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("""
             SELECT id, tenant_id, name, provider, credential_type, secret_ref,
@@ -107,7 +110,9 @@ class SqlCredentialRepository:
             updated_at=row[12],
         )
 
-    async def save(self, profile: CredentialProfile, session: AsyncSession | None = None) -> CredentialProfile:
+    async def save(
+        self, profile: CredentialProfile, session: AsyncSession | None = None
+    ) -> CredentialProfile:
         if session is not None:
             return await self._save_with_session(profile, session)
         async with get_tenant_session(profile.tenant_id) as sess:
@@ -115,11 +120,15 @@ class SqlCredentialRepository:
             await sess.commit()
             return res
 
-    async def _save_with_session(self, profile: CredentialProfile, session: AsyncSession) -> CredentialProfile:
+    async def _save_with_session(
+        self, profile: CredentialProfile, session: AsyncSession
+    ) -> CredentialProfile:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         # Enforce vault:// invariant before DB roundtrip as defense-in-depth
         if not profile.secret_ref.startswith("vault://"):
-            raise ValueError(f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'")
+            raise ValueError(
+                f"Secret reference must start with 'vault://', got: '{profile.secret_ref}'"
+            )
 
         query = text("""
             INSERT INTO credential_profiles (
@@ -151,20 +160,29 @@ class SqlCredentialRepository:
                 "id": profile.id,
                 "tenant_id": profile.tenant_id,
                 "name": profile.name,
-                "provider": profile.provider.value if hasattr(profile.provider, "value") else str(profile.provider),
-                "credential_type": profile.credential_type.value if hasattr(profile.credential_type, "value") else str(profile.credential_type),
+                "provider": profile.provider.value
+                if hasattr(profile.provider, "value")
+                else str(profile.provider),
+                "credential_type": profile.credential_type.value
+                if hasattr(profile.credential_type, "value")
+                else str(profile.credential_type),
                 "secret_ref": profile.secret_ref,
                 "previous_secret_ref": profile.previous_secret_ref,
                 "fingerprint": profile.fingerprint,
                 "version": profile.version,
-                "rotation_state": profile.rotation_state.value if hasattr(profile.rotation_state, "value") else str(profile.rotation_state),
+                "rotation_state": profile.rotation_state.value
+                if hasattr(profile.rotation_state, "value")
+                else str(profile.rotation_state),
                 "expires_at": profile.expires_at,
             },
         )
         return profile
 
     async def list_for_tenant(
-        self, tenant_id: str, provider: ProviderType | None = None, session: AsyncSession | None = None
+        self,
+        tenant_id: str,
+        provider: ProviderType | None = None,
+        session: AsyncSession | None = None,
     ) -> list[CredentialProfile]:
         if session is not None:
             return await self._list_with_session(tenant_id, provider, session)
@@ -211,7 +229,7 @@ class SqlCredentialRepository:
         await session.execute(text("SELECT set_config('cloudlens.bypass_rls', 'on', true);"))
         query = text("DELETE FROM credential_profiles WHERE id = :pid;")
         res = await session.execute(query, {"pid": profile_id})
-        return res.rowcount > 0
+        return bool(getattr(res, "rowcount", 0) > 0)
 
     def get_sync(self, profile_id: str) -> CredentialProfile | None:
         return self._run_async(self.get(profile_id))

@@ -46,8 +46,16 @@ class NotificationTester:
         notification_repo: NotificationLogRepository | None = None,
         audit_service: AuditService | None = None,
     ) -> None:
-        self._notification_repo = notification_repo or get_notification_log_repository()
-        self._audit_service = audit_service or get_audit_service()
+        self._notification_repo = notification_repo
+        self._audit_service = audit_service
+
+    @property
+    def notification_repo(self) -> NotificationLogRepository:
+        return self._notification_repo or get_notification_log_repository()
+
+    @property
+    def audit_service(self) -> AuditService:
+        return self._audit_service or get_audit_service()
 
     async def execute_alert_delivery_test(
         self,
@@ -113,7 +121,7 @@ class NotificationTester:
                 created_at=datetime.now(UTC),
                 updated_at=datetime.now(UTC),
             )
-            self._notification_repo.save(log_record, tenant_context=tenant_context)
+            self.notification_repo.save(log_record, tenant_context=tenant_context)
 
             results.append(
                 ChannelTestResult(
@@ -154,7 +162,7 @@ class NotificationTester:
 
         # Audit emission
         try:
-            self._audit_service.append_event(
+            self.audit_service.append_event(
                 tenant_context=tenant_context,
                 event_in=AuditEventCreate(
                     event_type=AuditEventType.ALERT_TEST_DISPATCHED,

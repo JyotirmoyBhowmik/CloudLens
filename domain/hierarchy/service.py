@@ -1,4 +1,3 @@
-
 """Domain Service for Hierarchy Explorer, Inventory, and Search (Prompt 38).
 
 Enforces:
@@ -52,7 +51,9 @@ class HierarchyService:
         self._budgets: dict[str, Decimal] = {}
         self._saved_views: dict[str, SavedInventoryView] = {}
 
-    def _get_scoped_resources(self, tenant_context: TenantContext | None) -> list[InventoryResource35]:
+    def _get_scoped_resources(
+        self, tenant_context: TenantContext | None
+    ) -> list[InventoryResource35]:
         if not tenant_context:
             return []
         return self._repository.list_resources(tenant_context=tenant_context)
@@ -86,9 +87,13 @@ class HierarchyService:
     @staticmethod
     def _combine_threshold_states(states: list[str]) -> str:
         """Bubbles worst threshold state: CRITICAL > WARNING > NORMAL."""
-        if any(s == "CRITICAL" for s in states):  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
+        if any(
+            s == "CRITICAL" for s in states
+        ):  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
             return "CRITICAL"  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
-        if any(s == "WARNING" for s in states):  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
+        if any(
+            s == "WARNING" for s in states
+        ):  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
             return "WARNING"  # no-hardcode-allow: reason="Canonical threshold state string", reviewer="Prompt-48-Audit"
         return "NORMAL"
 
@@ -105,9 +110,7 @@ class HierarchyService:
         """Constructs full hierarchical tree for chosen lens with rolled-up spend and worst-child state."""
         # 1. Filter resources by caller scope grants
         all_res = self._repository.list_resources(tenant_context=tenant_context)
-        scoped_resources = [
-            r for r in all_res if self._is_resource_in_scope(r, tenant_context)
-        ]
+        scoped_resources = [r for r in all_res if self._is_resource_in_scope(r, tenant_context)]
 
         if lens_type == LateralLensType.PROVIDER_HIERARCHY:
             return self._build_provider_hierarchy_tree(scoped_resources, root_id)
@@ -249,9 +252,7 @@ class HierarchyService:
             scope_id="sc-aws-prod-1",
             aggregate_cost=acct_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
             total_descendant_resource_count=sum(
@@ -270,9 +271,7 @@ class HierarchyService:
             native_type="OrganizationalUnit",
             aggregate_cost=acct_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
             total_descendant_resource_count=acct_node.total_descendant_resource_count,
@@ -289,9 +288,7 @@ class HierarchyService:
             native_type="Organization",
             aggregate_cost=acct_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=acct_worst,
             direct_resource_count=0,
             total_descendant_resource_count=ou_node.total_descendant_resource_count,
@@ -342,9 +339,7 @@ class HierarchyService:
             native_type="ResourceGroup",
             aggregate_cost=rg_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
             total_descendant_resource_count=sum(
@@ -364,9 +359,7 @@ class HierarchyService:
             scope_id="sc-azure-prod-1",
             aggregate_cost=rg_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
             total_descendant_resource_count=rg_node.total_descendant_resource_count,
@@ -383,9 +376,7 @@ class HierarchyService:
             native_type="ManagementGroup",
             aggregate_cost=rg_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
             total_descendant_resource_count=sub_node.total_descendant_resource_count,
@@ -402,9 +393,7 @@ class HierarchyService:
             native_type="Tenant",
             aggregate_cost=rg_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=rg_worst,
             direct_resource_count=0,
             total_descendant_resource_count=mg_node.total_descendant_resource_count,
@@ -456,9 +445,7 @@ class HierarchyService:
             scope_id="sc-gcp-analytics-1",
             aggregate_cost=prj_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
             total_descendant_resource_count=sum(
@@ -477,9 +464,7 @@ class HierarchyService:
             native_type="Folder",
             aggregate_cost=prj_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
             total_descendant_resource_count=prj_node.total_descendant_resource_count,
@@ -496,9 +481,7 @@ class HierarchyService:
             native_type="Organization",
             aggregate_cost=prj_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=prj_worst,
             direct_resource_count=0,
             total_descendant_resource_count=folder_node.total_descendant_resource_count,
@@ -549,9 +532,7 @@ class HierarchyService:
             native_type="Subcompartment",
             aggregate_cost=micro_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
             total_descendant_resource_count=sum(
@@ -571,9 +552,7 @@ class HierarchyService:
             scope_id="sc-oci-core-1",
             aggregate_cost=micro_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
             total_descendant_resource_count=micro_node.total_descendant_resource_count,
@@ -590,9 +569,7 @@ class HierarchyService:
             native_type="Compartment",
             aggregate_cost=micro_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
             total_descendant_resource_count=subcomp_node.total_descendant_resource_count,
@@ -609,9 +586,7 @@ class HierarchyService:
             native_type="Tenancy",
             aggregate_cost=micro_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=micro_worst,
             direct_resource_count=0,
             total_descendant_resource_count=comp_node.total_descendant_resource_count,
@@ -756,9 +731,7 @@ class HierarchyService:
             lens_type=LateralLensType.APPLICATION,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -842,9 +815,7 @@ class HierarchyService:
             lens_type=LateralLensType.COST_CENTRE,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -898,9 +869,7 @@ class HierarchyService:
                     lens_type=LateralLensType.ENVIRONMENT,
                     aggregate_cost=env_cost,
                     budget_amount=Decimal("0.00"),
-                    budget_utilisation_pct=(
-                        Decimal("0.00")
-                    ),
+                    budget_utilisation_pct=(Decimal("0.00")),
                     worst_child_threshold_state=env_worst,
                     direct_resource_count=0,
                     total_descendant_resource_count=sum(
@@ -924,9 +893,7 @@ class HierarchyService:
             lens_type=LateralLensType.ENVIRONMENT,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -954,9 +921,7 @@ class HierarchyService:
                     lens_type=LateralLensType.OWNER,
                     aggregate_cost=owner_cost,
                     budget_amount=Decimal("0.00"),
-                    budget_utilisation_pct=(
-                        Decimal("0.00")
-                    ),
+                    budget_utilisation_pct=(Decimal("0.00")),
                     worst_child_threshold_state=owner_worst,
                     direct_resource_count=len(leaves),
                     total_descendant_resource_count=len(leaves),
@@ -978,9 +943,7 @@ class HierarchyService:
             lens_type=LateralLensType.OWNER,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -1034,9 +997,7 @@ class HierarchyService:
                     lens_type=LateralLensType.REGION,
                     aggregate_cost=reg_cost,
                     budget_amount=Decimal("0.00"),
-                    budget_utilisation_pct=(
-                        Decimal("0.00")
-                    ),
+                    budget_utilisation_pct=(Decimal("0.00")),
                     worst_child_threshold_state=reg_worst,
                     direct_resource_count=0,
                     total_descendant_resource_count=sum(
@@ -1060,9 +1021,7 @@ class HierarchyService:
             lens_type=LateralLensType.REGION,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -1148,9 +1107,7 @@ class HierarchyService:
             lens_type=LateralLensType.TAG,
             aggregate_cost=total_cost,
             budget_amount=Decimal("0.00"),
-            budget_utilisation_pct=(
-                Decimal("0.00")
-            ),
+            budget_utilisation_pct=(Decimal("0.00")),
             worst_child_threshold_state=worst_state,
             direct_resource_count=0,
             total_descendant_resource_count=total_count,
@@ -1195,9 +1152,7 @@ class HierarchyService:
 
         # Collect direct or descendant resources
         all_res = self._repository.list_resources(tenant_context=tenant_context)
-        scoped_resources = [
-            r for r in all_res if self._is_resource_in_scope(r, tenant_context)
-        ]
+        scoped_resources = [r for r in all_res if self._is_resource_in_scope(r, tenant_context)]
 
         # Top contributing services under this node
         contributions: dict[str, Decimal] = {}
@@ -1287,9 +1242,7 @@ class HierarchyService:
                 )
             )
 
-        service_names = {
-            r.service_name: (r.service_id, r.provider, r.scope_id) for r in scoped_res
-        }
+        service_names = {r.service_name: (r.service_id, r.provider, r.scope_id) for r in scoped_res}
         for s_name, (s_id, prov, sc_id) in service_names.items():
             entities.append(
                 GlobalSearchItem(
@@ -1327,7 +1280,11 @@ class HierarchyService:
                 )
             )
 
-        unique_apps = {(r.application_id, r.application_name, r.scope_id) for r in scoped_res if r.application_name}
+        unique_apps = {
+            (r.application_id, r.application_name, r.scope_id)
+            for r in scoped_res
+            if r.application_name
+        }
         for aid, aname, sc_id in unique_apps:
             entities.append(
                 GlobalSearchItem(
@@ -1341,7 +1298,11 @@ class HierarchyService:
                 )
             )
 
-        unique_owners = {(r.owner_id or r.owner_email, r.owner_name, r.owner_email, r.scope_id) for r in scoped_res if r.owner_name}
+        unique_owners = {
+            (r.owner_id or r.owner_email, r.owner_name, r.owner_email, r.scope_id)
+            for r in scoped_res
+            if r.owner_name
+        }
         for oid, oname, email, sc_id in unique_owners:
             entities.append(
                 GlobalSearchItem(
@@ -1357,10 +1318,51 @@ class HierarchyService:
 
         # Scoped governance entities when scope is active in tenant
         if "sc-aws-prod-1" in unique_scopes:
-            entities.append(GlobalSearchItem(id="bgt-finops-core", entity_type="BUDGET", identifier="bgt-finops-core", title="Core FinOps Q4 Budget", subtitle="Financial Control Budget", scope_id="sc-aws-prod-1", deep_link="/budgets?budget_id=bgt-finops-core"))
-            entities.append(GlobalSearchItem(id="conn-aws-root", entity_type="CONNECTOR", identifier="conn-aws-root", title="AWS Multi-Account Connector", subtitle="Cloud Connector • AWS", provider="AWS", scope_id="sc-aws-prod-1", deep_link="/connectors?connector_id=conn-aws-root"))
-            entities.append(GlobalSearchItem(id="pol-tag-req", entity_type="POLICY", identifier="pol-tag-req", title="Mandatory FinOps Tagging Policy", subtitle="Governance Tag & Cost Policy", scope_id="sc-aws-prod-1", deep_link="/policies?policy_id=pol-tag-req"))
-            entities.append(GlobalSearchItem(id="alt-aws-spike", entity_type="ALERT", identifier="alt-aws-spike", title="EC2 Cost Velocity Anomaly Alert", subtitle="Anomaly & Threshold Alert", scope_id="sc-aws-prod-1", deep_link="/alerts?alert_id=alt-aws-spike"))
+            entities.append(
+                GlobalSearchItem(
+                    id="bgt-finops-core",
+                    entity_type="BUDGET",
+                    identifier="bgt-finops-core",
+                    title="Core FinOps Q4 Budget",
+                    subtitle="Financial Control Budget",
+                    scope_id="sc-aws-prod-1",
+                    deep_link="/budgets?budget_id=bgt-finops-core",
+                )
+            )
+            entities.append(
+                GlobalSearchItem(
+                    id="conn-aws-root",
+                    entity_type="CONNECTOR",
+                    identifier="conn-aws-root",
+                    title="AWS Multi-Account Connector",
+                    subtitle="Cloud Connector • AWS",
+                    provider="AWS",
+                    scope_id="sc-aws-prod-1",
+                    deep_link="/connectors?connector_id=conn-aws-root",
+                )
+            )
+            entities.append(
+                GlobalSearchItem(
+                    id="pol-tag-req",
+                    entity_type="POLICY",
+                    identifier="pol-tag-req",
+                    title="Mandatory FinOps Tagging Policy",
+                    subtitle="Governance Tag & Cost Policy",
+                    scope_id="sc-aws-prod-1",
+                    deep_link="/policies?policy_id=pol-tag-req",
+                )
+            )
+            entities.append(
+                GlobalSearchItem(
+                    id="alt-aws-spike",
+                    entity_type="ALERT",
+                    identifier="alt-aws-spike",
+                    title="EC2 Cost Velocity Anomaly Alert",
+                    subtitle="Anomaly & Threshold Alert",
+                    scope_id="sc-aws-prod-1",
+                    deep_link="/alerts?alert_id=alt-aws-spike",
+                )
+            )
 
         # Scope Filtering & Ranking
         matched_results: list[GlobalSearchItem] = []
@@ -1380,7 +1382,9 @@ class HierarchyService:
             if lower_q == ident_lower or lower_q == id_lower:
                 matched_results.append(item.model_copy(update={"rank_score": 1.0}))
             elif lower_q == title_lower:
-                matched_results.append(item.model_copy(update={"rank_score": 0.9}))  # no-hardcode-allow: reason="Search ranking score weight", reviewer="Prompt-48-Audit"
+                matched_results.append(
+                    item.model_copy(update={"rank_score": 0.9})
+                )  # no-hardcode-allow: reason="Search ranking score weight", reviewer="Prompt-48-Audit"
             elif ident_lower.startswith(lower_q) or title_lower.startswith(lower_q):
                 matched_results.append(item.model_copy(update={"rank_score": 0.75}))
             elif lower_q in ident_lower or lower_q in title_lower or lower_q in sub_lower:
@@ -1768,7 +1772,6 @@ class HierarchyService:
     ) -> list[InventoryResource35]:
         """Returns all 35-field inventory resources in the estate."""
         return self.list_resources(tenant_context=tenant_context)
-
 
 
 # Global singleton instance

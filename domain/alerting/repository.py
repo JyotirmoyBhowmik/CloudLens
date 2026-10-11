@@ -14,7 +14,12 @@ from typing import Any, Protocol, runtime_checkable
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.session import get_sync_bridge_loop, get_tenant_session, run_async, verify_persistence_startup_guard
+from db.session import (
+    get_sync_bridge_loop,
+    get_tenant_session,
+    run_async,
+    verify_persistence_startup_guard,
+)
 from domain.alerting.models import (
     AlertDeliveryLog,
     AlertEntity,
@@ -53,6 +58,12 @@ class AlertRepository(Protocol):
     def find_by_fingerprint(
         self, fingerprint: str, *, tenant_context: TenantContext
     ) -> AlertEntity | None: ...
+    def find_active_by_fingerprint(
+        self, fingerprint: str, *, tenant_context: TenantContext
+    ) -> AlertEntity | None: ...
+    def list_active_by_scope(
+        self, scope_id: str, *, tenant_context: TenantContext
+    ) -> list[AlertEntity]: ...
     def save_subscription(
         self, sub: RecipientSubscription, *, tenant_context: TenantContext
     ) -> RecipientSubscription: ...
@@ -92,7 +103,9 @@ class SqlAlertRepository:
     # Alerts Operations
     # --------------------------------------------------------------------------
 
-    async def get_async(self, entity_id: str, *, tenant_context: TenantContext) -> AlertEntity | None:
+    async def get_async(
+        self, entity_id: str, *, tenant_context: TenantContext
+    ) -> AlertEntity | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             query = text("""
                 SELECT * FROM alerts
@@ -106,7 +119,9 @@ class SqlAlertRepository:
     def get(self, entity_id: str, *, tenant_context: TenantContext) -> AlertEntity | None:
         return self._run_async(self.get_async(entity_id, tenant_context=tenant_context))
 
-    async def save_async(self, entity: AlertEntity, *, tenant_context: TenantContext) -> AlertEntity:
+    async def save_async(
+        self, entity: AlertEntity, *, tenant_context: TenantContext
+    ) -> AlertEntity:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             entity.tenant_id = tenant_context.tenant_id
             query = text("""
@@ -130,10 +145,16 @@ class SqlAlertRepository:
                 {
                     "id": entity.id,
                     "tenant_id": tenant_context.tenant_id,
-                    "alert_type": entity.alert_type.value if hasattr(entity.alert_type, "value") else str(entity.alert_type),
-                    "severity": entity.severity.value if hasattr(entity.severity, "value") else str(entity.severity),
+                    "alert_type": entity.alert_type.value
+                    if hasattr(entity.alert_type, "value")
+                    else str(entity.alert_type),
+                    "severity": entity.severity.value
+                    if hasattr(entity.severity, "value")
+                    else str(entity.severity),
                     "message": entity.description,
-                    "status": entity.status.value if hasattr(entity.status, "value") else str(entity.status),
+                    "status": entity.status.value
+                    if hasattr(entity.status, "value")
+                    else str(entity.status),
                     "triggered_at": entity.created_at,
                     "created_at": entity.created_at,
                     "fingerprint": entity.fingerprint or None,
@@ -179,7 +200,11 @@ class SqlAlertRepository:
         limit: int = 50,
         offset: int = 0,
     ) -> list[AlertEntity]:
-        return self._run_async(self.list_alerts_async(tenant_context=tenant_context, status=status, limit=limit, offset=offset))
+        return self._run_async(
+            self.list_alerts_async(
+                tenant_context=tenant_context, status=status, limit=limit, offset=offset
+            )
+        )
 
     def list(
         self,
@@ -190,7 +215,9 @@ class SqlAlertRepository:
         offset: int = 0,
     ) -> list[AlertEntity]:
         st = filter_params.get("status") if isinstance(filter_params, dict) else None
-        return self.list_alerts(tenant_context=tenant_context, status=st, limit=limit, offset=offset)
+        return self.list_alerts(
+            tenant_context=tenant_context, status=st, limit=limit, offset=offset
+        )
 
     async def delete_async(self, entity_id: str, *, tenant_context: TenantContext) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
@@ -229,7 +256,50 @@ class SqlAlertRepository:
     def find_by_fingerprint(
         self, fingerprint: str, *, tenant_context: TenantContext
     ) -> AlertEntity | None:
-        return self._run_async(self.find_by_fingerprint_async(fingerprint, tenant_context=tenant_context))
+        return self._run_async(
+            self.find_by_fingerprint_async(fingerprint, tenant_context=tenant_context)
+        )
+
+    async def find_active_by_fingerprint_async(
+        self, fingerprint: str, *, tenant_context: TenantContext
+    ) -> AlertEntity | None:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text(
+                    "SELECT * FROM alerts WHERE tenant_id = :tid AND fingerprint = :fp "
+                    "AND status IN ('ACTIVE', 'ACKNOWLEDGED') LIMIT 1;"
+                ),
+                {"tid": tenant_context.tenant_id, "fp": fingerprint},
+            )
+            row = res.first()
+            return self._row_to_alert(row) if row else None
+
+    def find_active_by_fingerprint(
+        self, fingerprint: str, *, tenant_context: TenantContext
+    ) -> AlertEntity | None:
+        return self._run_async(
+            self.find_active_by_fingerprint_async(fingerprint, tenant_context=tenant_context)
+        )
+
+    async def list_active_by_scope_async(
+        self, scope_id: str, *, tenant_context: TenantContext
+    ) -> list[AlertEntity]:
+        async with get_tenant_session(tenant_context.tenant_id) as sess:
+            res = await sess.execute(
+                text(
+                    "SELECT * FROM alerts WHERE tenant_id = :tid AND scope_id = :scope "
+                    "AND status IN ('ACTIVE', 'ACKNOWLEDGED');"
+                ),
+                {"tid": tenant_context.tenant_id, "scope": scope_id},
+            )
+            return [self._row_to_alert(row) for row in res.fetchall()]
+
+    def list_active_by_scope(
+        self, scope_id: str, *, tenant_context: TenantContext
+    ) -> list[AlertEntity]:
+        return self._run_async(
+            self.list_active_by_scope_async(scope_id, tenant_context=tenant_context)
+        )
 
     # --------------------------------------------------------------------------
     # Subscriptions Operations
@@ -270,7 +340,9 @@ class SqlAlertRepository:
     ) -> RecipientSubscription | None:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT subscription_payload FROM alert_subscriptions WHERE id = :id AND tenant_id = :tid;"),
+                text(
+                    "SELECT subscription_payload FROM alert_subscriptions WHERE id = :id AND tenant_id = :tid;"
+                ),
                 {"id": sub_id, "tid": tenant_context.tenant_id},
             )
             row = res.first()
@@ -291,7 +363,9 @@ class SqlAlertRepository:
     ) -> list[RecipientSubscription]:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT subscription_payload FROM alert_subscriptions WHERE tenant_id = :tid ORDER BY created_at DESC;"),
+                text(
+                    "SELECT subscription_payload FROM alert_subscriptions WHERE tenant_id = :tid ORDER BY created_at DESC;"
+                ),
                 {"tid": tenant_context.tenant_id},
             )
             rows = res.fetchall()
@@ -303,12 +377,12 @@ class SqlAlertRepository:
                 out.append(RecipientSubscription.model_validate(raw))
             return out
 
-    def list_subscriptions(
-        self, *, tenant_context: TenantContext
-    ) -> list[RecipientSubscription]:
+    def list_subscriptions(self, *, tenant_context: TenantContext) -> list[RecipientSubscription]:
         return self._run_async(self.list_subscriptions_async(tenant_context=tenant_context))
 
-    async def delete_subscription_async(self, sub_id: str, *, tenant_context: TenantContext) -> bool:
+    async def delete_subscription_async(
+        self, sub_id: str, *, tenant_context: TenantContext
+    ) -> bool:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
                 text("DELETE FROM alert_subscriptions WHERE id = :id AND tenant_id = :tid;"),
@@ -318,7 +392,9 @@ class SqlAlertRepository:
             return res.rowcount > 0
 
     def delete_subscription(self, sub_id: str, *, tenant_context: TenantContext) -> bool:
-        return self._run_async(self.delete_subscription_async(sub_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.delete_subscription_async(sub_id, tenant_context=tenant_context)
+        )
 
     # --------------------------------------------------------------------------
     # Delivery Logs Operations
@@ -342,7 +418,9 @@ class SqlAlertRepository:
                     "id": log.id,
                     "tid": tenant_context.tenant_id,
                     "aid": log.alert_id,
-                    "chan": log.channel.value if hasattr(log.channel, "value") else str(log.channel),
+                    "chan": log.channel.value
+                    if hasattr(log.channel, "value")
+                    else str(log.channel),
                     "out": log.outcome.value if hasattr(log.outcome, "value") else str(log.outcome),
                     "payload": json.dumps(log.model_dump(mode="json")),
                 },
@@ -360,7 +438,9 @@ class SqlAlertRepository:
     ) -> list[AlertDeliveryLog]:
         async with get_tenant_session(tenant_context.tenant_id) as sess:
             res = await sess.execute(
-                text("SELECT delivery_payload FROM alert_delivery_logs WHERE tenant_id = :tid AND alert_id = :aid ORDER BY attempted_at DESC;"),
+                text(
+                    "SELECT delivery_payload FROM alert_delivery_logs WHERE tenant_id = :tid AND alert_id = :aid ORDER BY attempted_at DESC;"
+                ),
                 {"tid": tenant_context.tenant_id, "aid": alert_id},
             )
             rows = res.fetchall()
@@ -375,7 +455,9 @@ class SqlAlertRepository:
     def list_delivery_logs(
         self, alert_id: str, *, tenant_context: TenantContext
     ) -> list[AlertDeliveryLog]:
-        return self._run_async(self.list_delivery_logs_async(alert_id, tenant_context=tenant_context))
+        return self._run_async(
+            self.list_delivery_logs_async(alert_id, tenant_context=tenant_context)
+        )
 
 
 # Singleton instance & factory

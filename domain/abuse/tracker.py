@@ -42,7 +42,11 @@ class AbuseTracker:
             try:
                 import redis
 
-                redis_url = os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "redis://localhost:6379/0"
+                redis_url = (
+                    os.getenv("REDIS_URL")
+                    or os.getenv("CELERY_BROKER_URL")
+                    or "redis://localhost:6379/0"
+                )
                 client = redis.Redis.from_url(redis_url, socket_connect_timeout=1, socket_timeout=1)
                 client.ping()
                 self._redis = client
@@ -95,7 +99,9 @@ class AbuseTracker:
             remaining = int(unlock_time - now)
             return True, remaining
 
-    def record_auth_failure(self, principal_id: str, ip_address: str | None = None) -> tuple[bool, int]:
+    def record_auth_failure(
+        self, principal_id: str, ip_address: str | None = None
+    ) -> tuple[bool, int]:
         """Records authentication failure and triggers lockout if max attempts exceeded.
 
         Returns (is_now_locked, remaining_seconds).
@@ -174,7 +180,9 @@ class AbuseTracker:
         redis_existed = False
         if r is not None:
             try:
-                redis_existed = bool(r.delete(f"abuse:lockout:{principal_id}", f"abuse:failures:{principal_id}"))
+                redis_existed = bool(
+                    r.delete(f"abuse:lockout:{principal_id}", f"abuse:failures:{principal_id}")
+                )
             except Exception:
                 pass
         with self._lock:
@@ -190,22 +198,20 @@ class AbuseTracker:
             active_lockouts = []
             for princ, unlock_ts in list(self._local_locked_principals.items()):
                 if unlock_ts > now:
-                    active_lockouts.append({
-                        "principal_id": princ,
-                        "remaining_seconds": int(unlock_ts - now),
-                        "unlocks_at": datetime.fromtimestamp(unlock_ts, UTC).isoformat(),
-                    })
+                    active_lockouts.append(
+                        {
+                            "principal_id": princ,
+                            "remaining_seconds": int(unlock_ts - now),
+                            "unlocks_at": datetime.fromtimestamp(unlock_ts, UTC).isoformat(),
+                        }
+                    )
                 else:
                     self._local_locked_principals.pop(princ, None)
 
             top_callers = [
-                {"caller": k, "requests": v}
-                for k, v in self._caller_counts.most_common(10)
+                {"caller": k, "requests": v} for k, v in self._caller_counts.most_common(10)
             ]
-            top_429s = [
-                {"caller": k, "hits": v}
-                for k, v in self._rate_limit_hits.most_common(10)
-            ]
+            top_429s = [{"caller": k, "hits": v} for k, v in self._rate_limit_hits.most_common(10)]
 
             return {
                 "active_lockouts_count": len(active_lockouts),

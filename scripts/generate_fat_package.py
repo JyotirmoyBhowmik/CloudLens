@@ -40,21 +40,33 @@ def generate_gate_outputs() -> None:
     py = sys.executable
 
     # 1. Layering
-    res_layer = subprocess.run([py, "scripts/check_layering.py"], cwd=str(ROOT), capture_output=True, text=True)
+    res_layer = subprocess.run(
+        [py, "scripts/check_layering.py"], cwd=str(ROOT), capture_output=True, text=True
+    )
     (FAT_DIR / "gate_layering.txt").write_text(
         f"$ python scripts/check_layering.py\nexit={res_layer.returncode}\n\nSTDOUT:\n{res_layer.stdout}\nSTDERR:\n{res_layer.stderr}",
         encoding="utf-8",
     )
 
     # 2. No hardcoded constants
-    res_const = subprocess.run([py, "scripts/check_no_hardcoded_constants.py", "--mode", "enforce"], cwd=str(ROOT), capture_output=True, text=True)
+    res_const = subprocess.run(
+        [py, "scripts/check_no_hardcoded_constants.py", "--mode", "enforce"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
     (FAT_DIR / "gate_constants.txt").write_text(
         f"$ python scripts/check_no_hardcoded_constants.py --mode enforce\nexit={res_const.returncode}\n\nSTDOUT:\n{res_const.stdout}\nSTDERR:\n{res_const.stderr}",
         encoding="utf-8",
     )
 
     # 3. Ruff
-    res_ruff = subprocess.run([py, "-m", "ruff", "check", ".", "--statistics"], cwd=str(ROOT), capture_output=True, text=True)
+    res_ruff = subprocess.run(
+        [py, "-m", "ruff", "check", ".", "--statistics"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
     (FAT_DIR / "gate_ruff.txt").write_text(
         f"$ ruff check . --statistics\nexit={res_ruff.returncode}\n\nSTDOUT:\n{res_ruff.stdout}\nSTDERR:\n{res_ruff.stderr}",
         encoding="utf-8",

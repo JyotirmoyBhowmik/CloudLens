@@ -827,19 +827,22 @@ class BulkImportEngine:
 
 
 # Global singleton instance
-_engine_instance = BulkImportEngine()
+_engine_instance: BulkImportEngine | None = None
 
 
 def get_bulk_import_engine() -> BulkImportEngine:
     """Returns the singleton BulkImportEngine."""
+    global _engine_instance
+    if _engine_instance is None:
+        _engine_instance = BulkImportEngine()
     return _engine_instance
 
 
-def reset_bulk_import_engine() -> BulkImportEngine:
+def reset_bulk_import_engine() -> BulkImportEngine | None:
     """Resets the singleton BulkImportEngine in-place."""
-    _engine_instance._entity_stores.clear()
-    _engine_instance._record_modified_at.clear()
-    _engine_instance._record_dependents.clear()
+    global _engine_instance
+    if _engine_instance is not None:
+        _engine_instance._entity_stores.clear()
+        _engine_instance._record_modified_at.clear()
+        _engine_instance._record_dependents.clear()
     return _engine_instance
-
-

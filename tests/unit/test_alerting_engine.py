@@ -38,6 +38,7 @@ from domain.alerting.models import (
     RecipientSubscription,
 )
 from domain.alerting.repository import AlertRepository
+from tests.fakes.alerting import InMemoryAlertRepository
 from domain.alerting.router import RecipientRouter
 from domain.alerting.service import AlertService, reset_alert_service
 from domain.audit.service import get_audit_service, reset_audit_service
@@ -96,7 +97,7 @@ def other_tenant_ctx() -> TenantContext:
 @pytest.fixture
 def alert_service() -> AlertService:
     """Fresh AlertService instance with clean in-memory state."""
-    repo = AlertRepository()
+    repo = InMemoryAlertRepository()
     router = RecipientRouter()
     registry = ChannelAdapterRegistry()
     audit = get_audit_service()
@@ -529,7 +530,10 @@ class TestRecipientRoutingAndGovernanceException:
             scope_metadata={},
             auto_dispatch=False,
         )
-        assert raised.recipients in (["governance-admin@cloudlens.internal"], ["governance-admin@cloudlens.local"])
+        assert raised.recipients in (
+            ["governance-admin@cloudlens.internal"],
+            ["governance-admin@cloudlens.local"],
+        )
         assert raised.governance_exception_raised is True
 
 
@@ -827,7 +831,7 @@ class TestMultiTenantIsolation:
 
     def test_repository_enforces_tenant_context(self):
         """Repository public methods reject None tenant_context."""
-        repo = AlertRepository()
+        repo = InMemoryAlertRepository()
         with pytest.raises(MissingTenantContextException):
             repo.list(tenant_context=None)  # type: ignore
 
@@ -1208,7 +1212,10 @@ class TestExtendedAlertCatalogueAndMasterDataRouting:
             scope_metadata={},
             auto_dispatch=False,
         )
-        assert raised.recipients in (["governance-admin@cloudlens.internal"], ["governance-admin@cloudlens.local"])
+        assert raised.recipients in (
+            ["governance-admin@cloudlens.internal"],
+            ["governance-admin@cloudlens.local"],
+        )
         assert raised.governance_exception_raised is True
 
     def test_extended_alerts_inherit_deduplication(
