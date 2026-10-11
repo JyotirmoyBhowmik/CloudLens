@@ -1,12 +1,7 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe scripts/check_layering.py
-exit=1 duration=2.2s
+exit=0 duration=10.6s
 
 --- STDOUT ---
+[PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer.
 
 --- STDERR ---
-
-[FAIL] Found 1 Layering Rule violation(s):
-
-  connectors/contract/raw_landing.py:207 in layer 'connectors/contract':
-    ERROR: Layering rule 'presentation -> application -> domain -> normalisation -> ingestion -> connector -> provider' violated. Layer 'connectors/contract' must not import provider SDK 'boto3'.
-

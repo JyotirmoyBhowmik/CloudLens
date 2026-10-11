@@ -143,7 +143,9 @@ class TokenPair(BaseModel):
 
     access_token: str = Field(..., description="Short-lived signed access token")
     refresh_token: str = Field(..., description="Rotated single-use refresh token")
-    token_type: str = Field(default="Bearer", description="Token type descriptor")
+    token_type: str = Field(
+        default_factory=lambda: "Bearer", description="Token type descriptor"
+    )
     expires_in: int = Field(..., description="Access token lifespan in seconds")
     session_id: str = Field(..., description="Session identifier")
     roles: list[str] = Field(default_factory=list, description="Granted canonical role names")

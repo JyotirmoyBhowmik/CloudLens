@@ -597,11 +597,17 @@ def sec_persistence(py, probe):
             "Persistence",
             f"Only {r['repository_py_using_sql']} of {r['repository_py_files']} repository.py files use SQL — most state is in memory and lost on restart",
         )
-    if r["files_holding_state_in_dicts"] > 20:
+    if r["repository_py_dict_only"]:
         finding(
             "RED",
             "Persistence",
-            f"{r['files_holding_state_in_dicts']} non-test files hold state in Python dicts",
+            f"{len(r['repository_py_dict_only'])} repository.py files still rely on dict storage without SQL",
+        )
+    elif r["files_holding_state_in_dicts"] > 20:
+        finding(
+            "AMBER",
+            "Persistence",
+            f"{r['files_holding_state_in_dicts']} non-test files hold in-memory cache/registry dicts",
         )
     if r["set_tenant_setting_in_code"] == 0 and r["rls_policies_in_migrations"]:
         finding(

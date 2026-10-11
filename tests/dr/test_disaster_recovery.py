@@ -25,6 +25,7 @@ from domain.models.enums import ChargeCategory, CostSourceType, ServiceCategory,
 from domain.models.measures import FinancialMeasure
 from domain.sync.repository import get_sync_job_repository
 from domain.tenant.context import TenantContext
+from tests.fakes.cost import InMemoryCostFactRepository
 
 
 class DisasterRecoveryCoordinator:
@@ -32,7 +33,7 @@ class DisasterRecoveryCoordinator:
 
     def __init__(self, primary_repo: CostFactRepository) -> None:
         self.primary_repo = primary_repo
-        self.secondary_repo = CostFactRepository()
+        self.secondary_repo = InMemoryCostFactRepository()
         self.checkpoints: list[dict[str, Any]] = []
 
     def take_checkpoint(self, tenant_context: TenantContext) -> str:
@@ -106,7 +107,7 @@ class TestDisasterRecoverySuite:
 
     def test_automated_dr_failover_and_zero_data_loss(self) -> None:
         """DR scenario restores all records within RTO <= 4h, RPO <= 1h, with zero data loss."""
-        primary_repo = CostFactRepository()
+        primary_repo = InMemoryCostFactRepository()
         tenant_context = TenantContext(
             tenant_id="tenant-dr-enterprise",
             user_id="dr-operator@acme.com",
@@ -167,7 +168,7 @@ class TestDisasterRecoverySuite:
 
     def test_point_in_time_recovery_pitr(self) -> None:
         """Simulates WAL continuous replay restoring data strictly up to target timestamp (DR-006)."""
-        repo = CostFactRepository()
+        repo = InMemoryCostFactRepository()
         tc = TenantContext(tenant_id="tenant-pitr", user_id="admin@pitr.com", roles={"SUPER_ADMIN"})
 
         base_time = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
@@ -255,7 +256,12 @@ class TestDisasterRecoverySuite:
 
     def test_mid_sync_worker_crash_recovery(self) -> None:
         """Simulates worker crashing mid-batch; lock releases, retries succeed, and idempotency guarantees zero duplication (NFR-043)."""
-        job_repo = get_sync_job_repository()
+        from domain.sync.repository import reset_sync_repositories
+        from tests.fakes.sync import InMemorySyncJobRepository
+
+        in_mem_repo = InMemorySyncJobRepository()
+        reset_sync_repositories(sync_jobs=in_mem_repo)
+        job_repo = in_mem_repo
         tc = TenantContext(
             tenant_id="tenant-crash-test",
             user_id="worker@cloudlens.internal",

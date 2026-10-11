@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "generated_utc": "2026-10-11 05:11:01",
+  "generated_utc": "2026-10-11 19:57:59",
   "python": "C:\\Users\\TEST\\CloudLens\\.venv\\Scripts\\python.exe",
   "flags": {
     "run_tests": false,
@@ -8,37 +8,32 @@
     "probe_startup": false
   },
   "git": {
-    "head": "9ab3c2a6f28f7716ac25eccf125dfa4688edac21",
+    "head": "6bda3885ba3c6f19e481983aca0dce5c6579cb04",
     "branch": "main",
     "remote": [
       "origin\thttps://github.com/JyotirmoyBhowmik/CloudLens.git (fetch)"
     ],
-    "commit_count": 100,
-    "uncommitted_files": 35,
+    "commit_count": 102,
+    "uncommitted_files": 13,
     "uncommitted_sample": [
-      " M README.md",
-      " M api/cloudlens_api/routes/connectors.py",
-      " M build_requirements_register.py",
       " M docs/configuration/exception_register.json",
-      "RM docs/configuration/exception_register.md -> docs/configuration/exception_register_summary.md",
-      "R  docs/configuration/identity_verification_report.md -> docs/configuration/identity_verification_summary.md",
-      "R  docs/configuration/pre_identity_verification_report.md -> docs/configuration/pre_identity_verification_summary.md",
-      "R  docs/pricing-dimensions-reconciled.md -> docs/pricing-dimensions-catalogue.md",
-      " M docs/requirement_traceability_matrix.md",
-      "R  docs/sbom.md -> docs/sbom-report.md",
-      " M domain/bootstrap/pre_identity.py",
-      " M domain/bootstrap/superuser.py",
-      " M fat/ACCEPTANCE.md",
-      " M fat/FAT_RESULTS.md",
-      "D  fat/control_tower_screenshot.jpg",
-      " M fat/decision_log_extract.md",
-      " M fat/exception_register.md",
-      " M fat/gate_constants.txt",
-      " M fat/gate_layering.txt",
-      " M fat/gate_ruff.txt"
+      " M docs/configuration/exception_register_summary.md",
+      " M docs/configuration/identity_verification_report.json",
+      " M docs/configuration/identity_verification_summary.md",
+      " M domain/identity/models.py",
+      " M scripts/check_no_hardcoded_constants.py",
+      " M tests/dr/test_disaster_recovery.py",
+      "?? docs/go_live_checklist.md",
+      "?? docs/uat_sign_off.md",
+      "?? ops/helm/cloudlens/values-uat.yaml",
+      "?? scripts/activate_superuser_uat.py",
+      "?? scripts/run_business_user_uat.py",
+      "?? scripts/run_uat_drills.py"
     ],
     "unpushed_commits": "no upstream",
     "last_25_commits": [
+      "6bda388|2026-10-12|P19: Production Test Suite and CI",
+      "b2f24d3|2026-10-11|P18: Evidence and Documentation Cleanup",
       "9ab3c2a|2026-10-11|P17: Operational Hardening",
       "c6cdab2|2026-10-10|P16: Control Tower With Measured Values Only",
       "15249a0|2026-10-10|P15: Configuration Panel and Editable Business Objects",
@@ -61,9 +56,7 @@
       "bb7020f|2026-10-07|P00: Baseline Environment and Real-Database Testing",
       "0f7fb1a|2026-10-06|chore(audit): upload audit_output artifacts and root audit_full.json",
       "4e60e9d|2026-10-06|chore(audit): update configuration reports and ignore audit_full.json",
-      "e3b3f74|2026-10-06|Add files via upload",
-      "205761a|2026-10-06|chore(audit): update exception register timestamps",
-      "e3549ad|2026-10-06|fix(migrations): widen alembic_version version_num to varchar(128) and update bootstrap identity verification"
+      "e3b3f74|2026-10-06|Add files via upload"
     ],
     "prompt_ids_in_commits": {
       "15B": [
@@ -219,6 +212,16 @@
     },
     "recent_commit_sizes": [
       {
+        "commit": "6bda388|P19: Production Test Suite and CI",
+        "files": 294,
+        "insertions": 9976
+      },
+      {
+        "commit": "b2f24d3|P18: Evidence and Documentation Cleanup",
+        "files": 59,
+        "insertions": 1294
+      },
+      {
         "commit": "9ab3c2a|P17: Operational Hardening",
         "files": 11,
         "insertions": 322
@@ -282,68 +285,58 @@
         "commit": "ca1063e|P06: Persistence Tier 3 \u2014 Cost, Pricing, Budgets, Thresholds, Forecast, Reconcilia",
         "files": 35,
         "insertions": 6101
-      },
-      {
-        "commit": "40fb698|P05: Persistence Tier 2 \u2014 Connections, Sync, Wizard, Landing",
-        "files": 20,
-        "insertions": 4323
-      },
-      {
-        "commit": "879128b|P04: Persistence Tier 1 \u2014 Identity, Tenancy, Audit, Configuration",
-        "files": 33,
-        "insertions": 5497
       }
     ]
   },
   "size": {
     "total": {
-      "files": 1068,
-      "loc": 392562
+      "files": 1079,
+      "loc": 398896
     },
     "by_top_level": {
       "domain": {
         "files": 338,
-        "loc": 96058
+        "loc": 97620
       },
       "docs": {
-        "files": 49,
-        "loc": 88932
+        "files": 51,
+        "loc": 88849
       },
       "web": {
-        "files": 83,
-        "loc": 80538
+        "files": 84,
+        "loc": 80825
       },
       "tests": {
-        "files": 175,
-        "loc": 50039
+        "files": 177,
+        "loc": 51786
       },
       "(root)": {
         "files": 14,
-        "loc": 16745
+        "loc": 17065
       },
       "connectors": {
-        "files": 85,
-        "loc": 16437
+        "files": 86,
+        "loc": 16626
       },
       "api": {
         "files": 63,
-        "loc": 15773
+        "loc": 16070
       },
       "masterdata": {
         "files": 69,
-        "loc": 8575
+        "loc": 8583
       },
       "scripts": {
-        "files": 48,
-        "loc": 7119
+        "files": 51,
+        "loc": 8553
       },
       "db": {
         "files": 30,
-        "loc": 4811
+        "loc": 4818
       },
       "ops": {
-        "files": 47,
-        "loc": 3071
+        "files": 48,
+        "loc": 3256
       },
       "fat": {
         "files": 11,
@@ -351,7 +344,7 @@
       },
       "workers": {
         "files": 6,
-        "loc": 1326
+        "loc": 1624
       },
       "artifacts": {
         "files": 4,
@@ -359,41 +352,41 @@
       },
       "normalisation": {
         "files": 7,
-        "loc": 399
+        "loc": 406
       },
       ".github": {
         "files": 2,
-        "loc": 179
+        "loc": 254
       },
       "data": {
-        "files": 37,
-        "loc": 37
+        "files": 38,
+        "loc": 38
       }
     },
     "by_language": {
       "Python": {
-        "files": 759,
-        "loc": 199704
+        "files": 764,
+        "loc": 205548
       },
       "JSON": {
-        "files": 124,
-        "loc": 103113
+        "files": 125,
+        "loc": 102976
       },
       "TypeScript": {
-        "files": 81,
-        "loc": 80488
+        "files": 82,
+        "loc": 80775
       },
       "Markdown": {
-        "files": 60,
-        "loc": 5644
+        "files": 62,
+        "loc": 5699
       },
       "YAML": {
-        "files": 38,
-        "loc": 3253
+        "files": 39,
+        "loc": 3513
       },
       "TOML": {
         "files": 2,
-        "loc": 150
+        "loc": 151
       },
       "PowerShell": {
         "files": 2,
@@ -402,6 +395,10 @@
       "Template": {
         "files": 1,
         "loc": 67
+      },
+      "JavaScript": {
+        "files": 1,
+        "loc": 24
       },
       "Shell": {
         "files": 1,
@@ -571,37 +568,65 @@
     }
   },
   "tests": {
-    "collected": 0,
-    "collect_exit": 4,
+    "collected": 1522,
+    "collect_exit": 0,
     "collection_errors": 0,
-    "by_directory": {}
+    "by_directory": {
+      "unit": 1034,
+      "security": 136,
+      "integration": 66,
+      "contracts": 30,
+      "e2e": 26,
+      "workers": 26,
+      "acceptance": 25,
+      "integrations": 17,
+      "adoption": 16,
+      "lifecycle": 14,
+      "improvements": 13,
+      "cloud_provider": 9,
+      "commitments": 9,
+      "control_tower": 9,
+      "cost_reconciliation": 8,
+      "mandates": 8,
+      "analytics": 7,
+      "connectors": 7,
+      "failure_injection": 7,
+      "perf": 7,
+      "planning": 7,
+      "masterdata": 6,
+      "ui": 6,
+      "data_validation": 5,
+      "dr": 5,
+      "workflow": 5,
+      "data": 4,
+      "regression": 4,
+      "rbac": 3,
+      "load": 2,
+      "upgrade": 1
+    }
   },
   "coverage": {
     "status": "not run (use --coverage)"
   },
   "gates": {
     "layering": {
-      "exit": 1,
+      "exit": 0,
       "tail": [
-        "[FAIL] Found 1 Layering Rule violation(s):",
-        "",
-        "  connectors/contract/raw_landing.py:207 in layer 'connectors/contract':",
-        "    ERROR: Layering rule 'presentation -> application -> domain -> normalisation -> ingestion -> connector -> provider' violated. Layer 'connectors/contract' must not import provider SDK 'boto3'."
+        "[PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer."
       ]
     },
     "no_hardcoded_constants": {
       "exit": 0,
       "tail": [
-        "[PASS] Zero hard-coding scan passed cleanly! (83 allow-listed exceptions in register)"
+        "================================================================================",
+        "Summary: 35 violations found across 5 directories.",
+        "Allow-listed exceptions recorded: 48",
+        "[GATE RESULT: REPORT MODE] Exiting with status 0 (Reporting mode for CI)."
       ]
     },
     "ruff": {
-      "exit": 1,
-      "tail": [
-        "8\tW291\ttrailing-whitespace",
-        "Found 8 errors.",
-        "No fixes available (8 hidden fixes can be enabled with the `--unsafe-fixes` option)."
-      ]
+      "exit": 0,
+      "tail": []
     },
     "ruff_F_errors": [
       "api\\cloudlens_api\\routes\\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias",
@@ -627,13 +652,13 @@
       "connectors\\contract\\checkpoint_store.py:41:13: F841 Local variable `loop` is assigned to but never used",
       "connectors\\contract\\raw_landing.py:14:8: F401 [*] `asyncio` imported but unused",
       "connectors\\contract\\raw_landing.py:15:8: F401 [*] `concurrent.futures` imported but unused",
+      "connectors\\contract\\raw_landing.py:19:8: F401 [*] `os` imported but unused",
       "connectors\\contract\\raw_landing.py:20:8: F401 [*] `sys` imported but unused",
       "connectors\\factory.py:22:33: F401 [*] `domain.models.enums.ProviderType` imported but unused",
       "connectors\\gcp\\cost.py:16:8: F401 [*] `json` imported but unused",
       "connectors\\oci\\cost.py:15:8: F401 [*] `csv` imported but unused",
       "connectors\\oci\\cost.py:16:8: F401 [*] `io` imported but unused",
-      "connectors\\oci\\cost.py:17:8: F401 [*] `json` imported but unused",
-      "db\\session.py:189:14: F821 Undefined name `Any`"
+      "connectors\\oci\\cost.py:17:8: F401 [*] `json` imported but unused"
     ],
     "web_typecheck": {
       "exit": 0,
@@ -699,24 +724,24 @@
     "sql_repository_classes_files": 34,
     "sql_repository_examples": [
       "domain/alerting/contextual.py:54: class SqlContextualAlertRepository:",
-      "domain/alerting/repository.py:74: class SqlAlertRepository:",
+      "domain/alerting/repository.py:85: class SqlAlertRepository:",
       "domain/analytics/repository.py:30: class SqlAnalyticsRepository:",
-      "domain/audit/repository.py:71: class SqlAuditRepository:",
-      "domain/budgets/repository.py:99: class SqlBudgetRepository:",
+      "domain/audit/repository.py:64: class SqlAuditRepository:",
+      "domain/budgets/repository.py:90: class SqlBudgetRepository:",
       "domain/bulk_import/repository.py:77: class SqlBulkImportRepository:",
-      "domain/catalogues/repository.py:50: class SqlCatalogueRepository:",
-      "domain/config/feature_flags_repository.py:85: class SqlFeatureFlagRepository:",
-      "domain/config/repository.py:57: class SqlTenantSettingsRepository:",
-      "domain/connectors/repository.py:83: class SqlConnectorRepository:",
-      "domain/cost/repository.py:161: class SqlCostFactRepository:",
-      "domain/cost/reconciliation/repository.py:142: class SqlReconciliationRepository:",
-      "domain/credentials/repository.py:63: class SqlCredentialRepository:",
-      "domain/dependency/repository.py:74: class SqlDependencyRepository:",
-      "domain/forecasting/repository.py:106: class SqlForecastRepository:",
+      "domain/catalogues/repository.py:51: class SqlCatalogueRepository:",
+      "domain/config/feature_flags_repository.py:77: class SqlFeatureFlagRepository:",
+      "domain/config/repository.py:61: class SqlTenantSettingsRepository:",
+      "domain/connectors/repository.py:91: class SqlConnectorRepository:",
+      "domain/cost/repository.py:150: class SqlCostFactRepository:",
+      "domain/cost/reconciliation/repository.py:131: class SqlReconciliationRepository:",
+      "domain/credentials/repository.py:62: class SqlCredentialRepository:",
+      "domain/dependency/repository.py:76: class SqlDependencyRepository:",
+      "domain/forecasting/repository.py:95: class SqlForecastRepository:",
       "domain/hierarchy/repository.py:54: class SqlHierarchyRepository:",
-      "domain/identity/repository.py:124: class SqlIdentityRepository:",
-      "domain/notification/repository.py:73: class SqlNotificationLogRepository:",
-      "domain/overrides/repository.py:64: class SqlOverrideRepository:",
+      "domain/identity/repository.py:142: class SqlIdentityRepository:",
+      "domain/notification/repository.py:72: class SqlNotificationLogRepository:",
+      "domain/overrides/repository.py:58: class SqlOverrideRepository:",
       "domain/policy/repository.py:117: class SqlPolicyRepository:"
     ],
     "files_using_db_session": 37,
@@ -893,9 +918,9 @@
       "domain/provisioning/models.py:142: default=\"*\", description=\"Deployment environment (PROD, STAGING, DEV, or '*')\"",
       "domain/provisioning/models.py:430: ..., description=\"Target environment (PROD, STAGING, DEV, etc.)\"",
       "domain/release/service.py:46: env = os.environ.get(\"CLOUDLENS_ENV\") or self._config.get(\"build_env\", \"production\")",
-      "domain/resource_detail/service.py:496: environment=\"Production\",",
-      "domain/resource_detail/service.py:780: environment=\"Production\",",
-      "domain/resource_detail/service.py:1035: environment=\"Production\","
+      "domain/resource_detail/service.py:495: environment=\"Production\",",
+      "domain/resource_detail/service.py:779: environment=\"Production\",",
+      "domain/resource_detail/service.py:1034: environment=\"Production\","
     ]
   },
   "security": {
@@ -940,7 +965,7 @@
         "connectors/simulator/connector.py:412: \"Owner\": \"payments-dev@cloudlens.internal\",",
         "connectors/simulator/connector.py:452: \"Owner\": \"devops@cloudlens.internal\",",
         "domain/config/surface.py:189: default=\"alerts@cloudlens.internal\", description=\"From address for outgoing alerts\"",
-        "domain/config/tenant_settings.py:234: smtp_sender: str = Field(default=\"alerts@cloudlens.internal\", description=\"Default notification sender email\")",
+        "domain/config/tenant_settings.py:235: default=\"alerts@cloudlens.internal\", description=\"Default notification sender email\"",
         "domain/synthetic/governance_generator.py:300: assigned_owner_id=\"cloudops-azure@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:458: requester_email=\"eng-lead@cloudlens.internal\",",
         "domain/synthetic/governance_generator.py:630: bypassed_by=\"user-admin@cloudlens.internal\",",
@@ -959,15 +984,9 @@
       ]
     },
     "secret_like_defaults": {
-      "files": [
-        "domain/config/tenant_settings.py",
-        "domain/identity/models.py"
-      ],
-      "file_count": 2,
-      "examples": [
-        "domain/config/tenant_settings.py:237: webhook_signing_secret_ref: str = Field(default=\"vault://secret/notifications/webhook_signing_key\", description=\"Vault secret reference for webhook HMAC signature\")",
-        "domain/identity/models.py:146: token_type: str = Field(default=\"Bearer\", description=\"Token type descriptor\")"
-      ]
+      "files": [],
+      "file_count": 0,
+      "examples": []
     },
     "inmemory_secret_fallback": {
       "files": [],
@@ -981,7 +1000,7 @@
       "file_count": 1,
       "examples": [
         "domain/credentials/store.py:69: def health_check(self) -> bool:",
-        "domain/credentials/store.py:278: def health_check(self) -> bool:"
+        "domain/credentials/store.py:286: def health_check(self) -> bool:"
       ]
     },
     "health_check_returns_constant_true": [],
@@ -1001,26 +1020,26 @@
         "api/cloudlens_api/routes/auth.py:62: class BreakGlassLoginRequest(BaseModel):",
         "api/cloudlens_api/routes/auth.py:63: \"\"\"Payload for emergency break-glass account authentication (Prompt 49B superuser only).\"\"\"",
         "api/cloudlens_api/routes/auth.py:65: account_name: str = Field(..., description=\"Break-glass username\")",
-        "api/cloudlens_api/routes/auth.py:281: \"/break-glass/login\",",
-        "api/cloudlens_api/routes/auth.py:283: summary=\"Break-glass emergency login with IdP + MFA\",",
-        "api/cloudlens_api/routes/auth.py:285: def break_glass_login(",
-        "api/cloudlens_api/routes/auth.py:286: payload: BreakGlassLoginRequest,",
-        "api/cloudlens_api/routes/auth.py:290: \"\"\"Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B & P01B Item 3).\"\"\"",
-        "api/cloudlens_api/routes/auth.py:294: detail=\"Local passwords are strictly rejected for break-glass. IdP + MFA authentication is required.\",",
-        "api/cloudlens_api/routes/auth.py:299: detail=\"IdP identity assertion is mandatory for break-glass login.\",",
-        "api/cloudlens_api/routes/auth.py:311: token_pair = service.authenticate_break_glass(",
-        "api/cloudlens_api/routes/auth.py:324: except BreakGlassAuthFailedException as e:",
-        "api/cloudlens_api/routes/auth.py:326: logger.error(\"Break-glass authentication failed for %s\", payload.account_name)",
-        "api/cloudlens_api/routes/auth.py:683: is_break_glass: bool = False",
-        "api/cloudlens_api/routes/auth.py:770: is_break_glass=tenant_context.is_superuser,",
-        "api/cloudlens_api/routes/bootstrap.py:55: break_glass_consolidated: bool = True",
-        "api/cloudlens_api/routes/bootstrap.py:148: # Prompt 49B: Superuser Provisioning & Break-Glass Consolidation Endpoints",
-        "api/cloudlens_api/routes/bootstrap.py:179: break_glass_consolidated=True,",
-        "api/cloudlens_api/routes/business_objects.py:213: \"auth_method\", \"idp_sub\", \"is_break_glass\",",
-        "api/cloudlens_api/routes/business_objects.py:216: \"email\", \"display_name\", \"status\", \"roles\", \"auth_method\", \"is_break_glass\", \"updated_at\",",
-        "api/cloudlens_api/routes/business_objects.py:224: \"is_break_glass\": False,",
+        "api/cloudlens_api/routes/auth.py:287: \"/break-glass/login\",",
+        "api/cloudlens_api/routes/auth.py:289: summary=\"Break-glass emergency login with IdP + MFA\",",
+        "api/cloudlens_api/routes/auth.py:291: def break_glass_login(",
+        "api/cloudlens_api/routes/auth.py:292: payload: BreakGlassLoginRequest,",
+        "api/cloudlens_api/routes/auth.py:296: \"\"\"Authenticates via the emergency break-glass path for the consolidated superuser (Prompt 49B & P01B Item 3).\"\"\"",
+        "api/cloudlens_api/routes/auth.py:300: detail=\"Local passwords are strictly rejected for break-glass. IdP + MFA authentication is required.\",",
+        "api/cloudlens_api/routes/auth.py:305: detail=\"IdP identity assertion is mandatory for break-glass login.\",",
+        "api/cloudlens_api/routes/auth.py:317: token_pair = service.authenticate_break_glass(",
+        "api/cloudlens_api/routes/auth.py:330: except BreakGlassAuthFailedException as e:",
+        "api/cloudlens_api/routes/auth.py:332: logger.error(\"Break-glass authentication failed for %s\", payload.account_name)",
+        "api/cloudlens_api/routes/auth.py:703: is_break_glass: bool = False",
+        "api/cloudlens_api/routes/auth.py:802: is_break_glass=tenant_context.is_superuser,",
+        "api/cloudlens_api/routes/bootstrap.py:56: break_glass_consolidated: bool = True",
+        "api/cloudlens_api/routes/bootstrap.py:151: # Prompt 49B: Superuser Provisioning & Break-Glass Consolidation Endpoints",
+        "api/cloudlens_api/routes/bootstrap.py:184: break_glass_consolidated=True,",
+        "api/cloudlens_api/routes/business_objects.py:294: \"is_break_glass\",",
+        "api/cloudlens_api/routes/business_objects.py:302: \"is_break_glass\",",
+        "api/cloudlens_api/routes/business_objects.py:311: \"is_break_glass\": False,",
         "api/cloudlens_api/routes/users.py:104: is_break_glass: bool",
-        "api/cloudlens_api/routes/users.py:214: is_break_glass=False,"
+        "api/cloudlens_api/routes/users.py:218: is_break_glass=False,"
       ]
     },
     "break_glass_provision_route": {
@@ -1065,37 +1084,13 @@
   },
   "allowlist": {
     "file": "docs/configuration/exception_register.json",
-    "count": 25,
+    "count": 7,
     "by_area": {
-      "?": 25
+      "?": 7
     },
     "missing_reason_or_reviewer": 0,
     "sensitive_entries_first_30": [
-      "\"file_path\": \"domain/cost/reconciliation/engine.py\",",
-      "\"reason\": \"Executive trust score tier thresholds (99.5% and 98.0%)\",",
-      "\"file_path\": \"domain/cost/reconciliation/engine.py\",",
-      "\"reason\": \"Executive trust score tier thresholds (99.5% and 98.0%)\",",
-      "\"file_path\": \"domain/cost/reconciliation/engine.py\",",
-      "\"reason\": \"Standard quarterly milestone thresholds (25%, 50%, 75%)\",",
-      "\"reason\": \"Standard quarterly milestone thresholds (25%, 50%, 75%)\",",
-      "\"reason\": \"Standard quarterly milestone thresholds (25%, 50%, 75%)\",",
-      "\"reason\": \"Cost trend spiking threshold ratio (30%)\",",
-      "\"reason\": \"Cost trend volatility coefficient of variation threshold (0.40)\",",
-      "\"reason\": \"Cost trend normalized slope drift threshold (5%)\",",
       "\"file_path\": \"domain/identity/password_hasher.py\",",
-      "\"file_path\": \"domain/statements/acceptance.py\",",
-      "\"reason\": \"SLA escalation threshold days\",",
-      "\"file_path\": \"domain/statements/acceptance.py\",",
-      "\"reason\": \"SLA reminder threshold days\",",
-      "\"file_path\": \"domain/statements/acceptance.py\",",
-      "\"reason\": \"SLA overdue threshold days\",",
-      "\"file_path\": \"domain/statements/disputes.py\",",
-      "\"file_path\": \"domain/statements/generator.py\",",
-      "\"reason\": \"Budget variance tolerance threshold percentage (10%)\",",
-      "\"file_path\": \"domain/statements/generator.py\",",
-      "\"reason\": \"Period cost movement significance threshold\",",
-      "\"file_path\": \"domain/statements/generator.py\",",
-      "\"reason\": \"Period cost movement significance threshold\",",
       "\"reason\": \"Standard 6-hour reconciliation window slice for backfill planning\","
     ],
     "decimal_literals_in_financial_logic": {
@@ -1127,26 +1122,26 @@
         "domain/cost/reconciliation/engine.py:80: percentage_tolerance=Decimal(\"0.50\"),",
         "domain/cost/reconciliation/engine.py:86: absolute_tolerance=Decimal(\"5.00\"),",
         "domain/cost/reconciliation/engine.py:87: percentage_tolerance=Decimal(\"0.50\"),",
-        "domain/cost/reconciliation/engine.py:145: \"critical_pct\": Decimal(\"5.0\"),",
-        "domain/cost/reconciliation/engine.py:146: \"critical_amount\": Decimal(\"1000.0\"),",
-        "domain/cost/reconciliation/engine.py:147: \"high_pct\": Decimal(\"1.0\"),",
-        "domain/cost/reconciliation/engine.py:148: \"high_amount\": Decimal(\"100.0\"),",
-        "domain/cost/reconciliation/engine.py:201: Decimal(\"0.0\"),",
-        "domain/cost/reconciliation/engine.py:208: if provider_total > Decimal(\"0.0\"):",
-        "domain/cost/reconciliation/engine.py:210: (absolute_variance / provider_total) * Decimal(\"100.0\")",
-        "domain/cost/reconciliation/engine.py:211: ).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)",
-        "domain/cost/reconciliation/engine.py:214: Decimal(\"0.00\") if platform_total == Decimal(\"0.0\") else Decimal(\"100.00\")",
-        "domain/cost/reconciliation/engine.py:277: platform_total=platform_total.quantize(Decimal(\"0.01\")),",
-        "domain/cost/reconciliation/engine.py:278: provider_total=provider_total.quantize(Decimal(\"0.01\")),",
-        "domain/cost/reconciliation/engine.py:279: absolute_variance=absolute_variance.quantize(Decimal(\"0.01\")),",
-        "domain/cost/reconciliation/engine.py:280: signed_variance=signed_variance.quantize(Decimal(\"0.01\")),",
-        "domain/cost/reconciliation/engine.py:319: total_spend = Decimal(\"0.0\")",
-        "domain/cost/reconciliation/engine.py:320: total_variance = Decimal(\"0.0\")",
-        "domain/cost/reconciliation/engine.py:341: \"total_spend\": Decimal(\"0.0\"),",
-        "domain/cost/reconciliation/engine.py:342: \"total_variance\": Decimal(\"0.0\"),",
-        "domain/cost/reconciliation/engine.py:354: if total_spend > Decimal(\"0.0\"):",
-        "domain/cost/reconciliation/engine.py:356: spend_match = Decimal(\"100.0\") - ((total_variance / total_spend) * Decimal(\"100.0\"))",
-        "domain/cost/reconciliation/engine.py:357: trust_score = max(Decimal(\"0.0\"), spend_match).quantize("
+        "domain/cost/reconciliation/engine.py:153: \"critical_pct\": Decimal(\"5.0\"),",
+        "domain/cost/reconciliation/engine.py:154: \"critical_amount\": Decimal(\"1000.0\"),",
+        "domain/cost/reconciliation/engine.py:155: \"high_pct\": Decimal(\"1.0\"),",
+        "domain/cost/reconciliation/engine.py:156: \"high_amount\": Decimal(\"100.0\"),",
+        "domain/cost/reconciliation/engine.py:209: Decimal(\"0.0\"),",
+        "domain/cost/reconciliation/engine.py:216: if provider_total > Decimal(\"0.0\"):",
+        "domain/cost/reconciliation/engine.py:218: (absolute_variance / provider_total) * Decimal(\"100.0\")",
+        "domain/cost/reconciliation/engine.py:219: ).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)",
+        "domain/cost/reconciliation/engine.py:222: Decimal(\"0.00\") if platform_total == Decimal(\"0.0\") else Decimal(\"100.00\")",
+        "domain/cost/reconciliation/engine.py:285: platform_total=platform_total.quantize(Decimal(\"0.01\")),",
+        "domain/cost/reconciliation/engine.py:286: provider_total=provider_total.quantize(Decimal(\"0.01\")),",
+        "domain/cost/reconciliation/engine.py:287: absolute_variance=absolute_variance.quantize(Decimal(\"0.01\")),",
+        "domain/cost/reconciliation/engine.py:288: signed_variance=signed_variance.quantize(Decimal(\"0.01\")),",
+        "domain/cost/reconciliation/engine.py:327: total_spend = Decimal(\"0.0\")",
+        "domain/cost/reconciliation/engine.py:328: total_variance = Decimal(\"0.0\")",
+        "domain/cost/reconciliation/engine.py:349: \"total_spend\": Decimal(\"0.0\"),",
+        "domain/cost/reconciliation/engine.py:350: \"total_variance\": Decimal(\"0.0\"),",
+        "domain/cost/reconciliation/engine.py:362: if total_spend > Decimal(\"0.0\"):",
+        "domain/cost/reconciliation/engine.py:364: spend_match = Decimal(\"100.0\") - ((total_variance / total_spend) * Decimal(\"100.0\"))",
+        "domain/cost/reconciliation/engine.py:365: trust_score = max(Decimal(\"0.0\"), spend_match).quantize("
       ]
     },
     "comparisons_against_decimal_literals": {
@@ -1183,20 +1178,20 @@
       "file_count": 28,
       "examples": [
         "domain/adoption/value_ledger.py:63: if dec_amount <= Decimal(\"0.00\"):",
-        "domain/adoption/value_ledger.py:161: if platform_cost.total_platform_cost > Decimal(\"0.00\"):",
+        "domain/adoption/value_ledger.py:163: if platform_cost.total_platform_cost > Decimal(\"0.00\"):",
         "domain/attribution/aggregation.py:189: if other_amount > Decimal(\"0.00\"):",
         "domain/catalogues/unit_service.py:44: if val < Decimal(\"0\"):",
         "domain/catalogues/unit_service.py:102: if eff_duration <= Decimal(\"0\"):",
-        "domain/commitments/service.py:140: coverage_ratio = (cov_dec / el_dec) if el_dec > Decimal(\"0.00\") else Decimal(\"0.0000\")",
-        "domain/commitments/service.py:143: utilization_ratio = (act_dec / cost_dec) if cost_dec > Decimal(\"0.00\") else Decimal(\"0.0000\")",
-        "domain/commitments/service.py:151: if coverage_ratio >= Decimal(\"0.8000\") and utilization_ratio < Decimal(\"0.8500\"):",
-        "domain/commitments/service.py:153: elif utilization_ratio >= Decimal(\"0.9500\") and coverage_ratio < Decimal(\"0.7000\"):",
-        "domain/commitments/service.py:209: if var < Decimal(\"0.00\"):",
-        "domain/commitments/service.py:345: if planned_decommission_pct >= Decimal(\"0.80\"):",
-        "domain/commitments/service.py:350: elif analysis.assessment == CommitmentAssessment.OVER_COMMITMENT or planned_decommission_pct > Decimal(\"0.15\"):",
-        "domain/commitments/service.py:355: elif analysis.assessment == CommitmentAssessment.UNDER_COMMITMENT and forward_growth_pct >= Decimal(\"0.00\"):",
-        "domain/commitments/service.py:489: if var < Decimal(\"0.00\"):",
-        "domain/commitments/service.py:515: priority=TaskPriority.HIGH if var > Decimal(\"50000.00\") else TaskPriority.MEDIUM,",
+        "domain/commitments/service.py:146: coverage_ratio = (cov_dec / el_dec) if el_dec > Decimal(\"0.00\") else Decimal(\"0.0000\")",
+        "domain/commitments/service.py:150: (act_dec / cost_dec) if cost_dec > Decimal(\"0.00\") else Decimal(\"0.0000\")",
+        "domain/commitments/service.py:159: if coverage_ratio >= Decimal(\"0.8000\") and utilization_ratio < Decimal(\"0.8500\"):",
+        "domain/commitments/service.py:161: elif utilization_ratio >= Decimal(\"0.9500\") and coverage_ratio < Decimal(\"0.7000\"):",
+        "domain/commitments/service.py:217: if var < Decimal(\"0.00\"):",
+        "domain/commitments/service.py:367: if planned_decommission_pct >= Decimal(\"0.80\"):",
+        "domain/commitments/service.py:376: or planned_decommission_pct > Decimal(\"0.15\")",
+        "domain/commitments/service.py:386: and forward_growth_pct >= Decimal(\"0.00\")",
+        "domain/commitments/service.py:527: if var < Decimal(\"0.00\"):",
+        "domain/commitments/service.py:555: priority=TaskPriority.HIGH if var > Decimal(\"50000.00\") else TaskPriority.MEDIUM,",
         "domain/cost/focus_mapper.py:225: if \"Fee\" in line_type and unblended_cost > Decimal(\"0.0\"):",
         "domain/cost/focus_mapper.py:231: elif line_type in (\"Credit\", \"Refund\") or unblended_cost < Decimal(\"0.0\"):",
         "domain/cost/focus_mapper.py:328: elif charge_type.lower() in (\"credit\", \"refund\") or cost_in_billing < Decimal(\"0.0\"):",
@@ -1304,7 +1299,7 @@
     },
     "tool_claims": {
       "helm": {
-        "mentioned_in_evidence_files": 2,
+        "mentioned_in_evidence_files": 3,
         "installed_on_this_machine": true
       },
       "kubeconform": {
@@ -1312,7 +1307,7 @@
         "installed_on_this_machine": true
       },
       "gitleaks": {
-        "mentioned_in_evidence_files": 1,
+        "mentioned_in_evidence_files": 2,
         "installed_on_this_machine": true
       },
       "trivy": {
@@ -1324,7 +1319,7 @@
         "installed_on_this_machine": false
       },
       "zap": {
-        "mentioned_in_evidence_files": 1,
+        "mentioned_in_evidence_files": 2,
         "installed_on_this_machine": false
       },
       "cosign": {
@@ -1396,6 +1391,7 @@
       "ops/helm/cloudlens/templates/worker-deployment.yaml",
       "ops/helm/cloudlens/values-dev.yaml",
       "ops/helm/cloudlens/values-prod.yaml",
+      "ops/helm/cloudlens/values-uat.yaml",
       "ops/helm/cloudlens/values.yaml",
       "ops/keycloak/cloudlens-realm.json",
       "ops/keycloak/realm-export.json",
@@ -1525,15 +1521,15 @@
     ]
   },
   "api_web": {
-    "route_count": 306,
+    "route_count": 303,
     "routes_by_prefix": {
       "/api/v1/masterdata": 29,
-      "/api/v1/connectors": 19,
-      "/api/v1/control-tower": 19,
       "/api/v1/alerts": 18,
+      "/api/v1/connectors": 18,
+      "/api/v1/control-tower": 18,
       "/api/v1/system": 17,
       "/api/v1/imports": 16,
-      "/api/v1/auth": 15,
+      "/api/v1/auth": 14,
       "/api/v1/policies": 14,
       "/api/v1/dependencies": 13,
       "/api/v1/statements": 13,
@@ -1770,6 +1766,7 @@
       "web/tests/e2e/demo_tenant_populated.spec.ts",
       "web/tests/e2e/p13_cloud_connections.spec.ts",
       "web/tests/e2e/p15_configuration_business_objects.spec.ts",
+      "web/tests/e2e/p19_production_e2e.spec.ts",
       "web/tests/e2e/screens_and_a11y.spec.ts",
       "web/tests/e2e/tenant_admin.spec.ts"
     ]
@@ -1803,6 +1800,7 @@
       "docs/enterprise-datacenter-deployment-guide.md",
       "docs/environment-matrix.md",
       "docs/fake-data-inventory.md",
+      "docs/go_live_checklist.md",
       "docs/metric-registry.md",
       "docs/module-map.md",
       "docs/open_items_register.md",
@@ -1824,7 +1822,8 @@
       "docs/restore-runbook.md",
       "docs/sbom-report.md",
       "docs/sbom.json",
-      "docs/security/security_self_assessment.md"
+      "docs/security/security_self_assessment.md",
+      "docs/uat_sign_off.md"
     ],
     "duplicate_doc_names": [],
     "rtm_ids_by_prefix": {
@@ -1845,9 +1844,9 @@
     "rtm_distinct_ids": 458,
     "rtm_status_words": {
       "partial": 1,
-      "verified": 2,
-      "implemented - unverified": 36,
       "pass": 421,
+      "implemented - unverified": 36,
+      "verified": 2,
       "implemented": 1,
       "fail": 1
     },
@@ -1995,8 +1994,8 @@
         "platform.observe"
       ],
       "examples": [
-        "api/cloudlens_api/routes/auth.py:717: \"platform.observe\",",
-        "api/cloudlens_api/routes/auth.py:734: caps.update([\"audit:read\", \"reports:read\", \"platform.observe\"])",
+        "api/cloudlens_api/routes/auth.py:736: \"platform.observe\",",
+        "api/cloudlens_api/routes/auth.py:756: caps.update([\"audit:read\", \"reports:read\", \"platform.observe\"])",
         "api/cloudlens_api/routes/control_tower.py:4: 1. Telemetry and Overview Endpoints (all require platform.observe):",
         "api/cloudlens_api/routes/control_tower.py:62: \"\"\"Verifies caller holds platform.observe capability.\"\"\"",
         "api/cloudlens_api/routes/control_tower.py:66: if caller_roles & OBSERVE_ROLES or \"platform.observe\" in getattr(tc, \"scope_grants\", []):",
@@ -2015,12 +2014,12 @@
         "act_as"
       ],
       "examples": [
-        "api/cloudlens_api/tenant_context.py:131: authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id",
-        "api/cloudlens_api/tenant_context.py:208: act_as_tenant_id=auth_context.act_as_tenant,",
-        "api/cloudlens_api/routes/admin.py:277: act_as_tenant: str",
-        "api/cloudlens_api/routes/admin.py:420: @router.post(\"/act-as\", response_model=ActAsTenantResponse, status_code=status.HTTP_200_OK)",
-        "api/cloudlens_api/routes/admin.py:421: def act_as_tenant(",
-        "api/cloudlens_api/routes/admin.py:426: \"\"\"Explicit act-as-tenant flow for Global Admin (Prompt R-SEC Item 1.3)."
+        "api/cloudlens_api/tenant_context.py:130: authenticated_tenant_id = auth_context.act_as_tenant or auth_context.tenant_id",
+        "api/cloudlens_api/tenant_context.py:212: act_as_tenant_id=auth_context.act_as_tenant,",
+        "api/cloudlens_api/routes/admin.py:279: act_as_tenant: str",
+        "api/cloudlens_api/routes/admin.py:422: @router.post(\"/act-as\", response_model=ActAsTenantResponse, status_code=status.HTTP_200_OK)",
+        "api/cloudlens_api/routes/admin.py:423: def act_as_tenant(",
+        "api/cloudlens_api/routes/admin.py:428: \"\"\"Explicit act-as-tenant flow for Global Admin (Prompt R-SEC Item 1.3)."
       ],
       "expect": 1
     },
@@ -2056,7 +2055,7 @@
         "demo_mode"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:39: demo_mode_router,",
+        "api/cloudlens_api/main.py:38: demo_mode_router,",
         "api/cloudlens_api/main.py:1030: app.include_router(demo_mode_router, dependencies=auth_dep)",
         "api/cloudlens_api/routes/demo_mode.py:1: \"\"\"CloudLens Demo Mode and Scenarios REST API Endpoints (Prompt 47 Items 30-32).",
         "api/cloudlens_api/routes/demo_mode.py:4: - POST /api/v1/system/demo/mode/enable: Enables Demo Mode with safety interlock checks.",
@@ -2087,12 +2086,12 @@
         "quota"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:53: quotas_router,",
-        "api/cloudlens_api/main.py:147: QuotaException,",
-        "api/cloudlens_api/main.py:148: QuotaExhaustedException,",
-        "api/cloudlens_api/main.py:149: QuotaIncreaseRequestNotFoundException,",
-        "api/cloudlens_api/main.py:150: QuotaNotFoundException,",
-        "api/cloudlens_api/main.py:151: QuotaNotSupportedException,"
+        "api/cloudlens_api/main.py:52: quotas_router,",
+        "api/cloudlens_api/main.py:146: QuotaException,",
+        "api/cloudlens_api/main.py:147: QuotaExhaustedException,",
+        "api/cloudlens_api/main.py:148: QuotaIncreaseRequestNotFoundException,",
+        "api/cloudlens_api/main.py:149: QuotaNotFoundException,",
+        "api/cloudlens_api/main.py:150: QuotaNotSupportedException,"
       ],
       "expect": 1
     },
@@ -2108,9 +2107,9 @@
         "request"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:144: ProvisioningGateException,",
-        "api/cloudlens_api/main.py:145: ProvisioningRequestInvalidStateException,",
-        "api/cloudlens_api/main.py:146: ProvisioningRequestNotFoundException,",
+        "api/cloudlens_api/main.py:143: ProvisioningGateException,",
+        "api/cloudlens_api/main.py:144: ProvisioningRequestInvalidStateException,",
+        "api/cloudlens_api/main.py:145: ProvisioningRequestNotFoundException,",
         "api/cloudlens_api/main.py:945: @app.exception_handler(ProvisioningGateException)",
         "api/cloudlens_api/main.py:946: async def provisioning_gate_exception_handler(request: Request, exc: ProvisioningGateException):",
         "api/cloudlens_api/main.py:947: \"\"\"Standardized exception handler for Cost-Aware Provisioning Gate (Prompt 55 / Rule 2.4).\"\"\""
@@ -2149,10 +2148,10 @@
       ],
       "examples": [
         "api/cloudlens_api/routes/admin.py:124: \"description\": \"Declarative governance rules POL-01 through POL-16, dry-run simulation mode, and automated enforcement.\",",
-        "api/cloudlens_api/routes/bootstrap.py:105: dry_run: bool = Query(default=False, description=\"Dry-run simulation mode\"),",
-        "api/cloudlens_api/routes/bootstrap.py:120: if service.is_initialised() and not dry_run:",
-        "api/cloudlens_api/routes/bootstrap.py:126: return service.bootstrap(dry_run=dry_run, correlation_id=x_correlation_id)",
-        "api/cloudlens_api/routes/bootstrap.py:136: report = service.bootstrap(dry_run=True)",
+        "api/cloudlens_api/routes/bootstrap.py:106: dry_run: bool = Query(default=False, description=\"Dry-run simulation mode\"),",
+        "api/cloudlens_api/routes/bootstrap.py:123: if service.is_initialised() and not dry_run:",
+        "api/cloudlens_api/routes/bootstrap.py:129: return service.bootstrap(dry_run=dry_run, correlation_id=x_correlation_id)",
+        "api/cloudlens_api/routes/bootstrap.py:139: report = service.bootstrap(dry_run=True)",
         "api/cloudlens_api/routes/bulk_import.py:9: - POST /api/v1/imports/dry-run: Execute mandatory dry-run validation."
       ],
       "expect": 1
@@ -2189,9 +2188,9 @@
         "api/cloudlens_api/conventions/middleware.py:41: from domain.maintenance.service import get_maintenance_mode_service",
         "api/cloudlens_api/conventions/middleware.py:138: # 1.5. Maintenance Mode Check (IMP-01)",
         "api/cloudlens_api/conventions/middleware.py:139: maint_svc = get_maintenance_mode_service()",
-        "api/cloudlens_api/conventions/middleware.py:144: if maint_svc.is_maintenance_mode(tenant_id) and not maint_svc.is_request_exempt(path, method, caller_roles):",
-        "api/cloudlens_api/conventions/middleware.py:148: error_code=\"MAINTENANCE_MODE\",",
-        "api/cloudlens_api/conventions/middleware.py:152: title=\"Platform Maintenance Mode\","
+        "api/cloudlens_api/conventions/middleware.py:144: if maint_svc.is_maintenance_mode(tenant_id) and not maint_svc.is_request_exempt(",
+        "api/cloudlens_api/conventions/middleware.py:150: error_code=\"MAINTENANCE_MODE\",",
+        "api/cloudlens_api/conventions/middleware.py:154: title=\"Platform Maintenance Mode\","
       ],
       "expect": 1
     },
@@ -2203,11 +2202,11 @@
         "revoke_session"
       ],
       "examples": [
-        "api/cloudlens_api/routes/auth.py:381: @router.get(\"/sessions\", summary=\"List active sessions (IMP-02)\")",
-        "api/cloudlens_api/routes/auth.py:419: @router.delete(\"/sessions/{session_id}\", summary=\"Revoke single session (IMP-02)\")",
-        "api/cloudlens_api/routes/auth.py:420: def revoke_session(",
-        "api/cloudlens_api/routes/auth.py:436: success = service.revoke_session(",
-        "api/cloudlens_api/routes/auth.py:447: @router.delete(\"/sessions/user/{user_id}\", summary=\"Revoke all sessions for user (IMP-02)\")",
+        "api/cloudlens_api/routes/auth.py:387: @router.get(\"/sessions\", summary=\"List active sessions (IMP-02)\")",
+        "api/cloudlens_api/routes/auth.py:427: @router.delete(\"/sessions/{session_id}\", summary=\"Revoke single session (IMP-02)\")",
+        "api/cloudlens_api/routes/auth.py:428: def revoke_session(",
+        "api/cloudlens_api/routes/auth.py:450: success = service.revoke_session(",
+        "api/cloudlens_api/routes/auth.py:463: @router.delete(\"/sessions/user/{user_id}\", summary=\"Revoke all sessions for user (IMP-02)\")",
         "api/cloudlens_api/routes/wizard.py:87: @router.post(\"/sessions\", response_model=StartSessionResponse, status_code=status.HTTP_201_CREATED)"
       ],
       "expect": 1
@@ -2223,12 +2222,12 @@
         "first_sync"
       ],
       "examples": [
-        "api/cloudlens_api/main.py:110: FirstSyncNotFoundException,",
+        "api/cloudlens_api/main.py:109: FirstSyncNotFoundException,",
         "api/cloudlens_api/main.py:529: exc, (SyncJobNotFoundException, WizardSessionNotFoundException, FirstSyncNotFoundException)",
         "api/cloudlens_api/routes/wizard.py:33: from domain.sync.first_sync_models import FirstSyncProgressReport",
         "api/cloudlens_api/routes/wizard.py:83: first_sync_progress: dict[str, Any] | None = None",
-        "api/cloudlens_api/routes/wizard.py:269: response_model=FirstSyncProgressReport,",
-        "api/cloudlens_api/routes/wizard.py:271: async def get_first_sync_progress("
+        "api/cloudlens_api/routes/wizard.py:268: response_model=FirstSyncProgressReport,",
+        "api/cloudlens_api/routes/wizard.py:270: async def get_first_sync_progress("
       ],
       "expect": 1
     },
@@ -2249,10 +2248,10 @@
       "examples": [
         "api/cloudlens_api/routes/wizard.py:28: AlertDeliveryTestReport,",
         "api/cloudlens_api/routes/wizard.py:68: class TestAlertDeliveryRequest(BaseModel):",
-        "api/cloudlens_api/routes/wizard.py:251: response_model=AlertDeliveryTestReport,",
-        "api/cloudlens_api/routes/wizard.py:253: async def test_alert_delivery(",
-        "api/cloudlens_api/routes/wizard.py:255: payload: TestAlertDeliveryRequest,",
-        "api/cloudlens_api/routes/wizard.py:257: ) -> AlertDeliveryTestReport:"
+        "api/cloudlens_api/routes/wizard.py:250: response_model=AlertDeliveryTestReport,",
+        "api/cloudlens_api/routes/wizard.py:252: async def test_alert_delivery(",
+        "api/cloudlens_api/routes/wizard.py:254: payload: TestAlertDeliveryRequest,",
+        "api/cloudlens_api/routes/wizard.py:256: ) -> AlertDeliveryTestReport:"
       ],
       "expect": 1
     },
@@ -2282,7 +2281,7 @@
         "domain/tenant/object_store.py:82: raise NotImplementedError",
         "domain/tenant/object_store.py:87: raise NotImplementedError",
         "domain/tenant/object_store.py:92: raise NotImplementedError",
-        "domain/tenant/repository.py:50: raise NotImplementedError"
+        "domain/tenant/repository.py:57: raise NotImplementedError"
       ],
       "expect": null
     },
@@ -2298,7 +2297,12 @@
     {
       "severity": "AMBER",
       "area": "Git",
-      "message": "35 uncommitted files \u2014 audit does not reflect a committed state"
+      "message": "Very large or multi-prompt commit: 6bda388|P19: Production Test Suite and CI (294 files, +9976) \u2014 hard to review; one prompt per commit expected"
+    },
+    {
+      "severity": "AMBER",
+      "area": "Git",
+      "message": "13 uncommitted files \u2014 audit does not reflect a committed state"
     },
     {
       "severity": "AMBER",
@@ -2328,52 +2332,22 @@
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/dr has only 0 tests \u2014 thin evidence for that test level"
+      "message": "tests/upgrade has only 1 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/upgrade has only 0 tests \u2014 thin evidence for that test level"
+      "message": "tests/load has only 2 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "AMBER",
       "area": "Tests",
-      "message": "tests/load has only 0 tests \u2014 thin evidence for that test level"
+      "message": "tests/rbac has only 3 tests \u2014 thin evidence for that test level"
     },
     {
       "severity": "AMBER",
-      "area": "Tests",
-      "message": "tests/rbac has only 0 tests \u2014 thin evidence for that test level"
-    },
-    {
-      "severity": "AMBER",
-      "area": "Tests",
-      "message": "tests/security has only 0 tests \u2014 thin evidence for that test level"
-    },
-    {
-      "severity": "AMBER",
-      "area": "Tests",
-      "message": "tests/e2e has only 0 tests \u2014 thin evidence for that test level"
-    },
-    {
-      "severity": "RED",
-      "area": "Gates",
-      "message": "layering gate failed (exit 1)"
-    },
-    {
-      "severity": "RED",
-      "area": "Gates",
-      "message": "Undefined names (F821) present \u2014 code will crash on that path"
-    },
-    {
-      "severity": "RED",
       "area": "Persistence",
-      "message": "52 non-test files hold state in Python dicts"
-    },
-    {
-      "severity": "RED",
-      "area": "Security",
-      "message": "Secret-like default values in code"
+      "message": "52 non-test files hold in-memory cache/registry dicts"
     },
     {
       "severity": "AMBER",

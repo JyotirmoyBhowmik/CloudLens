@@ -1,7 +1,13 @@
 $ git log -15 --shortstat --pretty=format:@@%h|%s
-exit=0 duration=0.4s
+exit=0 duration=1.8s
 
 --- STDOUT ---
+@@6bda388|P19: Production Test Suite and CI
+ 294 files changed, 9976 insertions(+), 3242 deletions(-)
+
+@@b2f24d3|P18: Evidence and Documentation Cleanup
+ 59 files changed, 1294 insertions(+), 3039 deletions(-)
+
 @@9ab3c2a|P17: Operational Hardening
  11 files changed, 322 insertions(+), 41 deletions(-)
 
@@ -40,11 +46,5 @@ exit=0 duration=0.4s
 
 @@ca1063e|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
  35 files changed, 6101 insertions(+), 2282 deletions(-)
-
-@@40fb698|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
- 20 files changed, 4323 insertions(+), 582 deletions(-)
-
-@@879128b|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
- 33 files changed, 5497 insertions(+), 257 deletions(-)
 
 --- STDERR ---

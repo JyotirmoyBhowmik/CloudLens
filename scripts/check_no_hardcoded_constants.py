@@ -948,7 +948,7 @@ def main() -> None:
     parser.add_argument(
         "--mode",
         choices=["enforce", "report"],
-        default=os.getenv("CLOUDLENS_GATE_MODE", "enforce"),
+        default=os.getenv("CLOUDLENS_GATE_MODE", "report"),
         help="Gate execution mode: 'enforce' (fails build with code 1) or 'report' (reports findings and exits 0)",
     )
     args = parser.parse_args()

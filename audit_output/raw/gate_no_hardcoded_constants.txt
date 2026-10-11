@@ -1,7 +1,91 @@
 $ C:\Users\TEST\CloudLens\.venv\Scripts\python.exe scripts/check_no_hardcoded_constants.py
-exit=0 duration=1.5s
+exit=0 duration=3.6s
 
 --- STDOUT ---
-[PASS] Zero hard-coding scan passed cleanly! (83 allow-listed exceptions in register)
 
 --- STDERR ---
+================================================================================
+CLOUDLENS BUILD GATE FINDINGS: HARD-CODED CONSTANTS DETECTED
+Mode: REPORT | Total Violations: 35
+================================================================================
+
+### Rule 4.2 � Identity Attribute String Comparisons (9 findings):
+  - api/cloudlens_api/routes/auth.py:791 -> '@'
+    Reason: Comparison of string literal '@' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - api/cloudlens_api/routes/auth.py:920 -> '@'
+    Reason: Comparison of string literal '@' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/alerting/engine.py:78 -> 'engine:'
+    Reason: Comparison of string literal 'engine:' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/alerting/engine.py:79 -> 'system'
+    Reason: Comparison of identity attribute against string literal 'system'. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/attribution/governance_resolver.py:27 -> 'BUSINESS_OWNER'
+    Reason: Comparison of identity attribute against string literal 'BUSINESS_OWNER'. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/provisioning/service.py:136 -> '@'
+    Reason: Comparison of string literal '@' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/resource_detail/service.py:1779 -> 'RESTRICTED_VIEWER'
+    Reason: Comparison of string literal 'RESTRICTED_VIEWER' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/workflows/service.py:325 -> 'GLOBAL_ADMIN'
+    Reason: Comparison of string literal 'GLOBAL_ADMIN' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+  - domain/workflows/service.py:723 -> 'TENANT_ADMIN'
+    Reason: Comparison of string literal 'TENANT_ADMIN' against identity attribute. Identity and roles must resolve from SystemRole enum or dynamic RBAC context.
+
+### Rule 4.4 � Financial / Threshold Numeric Comparisons (10 findings):
+  - domain/cost/reconciliation/engine.py:377 -> 'Decimal('99.50')'
+    Reason: Numeric or Decimal literal 'Decimal('99.50')' used in comparison inside domain/cost/reconciliation/engine.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/cost/reconciliation/engine.py:381 -> 'Decimal('98.00')'
+    Reason: Numeric or Decimal literal 'Decimal('98.00')' used in comparison inside domain/cost/reconciliation/engine.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/cost/reconciliation/engine.py:552 -> '2'
+    Reason: Numeric or Decimal literal '2' used in comparison inside domain/cost/reconciliation/engine.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/acceptance.py:95 -> '7'
+    Reason: Numeric or Decimal literal '7' used in comparison inside domain/statements/acceptance.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/acceptance.py:99 -> '3'
+    Reason: Numeric or Decimal literal '3' used in comparison inside domain/statements/acceptance.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/acceptance.py:129 -> '5'
+    Reason: Numeric or Decimal literal '5' used in comparison inside domain/statements/acceptance.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/disputes.py:67 -> '5'
+    Reason: Numeric or Decimal literal '5' used in comparison inside domain/statements/disputes.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/generator.py:184 -> 'Decimal('10.0')'
+    Reason: Numeric or Decimal literal 'Decimal('10.0')' used in comparison inside domain/statements/generator.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/generator.py:208 -> 'Decimal('50.00')'
+    Reason: Numeric or Decimal literal 'Decimal('50.00')' used in comparison inside domain/statements/generator.py. Financial tolerances and thresholds must resolve from configuration surface.
+  - domain/statements/generator.py:212 -> 'Decimal('-50.00')'
+    Reason: Numeric or Decimal literal 'Decimal('-50.00')' used in comparison inside domain/statements/generator.py. Financial tolerances and thresholds must resolve from configuration surface.
+
+### General Hardcoded Constants (Thresholds/Colors/Statuses) (16 findings):
+  - domain/dashboards/service.py:610 -> 'STOPPED'
+    Reason: Direct comparison against hardcoded status string 'STOPPED'. Must use domain Enum ('RuntimeStatus' / 'PricingStatus') or resolve from master.
+  - domain/forecasting/accuracy.py:41 -> '0.75'
+    Reason: Direct comparison against float threshold literal 0.75. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/forecasting/accuracy.py:45 -> '0.5'
+    Reason: Direct comparison against float threshold literal 0.5. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/forecasting/accuracy.py:49 -> '0.25'
+    Reason: Direct comparison against float threshold literal 0.25. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/forecasting/engine.py:507 -> '0.3'
+    Reason: Direct comparison against float threshold literal 0.3. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/forecasting/engine.py:517 -> '0.4'
+    Reason: Direct comparison against float threshold literal 0.4. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/forecasting/engine.py:535 -> '0.05'
+    Reason: Direct comparison against float threshold literal 0.05. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings ('threshold_defaults').
+  - domain/hierarchy/service.py:91 -> 'CRITICAL'
+    Reason: Direct comparison against hardcoded severity string 'CRITICAL'. Must use domain Enum ('PolicySeverity' / 'ThresholdBand') or resolve from master.
+  - domain/hierarchy/service.py:95 -> 'WARNING'
+    Reason: Direct comparison against hardcoded severity string 'WARNING'. Must use domain Enum ('PolicySeverity' / 'ThresholdBand') or resolve from master.
+  - domain/hierarchy/service.py:1386 -> '0.9'
+    Reason: Hardcoded 0.9 business threshold literal detected in application code. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings.
+  - domain/resource_detail/service.py:1355 -> '0.9'
+    Reason: Hardcoded 0.9 business threshold literal detected in application code. Must resolve from configuration: 'domain.config.config_resolver' or tenant settings.
+  - domain/resource_detail/service.py:2030 -> 'STOPPED'
+    Reason: Direct comparison against hardcoded status string 'STOPPED'. Must use domain Enum ('RuntimeStatus' / 'PricingStatus') or resolve from master.
+  - domain/runtime/models.py:413 -> '#10b981'
+    Reason: Hardcoded colour literal '#10b981' detected. Must resolve from theme configuration or master 'THEME_COLOUR'.
+  - domain/runtime/models.py:414 -> '#22c55e'
+    Reason: Hardcoded colour literal '#22c55e' detected. Must resolve from theme configuration or master 'THEME_COLOUR'.
+  - domain/runtime/models.py:415 -> '#16a34a'
+    Reason: Hardcoded colour literal '#16a34a' detected. Must resolve from theme configuration or master 'THEME_COLOUR'.
+  - domain/runtime/models.py:416 -> '#15803d'
+    Reason: Hardcoded colour literal '#15803d' detected. Must resolve from theme configuration or master 'THEME_COLOUR'.
+
+================================================================================
+Summary: 35 violations found across 5 directories.
+Allow-listed exceptions recorded: 48
+[GATE RESULT: REPORT MODE] Exiting with status 0 (Reporting mode for CI).

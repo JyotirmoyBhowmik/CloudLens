@@ -1,5 +1,5 @@
 $ cosign version
-exit=0 duration=0.1s
+exit=0 duration=0.6s
 
 --- STDOUT ---
   ______   ______        _______. __    _______ .__   __.

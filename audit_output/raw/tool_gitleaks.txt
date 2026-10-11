@@ -1,5 +1,5 @@
 $ gitleaks version
-exit=0 duration=0.4s
+exit=0 duration=1.0s
 
 --- STDOUT ---
 8.30.1

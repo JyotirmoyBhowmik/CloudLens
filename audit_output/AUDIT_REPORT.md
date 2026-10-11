@@ -1,38 +1,35 @@
 # CloudLens Audit Report v2.0
 
-Generated **2026-10-11 05:11:01 UTC** | repo `CloudLens` | HEAD `9ab3c2a6f28f` | branch `main` | python `C:\Users\TEST\CloudLens\.venv\Scripts\python.exe`
+Generated **2026-10-11 19:57:59 UTC** | repo `CloudLens` | HEAD `6bda3885ba3c` | branch `main` | python `C:\Users\TEST\CloudLens\.venv\Scripts\python.exe`
 
 > Every figure below was produced by a command or file scan in this run. Raw outputs: `audit_output/raw/`. Flags: `--run-tests` OFF, `--coverage` OFF, `--probe-startup` OFF
 
-## 0. Findings summary — RED 4 | AMBER 15
+## 0. Findings summary — RED 0 | AMBER 14
 
 | # | Severity | Area | Finding |
 |---|---|---|---|
-| 1 | RED | Gates | layering gate failed (exit 1) |
-| 2 | RED | Gates | Undefined names (F821) present — code will crash on that path |
-| 3 | RED | Persistence | 52 non-test files hold state in Python dicts |
-| 4 | RED | Security | Secret-like default values in code |
-| 5 | AMBER | Git | 35 uncommitted files — audit does not reflect a committed state |
-| 6 | AMBER | Git | No commit message references R-SEC; no commit-level evidence it was executed |
-| 7 | AMBER | Git | No commit message references R-QUAL; no commit-level evidence it was executed |
-| 8 | AMBER | Git | No commit message references R-ROLES; no commit-level evidence it was executed |
-| 9 | AMBER | Git | No commit message references R-PERSIST; no commit-level evidence it was executed |
-| 10 | AMBER | Git | No commit message references R-DATA; no commit-level evidence it was executed |
-| 11 | AMBER | Tests | tests/dr has only 0 tests — thin evidence for that test level |
-| 12 | AMBER | Tests | tests/upgrade has only 0 tests — thin evidence for that test level |
-| 13 | AMBER | Tests | tests/load has only 0 tests — thin evidence for that test level |
-| 14 | AMBER | Tests | tests/rbac has only 0 tests — thin evidence for that test level |
-| 15 | AMBER | Tests | tests/security has only 0 tests — thin evidence for that test level |
-| 16 | AMBER | Tests | tests/e2e has only 0 tests — thin evidence for that test level |
-| 17 | AMBER | Mandate M2 | Thresholds compared against Decimal literals in 28 file(s) — should come from master data |
-| 18 | AMBER | Evidence | Evidence/docs cite 'zap' results but zap is not installed here — results cannot have been produced on this machine |
-| 19 | AMBER | Security | 128 routes have no visible auth/tenant dependency in their signature — verify they are protected by middleware |
+| 1 | AMBER | Git | Very large or multi-prompt commit: 6bda388|P19: Production Test Suite and CI (294 files, +9976) — hard to review; one prompt per commit expected |
+| 2 | AMBER | Git | 13 uncommitted files — audit does not reflect a committed state |
+| 3 | AMBER | Git | No commit message references R-SEC; no commit-level evidence it was executed |
+| 4 | AMBER | Git | No commit message references R-QUAL; no commit-level evidence it was executed |
+| 5 | AMBER | Git | No commit message references R-ROLES; no commit-level evidence it was executed |
+| 6 | AMBER | Git | No commit message references R-PERSIST; no commit-level evidence it was executed |
+| 7 | AMBER | Git | No commit message references R-DATA; no commit-level evidence it was executed |
+| 8 | AMBER | Tests | tests/upgrade has only 1 tests — thin evidence for that test level |
+| 9 | AMBER | Tests | tests/load has only 2 tests — thin evidence for that test level |
+| 10 | AMBER | Tests | tests/rbac has only 3 tests — thin evidence for that test level |
+| 11 | AMBER | Persistence | 52 non-test files hold in-memory cache/registry dicts |
+| 12 | AMBER | Mandate M2 | Thresholds compared against Decimal literals in 28 file(s) — should come from master data |
+| 13 | AMBER | Evidence | Evidence/docs cite 'zap' results but zap is not installed here — results cannot have been produced on this machine |
+| 14 | AMBER | Security | 128 routes have no visible auth/tenant dependency in their signature — verify they are protected by middleware |
 
 ## 1. Git
-- Commits **100** | uncommitted **35** | unpushed **no upstream**
+- Commits **102** | uncommitted **13** | unpushed **no upstream**
 - Prompt IDs in commit messages: `15B, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 31B, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 47B, 50, 51, 52, 53, 54, 55, 56, 58, 59, 60, 61, CT, DOC, FEAT, FINAL, OBS, OPS, PERF, RUN, UI`
 - Recent commit sizes:
 ```
+ 294 files +9976    6bda388|P19: Production Test Suite and CI
+  59 files +1294    b2f24d3|P18: Evidence and Documentation Cleanup
   11 files +322     9ab3c2a|P17: Operational Hardening
    5 files +775     c6cdab2|P16: Control Tower With Measured Values Only
   13 files +3716    15249a0|P15: Configuration Panel and Editable Business Objects
@@ -46,11 +43,11 @@ Generated **2026-10-11 05:11:01 UTC** | repo `CloudLens` | HEAD `9ab3c2a6f28f` |
   69 files +4665    3ffbbb5|P08: Persistence Tier 5 — Remaining Modules and In-Memory Removal
   34 files +8512    117ebe7|P07: Persistence Tier 4 — Governance and Estate
   35 files +6101    ca1063e|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconcilia
-  20 files +4323    40fb698|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
-  33 files +5497    879128b|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
 ```
 Last 15 commits:
 ```
+6bda388|2026-10-12|P19: Production Test Suite and CI
+b2f24d3|2026-10-11|P18: Evidence and Documentation Cleanup
 9ab3c2a|2026-10-11|P17: Operational Hardening
 c6cdab2|2026-10-10|P16: Control Tower With Measured Values Only
 15249a0|2026-10-10|P15: Configuration Panel and Editable Business Objects
@@ -64,66 +61,58 @@ c6cdab2|2026-10-10|P16: Control Tower With Measured Values Only
 3ffbbb5|2026-10-09|P08: Persistence Tier 5 — Remaining Modules and In-Memory Removal
 117ebe7|2026-10-09|P07: Persistence Tier 4 — Governance and Estate
 ca1063e|2026-10-09|P06: Persistence Tier 3 — Cost, Pricing, Budgets, Thresholds, Forecast, Reconciliation
-40fb698|2026-10-09|P05: Persistence Tier 2 — Connections, Sync, Wizard, Landing
-879128b|2026-10-08|P04: Persistence Tier 1 — Identity, Tenancy, Audit, Configuration
 ```
 Uncommitted:
 ```
- M README.md
- M api/cloudlens_api/routes/connectors.py
- M build_requirements_register.py
  M docs/configuration/exception_register.json
-RM docs/configuration/exception_register.md -> docs/configuration/exception_register_summary.md
-R  docs/configuration/identity_verification_report.md -> docs/configuration/identity_verification_summary.md
-R  docs/configuration/pre_identity_verification_report.md -> docs/configuration/pre_identity_verification_summary.md
-R  docs/pricing-dimensions-reconciled.md -> docs/pricing-dimensions-catalogue.md
- M docs/requirement_traceability_matrix.md
-R  docs/sbom.md -> docs/sbom-report.md
- M domain/bootstrap/pre_identity.py
- M domain/bootstrap/superuser.py
- M fat/ACCEPTANCE.md
- M fat/FAT_RESULTS.md
-D  fat/control_tower_screenshot.jpg
- M fat/decision_log_extract.md
- M fat/exception_register.md
- M fat/gate_constants.txt
- M fat/gate_layering.txt
- M fat/gate_ruff.txt
+ M docs/configuration/exception_register_summary.md
+ M docs/configuration/identity_verification_report.json
+ M docs/configuration/identity_verification_summary.md
+ M domain/identity/models.py
+ M scripts/check_no_hardcoded_constants.py
+ M tests/dr/test_disaster_recovery.py
+?? docs/go_live_checklist.md
+?? docs/uat_sign_off.md
+?? ops/helm/cloudlens/values-uat.yaml
+?? scripts/activate_superuser_uat.py
+?? scripts/run_business_user_uat.py
+?? scripts/run_uat_drills.py
 ```
 
 ## 2. Size
-- Files **1068** | non-blank lines **392562**
+- Files **1079** | non-blank lines **398896**
 
 | Top-level | Files | LOC |
 |---|---|---|
-| domain | 338 | 96058 |
-| docs | 49 | 88932 |
-| web | 83 | 80538 |
-| tests | 175 | 50039 |
-| (root) | 14 | 16745 |
-| connectors | 85 | 16437 |
-| api | 63 | 15773 |
-| masterdata | 69 | 8575 |
-| scripts | 48 | 7119 |
-| db | 30 | 4811 |
-| ops | 47 | 3071 |
+| domain | 338 | 97620 |
+| docs | 51 | 88849 |
+| web | 84 | 80825 |
+| tests | 177 | 51786 |
+| (root) | 14 | 17065 |
+| connectors | 86 | 16626 |
+| api | 63 | 16070 |
+| masterdata | 69 | 8583 |
+| scripts | 51 | 8553 |
+| db | 30 | 4818 |
+| ops | 48 | 3256 |
 | fat | 11 | 2112 |
-| workers | 6 | 1326 |
+| workers | 6 | 1624 |
 | artifacts | 4 | 411 |
-| normalisation | 7 | 399 |
-| .github | 2 | 179 |
-| data | 37 | 37 |
+| normalisation | 7 | 406 |
+| .github | 2 | 254 |
+| data | 38 | 38 |
 
 | Language | Files | LOC |
 |---|---|---|
-| Python | 759 | 199704 |
-| JSON | 124 | 103113 |
-| TypeScript | 81 | 80488 |
-| Markdown | 60 | 5644 |
-| YAML | 38 | 3253 |
-| TOML | 2 | 150 |
+| Python | 764 | 205548 |
+| JSON | 125 | 102976 |
+| TypeScript | 82 | 80775 |
+| Markdown | 62 | 5699 |
+| YAML | 39 | 3513 |
+| TOML | 2 | 151 |
 | PowerShell | 2 | 133 |
 | Template | 1 | 67 |
+| JavaScript | 1 | 24 |
 | Shell | 1 | 10 |
 
 Key directories:
@@ -142,19 +131,50 @@ Key directories:
 - **fat/**: (files only)
 
 ## 3. Tests
-- Collected **0** | collection errors **0** | collect exit 4
+- Collected **1522** | collection errors **0** | collect exit 0
 - Tests not executed in this run (use `--run-tests`).
 
 | Test directory | Tests |
 |---|---|
+| unit | 1034 |
+| security | 136 |
+| integration | 66 |
+| contracts | 30 |
+| e2e | 26 |
+| workers | 26 |
+| acceptance | 25 |
+| integrations | 17 |
+| adoption | 16 |
+| lifecycle | 14 |
+| improvements | 13 |
+| cloud_provider | 9 |
+| commitments | 9 |
+| control_tower | 9 |
+| cost_reconciliation | 8 |
+| mandates | 8 |
+| analytics | 7 |
+| connectors | 7 |
+| failure_injection | 7 |
+| perf | 7 |
+| planning | 7 |
+| masterdata | 6 |
+| ui | 6 |
+| data_validation | 5 |
+| dr | 5 |
+| workflow | 5 |
+| data | 4 |
+| regression | 4 |
+| rbac | 3 |
+| load | 2 |
+| upgrade | 1 |
 
 ## 4. Coverage
 - {'status': 'not run (use --coverage)'}
 
 ## 5. Quality gates
-- **layering**: exit 1 —   connectors/contract/raw_landing.py:207 in layer 'connectors/contract': /     ERROR: Layering rule 'presentation -> application -> domain -> normalisation -> ingestion -> connector -> provider' violated. Layer 'connectors/contract' must not import provider SDK 'boto3'.
-- **no_hardcoded_constants**: exit 0 — [PASS] Zero hard-coding scan passed cleanly! (83 allow-listed exceptions in register)
-- **ruff**: exit 1 — Found 8 errors. / No fixes available (8 hidden fixes can be enabled with the `--unsafe-fixes` option).
+- **layering**: exit 0 — [PASS] Layering rule check passed. Zero forbidden provider SDK imports above connector layer.
+- **no_hardcoded_constants**: exit 0 — Allow-listed exceptions recorded: 48 / [GATE RESULT: REPORT MODE] Exiting with status 0 (Reporting mode for CI).
+- **ruff**: exit 0 — 
 - **ruff F-class findings**:
 ```
 api\cloudlens_api\routes\__init__.py:1:54: F401 `api.cloudlens_api.routes.about.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
@@ -180,13 +200,13 @@ connectors\contract\checkpoint_store.py:17:8: F401 [*] `sys` imported but unused
 connectors\contract\checkpoint_store.py:41:13: F841 Local variable `loop` is assigned to but never used
 connectors\contract\raw_landing.py:14:8: F401 [*] `asyncio` imported but unused
 connectors\contract\raw_landing.py:15:8: F401 [*] `concurrent.futures` imported but unused
+connectors\contract\raw_landing.py:19:8: F401 [*] `os` imported but unused
 connectors\contract\raw_landing.py:20:8: F401 [*] `sys` imported but unused
 connectors\factory.py:22:33: F401 [*] `domain.models.enums.ProviderType` imported but unused
 connectors\gcp\cost.py:16:8: F401 [*] `json` imported but unused
 connectors\oci\cost.py:15:8: F401 [*] `csv` imported but unused
 connectors\oci\cost.py:16:8: F401 [*] `io` imported but unused
 connectors\oci\cost.py:17:8: F401 [*] `json` imported but unused
-db\session.py:189:14: F821 Undefined name `Any`
 ```
 - **web_typecheck**: exit 0 —  (TS errors 0)
 
@@ -233,7 +253,7 @@ domain/provisioning/models.py:142: default="*", description="Deployment environm
 |---|---|---|
 | superuser_literal_in_app_code | 0 |  |
 | email_identity_comparison | 0 |  |
-| secret_like_defaults | 2 | domain/config/tenant_settings.py:237: webhook_signing_secret_ref: str = Field(default="vault://secret/notifications/webhook_signing_key", description="Vault secret reference for webhook HMAC signature")<br>domain/identity/models.py:146: token_type: str = Field(default="Bearer", description="Token type descriptor") |
+| secret_like_defaults | 0 |  |
 | inmemory_secret_fallback | 0 |  |
 | break_glass_provision_route | 0 |  |
 | secret_returned_or_printed | 1 | domain/credentials/store.py:45: Returns an opaque reference URI (e.g. vault://secret/data/tenants/{tenant_id}/credentials/{profile_id}/v{version}). |
@@ -247,47 +267,23 @@ domain/provisioning/models.py:142: default="*", description="Deployment environm
 - `health_check()` returning constant True: none
 
 ## 8. Hard-coding exception register
-- File: `docs/configuration/exception_register.json` | entries: **25** | missing reason/reviewer: **0**
-- By area: `{'?': 25}`
+- File: `docs/configuration/exception_register.json` | entries: **7** | missing reason/reviewer: **0**
+- By area: `{'?': 7}`
 - Entries touching sensitive areas:
 ```
-"file_path": "domain/cost/reconciliation/engine.py",
-"reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
-"file_path": "domain/cost/reconciliation/engine.py",
-"reason": "Executive trust score tier thresholds (99.5% and 98.0%)",
-"file_path": "domain/cost/reconciliation/engine.py",
-"reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-"reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-"reason": "Standard quarterly milestone thresholds (25%, 50%, 75%)",
-"reason": "Cost trend spiking threshold ratio (30%)",
-"reason": "Cost trend volatility coefficient of variation threshold (0.40)",
-"reason": "Cost trend normalized slope drift threshold (5%)",
 "file_path": "domain/identity/password_hasher.py",
-"file_path": "domain/statements/acceptance.py",
-"reason": "SLA escalation threshold days",
-"file_path": "domain/statements/acceptance.py",
-"reason": "SLA reminder threshold days",
-"file_path": "domain/statements/acceptance.py",
-"reason": "SLA overdue threshold days",
-"file_path": "domain/statements/disputes.py",
-"file_path": "domain/statements/generator.py",
-"reason": "Budget variance tolerance threshold percentage (10%)",
-"file_path": "domain/statements/generator.py",
-"reason": "Period cost movement significance threshold",
-"file_path": "domain/statements/generator.py",
-"reason": "Period cost movement significance threshold",
 "reason": "Standard 6-hour reconciliation window slice for backfill planning",
 ```
 - Comparisons against Decimal literals: **28** file(s)
 ```
 domain/adoption/value_ledger.py:63: if dec_amount <= Decimal("0.00"):
-domain/adoption/value_ledger.py:161: if platform_cost.total_platform_cost > Decimal("0.00"):
+domain/adoption/value_ledger.py:163: if platform_cost.total_platform_cost > Decimal("0.00"):
 domain/attribution/aggregation.py:189: if other_amount > Decimal("0.00"):
 domain/catalogues/unit_service.py:44: if val < Decimal("0"):
 domain/catalogues/unit_service.py:102: if eff_duration <= Decimal("0"):
-domain/commitments/service.py:140: coverage_ratio = (cov_dec / el_dec) if el_dec > Decimal("0.00") else Decimal("0.0000")
-domain/commitments/service.py:143: utilization_ratio = (act_dec / cost_dec) if cost_dec > Decimal("0.00") else Decimal("0.0000")
-domain/commitments/service.py:151: if coverage_ratio >= Decimal("0.8000") and utilization_ratio < Decimal("0.8500"):
+domain/commitments/service.py:146: coverage_ratio = (cov_dec / el_dec) if el_dec > Decimal("0.00") else Decimal("0.0000")
+domain/commitments/service.py:150: (act_dec / cost_dec) if cost_dec > Decimal("0.00") else Decimal("0.0000")
+domain/commitments/service.py:159: if coverage_ratio >= Decimal("0.8000") and utilization_ratio < Decimal("0.8500"):
 ```
 
 ## 9. Evidence integrity (fat/, README, docs)
@@ -314,12 +310,12 @@ fat/test_summary.md (4568 B)
 
 | Tool | Mentioned in fat/docs/README | Installed |
 |---|---|---|
-| helm | 2 file(s) | True |
+| helm | 3 file(s) | True |
 | kubeconform | 2 file(s) | True |
-| gitleaks | 1 file(s) | True |
+| gitleaks | 2 file(s) | True |
 | trivy | 0 file(s) | False |
 | k6 | 0 file(s) | False |
-| zap | 1 file(s) | False |
+| zap | 2 file(s) | False |
 | cosign | 1 file(s) | True |
 | kubectl | 5 file(s) | True |
 - Metric values hard-coded in scripts: **0** file(s)
@@ -388,16 +384,16 @@ workers/cloudlens_workers/celery_app.py:34: beat_scheduler="workers.cloudlens_wo
 | pnpm | NOT FOUND: [WinError 2] The system cannot find the file specified |
 
 ## 11. API and Web
-- API routes: **306** | routes with no visible auth dependency: **128**
+- API routes: **303** | routes with no visible auth dependency: **128**
 - Routes by prefix:
 ```
   29 /api/v1/masterdata
-  19 /api/v1/connectors
-  19 /api/v1/control-tower
   18 /api/v1/alerts
+  18 /api/v1/connectors
+  18 /api/v1/control-tower
   17 /api/v1/system
   16 /api/v1/imports
-  15 /api/v1/auth
+  14 /api/v1/auth
   14 /api/v1/policies
   13 /api/v1/dependencies
   13 /api/v1/statements
@@ -477,7 +473,7 @@ api/cloudlens_api/routes/control_tower.py: GET /audit/tail
 api/cloudlens_api/routes/control_tower.py: POST /actions/{action_name}
 ```
 - Web pages (38): AboutPage.tsx, AdminConsolePage.tsx, AuditLogPage.tsx, BudgetManagementPage.tsx, BudgetPlanningPage.tsx, CommitmentRenewalsPage.tsx, ConnectorManagementPage.tsx, ControlTowerPage.tsx, CostEstimatorPage.tsx, CostExplorerPage.tsx, DependencyGraphPage.tsx, DesignSystemShowcase.tsx, ExecutiveDashboard.tsx, ExplanationLayerView.tsx, ForbiddenPage.tsx, HierarchyExplorer.tsx, InvestigationViewPage.tsx, LandingPage.tsx, LoginPage.tsx, MasterDataConsole.tsx, NotFoundPage.tsx, OnboardingWizardPage.tsx, PolicyManagementPage.tsx, ProviderDashboard.tsx, ProvisioningRequestsPage.tsx, QuotaHeadroomPage.tsx, RemediationBoardPage.tsx, ReportsPage.tsx, ResourceDetailPage.tsx, RuntimeViewPage.tsx, ServiceDashboard.tsx, ServiceInventory.tsx, SettingsPage.tsx, SetupWizardPage.tsx, ShowbackStatementsPage.tsx, TenantsPage.tsx, UsageDetailPage.tsx, UsersRbacPage.tsx
-- Web route definitions found: **70** | Playwright specs: 7
+- Web route definitions found: **70** | Playwright specs: 8
 - Screen presence:
 
 | Screen | Page file |
@@ -512,10 +508,10 @@ api/cloudlens_api/routes/control_tower.py: POST /actions/{action_name}
 | Control Tower | yes |
 
 ## 12. Docs and traceability
-- Docs: 49 files | duplicates: none
+- Docs: 51 files | duplicates: none
 - rtm_distinct_ids: `458`
 - rtm_ids_by_prefix: `{'AC': 78, 'API': 66, 'BR': 18, 'CON': 32, 'CST': 32, 'DEP': 18, 'DR': 7, 'FR': 89, 'NFR': 50, 'PR': 20, 'RUN': 10, 'SEC': 31, 'USE': 10}`
-- rtm_status_words: `{'partial': 1, 'verified': 2, 'implemented - unverified': 36, 'pass': 421, 'implemented': 1, 'fail': 1}`
+- rtm_status_words: `{'partial': 1, 'pass': 421, 'implemented - unverified': 36, 'verified': 2, 'implemented': 1, 'fail': 1}`
 - rtm_rows_with_test_reference: `2`
 - register_ac_count: `76`
 - README statements containing figures/claims (each needs a source):

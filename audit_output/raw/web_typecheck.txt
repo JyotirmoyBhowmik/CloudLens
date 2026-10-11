@@ -1,5 +1,5 @@
 $ npx --prefix web tsc --noEmit -p web
-exit=0 duration=7.4s
+exit=0 duration=22.1s
 
 --- STDOUT ---
 
