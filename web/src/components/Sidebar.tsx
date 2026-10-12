@@ -108,7 +108,7 @@ export const SIDEBAR_NAV_GROUPS: NavGroupConfig[] = [
   {
     title: 'ADMINISTRATION',
     items: [
-      { label: 'Tenants', to: '/tenants', icon: Building2, capability: 'tenants:settings:read' },
+      { label: 'Tenants', to: '/tenants', icon: Building2 },
       { label: 'Cloud Connections', to: '/connectors', icon: Plug, capability: 'admin:connectors:manage' },
       { label: 'Users & Roles', to: '/users', icon: Users, capability: 'iam:manage' },
       { label: 'Configuration', to: '/admin', icon: Settings, capability: 'admin:access' },

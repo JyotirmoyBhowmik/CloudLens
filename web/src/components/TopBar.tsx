@@ -385,6 +385,29 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           </div>
         )}
+
+        {/* Sign In button when unauthenticated */}
+        {!auth.isAuthenticated && (
+          <Link
+            to="/login"
+            id="header-signin-btn"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              backgroundColor: '#0284c7',
+              color: '#ffffff',
+              borderRadius: '6px',
+              padding: '0.3rem 0.75rem',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            <User size={13} aria-hidden="true" />
+            <span>Sign In</span>
+          </Link>
+        )}
       </div>
     </header>
   );

@@ -38,6 +38,7 @@ EXEMPT_PATHS = {
     ("GET", "/api/v1/.well-known/jwks.json"),
     ("GET", "/api/v1/auth/oidc/authorize"),
     ("GET", "/api/v1/auth/oidc/callback"),
+    ("POST", "/api/v1/auth/login"),
     ("POST", "/api/v1/auth/break-glass/login"),
     ("POST", "/api/v1/auth/token/refresh"),
     ("POST", "/api/v1/auth/machine-clients/token"),

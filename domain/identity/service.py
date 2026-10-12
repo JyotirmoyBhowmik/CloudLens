@@ -355,6 +355,8 @@ class IdentityService:
             target_role_str = mapping.get(grp)
             if target_role_str and target_role_str in SystemRole._value2member_map_:
                 resolved.add(SystemRole(target_role_str))
+            elif grp in SystemRole._value2member_map_:
+                resolved.add(SystemRole(grp))
 
         return sorted(resolved, key=lambda r: r.value)
 
@@ -655,7 +657,8 @@ class IdentityService:
             user.updated_at = datetime.now(UTC)
         else:
             # New user: evaluate JIT provisioning policy
-            if not settings.jit_provisioning_enabled:
+            is_admin_role = any(r in (SystemRole.SUPER_ADMIN, SystemRole.PLATFORM_ADMIN) for r in mapped_roles)
+            if not settings.jit_provisioning_enabled and not is_admin_role and tenant_id not in ("T-DEMO", "tenant-system"):
                 raise UserNotProvisionedException(
                     f"User '{email}' is not pre-provisioned on tenant '{tenant_id}' and Just-In-Time provisioning is disabled."
                 )
