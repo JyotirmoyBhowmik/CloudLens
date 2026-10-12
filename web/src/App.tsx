@@ -34,6 +34,7 @@ import { RemediationBoardPage } from './pages/RemediationBoardPage';
 import { ShowbackStatementsPage } from './pages/ShowbackStatementsPage';
 import { BudgetPlanningPage } from './pages/BudgetPlanningPage';
 import { CommitmentRenewalsPage } from './pages/CommitmentRenewalsPage';
+import { AnomalyRadarPage } from './pages/AnomalyRadarPage';
 
 // Portal, Identity, Operations & Governance Screens
 import { LoginPage } from './pages/LoginPage';
@@ -324,6 +325,9 @@ const AppLayout: React.FC = () => {
 
             {/* Investigation View */}
             <Route path="/investigation" element={<InvestigationViewPage />} />
+
+            {/* FinOps Anomaly Radar */}
+            <Route path="/anomaly-radar" element={<AnomalyRadarPage />} />
 
             {/* Dependency Topology (Lazy Loaded) */}
             <Route

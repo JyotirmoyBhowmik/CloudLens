@@ -73,6 +73,7 @@ export const SIDEBAR_NAV_GROUPS: NavGroupConfig[] = [
     title: 'COST',
     items: [
       { label: 'Cost Explorer', to: '/cost-explorer', icon: DollarSign },
+      { label: 'Anomaly Radar', to: '/anomaly-radar', icon: Activity, badge: 'Live' },
       { label: 'Cost Increases', to: '/investigation', icon: TrendingUp },
       { label: 'Estimator', to: '/estimator', icon: Calculator },
       { label: 'Commitments', to: '/commitments', icon: FileCheck },

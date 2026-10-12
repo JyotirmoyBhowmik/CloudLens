@@ -5,7 +5,7 @@
     "literal_value": "2555",
     "reason": "Statutory 7-year audit retention requirement (365 * 7)",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T19:59:06.506570+00:00"
+    "recorded_at": "2026-10-11T23:12:45.416455+00:00"
   },
   {
     "file_path": "domain/forecasting/engine.py",
@@ -13,7 +13,7 @@
     "literal_value": "0.9",
     "reason": "Empirical statistical confidence score for historical baseline",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T19:59:07.213676+00:00"
+    "recorded_at": "2026-10-11T23:12:45.973914+00:00"
   },
   {
     "file_path": "domain/forecasting/engine.py",
@@ -21,7 +21,7 @@
     "literal_value": "0.9",
     "reason": "Empirical statistical confidence score for seasonal pattern",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T19:59:07.216401+00:00"
+    "recorded_at": "2026-10-11T23:12:45.976023+00:00"
   },
   {
     "file_path": "domain/identity/password_hasher.py",
@@ -29,7 +29,7 @@
     "literal_value": "30",
     "reason": "RFC 6238 TOTP standard interval of 30 seconds",
     "reviewer": "security-arch",
-    "recorded_at": "2026-10-11T19:59:07.325140+00:00"
+    "recorded_at": "2026-10-11T23:12:46.061636+00:00"
   },
   {
     "file_path": "domain/observability/health.py",
@@ -37,7 +37,7 @@
     "literal_value": "0.9",
     "reason": "Simulated probe latency metric",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T19:59:07.577613+00:00"
+    "recorded_at": "2026-10-11T23:12:46.257223+00:00"
   },
   {
     "file_path": "workers/cloudlens_workers/scheduler.py",
@@ -45,7 +45,7 @@
     "literal_value": "30.0",
     "reason": "Schedule refresh polling interval seconds",
     "reviewer": "Prompt-48-Audit",
-    "recorded_at": "2026-10-11T19:59:08.504790+00:00"
+    "recorded_at": "2026-10-11T23:12:47.228368+00:00"
   },
   {
     "file_path": "connectors/diagnostics/service.py",
@@ -53,6 +53,6 @@
     "literal_value": "6",
     "reason": "Standard 6-hour reconciliation window slice for backfill planning",
     "reviewer": "enterprise-arch",
-    "recorded_at": "2026-10-11T19:59:08.770083+00:00"
+    "recorded_at": "2026-10-11T23:12:48.292419+00:00"
   }
 ]
